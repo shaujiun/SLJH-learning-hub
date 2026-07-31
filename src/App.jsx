@@ -206,7 +206,7 @@ export default function App() {
   if (state.error) return <ErrorScreen message={state.error} onRetry={load} />
   if (!state.data?.authenticated) return <LoginRequired />
 
-  const { profile, student, systems, weeklyTasks, role } = state.data
+  const { profile, student, systems, weeklyTasks, role, groupBySubject = {} } = state.data
   const visibleTotal = pendingTasks.length + completedTasks.length
 
   const handleLogout = async () => {
@@ -243,6 +243,9 @@ export default function App() {
               <div>
                 <p className="eyebrow">FOCUS PRACTICE</p>
                 <h1>{profile.displayName}，一次完成一項就好</h1>
+                <div className="welcome-groups">
+                  <span>英語 {groupBySubject.english || 'B'} 組</span>
+                </div>
                 <p>每天會有 1～4 項任務，每項只呈現一題，完成後再前往下一項。</p>
               </div>
               <div className="welcome-figure"><Brain aria-hidden="true" /></div>

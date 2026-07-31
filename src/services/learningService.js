@@ -116,6 +116,10 @@ export async function loadLearningDashboard(referenceDate = new Date()) {
   if (weeklyError) throw weeklyError
 
   const classInfo = relation(student.classes)
+  const groupBySubject = (weeklyRows || []).reduce((groups, row) => {
+    groups[row.subject_code_snapshot] = row.group_code_snapshot
+    return groups
+  }, {})
   return {
     authenticated: true,
     role: 'student',
@@ -129,6 +133,7 @@ export async function loadLearningDashboard(referenceDate = new Date()) {
       className: classInfo?.name || '',
     },
     systems,
+    groupBySubject,
     tasks: (taskRows || []).map(mapTask),
     weeklyTasks: (weeklyRows || []).map((row) => ({
       id: row.id,
