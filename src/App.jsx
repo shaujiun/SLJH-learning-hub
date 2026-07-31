@@ -243,8 +243,10 @@ export default function App() {
               <div>
                 <p className="eyebrow">FOCUS PRACTICE</p>
                 <h1>{profile.displayName}，一次完成一項就好</h1>
-                <div className="welcome-groups">
-                  <span>英語 {groupBySubject.english || 'B'} 組</span>
+                <div className="welcome-identity" aria-label="學生身分與分組">
+                  <span><b>姓名</b>{profile.displayName}</span>
+                  <span><b>學號</b>{profile.username}</span>
+                  <span><b>英語</b>{groupBySubject.english || 'B'} 組</span>
                 </div>
                 <p>每天會有 1～4 項任務，每項只呈現一題，完成後再前往下一項。</p>
               </div>
