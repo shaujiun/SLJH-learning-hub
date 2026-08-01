@@ -7,13 +7,19 @@ import {
   ChevronDown,
   ChevronUp,
   CircleAlert,
+  Eye,
+  EyeOff,
   Headphones,
   LogOut,
   Mic2,
+  Pencil,
   Play,
+  Plus,
   RefreshCw,
+  Save,
   Sparkles,
   Target,
+  X,
 } from 'lucide-react'
 import { isSupabaseConfigured } from './lib/supabase.js'
 import {
@@ -21,6 +27,12 @@ import {
   loadLearningDashboard,
   signOutEverywhere,
 } from './services/learningService.js'
+import {
+  loadAdminLearningSystems,
+  reorderLearningSystems,
+  saveLearningSystem,
+  setLearningSystemActive,
+} from './services/learningAdminService.js'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
@@ -150,21 +162,230 @@ function FocusTask({ task, position, total }) {
 
 function SystemCard({ system }) {
   const isEnglish = system.code === 'english'
+  const launchUrl = system.launchUrl || (isEnglish ? englishVocabUrl : '')
+  const isReady = Boolean(launchUrl)
   return (
-    <article className={`system-card ${isEnglish ? 'system-ready' : ''}`}>
-      <div className="system-card-icon">{isEnglish ? 'Aa' : '＋'}</div>
+    <article className={`system-card ${isReady ? 'system-ready' : ''}`}>
+      <div className="system-card-icon">{isEnglish ? 'Aa' : system.name.slice(0, 1)}</div>
       <div className="system-copy">
         <div className="system-title-row">
           <h3>{system.name}</h3>
-          <span>{isEnglish ? '已開放' : '準備中'}</span>
+          <span>{isReady ? '已開放' : '準備中'}</span>
         </div>
         <p>{system.description}</p>
         <small>每週隨機安排 {system.weeklyMinimum}～{system.weeklyMaximum} 次</small>
       </div>
-      <a href={system.launchUrl || englishVocabUrl} aria-label={`前往${system.name}學習系統`}>
-        前往練習
-      </a>
+      {isReady ? (
+        <a href={launchUrl} aria-label={`前往${system.name}學習系統`}>
+          前往練習
+        </a>
+      ) : <span className="system-unavailable">尚未開放</span>}
     </article>
+  )
+}
+
+const emptySystemForm = {
+  id: '',
+  subjectCode: '',
+  subjectName: '',
+  description: '',
+  launchUrl: '',
+  displayOrder: 10,
+  weeklyMinimum: 1,
+  weeklyMaximum: 3,
+  isActive: true,
+}
+
+function LearningSystemManager({ onSystemsChanged }) {
+  const [systems, setSystems] = useState([])
+  const [form, setForm] = useState(null)
+  const [status, setStatus] = useState({ loading: true, saving: false, message: '', error: '' })
+
+  const loadSystems = async () => {
+    setStatus((current) => ({ ...current, loading: true, error: '' }))
+    try {
+      const rows = await loadAdminLearningSystems()
+      setSystems(rows)
+      setStatus((current) => ({ ...current, loading: false }))
+    } catch (error) {
+      setStatus((current) => ({ ...current, loading: false, error: error.message }))
+    }
+  }
+
+  useEffect(() => {
+    loadSystems()
+  }, [])
+
+  const startCreate = () => {
+    const nextOrder = systems.length === 0
+      ? 10
+      : Math.max(...systems.map((system) => system.displayOrder || 0)) + 10
+    setForm({ ...emptySystemForm, displayOrder: nextOrder })
+    setStatus((current) => ({ ...current, message: '', error: '' }))
+  }
+
+  const startEdit = (system) => {
+    setForm({ ...system })
+    setStatus((current) => ({ ...current, message: '', error: '' }))
+  }
+
+  const updateField = (field, value) => {
+    setForm((current) => ({ ...current, [field]: value }))
+  }
+
+  const handleSave = async (event) => {
+    event.preventDefault()
+    setStatus((current) => ({ ...current, saving: true, message: '', error: '' }))
+    try {
+      await saveLearningSystem(form)
+      setForm(null)
+      setStatus((current) => ({ ...current, saving: false, message: '學習系統連結已儲存。' }))
+      await loadSystems()
+      await onSystemsChanged()
+    } catch (error) {
+      setStatus((current) => ({ ...current, saving: false, error: error.message }))
+    }
+  }
+
+  const handleVisibility = async (system) => {
+    setStatus((current) => ({ ...current, saving: true, message: '', error: '' }))
+    try {
+      await setLearningSystemActive(system.id, !system.isActive)
+      setStatus((current) => ({
+        ...current,
+        saving: false,
+        message: system.isActive ? '已隱藏學習系統。' : '已恢復顯示學習系統。',
+      }))
+      await loadSystems()
+      await onSystemsChanged()
+    } catch (error) {
+      setStatus((current) => ({ ...current, saving: false, error: error.message }))
+    }
+  }
+
+  const moveSystem = async (index, direction) => {
+    const targetIndex = index + direction
+    if (targetIndex < 0 || targetIndex >= systems.length) return
+    const reordered = [...systems]
+    ;[reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]]
+    setSystems(reordered)
+    setStatus((current) => ({ ...current, saving: true, message: '', error: '' }))
+    try {
+      await reorderLearningSystems(reordered.map((system) => system.id))
+      setStatus((current) => ({ ...current, saving: false, message: '顯示順序已更新。' }))
+      await loadSystems()
+      await onSystemsChanged()
+    } catch (error) {
+      setStatus((current) => ({ ...current, saving: false, error: error.message }))
+      await loadSystems()
+    }
+  }
+
+  return (
+    <section className="system-manager" aria-labelledby="system-manager-title">
+      <div className="section-heading manager-heading">
+        <div>
+          <p className="eyebrow">ADMIN SETTINGS</p>
+          <h2 id="system-manager-title">學習系統連結管理</h2>
+          <p>新增科目入口、調整順序，或暫時隱藏尚未開放的系統。</p>
+        </div>
+        <button className="manager-add-button" type="button" onClick={startCreate} disabled={status.saving}>
+          <Plus aria-hidden="true" />新增學習系統
+        </button>
+      </div>
+
+      {status.message && <p className="manager-notice success-notice">{status.message}</p>}
+      {status.error && <p className="manager-notice error-notice">{status.error}</p>}
+
+      {form && (
+        <form className="system-editor" onSubmit={handleSave}>
+          <div className="editor-title-row">
+            <div>
+              <p className="eyebrow">{form.id ? 'EDIT SYSTEM' : 'NEW SYSTEM'}</p>
+              <h3>{form.id ? `編輯${form.subjectName}` : '新增科目學習系統'}</h3>
+            </div>
+            <button className="editor-close" type="button" onClick={() => setForm(null)} aria-label="關閉編輯表單">
+              <X aria-hidden="true" />
+            </button>
+          </div>
+          <div className="editor-grid">
+            <label>
+              <span>科目代碼</span>
+              <input value={form.subjectCode} onChange={(event) => updateField('subjectCode', event.target.value)} disabled={Boolean(form.id)} placeholder="例如 math" required />
+              <small>{form.id ? '建立後不可更改，避免既有任務失去對應。' : '使用小寫英文，例如 science、math_game。'}</small>
+            </label>
+            <label>
+              <span>科目名稱</span>
+              <input value={form.subjectName} onChange={(event) => updateField('subjectName', event.target.value)} placeholder="例如數學" required />
+            </label>
+            <label className="editor-url-field">
+              <span>學習系統網址</span>
+              <input type="url" value={form.launchUrl} onChange={(event) => updateField('launchUrl', event.target.value)} placeholder="https://..." required />
+            </label>
+            <label className="editor-description-field">
+              <span>簡短說明</span>
+              <textarea value={form.description} onChange={(event) => updateField('description', event.target.value)} rows="2" maxLength="180" placeholder="說明這個系統可以練習什麼內容" />
+            </label>
+            <label>
+              <span>每週最少次數</span>
+              <select value={form.weeklyMinimum} onChange={(event) => updateField('weeklyMinimum', event.target.value)}>
+                <option value="1">1 次</option><option value="2">2 次</option><option value="3">3 次</option>
+              </select>
+            </label>
+            <label>
+              <span>每週最多次數</span>
+              <select value={form.weeklyMaximum} onChange={(event) => updateField('weeklyMaximum', event.target.value)}>
+                <option value="1">1 次</option><option value="2">2 次</option><option value="3">3 次</option>
+              </select>
+            </label>
+            <label>
+              <span>顯示順序</span>
+              <input type="number" min="0" max="9999" value={form.displayOrder} onChange={(event) => updateField('displayOrder', event.target.value)} required />
+            </label>
+            <label className="editor-checkbox">
+              <input type="checkbox" checked={form.isActive} onChange={(event) => updateField('isActive', event.target.checked)} />
+              <span>儲存後立即顯示</span>
+            </label>
+          </div>
+          <div className="editor-actions">
+            <button className="secondary-button" type="button" onClick={() => setForm(null)}>取消</button>
+            <button className="primary-button" type="submit" disabled={status.saving}>
+              {status.saving ? <RefreshCw className="spin-icon" aria-hidden="true" /> : <Save aria-hidden="true" />}
+              儲存設定
+            </button>
+          </div>
+        </form>
+      )}
+
+      {status.loading ? (
+        <p className="manager-empty"><RefreshCw className="spin-icon" aria-hidden="true" />正在讀取設定……</p>
+      ) : systems.length === 0 ? (
+        <p className="manager-empty">尚未建立任何學習系統。</p>
+      ) : (
+        <div className="manager-system-list">
+          {systems.map((system, index) => (
+            <article className={`manager-system-row ${system.isActive ? '' : 'manager-system-hidden'}`} key={system.id}>
+              <div className="manager-order-buttons">
+                <button type="button" onClick={() => moveSystem(index, -1)} disabled={index === 0 || status.saving} aria-label={`將${system.subjectName}往前移`}><ChevronUp aria-hidden="true" /></button>
+                <button type="button" onClick={() => moveSystem(index, 1)} disabled={index === systems.length - 1 || status.saving} aria-label={`將${system.subjectName}往後移`}><ChevronDown aria-hidden="true" /></button>
+              </div>
+              <div className="manager-system-copy">
+                <div><strong>{system.subjectName}</strong><code>{system.subjectCode}</code><span>{system.isActive ? '顯示中' : '已隱藏'}</span></div>
+                <p>{system.description || '尚未填寫說明'}</p>
+                <small>{system.launchUrl}・每週 {system.weeklyMinimum}～{system.weeklyMaximum} 次・{system.activities.length} 項任務</small>
+              </div>
+              <div className="manager-row-actions">
+                <button type="button" onClick={() => startEdit(system)} disabled={status.saving}><Pencil aria-hidden="true" />編輯</button>
+                <button type="button" onClick={() => handleVisibility(system)} disabled={status.saving}>
+                  {system.isActive ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+                  {system.isActive ? '隱藏' : '恢復'}
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -303,6 +524,8 @@ export default function App() {
             <div className="welcome-figure"><Brain aria-hidden="true" /></div>
           </section>
         )}
+
+        {role === 'admin' && <LearningSystemManager onSystemsChanged={load} />}
 
         <section className="systems-section" aria-labelledby="systems-title">
           <div className="section-heading">
