@@ -173,7 +173,11 @@ function SystemCard({ system }) {
           <span>{isReady ? '已開放' : '準備中'}</span>
         </div>
         <p>{system.description}</p>
-        <small>每週隨機安排 {system.weeklyMinimum}～{system.weeklyMaximum} 次</small>
+        <small>
+          {system.activities.length > 0
+            ? `每週隨機安排 ${system.weeklyMinimum}～${system.weeklyMaximum} 次`
+            : '目前提供自由練習，尚未安排專注任務'}
+        </small>
       </div>
       {isReady ? (
         <a href={launchUrl} aria-label={`前往${system.name}學習系統`}>
