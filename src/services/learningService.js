@@ -1,5 +1,10 @@
 import { requireSupabase } from '../lib/supabase.js'
 import { startOfWeek, toLocalDateString } from '../lib/focusPlanner.js'
+import {
+  getLearningAudienceLabel,
+  isLearningSystemVisible,
+  normalizeLearningAudience,
+} from '../lib/learningAudiences.js'
 
 function relation(value) {
   return Array.isArray(value) ? value[0] : value
@@ -14,6 +19,8 @@ function mapSystem(row) {
     launchUrl: row.launch_url,
     weeklyMinimum: row.weekly_minimum,
     weeklyMaximum: row.weekly_maximum,
+    audienceScope: normalizeLearningAudience(row.audience_scope),
+    audienceLabel: getLearningAudienceLabel(row.audience_scope),
     activities: (row.learning_activities || [])
       .filter((activity) => activity.is_active)
       .sort((left, right) => left.display_order - right.display_order)
@@ -70,7 +77,7 @@ export async function loadLearningDashboard(referenceDate = new Date()) {
       .maybeSingle(),
     client
       .from('learning_systems')
-      .select('id,subject_code,subject_name,description,launch_url,display_order,weekly_minimum,weekly_maximum,is_active,learning_activities(id,activity_code,activity_name,target_score,display_order,is_active)')
+      .select('id,subject_code,subject_name,description,launch_url,display_order,weekly_minimum,weekly_maximum,audience_scope,is_active,learning_activities(id,activity_code,activity_name,target_score,display_order,is_active)')
       .eq('is_active', true)
       .order('display_order'),
   ])
@@ -101,10 +108,25 @@ export async function loadLearningDashboard(referenceDate = new Date()) {
     }
   }
 
-  const { data: taskRows, error: taskError } = await client.rpc('prepare_student_focus_tasks', {
-    p_reference_date: date,
-  })
+  const [taskResult, mathGroupResult, englishGroupResult] = await Promise.all([
+    client.rpc('prepare_student_focus_tasks', { p_reference_date: date }),
+    client.rpc('resolve_student_learning_group', {
+      p_student_id: student.id,
+      p_subject_code: 'math',
+      p_reference_date: date,
+    }),
+    client.rpc('resolve_student_learning_group', {
+      p_student_id: student.id,
+      p_subject_code: 'english',
+      p_reference_date: date,
+    }),
+  ])
+  const { data: taskRows, error: taskError } = taskResult
   if (taskError) throw new Error(`無法建立今日專注任務：${taskError.message}`)
+  if (mathGroupResult.error || englishGroupResult.error) {
+    const groupError = mathGroupResult.error || englishGroupResult.error
+    throw new Error(`無法確認學生分組：${groupError.message}`)
+  }
 
   const weekStart = startOfWeek(new Date(`${date}T12:00:00`))
   const { data: weeklyRows, error: weeklyError } = await client
@@ -116,10 +138,14 @@ export async function loadLearningDashboard(referenceDate = new Date()) {
   if (weeklyError) throw weeklyError
 
   const classInfo = relation(student.classes)
-  const groupBySubject = (weeklyRows || []).reduce((groups, row) => {
-    groups[row.subject_code_snapshot] = row.group_code_snapshot
-    return groups
-  }, {})
+  const groupBySubject = {
+    math: String(mathGroupResult.data || 'B').toUpperCase(),
+    english: String(englishGroupResult.data || 'B').toUpperCase(),
+  }
+  const visibleSystems = systems.filter((system) => isLearningSystemVisible(system, groupBySubject))
+  const visibleSystemCodes = new Set(visibleSystems.map((system) => system.code))
+  const visibleTaskRows = (taskRows || []).filter((row) => visibleSystemCodes.has(row.subject_code))
+  const visibleWeeklyRows = (weeklyRows || []).filter((row) => visibleSystemCodes.has(row.subject_code_snapshot))
   return {
     authenticated: true,
     role: 'student',
@@ -132,10 +158,10 @@ export async function loadLearningDashboard(referenceDate = new Date()) {
       seatNumber: student.seat_number,
       className: classInfo?.name || '',
     },
-    systems,
+    systems: visibleSystems,
     groupBySubject,
-    tasks: (taskRows || []).map(mapTask),
-    weeklyTasks: (weeklyRows || []).map((row) => ({
+    tasks: visibleTaskRows.map(mapTask),
+    weeklyTasks: visibleWeeklyRows.map((row) => ({
       id: row.id,
       status: row.status,
       subjectCode: row.subject_code_snapshot,

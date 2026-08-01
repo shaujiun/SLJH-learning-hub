@@ -14,6 +14,7 @@ describe('normalizeLearningSystemInput', () => {
       displayOrder: '20',
       weeklyMinimum: '1',
       weeklyMaximum: '3',
+      audienceScope: 'math_a',
       isActive: true,
     })
 
@@ -24,6 +25,7 @@ describe('normalizeLearningSystemInput', () => {
       display_order: 20,
       weekly_minimum: 1,
       weekly_maximum: 3,
+      audience_scope: 'math_a',
       is_active: true,
     })
   })
@@ -32,6 +34,7 @@ describe('normalizeLearningSystemInput', () => {
     [{ subjectCode: '數學' }, '科目代碼'],
     [{ launchUrl: 'javascript:alert(1)' }, 'HTTP'],
     [{ weeklyMinimum: 3, weeklyMaximum: 1 }, '最多次數'],
+    [{ audienceScope: 'all_students' }, '顯示對象'],
   ])('拒絕不合法的設定', (override, expectedMessage) => {
     const input = {
       subjectCode: 'math',
@@ -41,6 +44,7 @@ describe('normalizeLearningSystemInput', () => {
       displayOrder: 10,
       weeklyMinimum: 1,
       weeklyMaximum: 3,
+      audienceScope: 'common',
       ...override,
     }
     expect(() => normalizeLearningSystemInput(input)).toThrow(expectedMessage)

@@ -1,4 +1,9 @@
 import { requireSupabase } from '../lib/supabase.js'
+import {
+  getLearningAudienceLabel,
+  isValidLearningAudience,
+  normalizeLearningAudience,
+} from '../lib/learningAudiences.js'
 
 const systemSelect = `
   id,
@@ -9,6 +14,7 @@ const systemSelect = `
   display_order,
   weekly_minimum,
   weekly_maximum,
+  audience_scope,
   is_active,
   learning_activities(id,activity_code,activity_name,is_active)
 `
@@ -39,6 +45,7 @@ export function normalizeLearningSystemInput(input = {}) {
   const subjectCode = String(input.subjectCode || '').trim().toLowerCase()
   const subjectName = String(input.subjectName || '').trim()
   const description = String(input.description || '').trim()
+  const audienceScope = String(input.audienceScope || 'common').trim().toLowerCase()
 
   if (!/^[a-z0-9][a-z0-9_-]{1,31}$/.test(subjectCode)) {
     throw new Error('科目代碼須為 2～32 個小寫英文字母、數字、底線或連字號。')
@@ -46,6 +53,7 @@ export function normalizeLearningSystemInput(input = {}) {
   if (!subjectName) throw new Error('請輸入科目名稱。')
   if (subjectName.length > 30) throw new Error('科目名稱不可超過 30 個字。')
   if (description.length > 180) throw new Error('科目說明不可超過 180 個字。')
+  if (!isValidLearningAudience(audienceScope)) throw new Error('請選擇正確的顯示對象。')
 
   const weeklyMinimum = integerBetween(input.weeklyMinimum, 1, 3, '每週最少次數')
   const weeklyMaximum = integerBetween(input.weeklyMaximum, 1, 3, '每週最多次數')
@@ -61,6 +69,7 @@ export function normalizeLearningSystemInput(input = {}) {
     display_order: integerBetween(input.displayOrder ?? 0, 0, 9999, '顯示順序'),
     weekly_minimum: weeklyMinimum,
     weekly_maximum: weeklyMaximum,
+    audience_scope: audienceScope,
     is_active: input.isActive !== false,
     updated_at: new Date().toISOString(),
   }
@@ -76,6 +85,8 @@ function mapAdminSystem(row) {
     displayOrder: row.display_order,
     weeklyMinimum: row.weekly_minimum,
     weeklyMaximum: row.weekly_maximum,
+    audienceScope: normalizeLearningAudience(row.audience_scope),
+    audienceLabel: getLearningAudienceLabel(row.audience_scope),
     isActive: row.is_active,
     activities: (row.learning_activities || []).map((activity) => ({
       id: activity.id,

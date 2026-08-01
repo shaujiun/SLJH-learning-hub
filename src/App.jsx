@@ -33,6 +33,7 @@ import {
   saveLearningSystem,
   setLearningSystemActive,
 } from './services/learningAdminService.js'
+import { learningAudienceOptions } from './lib/learningAudiences.js'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
@@ -170,7 +171,7 @@ function SystemCard({ system }) {
       <div className="system-copy">
         <div className="system-title-row">
           <h3>{system.name}</h3>
-          <span>{isReady ? '已開放' : '準備中'}</span>
+          <span>{isReady ? '已開放' : '準備中'}・{system.audienceLabel}</span>
         </div>
         <p>{system.description}</p>
         <small>
@@ -197,6 +198,7 @@ const emptySystemForm = {
   displayOrder: 10,
   weeklyMinimum: 1,
   weeklyMaximum: 3,
+  audienceScope: 'common',
   isActive: true,
 }
 
@@ -291,7 +293,7 @@ function LearningSystemManager({ onSystemsChanged }) {
         <div>
           <p className="eyebrow">ADMIN SETTINGS</p>
           <h2 id="system-manager-title">學習系統連結管理</h2>
-          <p>新增科目入口、調整順序，或暫時隱藏尚未開放的系統。</p>
+          <p>新增科目入口、設定學生分組對象、調整順序，或暫時隱藏尚未開放的系統。</p>
         </div>
         <button className="manager-add-button" type="button" onClick={startCreate} disabled={status.saving}>
           <Plus aria-hidden="true" />新增學習系統
@@ -346,6 +348,15 @@ function LearningSystemManager({ onSystemsChanged }) {
               <span>顯示順序</span>
               <input type="number" min="0" max="9999" value={form.displayOrder} onChange={(event) => updateField('displayOrder', event.target.value)} required />
             </label>
+            <label>
+              <span>顯示對象</span>
+              <select value={form.audienceScope} onChange={(event) => updateField('audienceScope', event.target.value)}>
+                {learningAudienceOptions.map((option) => (
+                  <option value={option.value} key={option.value}>{option.label}</option>
+                ))}
+              </select>
+              <small>學生只會看到共同項目及符合本人分組的項目。</small>
+            </label>
             <label className="editor-checkbox">
               <input type="checkbox" checked={form.isActive} onChange={(event) => updateField('isActive', event.target.checked)} />
               <span>儲存後立即顯示</span>
@@ -374,7 +385,7 @@ function LearningSystemManager({ onSystemsChanged }) {
                 <button type="button" onClick={() => moveSystem(index, 1)} disabled={index === systems.length - 1 || status.saving} aria-label={`將${system.subjectName}往後移`}><ChevronDown aria-hidden="true" /></button>
               </div>
               <div className="manager-system-copy">
-                <div><strong>{system.subjectName}</strong><code>{system.subjectCode}</code><span>{system.isActive ? '顯示中' : '已隱藏'}</span></div>
+                <div><strong>{system.subjectName}</strong><code>{system.subjectCode}</code><span>{system.audienceLabel}</span><span>{system.isActive ? '顯示中' : '已隱藏'}</span></div>
                 <p>{system.description || '尚未填寫說明'}</p>
                 <small>{system.launchUrl}・每週 {system.weeklyMinimum}～{system.weeklyMaximum} 次・{system.activities.length} 項任務</small>
               </div>
@@ -471,6 +482,7 @@ export default function App() {
                 <div className="welcome-identity" aria-label="學生身分與分組">
                   <span><b>姓名</b>{profile.displayName}</span>
                   <span><b>學號</b>{profile.username}</span>
+                  <span><b>數學</b>{groupBySubject.math || 'B'} 組</span>
                   <span><b>英語</b>{groupBySubject.english || 'B'} 組</span>
                 </div>
                 <p>每天會有 1～4 項任務，每項只呈現一題，完成後再前往下一項。</p>
@@ -523,7 +535,7 @@ export default function App() {
             <div>
               <p className="eyebrow">STAFF PREVIEW</p>
               <h1>{profile.displayName}，歡迎查看各科學習入口</h1>
-              <p>學生登入後，系統會依個人的英語 A／B 組產生專注任務。</p>
+              <p>學生登入後，只會看到共同內容及符合本人數學、英語 A／B 分組的學習系統。</p>
             </div>
             <div className="welcome-figure"><Brain aria-hidden="true" /></div>
           </section>
