@@ -420,19 +420,59 @@
 }
 
 .periodic-table-scroll {
-  overflow-x: auto;
+  overflow-x: hidden;
+  width: 100%;
   padding: 0.4rem 0.2rem 0.9rem;
-  overscroll-behavior-inline: contain;
+  touch-action: pan-y;
 }
 
 .periodic-table-grid {
   display: grid;
-  width: 1160px;
-  min-height: 610px;
+  width: min(100%, 1160px);
   margin: 0 auto;
-  grid-template-columns: 54px repeat(18, 58px);
-  grid-template-rows: 36px repeat(7, 58px) 58px 58px;
-  gap: 5px;
+  grid-template-columns: clamp(32px, 4.2vw, 54px) repeat(18, minmax(0, 1fr));
+  grid-template-rows: clamp(28px, 3vw, 36px) repeat(9, clamp(38px, 4.7vw, 58px));
+  gap: clamp(2px, 0.35vw, 5px);
+}
+
+.periodic-orientation-hint {
+  display: none;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 2px solid #496b91;
+  border-radius: 20px;
+  color: #2b4564;
+  background: linear-gradient(145deg, #e8f5ff, #e7f9ef);
+  box-shadow: 0 5px 0 rgba(41, 59, 84, 0.16);
+}
+
+.periodic-orientation-hint > svg {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  color: #4f68a3;
+}
+
+.periodic-orientation-hint > svg:last-child {
+  width: 28px;
+  height: 28px;
+}
+
+.periodic-orientation-hint div {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  line-height: 1.45;
+}
+
+.periodic-orientation-hint strong {
+  font-size: 1.1rem;
+}
+
+.periodic-orientation-hint span {
+  color: #526a82;
+  font-size: 0.9rem;
 }
 
 .table-corner,
@@ -444,7 +484,7 @@
   place-items: center;
   color: #607086;
   font-family: Arial, sans-serif;
-  font-size: 0.82rem;
+  font-size: clamp(0.62rem, 1vw, 0.82rem);
   font-weight: 900;
 }
 
@@ -476,13 +516,13 @@
 
 .periodic-element small {
   align-self: flex-start;
-  font-size: 0.72rem;
+  font-size: clamp(0.58rem, 0.9vw, 0.72rem);
   line-height: 1;
 }
 
 .periodic-element strong {
   font-family: Arial, sans-serif;
-  font-size: 1rem;
+  font-size: clamp(0.75rem, 1.3vw, 1rem);
   line-height: 1.1;
 }
 
@@ -754,6 +794,16 @@
     justify-content: center;
   }
   .periodic-game-shell { padding-bottom: 6.2rem; }
+}
+
+@media (max-width: 1024px) and (orientation: portrait) and (pointer: coarse) {
+  .periodic-orientation-hint {
+    display: flex;
+  }
+
+  .periodic-table-scroll {
+    display: none;
+  }
 }
 
 @media (max-width: 680px) {

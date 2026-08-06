@@ -8,8 +8,10 @@ import {
   FlaskConical,
   Home,
   RefreshCw,
+  RotateCw,
   RotateCcw,
   Sparkles,
+  TabletSmartphone,
   Target,
   Trophy,
   X,
@@ -70,7 +72,16 @@ function PeriodicTableGrid({ allowedNumbers, targetNumber, selectedNumber, answe
   )
 
   return (
-    <div className="periodic-table-scroll" aria-label="元素週期表作答區">
+    <>
+      <div className="periodic-orientation-hint" role="status" aria-live="polite">
+        <TabletSmartphone aria-hidden="true" />
+        <div>
+          <strong>請將手機或平板轉成橫向</strong>
+          <span>橫向畫面可以看清楚完整週期表，也比較不容易按錯。</span>
+        </div>
+        <RotateCw aria-hidden="true" />
+      </div>
+      <div className="periodic-table-scroll" aria-label="元素週期表作答區">
       <div className="periodic-table-grid" role="grid">
         <span className="table-corner" style={{ gridColumn: 1, gridRow: 1 }}>族</span>
         {Array.from({ length: 18 }, (_, index) => (
@@ -87,8 +98,8 @@ function PeriodicTableGrid({ allowedNumbers, targetNumber, selectedNumber, answe
           gridColumn: element.group + 1,
           gridRow: element.period + 1,
         }))}
-        <span className="series-placeholder" style={{ gridColumn: 4, gridRow: 7 }}>57～71</span>
-        <span className="series-placeholder" style={{ gridColumn: 4, gridRow: 8 }}>89～103</span>
+        <span className="series-placeholder" style={{ gridColumn: 4, gridRow: 7 }}>57–71</span>
+        <span className="series-placeholder" style={{ gridColumn: 4, gridRow: 8 }}>89–103</span>
         <span className="series-label" style={{ gridColumn: '1 / span 3', gridRow: 9 }}>鑭系</span>
         <span className="series-label" style={{ gridColumn: '1 / span 3', gridRow: 10 }}>錒系</span>
         {lanthanides.map((element, index) => renderElement(element, {
@@ -100,7 +111,8 @@ function PeriodicTableGrid({ allowedNumbers, targetNumber, selectedNumber, answe
           gridRow: 10,
         }))}
       </div>
-    </div>
+      </div>
+    </>
   )
 }
 
