@@ -12,7 +12,6 @@ const errorMessages = {
   buzzer_closed: '搶答時間尚未開始，或已經有人先搶到。',
   not_active_answerer: '目前不是你的作答回合。',
 }
-
 function battleError(error, fallback) {
   const key = Object.keys(errorMessages).find((item) => error?.message?.includes(item))
   return new Error(key ? errorMessages[key] : `${fallback}：${error?.message || '未知錯誤'}`)
@@ -78,4 +77,3 @@ export function subscribePeriodicBattle(roomId, onChange, client = requireSupaba
     .subscribe()
   return () => client.removeChannel(channel)
 }
-

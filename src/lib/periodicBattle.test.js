@@ -50,4 +50,3 @@ describe('periodic battle rules', () => {
     expect(secondsUntil('2026-08-05T23:59:59Z', Date.parse('2026-08-06T00:00:00Z'))).toBe(0)
   })
 })
-

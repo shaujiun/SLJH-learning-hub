@@ -16,7 +16,6 @@ export function isValidBattleQuestionCount(playerLimit, questionCount) {
     && questions <= 40
     && (players !== 4 || questions % 4 === 0)
 }
-
 export function getInitialBattleSeats(playerLimit, questionPosition) {
   if (Number(playerLimit) === 2) return [1, 2]
   return [
@@ -87,4 +86,3 @@ export function secondsUntil(deadline, now = Date.now()) {
   if (!deadline) return 0
   return Math.max(0, Math.ceil((new Date(deadline).getTime() - Number(now)) / 1000))
 }
-

@@ -57,4 +57,3 @@ export default function PeriodicTableGrid({ allowedNumbers, targetNumber, select
     </>
   )
 }
-
