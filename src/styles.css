@@ -242,7 +242,8 @@ p {
 .today-section,
 .weekly-card,
 .systems-section,
-.system-manager {
+.system-manager,
+.science-level-manager {
   border: 2px solid var(--border);
   border-radius: 26px;
   background: var(--cream);
@@ -477,6 +478,105 @@ p {
   margin-top: 1.3rem;
   padding: 1.2rem;
   background: linear-gradient(145deg, #fffaf0, #f4efff);
+}
+
+.science-level-manager {
+  margin-top: 1.3rem;
+  padding: 1.2rem;
+  background: linear-gradient(145deg, #f4fbff, #e5f6ef);
+}
+
+.science-level-manager h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.science-level-manager h2 svg {
+  width: 28px;
+  color: #3b7d72;
+}
+
+.manager-refresh-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 46px;
+  padding: 0.5rem 0.7rem;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  color: var(--ink);
+  background: #fff;
+  box-shadow: 0 3px 0 rgba(47, 58, 80, 0.16);
+  cursor: pointer;
+}
+
+.science-level-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.science-level-row {
+  display: grid;
+  grid-template-columns: 46px minmax(150px, 1fr) minmax(190px, auto) 145px;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.7rem 0.8rem;
+  border: 2px solid var(--border);
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 3px 0 rgba(47, 58, 80, 0.12);
+}
+
+.science-seat {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 2px solid #527c78;
+  border-radius: 13px;
+  color: #2c5b55;
+  background: #d9f2e8;
+  font-family: Arial, sans-serif;
+  font-weight: 900;
+}
+
+.science-student-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.science-student-copy strong {
+  font-size: 1.05rem;
+}
+
+.science-student-copy small {
+  color: var(--muted);
+}
+
+.science-streak {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #4f5f79;
+  font-weight: 700;
+}
+
+.science-streak svg {
+  width: 22px;
+  color: #5576af;
+}
+
+.science-level-row select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.45rem 0.55rem;
+  border: 2px solid #9aa8b8;
+  border-radius: 12px;
+  color: var(--ink);
+  background: #fffdf8;
+  font: inherit;
 }
 
 .manager-heading {
@@ -1077,7 +1177,8 @@ p {
   .today-section,
   .weekly-card,
   .systems-section,
-  .system-manager {
+  .system-manager,
+  .science-level-manager {
     padding: 0.85rem;
     border-radius: 21px;
   }
@@ -1102,6 +1203,15 @@ p {
 
   .manager-system-row {
     grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .science-level-row {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .science-streak,
+  .science-level-row label {
+    grid-column: 1 / -1;
   }
 
   .manager-row-actions {

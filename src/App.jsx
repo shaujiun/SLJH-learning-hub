@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft,
+  Atom,
   BookOpenCheck,
   Brain,
   Check,
@@ -21,6 +22,8 @@ import {
   Target,
   X,
 } from 'lucide-react'
+import PeriodicTableGame from './components/PeriodicTableGame.jsx'
+import ScienceLevelManager from './components/ScienceLevelManager.jsx'
 import { isSupabaseConfigured } from './lib/supabase.js'
 import {
   buildTaskLaunchUrl,
@@ -53,7 +56,7 @@ function LoadingScreen() {
     <main className="center-screen">
       <div className="loading-orb"><RefreshCw aria-hidden="true" /></div>
       <h1>正在準備今天的學習任務</h1>
-      <p>系統正在讀取登入身分與英語分組。</p>
+      <p>系統正在讀取登入身分、學生分組與個人學習進度。</p>
     </main>
   )
 }
@@ -130,14 +133,19 @@ function WeeklyProgress({ tasks }) {
 }
 
 function FocusTask({ task, position, total }) {
-  const ActivityIcon = activityIcons[task.activityCode] || Target
+  const ActivityIcon = task.activityCode?.startsWith('periodic_')
+    ? Atom
+    : activityIcons[task.activityCode] || Target
   const completed = task.status === 'completed'
+  const groupLabel = task.groupCode === 'COMMON'
+    ? '共同任務'
+    : `${task.subjectName} ${task.groupCode} 組`
 
   return (
     <article className={`focus-task ${completed ? 'task-completed' : ''}`}>
       <div className="task-topline">
         <span className="task-position">今日任務 {position}／{total}</span>
-        <span className="group-badge">英語 {task.groupCode} 組</span>
+        <span className="group-badge">{groupLabel}</span>
       </div>
       <div className="task-main">
         <div className="task-icon"><ActivityIcon aria-hidden="true" /></div>
@@ -404,7 +412,7 @@ function LearningSystemManager({ onSystemsChanged }) {
   )
 }
 
-export default function App() {
+function LearningHub() {
   const [state, setState] = useState({ loading: true, data: null, error: '' })
   const [showLater, setShowLater] = useState(false)
 
@@ -485,7 +493,7 @@ export default function App() {
                   <span><b>數學</b>{groupBySubject.math || 'B'} 組</span>
                   <span><b>英語</b>{groupBySubject.english || 'B'} 組</span>
                 </div>
-                <p>每天會有 1～4 項任務，每項只呈現一題，完成後再前往下一項。</p>
+                <p>每天會有 1～4 項任務；一次專注一項，遊戲內也一次只呈現一題。</p>
               </div>
               <div className="welcome-figure"><Brain aria-hidden="true" /></div>
             </section>
@@ -542,6 +550,7 @@ export default function App() {
         )}
 
         {role === 'admin' && <LearningSystemManager onSystemsChanged={load} />}
+        {role === 'admin' && <ScienceLevelManager />}
 
         <section className="systems-section" aria-labelledby="systems-title">
           <div className="section-heading">
@@ -558,4 +567,10 @@ export default function App() {
       </main>
     </div>
   )
+}
+
+export default function App() {
+  const requestedGame = new URLSearchParams(window.location.search).get('game')
+  if (requestedGame === 'periodic-table') return <PeriodicTableGame />
+  return <LearningHub />
 }
