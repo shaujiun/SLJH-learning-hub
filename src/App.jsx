@@ -37,6 +37,7 @@ import {
   setLearningSystemActive,
 } from './services/learningAdminService.js'
 import { learningAudienceOptions } from './lib/learningAudiences.js'
+import { learningSystemLaunchUrl, subjectGamesFor } from './lib/subjectGames.js'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
@@ -171,7 +172,7 @@ function FocusTask({ task, position, total }) {
 
 function SystemCard({ system }) {
   const isEnglish = system.code === 'english'
-  const launchUrl = system.launchUrl || (isEnglish ? englishVocabUrl : '')
+  const launchUrl = learningSystemLaunchUrl(system, englishVocabUrl)
   const isReady = Boolean(launchUrl)
   return (
     <article className={`system-card ${isReady ? 'system-ready' : ''}`}>
@@ -194,6 +195,69 @@ function SystemCard({ system }) {
         </a>
       ) : <span className="system-unavailable">尚未開放</span>}
     </article>
+  )
+}
+
+function SubjectGameIcon({ system }) {
+  if (system?.code === 'science') return <Atom aria-hidden="true" />
+  if (system?.code === 'english') return <span aria-hidden="true">Aa</span>
+  return <span aria-hidden="true">{system?.name?.slice(0, 1) || '學'}</span>
+}
+
+function SubjectGameMenu({ system }) {
+  const games = subjectGamesFor(system, englishVocabUrl)
+  if (!system) {
+    return (
+      <section className="subject-games-section subject-menu-empty">
+        <CircleAlert aria-hidden="true" />
+        <h1>找不到這個科目的學習系統</h1>
+        <p>這個科目可能尚未開放，或不符合目前學生的分組設定。</p>
+        <a className="primary-button" href="./"><ArrowLeft aria-hidden="true" />返回各科選擇</a>
+      </section>
+    )
+  }
+
+  return (
+    <>
+      <section className="subject-menu-hero">
+        <div>
+          <p className="eyebrow">{system.code.toUpperCase()} GAMES</p>
+          <h1>{system.name}遊戲選擇</h1>
+          <p>選擇這次要練習的遊戲。之後新增的{system.name}遊戲也會集中顯示在這裡。</p>
+        </div>
+        <div className={`subject-menu-hero-icon is-${system.code}`}><SubjectGameIcon system={system} /></div>
+      </section>
+
+      <section className="subject-games-section" aria-labelledby="subject-games-title">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">SELECT A GAME</p>
+            <h2 id="subject-games-title">選擇遊戲項目</h2>
+          </div>
+          <a className="back-link" href="./"><ArrowLeft aria-hidden="true" />返回各科選擇</a>
+        </div>
+
+        <div className="subject-game-grid">
+          {games.map((game) => (
+            <article className="subject-game-card" key={game.code}>
+              <div className="subject-game-icon"><SubjectGameIcon system={system} /></div>
+              <div className="subject-game-copy">
+                <div className="subject-game-title-row">
+                  <h3>{game.name}</h3>
+                  {game.availability && <span>{game.availability}</span>}
+                </div>
+                <p>{game.description}</p>
+              </div>
+              <a href={game.launchUrl} aria-label={`進入${game.name}`}>
+                <Play aria-hidden="true" />進入遊戲
+              </a>
+            </article>
+          ))}
+        </div>
+
+        <p className="subject-coming-soon">其他{system.name}遊戲將陸續加入。</p>
+      </section>
+    </>
   )
 }
 
@@ -412,7 +476,7 @@ function LearningSystemManager({ onSystemsChanged }) {
   )
 }
 
-function LearningHub() {
+function LearningHub({ requestedSubject = '' }) {
   const [state, setState] = useState({ loading: true, data: null, error: '' })
   const [showLater, setShowLater] = useState(false)
 
@@ -452,6 +516,9 @@ function LearningHub() {
 
   const { profile, student, systems, weeklyTasks, role, groupBySubject = {} } = state.data
   const visibleTotal = pendingTasks.length + completedTasks.length
+  const selectedSystem = requestedSubject
+    ? systems.find((system) => system.code === requestedSubject)
+    : null
 
   const handleLogout = async () => {
     await signOutEverywhere()
@@ -481,7 +548,9 @@ function LearningHub() {
       </header>
 
       <main className="page-content">
-        {role === 'student' ? (
+        {requestedSubject ? (
+          <SubjectGameMenu system={selectedSystem} />
+        ) : <>{role === 'student' ? (
           <>
             <section className="welcome-panel">
               <div>
@@ -564,13 +633,15 @@ function LearningHub() {
             {systems.map((system) => <SystemCard key={system.id} system={system} />)}
           </div>
         </section>
+        </>}
       </main>
     </div>
   )
 }
 
 export default function App() {
-  const requestedGame = new URLSearchParams(window.location.search).get('game')
+  const searchParams = new URLSearchParams(window.location.search)
+  const requestedGame = searchParams.get('game')
   if (requestedGame === 'periodic-table') return <PeriodicTableGame />
-  return <LearningHub />
+  return <LearningHub requestedSubject={searchParams.get('subject') || ''} />
 }
