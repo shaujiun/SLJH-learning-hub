@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft,
   Atom,
@@ -38,6 +38,8 @@ import {
 } from './services/learningAdminService.js'
 import { learningAudienceOptions } from './lib/learningAudiences.js'
 import { learningSystemLaunchUrl, subjectGamesFor } from './lib/subjectGames.js'
+
+const HistoryAtlas = lazy(() => import('./components/HistoryAtlas.jsx'))
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
@@ -206,6 +208,7 @@ function SubjectGameIcon({ system }) {
 
 function SubjectGameMenu({ system }) {
   const games = subjectGamesFor(system, englishVocabUrl)
+  const isHistory = system?.code === 'history'
   if (!system) {
     return (
       <section className="subject-games-section subject-menu-empty">
@@ -221,9 +224,9 @@ function SubjectGameMenu({ system }) {
     <>
       <section className="subject-menu-hero">
         <div>
-          <p className="eyebrow">{system.code.toUpperCase()} GAMES</p>
-          <h1>{system.name}遊戲選擇</h1>
-          <p>選擇這次要練習的遊戲。之後新增的{system.name}遊戲也會集中顯示在這裡。</p>
+          <p className="eyebrow">{system.code.toUpperCase()} {isHistory ? 'LEARNING' : 'GAMES'}</p>
+          <h1>{system.name}{isHistory ? '學習選擇' : '遊戲選擇'}</h1>
+          <p>{isHistory ? '選擇這次要閱讀的歷史學習工具，之後新增的遊戲也會放在這裡。' : `選擇這次要練習的遊戲。之後新增的${system.name}遊戲也會集中顯示在這裡。`}</p>
         </div>
         <div className={`subject-menu-hero-icon is-${system.code}`}><SubjectGameIcon system={system} /></div>
       </section>
@@ -231,8 +234,8 @@ function SubjectGameMenu({ system }) {
       <section className="subject-games-section" aria-labelledby="subject-games-title">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">SELECT A GAME</p>
-            <h2 id="subject-games-title">選擇遊戲項目</h2>
+            <p className="eyebrow">SELECT {isHistory ? 'A TOOL' : 'A GAME'}</p>
+            <h2 id="subject-games-title">選擇{isHistory ? '學習' : '遊戲'}項目</h2>
           </div>
           <a className="back-link" href="./"><ArrowLeft aria-hidden="true" />返回各科選擇</a>
         </div>
@@ -249,13 +252,13 @@ function SubjectGameMenu({ system }) {
                 <p>{game.description}</p>
               </div>
               <a href={game.launchUrl} aria-label={`進入${game.name}`}>
-                <Play aria-hidden="true" />進入遊戲
+                <Play aria-hidden="true" />進入{isHistory ? '學習' : '遊戲'}
               </a>
             </article>
           ))}
         </div>
 
-        <p className="subject-coming-soon">其他{system.name}遊戲將陸續加入。</p>
+        <p className="subject-coming-soon">其他{system.name}{isHistory ? '學習內容與遊戲' : '遊戲'}將陸續加入。</p>
       </section>
     </>
   )
@@ -643,5 +646,8 @@ export default function App() {
   const searchParams = new URLSearchParams(window.location.search)
   const requestedGame = searchParams.get('game')
   if (requestedGame === 'periodic-table') return <PeriodicTableGame />
+  if (searchParams.get('history') === 'atlas') {
+    return <Suspense fallback={<LoadingScreen />}><HistoryAtlas /></Suspense>
+  }
   return <LearningHub requestedSubject={searchParams.get('subject') || ''} />
 }

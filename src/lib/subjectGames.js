@@ -16,6 +16,15 @@ const subjectGameTemplates = {
       launchUrl: '?game=periodic-table',
     },
   ],
+  history: [
+    {
+      code: 'history-atlas',
+      name: '歷史時光地圖',
+      description: '用可搜尋、可篩選的時間軸，串起八年級中國與東亞的重要人物、制度與事件。',
+      availability: '翰林八上、八下適用',
+      launchUrl: '?history=atlas',
+    },
+  ],
 }
 
 function configuredLaunchUrl(system, englishVocabUrl) {

@@ -5,6 +5,7 @@ describe('各科遊戲選擇入口', () => {
   it.each([
     ['english', '?subject=english'],
     ['science', '?subject=science'],
+    ['history', '?subject=history'],
     ['math', '?subject=math'],
   ])('%s 自由練習先進入該科遊戲選擇頁', (code, expected) => {
     expect(learningSystemLaunchUrl({
@@ -31,7 +32,15 @@ describe('各科遊戲選擇入口', () => {
   })
 
   it('尚未建立遊戲網址的其他科目維持準備中', () => {
-    expect(learningSystemLaunchUrl({ code: 'history', name: '歷史', launchUrl: '' }, '')).toBe('')
-    expect(subjectGamesFor({ code: 'history', name: '歷史', launchUrl: '' }, '')).toEqual([])
+    expect(learningSystemLaunchUrl({ code: 'geography', name: '地理', launchUrl: '' }, '')).toBe('')
+    expect(subjectGamesFor({ code: 'geography', name: '地理', launchUrl: '' }, '')).toEqual([])
+  })
+
+  it('歷史科先提供八年級歷史時光地圖', () => {
+    expect(subjectGamesFor({ code: 'history', name: '歷史' }, '')).toContainEqual(expect.objectContaining({
+      code: 'history-atlas',
+      launchUrl: '?history=atlas',
+      availability: '翰林八上、八下適用',
+    }))
   })
 })
