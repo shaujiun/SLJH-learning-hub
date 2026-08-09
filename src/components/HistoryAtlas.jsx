@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleAlert,
+  Columns3,
   Clock3,
   ClipboardList,
   Compass,
@@ -25,8 +26,10 @@ import {
   ZoomOut,
 } from 'lucide-react'
 import HistoryContentManager from './HistoryContentManager.jsx'
+import HistoryQuestionContent, { HistoryQuestionAnswer } from './HistoryQuestionContent.jsx'
 import {
   HistoryHelpDialog,
+  HistoryCompareDialog,
   HistoryLiteracyDialog,
   HistoryPeriodDialog,
   HistoryQuestionBankDialog,
@@ -39,6 +42,7 @@ import {
   formatHistoryYear,
   historyCategories,
   historyCategoryLabel,
+  historyQuestionSourceLabel,
   historyRegionLabel,
   historyRegions,
   historyStatusLabel,
@@ -102,17 +106,17 @@ function EventDetail({ event, onClose }) {
           <div className="history-question-groups">
             {[
               ['相關歷屆題', event.pastQuestions || []],
-              ['自編練習題', event.practiceQuestions || []],
+              ['教師自編題', event.practiceQuestions || []],
             ].map(([label, questions]) => (
               <section key={label}>
                 <h4>{label}</h4>
                 {questions.length > 0 ? questions.map((question, index) => (
                   <article className="history-question-card" key={question.id || `${label}-${index}`}>
-                    <small>{question.source || label}</small>
-                    <p>{question.prompt}</p>
+                    <small>來源：{question.sourceUrl ? <a href={question.sourceUrl} target="_blank" rel="noreferrer">{historyQuestionSourceLabel(question)}</a> : historyQuestionSourceLabel(question)}</small>
+                    <HistoryQuestionContent question={question} />
                     <details>
                       <summary>查看答案與解析</summary>
-                      <strong>{question.answer}</strong>
+                      <HistoryQuestionAnswer question={question} />
                       {question.explanation && <span>{question.explanation}</span>}
                     </details>
                   </article>
@@ -661,6 +665,7 @@ export default function HistoryAtlas() {
                   </div>
                   <div className="history-tool-buttons">
                     <button type="button" onClick={() => setActiveTool('questions')}><ClipboardList aria-hidden="true" />題庫</button>
+                    <button type="button" onClick={() => setActiveTool('compare')}><Columns3 aria-hidden="true" />事件比較</button>
                     <button type="button" onClick={() => setActiveTool('relations')}><Link2 aria-hidden="true" />事件關聯</button>
                     <button type="button" onClick={() => setActiveTool('literacy')}><Brain aria-hidden="true" />素養工具</button>
                     <button type="button" onClick={() => window.print()}><Printer aria-hidden="true" />列印</button>
@@ -695,6 +700,7 @@ export default function HistoryAtlas() {
       </main>
       <EventDetail event={detailEvent} onClose={() => setDetailEvent(null)} />
       {activeTool === 'questions' && <HistoryQuestionBankDialog events={volumeTimelineEvents} onClose={() => setActiveTool('')} onSelectEvent={selectEventFromTool} />}
+      {activeTool === 'compare' && <HistoryCompareDialog events={volumeTimelineEvents} onClose={() => setActiveTool('')} onSelectEvent={selectEventFromTool} />}
       {activeTool === 'relations' && <HistoryRelationDialog events={volumeTimelineEvents} onClose={() => setActiveTool('')} onSelectEvent={selectEventFromTool} />}
       {activeTool === 'literacy' && <HistoryLiteracyDialog onClose={() => setActiveTool('')} />}
       {activeTool === 'help' && <HistoryHelpDialog onClose={() => setActiveTool('')} />}

@@ -1,6 +1,8 @@
+import React from 'react'
+import { renderToString } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { createHistoryPreviewData } from '../../preview/historyPreviewData.js'
-import { buildHistoryRelations } from './HistoryToolDialogs.jsx'
+import { buildHistoryRelations, HistoryCompareDialog } from './HistoryToolDialogs.jsx'
 
 describe('history learning tools', () => {
   it('builds event relations only inside the same chapter', () => {
@@ -24,5 +26,16 @@ describe('history learning tools', () => {
     }
 
     expect(buildHistoryRelations([event])).toEqual([])
+  })
+
+  it('renders two events with the same comparison fields', () => {
+    const { events } = createHistoryPreviewData()
+    const html = renderToString(<HistoryCompareDialog events={events.slice(0, 2)} onClose={() => {}} onSelectEvent={() => {}} />)
+
+    expect(html).toContain('事件並排比較')
+    expect(html).toContain('左側事件')
+    expect(html).toContain('右側事件')
+    expect(html).toContain('原因')
+    expect(html).toContain('影響')
   })
 })

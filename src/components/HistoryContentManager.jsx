@@ -27,6 +27,7 @@ import {
   setHistoryEventStatus,
   uploadHistoryImage,
 } from '../services/historyService.js'
+import HistoryQuestionManager from './HistoryQuestionManager.jsx'
 
 function emptyEvent(chapters) {
   const chapter = chapters[0]
@@ -219,6 +220,7 @@ function WorkbookImporter({ chapters, onImported }) {
 }
 
 export default function HistoryContentManager({ chapters, events, onChanged }) {
+  const [managerSection, setManagerSection] = useState('events')
   const [editor, setEditor] = useState(null)
   const [statusFilter, setStatusFilter] = useState('draft')
   const [chapterFilter, setChapterFilter] = useState('')
@@ -256,8 +258,13 @@ export default function HistoryContentManager({ chapters, events, onChanged }) {
     <section className="history-content-manager" aria-labelledby="history-manager-title">
       <div className="history-manager-title-row">
         <div><p className="eyebrow">HISTORY ADMIN</p><h2 id="history-manager-title">歷史內容管理</h2><p>草稿須確認內容與來源後再發布；歷史老師只能管理歷史科內容。</p></div>
-        <button className="manager-add-button" type="button" onClick={() => setEditor(emptyEvent(chapters))}><Plus aria-hidden="true" />新增事件</button>
+        {managerSection === 'events' && <button className="manager-add-button" type="button" onClick={() => setEditor(emptyEvent(chapters))}><Plus aria-hidden="true" />新增事件</button>}
       </div>
+      <div className="history-manager-tabs" role="tablist" aria-label="歷史內容管理項目">
+        <button type="button" role="tab" aria-selected={managerSection === 'events'} className={managerSection === 'events' ? 'is-active' : ''} onClick={() => setManagerSection('events')}>事件管理</button>
+        <button type="button" role="tab" aria-selected={managerSection === 'questions'} className={managerSection === 'questions' ? 'is-active' : ''} onClick={() => { setManagerSection('questions'); setEditor(null) }}>題庫管理</button>
+      </div>
+      {managerSection === 'questions' ? <HistoryQuestionManager events={events} onChanged={onChanged} /> : <>
       {notice.message && <p className="manager-notice success-notice">{notice.message}</p>}
       {notice.error && <p className="manager-notice error-notice">{notice.error}</p>}
 
@@ -288,6 +295,7 @@ export default function HistoryContentManager({ chapters, events, onChanged }) {
           </article>
         ))}
       </div>
+      </>}
     </section>
   )
 }
