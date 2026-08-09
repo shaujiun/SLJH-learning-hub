@@ -1,8 +1,11 @@
 import { useMemo, useState } from 'react'
 import { ArrowRight, BookOpen, Search, X } from 'lucide-react'
+import HistoryQuestionContent, { HistoryQuestionAnswer } from './HistoryQuestionContent.jsx'
 import {
   formatHistoryDate,
   formatHistoryYear,
+  historyCategoryLabel,
+  historyQuestionSourceLabel,
   historyRegionLabel,
   sortHistoryEvents,
 } from '../lib/historyAtlas.js'
@@ -123,7 +126,7 @@ export function HistoryQuestionBankDialog({ events, onClose, onSelectEvent }) {
   ]).filter((question) => {
     if (type !== 'all' && question.type !== type) return false
     const normalized = keyword.trim().toLocaleLowerCase('zh-Hant')
-    return !normalized || [question.prompt, question.answer, question.explanation, question.event.title]
+    return !normalized || [question.prompt, question.answer, question.explanation, question.event.title, historyQuestionSourceLabel(question)]
       .join(' ').toLocaleLowerCase('zh-Hant').includes(normalized)
   }), [events, keyword, type])
 
@@ -131,18 +134,60 @@ export function HistoryQuestionBankDialog({ events, onClose, onSelectEvent }) {
     <ToolDialog title="歷屆與練習題庫" eyebrow="題目練習" onClose={onClose}>
       <div className="history-question-bank-filters">
         <label className="history-tool-search"><Search aria-hidden="true" /><input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜尋題目或相關事件" /></label>
-        <label><span>題目類型</span><select value={type} onChange={(event) => setType(event.target.value)}><option value="all">全部題目</option><option value="past">相關歷屆題</option><option value="practice">自編練習題</option></select></label>
+        <label><span>題目類型</span><select value={type} onChange={(event) => setType(event.target.value)}><option value="all">全部題目</option><option value="past">相關歷屆題</option><option value="practice">教師自編題</option></select></label>
       </div>
       <p className="history-question-bank-count">目前找到 {questions.length} 題；答案與解析預設收合。</p>
       <div className="history-question-bank-list">
         {questions.map((question, index) => (
           <article key={question.id || `${question.event.id}-${index}`}>
-            <div><button type="button" onClick={() => onSelectEvent(question.event)}>{question.event.title}</button><span>{question.type === 'past' ? '歷屆題' : '自編題'}</span></div>
-            <p>{question.prompt}</p>
-            <details><summary>查看答案與解析</summary><strong>{question.answer}</strong>{question.explanation && <span>{question.explanation}</span>}</details>
+            <div><button type="button" onClick={() => onSelectEvent(question.event)}>{question.event.title}</button><span>{question.type === 'past' ? '歷屆題' : '教師自編題'}</span></div>
+            <HistoryQuestionContent question={question} />
+            <small className="history-question-source">來源：{question.sourceUrl ? <a href={question.sourceUrl} target="_blank" rel="noreferrer">{historyQuestionSourceLabel(question)}</a> : historyQuestionSourceLabel(question)}</small>
+            <details><summary>查看答案與解析</summary><HistoryQuestionAnswer question={question} />{question.explanation && <span>{question.explanation}</span>}</details>
           </article>
         ))}
         {questions.length === 0 && <p className="history-tool-empty">目前尚無符合條件的題目；不會以其他題目假裝成歷屆考題。</p>}
+      </div>
+    </ToolDialog>
+  )
+}
+
+function CompareEventCard({ event, onSelectEvent }) {
+  if (!event) return <article className="history-compare-card"><p>目前沒有可比較的事件。</p></article>
+  return (
+    <article className={`history-compare-card category-${event.category}`}>
+      <div><span>{historyRegionLabel(event.region)}</span><span>{historyCategoryLabel(event.category)}</span></div>
+      <p>{formatHistoryDate(event)}</p>
+      <h3>{event.title}</h3>
+      <strong>{event.summary || '尚未填寫一句話重點。'}</strong>
+      <dl>
+        <div><dt>原因</dt><dd>{event.causeText || '教師審核後補充。'}</dd></div>
+        <div><dt>經過</dt><dd>{event.processText || '教師審核後補充。'}</dd></div>
+        <div><dt>影響</dt><dd>{event.impactText || '教師審核後補充。'}</dd></div>
+      </dl>
+      <button type="button" onClick={() => onSelectEvent(event)}>開啟完整事件</button>
+    </article>
+  )
+}
+
+export function HistoryCompareDialog({ events, onClose, onSelectEvent }) {
+  const ordered = useMemo(() => sortHistoryEvents(events), [events])
+  const [leftId, setLeftId] = useState(() => ordered[0]?.id || '')
+  const [rightId, setRightId] = useState(() => ordered[1]?.id || ordered[0]?.id || '')
+  const left = ordered.find((event) => event.id === leftId)
+  const right = ordered.find((event) => event.id === rightId)
+  const options = ordered.map((event) => <option value={event.id} key={event.id}>{formatHistoryDate(event)}｜{event.title}</option>)
+
+  return (
+    <ToolDialog title="事件並排比較" eyebrow="異同比較" onClose={onClose} className="history-compare-dialog">
+      <p className="history-tool-intro">選擇兩個事件，使用相同欄位比較時間、地區、原因、經過與影響。</p>
+      <div className="history-compare-selectors">
+        <label><span>左側事件</span><select value={leftId} onChange={(event) => setLeftId(event.target.value)}>{options}</select></label>
+        <label><span>右側事件</span><select value={rightId} onChange={(event) => setRightId(event.target.value)}>{options}</select></label>
+      </div>
+      <div className="history-compare-grid">
+        <CompareEventCard event={left} onSelectEvent={onSelectEvent} />
+        <CompareEventCard event={right} onSelectEvent={onSelectEvent} />
       </div>
     </ToolDialog>
   )
