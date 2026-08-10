@@ -40,6 +40,8 @@ import { learningAudienceOptions } from './lib/learningAudiences.js'
 import { learningSystemLaunchUrl, subjectGamesFor } from './lib/subjectGames.js'
 
 const HistoryAtlas = lazy(() => import('./components/HistoryAtlas.jsx'))
+const FocusTrainingHub = lazy(() => import('./components/FocusTrainingHub.jsx'))
+const SchulteStaticGame = lazy(() => import('./components/SchulteStaticGame.jsx'))
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
@@ -136,11 +138,16 @@ function WeeklyProgress({ tasks }) {
 }
 
 function FocusTask({ task, position, total }) {
-  const ActivityIcon = task.activityCode?.startsWith('periodic_')
+  const isSchulte = task.activityCode?.startsWith('schulte_')
+  const ActivityIcon = isSchulte
+    ? Brain
+    : task.activityCode?.startsWith('periodic_')
     ? Atom
     : activityIcons[task.activityCode] || Target
   const completed = task.status === 'completed'
-  const groupLabel = task.groupCode === 'COMMON'
+  const groupLabel = isSchulte
+    ? '專注力訓練'
+    : task.groupCode === 'COMMON'
     ? '共同任務'
     : `${task.subjectName} ${task.groupCode} 組`
 
@@ -156,19 +163,40 @@ function FocusTask({ task, position, total }) {
           <p className="task-subject">{task.subjectName}</p>
           <h2>{task.activityName}</h2>
           <div className="task-rules">
-            <span><Target aria-hidden="true" />{task.questionCount} 題</span>
-            <span><Sparkles aria-hidden="true" />目標 {task.targetScore} 分</span>
+            {isSchulte ? (
+              <span><Target aria-hidden="true" />完成 1 回合</span>
+            ) : <>
+              <span><Target aria-hidden="true" />{task.questionCount} 題</span>
+              <span><Sparkles aria-hidden="true" />目標 {task.targetScore} 分</span>
+            </>}
           </div>
         </div>
       </div>
       {completed ? (
-        <div className="completed-message"><Check aria-hidden="true" />已完成，最高 {task.bestScore ?? task.targetScore} 分</div>
+        <div className="completed-message">
+          <Check aria-hidden="true" />
+          {isSchulte ? '已完成本次專注力訓練' : `已完成，最高 ${task.bestScore ?? task.targetScore} 分`}
+        </div>
       ) : (
         <a className="task-start-button" href={buildTaskLaunchUrl(task)}>
           <Play aria-hidden="true" />開始這項任務
         </a>
       )}
     </article>
+  )
+}
+
+function FocusTrainingEntrance() {
+  return (
+    <section className="focus-training-entrance" aria-labelledby="focus-training-title">
+      <div className="focus-training-entrance-icon"><Brain aria-hidden="true" /></div>
+      <div>
+        <p className="eyebrow">FOCUS TRAINING</p>
+        <h2 id="focus-training-title">專注力訓練</h2>
+        <p>不分科目與分組，用舒爾特學習法練習視覺搜尋、注意力與穩定度。</p>
+      </div>
+      <a href="./?focus=training"><Play aria-hidden="true" />選擇訓練</a>
+    </section>
   )
 }
 
@@ -518,6 +546,7 @@ function LearningHub({ requestedSubject = '' }) {
   if (!state.data?.authenticated) return <LoginRequired />
 
   const { profile, student, systems, weeklyTasks, role, groupBySubject = {} } = state.data
+  const academicSystems = systems.filter((system) => system.code !== 'focus_training')
   const visibleTotal = pendingTasks.length + completedTasks.length
   const selectedSystem = requestedSubject
     ? systems.find((system) => system.code === requestedSubject)
@@ -624,6 +653,8 @@ function LearningHub({ requestedSubject = '' }) {
         {role === 'admin' && <LearningSystemManager onSystemsChanged={load} />}
         {role === 'admin' && <ScienceLevelManager />}
 
+        <FocusTrainingEntrance />
+
         <section className="systems-section" aria-labelledby="systems-title">
           <div className="section-heading">
             <div>
@@ -633,7 +664,7 @@ function LearningHub({ requestedSubject = '' }) {
             <a className="back-link" href={contactBookUrl}><ArrowLeft aria-hidden="true" />返回聯絡簿</a>
           </div>
           <div className="system-grid">
-            {systems.map((system) => <SystemCard key={system.id} system={system} />)}
+            {academicSystems.map((system) => <SystemCard key={system.id} system={system} />)}
           </div>
         </section>
         </>}
@@ -646,6 +677,12 @@ export default function App() {
   const searchParams = new URLSearchParams(window.location.search)
   const requestedGame = searchParams.get('game')
   if (requestedGame === 'periodic-table') return <PeriodicTableGame />
+  if (requestedGame === 'schulte-static') {
+    return <Suspense fallback={<LoadingScreen />}><SchulteStaticGame /></Suspense>
+  }
+  if (searchParams.get('focus') === 'training') {
+    return <Suspense fallback={<LoadingScreen />}><FocusTrainingHub /></Suspense>
+  }
   if (searchParams.get('history') === 'atlas') {
     return <Suspense fallback={<LoadingScreen />}><HistoryAtlas /></Suspense>
   }
