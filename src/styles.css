@@ -3600,3 +3600,89 @@ p {
     white-space: nowrap;
   }
 }
+
+/* 獨立於學科入口的專注力訓練 */
+.focus-training-entrance {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.2rem 0;
+  padding: 1rem 1.15rem;
+  border: 2px solid var(--border);
+  border-radius: 24px;
+  background: linear-gradient(135deg, #e1f5ea, #fff5cf);
+  box-shadow: var(--shadow);
+}
+
+.focus-training-entrance-icon {
+  display: grid;
+  width: 70px;
+  height: 70px;
+  place-items: center;
+  border-radius: 22px;
+  color: #fff;
+  background: linear-gradient(145deg, #69aa91, #3d7d68);
+}
+
+.focus-training-entrance-icon svg {
+  width: 38px;
+  height: 38px;
+}
+
+.focus-training-entrance h2,
+.focus-training-entrance p {
+  margin: 0;
+}
+
+.focus-training-entrance h2 {
+  margin: 0.1rem 0 0.25rem;
+}
+
+.focus-training-entrance > div:nth-child(2) > p:last-child {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.focus-training-entrance > a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 48px;
+  padding: 0.65rem 0.95rem;
+  border-radius: 14px;
+  color: #fff;
+  background: #3f8069;
+  font-weight: 900;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.focus-training-entrance > a svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 700px) {
+  .focus-training-entrance {
+    grid-template-columns: 58px minmax(0, 1fr);
+    gap: 0.7rem;
+    padding: 0.85rem;
+  }
+
+  .focus-training-entrance-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+  }
+
+  .focus-training-entrance-icon svg {
+    width: 31px;
+    height: 31px;
+  }
+
+  .focus-training-entrance > a {
+    grid-column: 1 / -1;
+  }
+}

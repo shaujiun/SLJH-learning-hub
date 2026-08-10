@@ -1,0 +1,625 @@
+.focus-training-shell,
+.schulte-shell {
+  min-height: 100vh;
+  color: #26364a;
+  background:
+    radial-gradient(circle at 8% 8%, rgba(246, 200, 95, 0.28), transparent 24rem),
+    radial-gradient(circle at 92% 22%, rgba(134, 211, 181, 0.28), transparent 28rem),
+    #f7f4ea;
+}
+
+.focus-training-header,
+.schulte-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 82px;
+  padding: 0.7rem max(1rem, calc((100vw - 1180px) / 2));
+  border-bottom: 2px solid rgba(47, 58, 80, 0.16);
+  background: rgba(255, 252, 244, 0.94);
+  backdrop-filter: blur(12px);
+}
+
+.focus-training-header {
+  justify-content: space-between;
+}
+
+.focus-training-brand,
+.schulte-header,
+.focus-training-header nav,
+.focus-training-header nav a,
+.schulte-floating-nav a {
+  display: flex;
+  align-items: center;
+}
+
+.focus-training-brand {
+  gap: 0.7rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.focus-training-brand > span,
+.schulte-brand-icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border: 2px solid #34455d;
+  border-radius: 18px;
+  color: #fff;
+  background: linear-gradient(145deg, #69aa91, #3c7f69);
+  box-shadow: 0 5px 0 rgba(47, 58, 80, 0.16);
+}
+
+.focus-training-brand svg,
+.schulte-brand-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.focus-training-brand div,
+.schulte-header div:last-child {
+  display: grid;
+}
+
+.focus-training-brand small,
+.schulte-header small {
+  color: #508471;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.focus-training-brand strong,
+.schulte-header strong {
+  font-size: 1.2rem;
+}
+
+.focus-training-header nav {
+  gap: 0.55rem;
+}
+
+.focus-training-header nav a,
+.schulte-floating-nav a {
+  gap: 0.35rem;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: 1.5px solid rgba(47, 58, 80, 0.28);
+  border-radius: 13px;
+  color: #34455d;
+  background: #fffdf8;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.focus-training-header nav svg,
+.schulte-floating-nav svg {
+  width: 19px;
+  height: 19px;
+}
+
+.focus-training-content,
+.schulte-content {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1.3rem 0 4rem;
+}
+
+.focus-training-hero,
+.schulte-intro-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.4rem 1.6rem;
+  border: 2px solid #34455d;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #dff4e8, #fff7d7);
+  box-shadow: 0 8px 0 rgba(47, 58, 80, 0.14);
+}
+
+.focus-training-hero > svg,
+.schulte-intro-card > svg {
+  width: 88px;
+  height: 88px;
+  padding: 0.9rem;
+  border-radius: 28px;
+  color: #fff;
+  background: #4c8f76;
+}
+
+.focus-training-hero p,
+.schulte-intro-card p {
+  margin: 0 0 0.25rem;
+  color: #497c68;
+  font-weight: 900;
+}
+
+.focus-training-hero h1,
+.schulte-intro-card h1 {
+  margin: 0 0 0.4rem;
+  font-size: clamp(1.55rem, 3vw, 2.25rem);
+  line-height: 1.25;
+}
+
+.focus-training-hero span,
+.schulte-intro-card span {
+  color: #5e6878;
+  line-height: 1.65;
+}
+
+.focus-mode-section,
+.schulte-size-section,
+.schulte-play-card,
+.schulte-result-card {
+  margin-top: 1.2rem;
+  padding: 1.25rem;
+  border: 2px solid #34455d;
+  border-radius: 26px;
+  background: rgba(255, 253, 248, 0.96);
+  box-shadow: 0 8px 0 rgba(47, 58, 80, 0.12);
+}
+
+.focus-section-heading,
+.schulte-section-heading,
+.schulte-play-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.focus-section-heading small,
+.schulte-section-heading small,
+.schulte-play-heading small {
+  color: #568a75;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.focus-section-heading h2,
+.schulte-section-heading h2,
+.schulte-play-heading h1 {
+  margin: 0.15rem 0 0;
+}
+
+.focus-section-heading > span,
+.schulte-section-heading > span,
+.schulte-play-heading > span {
+  padding: 0.42rem 0.72rem;
+  border-radius: 999px;
+  color: #3f735f;
+  background: #e0f3e9;
+  font-weight: 800;
+}
+
+.focus-mode-grid,
+.schulte-size-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.focus-mode-card {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1.5px solid rgba(52, 69, 93, 0.3);
+  border-radius: 20px;
+  background: #fffdf8;
+}
+
+.focus-mode-icon {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  border-radius: 18px;
+  color: #fff;
+  background: #659d87;
+}
+
+.focus-mode-card h3 {
+  margin: 0.08rem 0 0.3rem;
+  font-size: 1.25rem;
+}
+
+.focus-mode-card p {
+  margin: 0;
+  color: #667085;
+  line-height: 1.55;
+}
+
+.focus-mode-card span {
+  color: #4f846e;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.focus-mode-card > a,
+.focus-mode-card > b {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-height: 46px;
+  border-radius: 14px;
+  text-decoration: none;
+}
+
+.focus-mode-card > a {
+  color: #fff;
+  background: #3f8069;
+  font-weight: 900;
+}
+
+.focus-mode-card > b {
+  color: #7b8492;
+  background: #eef0f3;
+}
+
+.focus-mode-card.is-future {
+  opacity: 0.78;
+}
+
+.schulte-size-grid button {
+  min-width: 0;
+  padding: 1rem;
+  border: 2px solid rgba(52, 69, 93, 0.25);
+  border-radius: 20px;
+  color: #26364a;
+  background: #fffaf0;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.schulte-size-grid button:hover,
+.schulte-size-grid button:focus-visible {
+  transform: translateY(-3px);
+  border-color: #4d8d75;
+  box-shadow: 0 6px 0 rgba(77, 141, 117, 0.16);
+}
+
+.schulte-size-grid button > span {
+  color: #4d806c;
+  font-weight: 900;
+}
+
+.schulte-size-grid button > strong {
+  display: block;
+  margin: 0.25rem 0;
+  font-family: ui-rounded, "Iansui", sans-serif;
+  font-size: 2.2rem;
+}
+
+.schulte-size-grid button p {
+  min-height: 3.2em;
+  margin: 0 0 0.65rem;
+  color: #626d7c;
+  line-height: 1.55;
+}
+
+.schulte-size-grid button small {
+  display: block;
+  color: #735f38;
+  font-weight: 800;
+}
+
+.schulte-floating-nav {
+  position: fixed;
+  z-index: 50;
+  top: 50%;
+  right: 0.65rem;
+  display: grid;
+  gap: 0.4rem;
+  transform: translateY(-50%);
+}
+
+.schulte-floating-nav a {
+  justify-content: center;
+  box-shadow: 0 3px 0 rgba(47, 58, 80, 0.12);
+}
+
+.schulte-play-card {
+  width: min(760px, 100%);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.schulte-play-heading b {
+  color: #33755d;
+  font-size: 1.35em;
+}
+
+.schulte-play-heading > span {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.schulte-play-heading svg {
+  width: 20px;
+}
+
+.schulte-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--schulte-size), minmax(0, 1fr));
+  gap: clamp(0.3rem, 1.1vw, 0.62rem);
+  width: min(100%, 650px);
+  margin: 0 auto;
+  aspect-ratio: 1;
+}
+
+.schulte-grid button {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  place-items: center;
+  border: 2px solid #405069;
+  border-radius: clamp(10px, 1.5vw, 18px);
+  color: #253047;
+  background: #fff8e8;
+  box-shadow: 0 4px 0 rgba(47, 58, 80, 0.18);
+  cursor: pointer;
+  font-family: ui-rounded, "Iansui", sans-serif;
+  font-size: clamp(1.15rem, 4vw, 2rem);
+  font-weight: 900;
+  touch-action: manipulation;
+}
+
+.schulte-grid button:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 rgba(47, 58, 80, 0.18);
+}
+
+.schulte-grid button.is-correct {
+  border-color: #34765c;
+  color: #22523f;
+  background: #bde8d4;
+  box-shadow: none;
+}
+
+.schulte-grid button svg {
+  width: 42%;
+  height: 42%;
+  stroke-width: 3;
+}
+
+.schulte-feedback {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 54px;
+  margin-top: 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 15px;
+  background: #eef5f0;
+}
+
+.schulte-feedback span {
+  font-weight: 800;
+}
+
+.schulte-feedback small {
+  color: #697483;
+  white-space: nowrap;
+}
+
+.schulte-result-card {
+  width: min(820px, 100%);
+  margin-right: auto;
+  margin-left: auto;
+  text-align: center;
+}
+
+.schulte-result-icon {
+  display: grid;
+  width: 82px;
+  height: 82px;
+  margin: 0 auto 0.75rem;
+  place-items: center;
+  border-radius: 28px;
+  color: #725510;
+  background: #ffe49a;
+}
+
+.schulte-result-icon svg {
+  width: 44px;
+  height: 44px;
+}
+
+.schulte-result-card > p {
+  margin: 0;
+  color: #4d806c;
+  font-weight: 900;
+}
+
+.schulte-result-card h1 {
+  margin: 0.25rem 0 1rem;
+  font-size: clamp(1.5rem, 3vw, 2.15rem);
+}
+
+.schulte-result-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.schulte-result-grid > div {
+  display: grid;
+  gap: 0.2rem;
+  place-items: center;
+  padding: 0.8rem 0.45rem;
+  border-radius: 17px;
+  background: #f2f6f3;
+}
+
+.schulte-result-grid svg {
+  color: #4a846e;
+}
+
+.schulte-result-grid span {
+  color: #687383;
+  font-size: 0.82rem;
+}
+
+.schulte-result-grid strong {
+  font-size: 1.05rem;
+}
+
+.schulte-result-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.schulte-result-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 48px;
+  padding: 0.65rem 0.95rem;
+  border: 1.5px solid #3b6f5b;
+  border-radius: 14px;
+  color: #fff;
+  background: #438269;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+}
+
+.schulte-result-actions button:last-child {
+  color: #3b5665;
+  background: #fffdf8;
+}
+
+.schulte-result-actions button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.schulte-save-note {
+  color: #86591f !important;
+  font-size: 0.84rem;
+}
+
+@media (max-width: 900px) {
+  .focus-mode-grid,
+  .schulte-size-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .schulte-size-grid button p {
+    min-height: 0;
+  }
+
+  .schulte-result-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .schulte-floating-nav {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0.65rem 0.75rem 0;
+    transform: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .focus-training-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .focus-training-header nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .focus-training-header nav a {
+    justify-content: center;
+  }
+
+  .focus-training-content,
+  .schulte-content {
+    width: min(100% - 1rem, 1180px);
+    padding-top: 0.65rem;
+  }
+
+  .focus-training-hero,
+  .schulte-intro-card {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+
+  .focus-training-hero > svg,
+  .schulte-intro-card > svg {
+    display: none;
+  }
+
+  .focus-mode-section,
+  .schulte-size-section,
+  .schulte-play-card,
+  .schulte-result-card {
+    padding: 0.78rem;
+    border-radius: 20px;
+  }
+
+  .focus-section-heading,
+  .schulte-section-heading,
+  .schulte-play-heading,
+  .schulte-feedback {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .schulte-section-heading > span,
+  .schulte-play-heading > span {
+    align-self: stretch;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .schulte-grid {
+    gap: 0.28rem;
+  }
+
+  .schulte-grid button {
+    border-radius: 9px;
+    font-size: clamp(1rem, 6vw, 1.55rem);
+    box-shadow: 0 3px 0 rgba(47, 58, 80, 0.17);
+  }
+
+  .schulte-grid.size-6 button {
+    font-size: clamp(0.85rem, 4.7vw, 1.25rem);
+  }
+
+  .schulte-feedback small {
+    white-space: normal;
+  }
+
+  .schulte-result-actions {
+    display: grid;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .schulte-size-grid button,
+  .schulte-grid button {
+    transition: none;
+  }
+}
