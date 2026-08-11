@@ -1,5 +1,6 @@
 import { requireSupabase } from '../lib/supabase.js'
 import {
+  getIntroGroupForProgress,
   normalizePeriodicLevel,
   parsePeriodicActivityCode,
   periodicLevels,
@@ -16,6 +17,7 @@ function mapLearningLevel(row) {
     label: periodicLevels[code].label,
     consecutivePasses: Number(row?.consecutive_passes || 0),
     requiredPasses: periodicLevels[code].requiredPasses,
+    introGroup: code === 'intro' ? getIntroGroupForProgress(row?.consecutive_passes) : null,
   }
 }
 
@@ -110,18 +112,29 @@ export async function loadPeriodicTableContext(focusTaskId = '', client = requir
 
 export async function recordPeriodicTableAttempt({
   focusTaskId,
+  level,
+  introGroup,
+  trackStudentProgress = false,
   score,
   correctCount,
   questionCount,
 }, client = requireSupabase()) {
-  if (!focusTaskId) return null
-  const { data, error } = await client.rpc('record_focus_task_attempt', {
+  const normalizedScore = Math.max(0, Math.min(100, Math.round(Number(score) || 0)))
+  if (!focusTaskId && (!trackStudentProgress || normalizePeriodicLevel(level) !== 'intro')) return null
+  const rpcName = focusTaskId ? 'record_focus_task_attempt' : 'record_periodic_intro_attempt'
+  const parameters = focusTaskId ? {
     p_focus_task_id: focusTaskId,
-    p_score: Math.max(0, Math.min(100, Math.round(Number(score) || 0))),
+    p_score: normalizedScore,
     p_correct_count: Number(correctCount),
     p_question_count: Number(questionCount),
-  })
-  if (error) throw new Error(`無法儲存每日任務成績：${error.message}`)
+  } : {
+    p_score: normalizedScore,
+    p_intro_group: Number(introGroup),
+    p_correct_count: Number(correctCount),
+    p_question_count: Number(questionCount),
+  }
+  const { data, error } = await client.rpc(rpcName, parameters)
+  if (error) throw new Error(`無法儲存元素週期表進度：${error.message}`)
   return data
 }
 

@@ -18,11 +18,13 @@ import {
 import {
   createPeriodicQuestions,
   getElementsForLevel,
+  getIntroGroupNumbers,
   normalizePeriodicLevel,
   normalizePeriodicMode,
   periodicElements,
   periodicLevels,
   periodicModes,
+  randomIntroGroup,
   resolvePeriodicGameSelection,
 } from '../lib/periodicTable.js'
 import {
@@ -70,6 +72,7 @@ export default function PeriodicTableGame() {
   const [phase, setPhase] = useState('loading')
   const [level, setLevel] = useState(normalizePeriodicLevel(query.get('level')))
   const [mode, setMode] = useState(normalizePeriodicMode(query.get('mode')))
+  const [introGroup, setIntroGroup] = useState(null)
   const [questions, setQuestions] = useState([])
   const [questionIndex, setQuestionIndex] = useState(0)
   const [correctCount, setCorrectCount] = useState(0)
@@ -93,6 +96,9 @@ export default function PeriodicTableGame() {
       })
       setLevel(selection.level)
       setMode(selection.mode)
+      setIntroGroup(selection.level === 'intro'
+        ? (nextContext.level.code === 'intro' ? nextContext.level.introGroup : randomIntroGroup())
+        : null)
       setPhase('setup')
     } catch (error) {
       setLoadError(error.message || '無法載入元素週期表遊戲。')
@@ -105,13 +111,44 @@ export default function PeriodicTableGame() {
   }, [])
 
   const currentQuestion = questions[questionIndex]
-  const allowedElements = useMemo(() => getElementsForLevel(level), [level])
+  const introGroupNumbers = useMemo(
+    () => (level === 'intro' ? getIntroGroupNumbers(introGroup) : []),
+    [introGroup, level],
+  )
+  const allowedElements = useMemo(
+    () => (level === 'intro'
+      ? getElementsForLevel(level).filter((element) => introGroupNumbers.includes(element.number))
+      : getElementsForLevel(level)),
+    [introGroupNumbers, level],
+  )
+
+  const selectLevel = (nextLevel) => {
+    setLevel(nextLevel)
+    if (nextLevel === 'intro') {
+      setIntroGroup(context?.level?.code === 'intro'
+        ? context.level.introGroup
+        : randomIntroGroup())
+    }
+  }
 
   const startQuiz = ({ onlyNumbers = null, isReview = false } = {}) => {
-    const count = onlyNumbers?.length
+    const selectedNumbers = onlyNumbers || (level === 'intro' ? introGroupNumbers : null)
+    const reviewedIntroGroup = level === 'intro' && onlyNumbers?.length
+      ? periodicElements.find((element) => element.number === onlyNumbers[0])?.group
+      : null
+    const introChoiceNumbers = reviewedIntroGroup
+      ? getIntroGroupNumbers(reviewedIntroGroup)
+      : introGroupNumbers
+    const count = selectedNumbers?.length
       || context?.task?.questionCount
       || periodicLevels[level].questionCount
-    const nextQuestions = createPeriodicQuestions({ level, mode, count, onlyNumbers })
+    const nextQuestions = createPeriodicQuestions({
+      level,
+      mode,
+      count,
+      onlyNumbers: selectedNumbers,
+      choiceNumbers: level === 'intro' ? introChoiceNumbers : null,
+    })
     setQuestions(nextQuestions)
     setQuestionIndex(0)
     setCorrectCount(0)
@@ -137,12 +174,17 @@ export default function PeriodicTableGame() {
     const score = Math.round((correctCount / questions.length) * 100)
     setSaving(true)
     try {
-      const progress = await recordPeriodicTableAttempt({
-        focusTaskId,
-        score,
-        correctCount,
-        questionCount: questions.length,
-      })
+      const progress = reviewing ? null : await recordPeriodicTableAttempt({
+          focusTaskId,
+          level,
+          introGroup,
+          trackStudentProgress: Boolean(context?.student),
+          score,
+          correctCount,
+          questionCount: questions.length,
+        })
+      if (progress?.introGroup) setIntroGroup(progress.introGroup)
+      if (progress?.leveledUp && progress.learningLevel) setLevel(progress.learningLevel)
       setResult({ score, progress, wrongNumbers })
       setPhase('result')
     } catch (error) {
@@ -221,7 +263,9 @@ export default function PeriodicTableGame() {
               <section className="personal-level-card">
                 <div><Target aria-hidden="true" /><span>目前個人等級</span><strong>{context.level.label}</strong></div>
                 <div><Trophy aria-hidden="true" /><span>升級進度</span><strong>{context.level.requiredPasses
-                  ? `${context.level.consecutivePasses}／${context.level.requiredPasses}`
+                  ? (context.level.code === 'intro'
+                    ? `第 ${context.level.introGroup} 族・${context.level.consecutivePasses}／8 族`
+                    : `${context.level.consecutivePasses}／${context.level.requiredPasses}`)
                   : '最高每日等級'}</strong></div>
               </section>
             )}
@@ -239,12 +283,12 @@ export default function PeriodicTableGame() {
                     <button
                       className={level === item.code ? 'selected' : ''}
                       type="button"
-                      onClick={() => setLevel(item.code)}
+                      onClick={() => selectLevel(item.code)}
                       key={item.code}
                     >
                       <span>{item.label}</span>
                       <small>{item.description}</small>
-                      <b>{item.questionCount} 題{item.code === 'complete' ? '・不列入每日任務' : ''}</b>
+                      <b>{item.code === 'intro' ? '每族 5～7 題' : `${item.questionCount} 題`}{item.code === 'complete' ? '・不列入每日任務' : ''}</b>
                     </button>
                   ))}
                 </div>
@@ -268,7 +312,10 @@ export default function PeriodicTableGame() {
 
               <div className="setup-summary">
                 <FlaskConical aria-hidden="true" />
-                <div><strong>{levelInfo.label}・{modeInfo.label}</strong><span>{context.task?.questionCount || levelInfo.questionCount} 題，達到 {context.task?.targetScore || 80} 分完成</span></div>
+                <div>
+                  <strong>{levelInfo.label}{level === 'intro' ? `・第 ${introGroup} 族` : ''}・{modeInfo.label}</strong>
+                  <span>{level === 'intro' ? introGroupNumbers.length : (context.task?.questionCount || levelInfo.questionCount)} 題，達到 {context.task?.targetScore || 80} 分完成</span>
+                </div>
                 <button className="periodic-primary-button" type="button" onClick={() => startQuiz()}>
                   開始測驗<ChevronRight aria-hidden="true" />
                 </button>

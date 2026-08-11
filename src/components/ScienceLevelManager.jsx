@@ -6,7 +6,7 @@ import {
   setStudentScienceLevel,
 } from '../services/periodicTableService.js'
 
-const editableLevels = ['beginner', 'advanced', 'challenge']
+const editableLevels = ['intro', 'beginner', 'advanced', 'challenge']
 
 export default function ScienceLevelManager() {
   const [students, setStudents] = useState([])
@@ -48,7 +48,7 @@ export default function ScienceLevelManager() {
         <div>
           <p className="eyebrow">SCIENCE PROGRESS</p>
           <h2 id="science-level-title"><Atom aria-hidden="true" />自然科元素進階</h2>
-          <p>入門連續 3 次達 80 分即可升級；若未達標，安排滿 5 個入門任務後，第 6 個起仍改為進階。進階需連續 5 次達標。</p>
+          <p>入門依序完成第 1、2、13～18 族後升為基礎；基礎連續 3 次達 80 分即可升為進階，進階需連續 5 次達標。</p>
         </div>
         <button className="manager-refresh-button" type="button" onClick={load} disabled={status.loading || status.savingId}>
           <RefreshCw className={status.loading ? 'spin-icon' : ''} aria-hidden="true" />重新整理
@@ -74,7 +74,9 @@ export default function ScienceLevelManager() {
               <div className="science-streak">
                 <ShieldCheck aria-hidden="true" />
                 <span>{student.requiredPasses
-                  ? `升級進度 ${student.consecutivePasses}／${student.requiredPasses}`
+                  ? (student.code === 'intro'
+                    ? `目前第 ${student.introGroup} 族・已完成 ${student.consecutivePasses}／8 族`
+                    : `升級進度 ${student.consecutivePasses}／${student.requiredPasses}`)
                   : '每日任務最高級'}</span>
               </div>
               <label>

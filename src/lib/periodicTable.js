@@ -47,10 +47,24 @@ const advancedNumbers = [
 
 const challengeExtras = [22, ...range(24, 30), 47, 74, 78, 79, 80, 92, 113]
 
+export const periodicIntroGroups = [1, 2, 13, 14, 15, 16, 17, 18]
+
+const introNumbers = periodicElements
+  .filter((element) => periodicIntroGroups.includes(element.group) && element.number < 114)
+  .map((element) => element.number)
+
 export const periodicLevels = {
+  intro: {
+    code: 'intro',
+    label: '入門',
+    description: '依序練習第 1、2、13～18 族，每回合只練一族',
+    numbers: introNumbers,
+    questionCount: 7,
+    requiredPasses: periodicIntroGroups.length,
+  },
   beginner: {
     code: 'beginner',
-    label: '入門',
+    label: '基礎',
     description: '第一週期至第三週期，共 18 種元素',
     numbers: range(1, 18),
     questionCount: 10,
@@ -89,7 +103,7 @@ export const periodicModes = {
   mixed: { code: 'mixed', label: '混合挑戰' },
 }
 
-export function normalizePeriodicLevel(value, fallback = 'beginner') {
+export function normalizePeriodicLevel(value, fallback = 'intro') {
   return Object.hasOwn(periodicLevels, value) ? value : fallback
 }
 
@@ -101,6 +115,26 @@ export function getElementsForLevel(level) {
   const normalized = normalizePeriodicLevel(level)
   const allowed = new Set(periodicLevels[normalized].numbers)
   return periodicElements.filter((element) => allowed.has(element.number))
+}
+
+export function getIntroGroupForProgress(completedGroups = 0) {
+  const index = Math.max(0, Math.min(
+    periodicIntroGroups.length - 1,
+    Number.parseInt(completedGroups, 10) || 0,
+  ))
+  return periodicIntroGroups[index]
+}
+
+export function getIntroGroupNumbers(group) {
+  const normalizedGroup = Number.parseInt(group, 10)
+  if (!periodicIntroGroups.includes(normalizedGroup)) return []
+  return periodicElements
+    .filter((element) => element.group === normalizedGroup && element.number < 114)
+    .map((element) => element.number)
+}
+
+export function randomIntroGroup(random = Math.random) {
+  return periodicIntroGroups[Math.floor(random() * periodicIntroGroups.length)]
 }
 
 export function shuffleItems(items, random = Math.random) {
@@ -141,6 +175,7 @@ export function createPeriodicQuestions({
   count,
   random = Math.random,
   onlyNumbers = null,
+  choiceNumbers = null,
 } = {}) {
   const normalizedLevel = normalizePeriodicLevel(level)
   const normalizedMode = normalizePeriodicMode(mode)
@@ -150,6 +185,12 @@ export function createPeriodicQuestions({
     : null
   const questionPool = requestedNumbers
     ? levelElements.filter((element) => requestedNumbers.has(element.number))
+    : levelElements
+  const requestedChoiceNumbers = Array.isArray(choiceNumbers) && choiceNumbers.length > 0
+    ? new Set(choiceNumbers)
+    : null
+  const choicePool = requestedChoiceNumbers
+    ? levelElements.filter((element) => requestedChoiceNumbers.has(element.number))
     : levelElements
   const questionCount = Math.min(
     Math.max(1, Number.parseInt(count, 10) || periodicLevels[normalizedLevel].questionCount),
@@ -171,7 +212,7 @@ export function createPeriodicQuestions({
         choices: [],
       }
     }
-    return buildChoiceQuestion(element, questionMode, levelElements, random)
+    return buildChoiceQuestion(element, questionMode, choicePool, random)
   })
 }
 
@@ -179,6 +220,17 @@ export function applyPeriodicProgress({ level, consecutivePasses = 0, score }) {
   const normalizedLevel = normalizePeriodicLevel(level)
   if (normalizedLevel === 'complete') {
     return { level: 'complete', consecutivePasses: 0, leveledUp: false }
+  }
+  if (normalizedLevel === 'intro') {
+    const completedGroups = Math.max(0, Number(consecutivePasses) || 0)
+    if (Number(score) < 80) {
+      return { level: 'intro', consecutivePasses: completedGroups, leveledUp: false }
+    }
+    const nextCompletedGroups = completedGroups + 1
+    if (nextCompletedGroups < periodicIntroGroups.length) {
+      return { level: 'intro', consecutivePasses: nextCompletedGroups, leveledUp: false }
+    }
+    return { level: 'beginner', consecutivePasses: 0, leveledUp: true }
   }
   if (Number(score) < 80) {
     return { level: normalizedLevel, consecutivePasses: 0, leveledUp: false }
@@ -224,7 +276,7 @@ export function canCountPeriodicProgress({ taskLevel, currentLevel }) {
 }
 
 export function parsePeriodicActivityCode(activityCode = '') {
-  const match = String(activityCode).match(/^periodic_(beginner|advanced|challenge)_(name_symbol|symbol_name|locate|mixed)$/)
+  const match = String(activityCode).match(/^periodic_(intro|beginner|advanced|challenge)_(name_symbol|symbol_name|locate|mixed)$/)
   if (!match) return null
   return { level: match[1], mode: match[2] }
 }

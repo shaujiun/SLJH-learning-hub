@@ -27,10 +27,30 @@ describe('recordPeriodicTableAttempt', () => {
     expect(result.learningLevel).toBe('advanced')
   })
 
-  it('自由練習沒有每日任務編號時不寫入進度', async () => {
+  it('學生的新入門自由練習會寫入逐族進度', async () => {
+    const rpc = vi.fn(async () => ({ data: { learningLevel: 'intro', introGroup: 2 }, error: null }))
+    await recordPeriodicTableAttempt({
+      focusTaskId: '',
+      level: 'intro',
+      introGroup: 1,
+      trackStudentProgress: true,
+      score: 100,
+      correctCount: 7,
+      questionCount: 7,
+    }, { rpc })
+    expect(rpc).toHaveBeenCalledWith('record_periodic_intro_attempt', {
+      p_score: 100,
+      p_intro_group: 1,
+      p_correct_count: 7,
+      p_question_count: 7,
+    })
+  })
+
+  it('教師自由練習沒有每日任務編號時不寫入進度', async () => {
     const rpc = vi.fn()
     await expect(recordPeriodicTableAttempt({
       focusTaskId: '',
+      level: 'intro',
       score: 100,
       correctCount: 20,
       questionCount: 20,
