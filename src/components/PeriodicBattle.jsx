@@ -43,6 +43,8 @@ const questionCountOptions = {
   4: [8, 12, 16, 20, 24, 28, 32, 36, 40],
 }
 
+const battleLevels = Object.values(periodicLevels).filter((item) => item.code !== 'intro')
+
 function Countdown({ deadline, label }) {
   const [now, setNow] = useState(Date.now())
   useEffect(() => {
@@ -72,7 +74,9 @@ function PlayerCard({ player, isMe, isHost, active, buzzer }) {
 function BattleMenu({ context, onRoom }) {
   const [menu, setMenu] = useState('choose')
   const [playerLimit, setPlayerLimit] = useState(2)
-  const [level, setLevel] = useState(context.student ? context.level.code : 'beginner')
+  const [level, setLevel] = useState(
+    context.student && context.level.code !== 'intro' ? context.level.code : 'beginner',
+  )
   const [mode, setMode] = useState('mixed')
   const [questionCount, setQuestionCount] = useState(battleDefaultQuestionCount)
   const [roomCode, setRoomCode] = useState('')
@@ -124,7 +128,7 @@ function BattleMenu({ context, onRoom }) {
       {menu === 'create' ? (
         <div className="battle-form-grid">
           <label>對戰人數<select value={playerLimit} onChange={(event) => updatePlayerLimit(event.target.value)}><option value={2}>2 人對戰</option><option value={4}>4 人團隊對戰</option></select></label>
-          <label>題目等級<select value={level} onChange={(event) => setLevel(event.target.value)}>{Object.values(periodicLevels).map((item) => <option value={item.code} key={item.code}>{item.label}</option>)}</select></label>
+          <label>題目等級<select value={level} onChange={(event) => setLevel(event.target.value)}>{battleLevels.map((item) => <option value={item.code} key={item.code}>{item.label}</option>)}</select></label>
           <label>題目模式<select value={mode} onChange={(event) => setMode(event.target.value)}>{Object.values(periodicModes).map((item) => <option value={item.code} key={item.code}>{item.label}</option>)}</select></label>
           <label>總題數<select value={questionCount} onChange={(event) => setQuestionCount(Number(event.target.value))}>{questionCountOptions[playerLimit].map((count) => <option value={count} key={count}>{count} 題{count === 20 ? '（建議）' : ''}</option>)}</select></label>
           <button className="periodic-primary-button battle-submit" type="button" disabled={busy} onClick={createRoom}>{busy ? <LoaderCircle className="spin-icon" /> : <Swords />}產生 4 位數代碼</button>
