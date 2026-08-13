@@ -1,4 +1,5 @@
-import { ArrowLeft, Brain, ChevronRight, Grid3X3, Orbit, Shapes } from 'lucide-react'
+import { ArrowLeft, Brain, ChevronRight, Grid3X3, MessageSquareQuote, Orbit, Shapes } from 'lucide-react'
+import SchultePhraseManager from './SchultePhraseManager.jsx'
 import './schulteGame.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
@@ -38,7 +39,7 @@ export default function FocusTrainingHub() {
         <section className="focus-mode-section" aria-labelledby="focus-mode-title">
           <div className="focus-section-heading">
             <div><small>CHOOSE A MODE</small><h2 id="focus-mode-title">選擇訓練方式</h2></div>
-            <span>第一階段</span>
+            <span>四種模式</span>
           </div>
           <div className="focus-mode-grid">
             <article className="focus-mode-card is-ready">
@@ -46,18 +47,24 @@ export default function FocusTrainingHub() {
               <div><span>目前開放</span><h3>靜態舒爾特</h3><p>在固定矩陣中，依序找出由小到大的數字。</p></div>
               <a href="./?game=schulte-static">開始練習<ChevronRight aria-hidden="true" /></a>
             </article>
-            <article className="focus-mode-card is-future">
+            <article className="focus-mode-card is-ready">
               <div className="focus-mode-icon"><Orbit aria-hidden="true" /></div>
-              <div><span>下一階段</span><h3>動態舒爾特</h3><p>三個同心圓環低速旋轉，練習動態視覺搜尋。</p></div>
-              <b>尚未開放</b>
+              <div><span>測試開放</span><h3>動態舒爾特</h3><p>三個同心圓環低速旋轉，練習動態視覺搜尋。</p></div>
+              <a href="./?game=schulte-dynamic">開始練習<ChevronRight aria-hidden="true" /></a>
             </article>
-            <article className="focus-mode-card is-future">
+            <article className="focus-mode-card is-ready">
               <div className="focus-mode-icon"><Shapes aria-hidden="true" /></div>
-              <div><span>後續階段</span><h3>圖形與語句變化型</h3><p>辨識相同圖形，或依語音、句義重組詩句與名言。</p></div>
-              <b>尚未開放</b>
+              <div><span>測試開放</span><h3>圖形舒爾特</h3><p>辨識提示圖形，在固定矩陣中找出全部相同圖案。</p></div>
+              <a href="./?game=schulte-shape">開始練習<ChevronRight aria-hidden="true" /></a>
+            </article>
+            <article className="focus-mode-card is-ready">
+              <div className="focus-mode-icon"><MessageSquareQuote aria-hidden="true" /></div>
+              <div><span>目前開放</span><h3>詩句與名言重組</h3><p>在 5×5 正確字與干擾字矩陣中，依語音或句義提示重組句子。</p></div>
+              <a href="./?game=schulte-phrase">開始練習<ChevronRight aria-hidden="true" /></a>
             </article>
           </div>
         </section>
+        <SchultePhraseManager />
       </main>
     </div>
   )

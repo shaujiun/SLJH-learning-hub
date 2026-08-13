@@ -13,8 +13,10 @@
   "dependencies": {
     "@fontsource/iansui": "^5.2.5",
     "@supabase/supabase-js": "^2.57.4",
+    "docx": "^9.7.1",
     "exceljs": "^4.4.0",
     "lucide-react": "^0.468.0",
+    "mammoth": "^1.12.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

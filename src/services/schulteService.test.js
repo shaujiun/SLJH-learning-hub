@@ -29,4 +29,36 @@ describe('Schulte local records', () => {
     storage.setItem('sljh-schulte-static-records-v1', '{broken')
     expect(loadLocalSchulteRecords(storage)).toEqual([])
   })
+
+  it('動態模式使用獨立紀錄空間，不影響靜態紀錄', () => {
+    const storage = createStorage()
+    const staticRecord = { id: 'static', mode: 'static', size: 4 }
+    const dynamicRecord = { id: 'dynamic', mode: 'dynamic', size: 20 }
+
+    saveLocalSchulteRecord(staticRecord, storage)
+    saveLocalSchulteRecord(dynamicRecord, storage, 'dynamic')
+
+    expect(loadLocalSchulteRecords(storage)).toEqual([staticRecord])
+    expect(loadLocalSchulteRecords(storage, 'dynamic')).toEqual([dynamicRecord])
+  })
+
+  it('圖形模式使用獨立紀錄空間', () => {
+    const storage = createStorage()
+    const shapeRecord = { id: 'shape', mode: 'shape', size: 5 }
+
+    saveLocalSchulteRecord(shapeRecord, storage, 'shape')
+
+    expect(loadLocalSchulteRecords(storage, 'shape')).toEqual([shapeRecord])
+    expect(loadLocalSchulteRecords(storage)).toEqual([])
+  })
+
+  it('詩句與名言模式使用獨立紀錄空間', () => {
+    const storage = createStorage()
+    const record = { id: 'sentence', mode: 'sentence', size: 9 }
+
+    saveLocalSchulteRecord(record, storage, 'sentence')
+
+    expect(loadLocalSchulteRecords(storage, 'sentence')).toEqual([record])
+    expect(loadLocalSchulteRecords(storage)).toEqual([])
+  })
 })
