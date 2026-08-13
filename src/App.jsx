@@ -42,6 +42,9 @@ import { learningSystemLaunchUrl, subjectGamesFor } from './lib/subjectGames.js'
 const HistoryAtlas = lazy(() => import('./components/HistoryAtlas.jsx'))
 const FocusTrainingHub = lazy(() => import('./components/FocusTrainingHub.jsx'))
 const SchulteStaticGame = lazy(() => import('./components/SchulteStaticGame.jsx'))
+const SchulteDynamicGame = lazy(() => import('./components/SchulteDynamicGame.jsx'))
+const SchulteShapeGame = lazy(() => import('./components/SchulteShapeGame.jsx'))
+const SchultePhraseGame = lazy(() => import('./components/SchultePhraseGame.jsx'))
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
@@ -679,6 +682,15 @@ export default function App() {
   if (requestedGame === 'periodic-table') return <PeriodicTableGame />
   if (requestedGame === 'schulte-static') {
     return <Suspense fallback={<LoadingScreen />}><SchulteStaticGame /></Suspense>
+  }
+  if (requestedGame === 'schulte-dynamic') {
+    return <Suspense fallback={<LoadingScreen />}><SchulteDynamicGame /></Suspense>
+  }
+  if (requestedGame === 'schulte-shape') {
+    return <Suspense fallback={<LoadingScreen />}><SchulteShapeGame /></Suspense>
+  }
+  if (requestedGame === 'schulte-phrase') {
+    return <Suspense fallback={<LoadingScreen />}><SchultePhraseGame /></Suspense>
   }
   if (searchParams.get('focus') === 'training') {
     return <Suspense fallback={<LoadingScreen />}><FocusTrainingHub /></Suspense>
