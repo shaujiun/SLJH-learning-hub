@@ -256,6 +256,119 @@ export async function loadSchulteContentManagerAccess() {
   return !error && Boolean(data)
 }
 
+export async function loadSchulteMemorizationManagerAccess() {
+  if (!isSupabaseConfigured) return false
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('can_manage_schulte_memorization')
+  if (!error) return Boolean(data)
+
+  // 本機預覽尚未套用新 migration 時，仍讓已登入的管理員下載正確範本。
+  // 正式匯入仍會由資料庫函式再次驗證管理員權限。
+  const { data: sessionData } = await client.auth.getSession()
+  const userId = sessionData?.session?.user?.id
+  if (!userId) return false
+  const { data: profile, error: profileError } = await client
+    .from('contact_book_profiles')
+    .select('user_type,approval_status,is_active')
+    .eq('id', userId)
+    .maybeSingle()
+  return !profileError
+    && profile?.user_type === 'admin'
+    && profile?.approval_status === 'approved'
+    && profile?.is_active === true
+}
+
+export async function loadSchulteMemorizationClasses() {
+  const client = requireSupabase()
+  const { data, error } = await client
+    .from('classes')
+    .select('id,name,grade_level,class_number')
+    .order('grade_level')
+    .order('class_number')
+  if (error) throw error
+  return (data || []).map((row) => ({
+    id: row.id,
+    name: row.name || `${row.grade_level || ''}年${row.class_number || ''}班`,
+  }))
+}
+
+export async function loadSchulteMemorizationSets(classId) {
+  if (!classId) return []
+  const client = requireSupabase()
+  const { data, error } = await client
+    .from('schulte_memorization_sets')
+    .select('id,class_id,test_date,is_active,created_at,schulte_memorization_set_items(display_order,schulte_phrase_items(id,content,meaning,source))')
+    .eq('class_id', classId)
+    .order('test_date')
+  if (error) throw error
+  return (data || []).map((row) => ({
+    id: row.id,
+    classId: row.class_id,
+    testDate: row.test_date,
+    isActive: row.is_active,
+    createdAt: row.created_at,
+    items: (row.schulte_memorization_set_items || [])
+      .sort((left, right) => left.display_order - right.display_order)
+      .map((item) => {
+        const phrase = Array.isArray(item.schulte_phrase_items)
+          ? item.schulte_phrase_items[0]
+          : item.schulte_phrase_items
+        return {
+          displayOrder: item.display_order,
+          id: phrase?.id,
+          content: phrase?.content || '',
+          meaning: phrase?.meaning || '',
+          source: phrase?.source || '',
+        }
+      }),
+  }))
+}
+
+export async function importSchulteMemorizationBatches(classId, batches) {
+  const client = requireSupabase()
+  const importedSetIds = []
+  for (const batch of batches) {
+    const { data, error } = await client.rpc('upsert_schulte_memorization_set', {
+      p_class_id: classId,
+      p_test_date: batch.testDate,
+      p_items: batch.items.map((item) => ({
+        content: item.content,
+        meaning: item.meaning,
+        source: item.source || '',
+      })),
+    })
+    if (error) throw error
+    importedSetIds.push(data)
+  }
+  return { importedBatches: importedSetIds.length, importedPhrases: importedSetIds.length * 5 }
+}
+
+export async function removeSchulteMemorizationSet(id) {
+  const client = requireSupabase()
+  const { error } = await client.from('schulte_memorization_sets').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function loadCurrentSchulteMemorizationBatch(referenceDate = '') {
+  if (!isSupabaseConfigured) return null
+  const client = requireSupabase()
+  const parameters = referenceDate ? { p_reference_date: referenceDate } : {}
+  const { data, error } = await client.rpc('get_my_schulte_memorization_batch', parameters)
+  if (error) throw error
+  return data || null
+}
+
+export async function recordSchulteMemorizationCompletion({ setId, durationMs, errorCount }) {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('record_schulte_memorization_completion', {
+    p_set_id: setId,
+    p_duration_ms: durationMs,
+    p_error_count: errorCount,
+  })
+  if (error) throw error
+  return data
+}
+
 export async function saveSchultePhrase(item) {
   const client = requireSupabase()
   const payload = {

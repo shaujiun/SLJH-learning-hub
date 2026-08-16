@@ -45,6 +45,7 @@ const SchulteStaticGame = lazy(() => import('./components/SchulteStaticGame.jsx'
 const SchulteDynamicGame = lazy(() => import('./components/SchulteDynamicGame.jsx'))
 const SchulteShapeGame = lazy(() => import('./components/SchulteShapeGame.jsx'))
 const SchultePhraseGame = lazy(() => import('./components/SchultePhraseGame.jsx'))
+const SchulteMemorizationGame = lazy(() => import('./components/SchulteMemorizationGame.jsx'))
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
@@ -142,6 +143,7 @@ function WeeklyProgress({ tasks }) {
 
 function FocusTask({ task, position, total }) {
   const isSchulte = task.activityCode?.startsWith('schulte_')
+  const isMemorization = task.activityCode === 'schulte_memorization'
   const ActivityIcon = isSchulte
     ? Brain
     : task.activityCode?.startsWith('periodic_')
@@ -167,7 +169,7 @@ function FocusTask({ task, position, total }) {
           <h2>{task.activityName}</h2>
           <div className="task-rules">
             {isSchulte ? (
-              <span><Target aria-hidden="true" />完成 1 回合</span>
+              <span><Target aria-hidden="true" />{isMemorization ? '連續完成 5 句' : '完成 1 回合'}</span>
             ) : <>
               <span><Target aria-hidden="true" />{task.questionCount} 題</span>
               <span><Sparkles aria-hidden="true" />目標 {task.targetScore} 分</span>
@@ -691,6 +693,9 @@ export default function App() {
   }
   if (requestedGame === 'schulte-phrase') {
     return <Suspense fallback={<LoadingScreen />}><SchultePhraseGame /></Suspense>
+  }
+  if (requestedGame === 'schulte-memorization') {
+    return <Suspense fallback={<LoadingScreen />}><SchulteMemorizationGame /></Suspense>
   }
   if (searchParams.get('focus') === 'training') {
     return <Suspense fallback={<LoadingScreen />}><FocusTrainingHub /></Suspense>

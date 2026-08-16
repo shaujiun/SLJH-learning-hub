@@ -108,7 +108,7 @@ export async function loadLearningDashboard(referenceDate = new Date()) {
     }
   }
 
-  const [taskResult, mathGroupResult, englishGroupResult] = await Promise.all([
+  const [taskResult, mathGroupResult, englishGroupResult, memorizationResult] = await Promise.all([
     client.rpc('prepare_student_focus_tasks', { p_reference_date: date }),
     client.rpc('resolve_student_learning_group', {
       p_student_id: student.id,
@@ -120,6 +120,7 @@ export async function loadLearningDashboard(referenceDate = new Date()) {
       p_subject_code: 'english',
       p_reference_date: date,
     }),
+    client.rpc('get_my_schulte_memorization_batch', { p_reference_date: date }),
   ])
   const { data: taskRows, error: taskError } = taskResult
   if (taskError) throw new Error(`無法建立今日專注任務：${taskError.message}`)
@@ -127,6 +128,7 @@ export async function loadLearningDashboard(referenceDate = new Date()) {
     const groupError = mathGroupResult.error || englishGroupResult.error
     throw new Error(`無法確認學生分組：${groupError.message}`)
   }
+  if (memorizationResult.error) throw new Error(`無法確認週五背誦任務：${memorizationResult.error.message}`)
 
   const weekStart = startOfWeek(new Date(`${date}T12:00:00`))
   const { data: weeklyRows, error: weeklyError } = await client
@@ -146,6 +148,30 @@ export async function loadLearningDashboard(referenceDate = new Date()) {
   const visibleSystemCodes = new Set(visibleSystems.map((system) => system.code))
   const visibleTaskRows = (taskRows || []).filter((row) => visibleSystemCodes.has(row.subject_code))
   const visibleWeeklyRows = (weeklyRows || []).filter((row) => visibleSystemCodes.has(row.subject_code_snapshot))
+  const mappedTasks = visibleTaskRows.map(mapTask)
+  const memorizationBatch = memorizationResult.data
+  if (memorizationBatch && visibleSystemCodes.has('focus_training')) {
+    const launchUrl = new URL(window.location.href)
+    launchUrl.search = 'game=schulte-memorization'
+    launchUrl.hash = ''
+    mappedTasks.unshift({
+      id: `schulte-memorization:${memorizationBatch.setId}`,
+      assignedDate: date,
+      subjectCode: 'focus_training',
+      subjectName: '專注力訓練',
+      activityCode: 'schulte_memorization',
+      activityName: `週五名言佳句背誦（${memorizationBatch.items?.length || 5} 句）`,
+      launchUrl: launchUrl.toString(),
+      groupCode: 'COMMON',
+      questionCount: 5,
+      targetScore: 100,
+      status: 'pending',
+      bestScore: null,
+      completedAt: null,
+      isWeekendCarryover: true,
+    })
+  }
+
   return {
     authenticated: true,
     role: 'student',
@@ -160,7 +186,7 @@ export async function loadLearningDashboard(referenceDate = new Date()) {
     },
     systems: visibleSystems,
     groupBySubject,
-    tasks: visibleTaskRows.map(mapTask),
+    tasks: mappedTasks.slice(0, 4),
     weeklyTasks: visibleWeeklyRows.map((row) => ({
       id: row.id,
       status: row.status,
