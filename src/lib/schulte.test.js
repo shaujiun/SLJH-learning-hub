@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  applyMemorizationSequenceStep,
   applyPhraseSchulteTap,
   applySchulteTap,
   applyShapeSchulteTap,
@@ -51,6 +52,32 @@ describe('phrase Schulte layout', () => {
 
   it('作答區自動保留標點並逐字顯示進度', () => {
     expect(phraseProgress('學而時習之，不亦說乎。', 2)).toBe('學而＿＿＿，＿＿＿＿。')
+  })
+})
+
+describe('Friday memorization sequence', () => {
+  it('returns to the first saying after any wrong answer', () => {
+    expect(applyMemorizationSequenceStep({
+      phraseIndex: 3,
+      totalPhrases: 5,
+      phraseCompleted: false,
+      correct: false,
+    })).toEqual({ phraseIndex: 0, resetPhrase: true, completed: false })
+  })
+
+  it('advances only after a complete saying and passes after all five', () => {
+    expect(applyMemorizationSequenceStep({
+      phraseIndex: 1,
+      totalPhrases: 5,
+      phraseCompleted: true,
+      correct: true,
+    })).toEqual({ phraseIndex: 2, resetPhrase: true, completed: false })
+    expect(applyMemorizationSequenceStep({
+      phraseIndex: 4,
+      totalPhrases: 5,
+      phraseCompleted: true,
+      correct: true,
+    })).toEqual({ phraseIndex: 4, resetPhrase: false, completed: true })
   })
 })
 

@@ -1,4 +1,5 @@
-import { ArrowLeft, Brain, ChevronRight, Grid3X3, MessageSquareQuote, Orbit, Shapes } from 'lucide-react'
+import { ArrowLeft, Brain, CalendarCheck2, ChevronRight, Grid3X3, MessageSquareQuote, Orbit, Shapes } from 'lucide-react'
+import SchulteMemorizationManager from './SchulteMemorizationManager.jsx'
 import SchultePhraseManager from './SchultePhraseManager.jsx'
 import './schulteGame.css'
 
@@ -62,8 +63,14 @@ export default function FocusTrainingHub() {
               <div><span>目前開放</span><h3>詩句與名言重組</h3><p>在 5×5 正確字與干擾字矩陣中，依語音或句義提示重組句子。</p></div>
               <a href="./?game=schulte-phrase">開始練習<ChevronRight aria-hidden="true" /></a>
             </article>
+            <article className="focus-mode-card is-ready friday-memorization-card">
+              <div className="focus-mode-icon"><CalendarCheck2 aria-hidden="true" /></div>
+              <div><span>週五任務</span><h3>名言佳句背誦</h3><p>只看釋義，連續完成指定 5 句；任一句答錯就從第 1 句重新開始。</p></div>
+              <a href="./?game=schulte-memorization">開始背誦<ChevronRight aria-hidden="true" /></a>
+            </article>
           </div>
         </section>
+        <SchulteMemorizationManager />
         <SchultePhraseManager />
       </main>
     </div>

@@ -164,6 +164,20 @@ export function applyPhraseSchulteTap({ expectedCharacter, tappedCharacter, expe
   }
 }
 
+export function applyMemorizationSequenceStep({ phraseIndex, totalPhrases = 5, phraseCompleted, correct }) {
+  if (!correct) {
+    return { phraseIndex: 0, resetPhrase: true, completed: false }
+  }
+  if (!phraseCompleted) {
+    return { phraseIndex, resetPhrase: false, completed: false }
+  }
+  const nextPhraseIndex = phraseIndex + 1
+  if (nextPhraseIndex >= totalPhrases) {
+    return { phraseIndex, resetPhrase: false, completed: true }
+  }
+  return { phraseIndex: nextPhraseIndex, resetPhrase: true, completed: false }
+}
+
 export function phraseProgress(content, selectedCount) {
   let characterIndex = 0
   return Array.from(String(content || '')).map((character) => {

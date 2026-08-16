@@ -146,8 +146,8 @@ export default function SchultePhraseManager() {
           <p>支援 <b>Excel（.xlsx）</b> 與 <b>Word（.docx）</b>。長句會自動拆成每題最多 20 個正確文字，相同句子會更新原題。</p>
         </div>
         <div className="phrase-import-actions">
-          <button type="button" onClick={downloadSchultePhraseExcelTemplate}><FileSpreadsheet aria-hidden="true" />下載 Excel 範本</button>
-          <button type="button" onClick={downloadSchultePhraseWordTemplate}><FileText aria-hidden="true" />下載 Word 範本</button>
+          <button type="button" onClick={downloadSchultePhraseExcelTemplate}><FileSpreadsheet aria-hidden="true" />下載一般練習 Excel 範本</button>
+          <button type="button" onClick={downloadSchultePhraseWordTemplate}><FileText aria-hidden="true" />下載一般練習 Word 範本</button>
           <label className="phrase-import-file"><Upload aria-hidden="true" />選擇匯入檔案
             <input type="file" accept=".xlsx,.docx" onChange={selectImportFile} disabled={busy} />
           </label>
