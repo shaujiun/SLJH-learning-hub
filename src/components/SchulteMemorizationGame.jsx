@@ -169,7 +169,7 @@ export default function SchulteMemorizationGame() {
               </>
             ) : (
               <>
-                <p>{result?.remoteError ? `目前無法讀取背誦安排：${result.remoteError}` : '目前沒有需要完成的週五背誦；已通過的批次不會重複出現。'}</p>
+                <p>{result?.remoteError ? `目前無法讀取背誦安排：${result.remoteError}` : '目前沒有位於挑戰期間的週五背誦；每批可從開放日起練習至測驗日當天。'}</p>
                 <a className="shape-start-button memorization-back-link" href={learningHubUrl('?focus=training')}>返回專注力訓練</a>
               </>
             )}
