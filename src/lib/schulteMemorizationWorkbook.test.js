@@ -18,6 +18,18 @@ describe('週五名言佳句匯入', () => {
     expect(result.batches[0].items).toHaveLength(5)
   })
 
+  it('接受 Excel 自動省略前導零的日期文字', () => {
+    const result = normalizeMemorizationImportRows(fiveRows('2026/8/21'))
+    expect(result.errors).toEqual([])
+    expect(result.batches[0]).toMatchObject({ testDate: '2026-08-21' })
+  })
+
+  it('接受 Excel 儲存為日期型別的儲存格', () => {
+    const result = normalizeMemorizationImportRows(fiveRows(new Date(2026, 7, 21)))
+    expect(result.errors).toEqual([])
+    expect(result.batches[0]).toMatchObject({ testDate: '2026-08-21' })
+  })
+
   it('每個測驗日期都必須剛好五句', () => {
     const result = normalizeMemorizationImportRows(fiveRows().slice(0, 4))
     expect(result.errors).toContain('2026-08-21 必須剛好有 5 句，目前為 4 句。')
