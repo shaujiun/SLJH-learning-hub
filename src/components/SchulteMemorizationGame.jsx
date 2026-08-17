@@ -84,8 +84,17 @@ export default function SchulteMemorizationGame() {
     setPhase('result')
     setSaving(true)
     try {
-      await recordSchulteMemorizationCompletion({ setId: batch.setId, durationMs, errorCount: finalErrorCount })
-      setResult({ durationMs, errorCount: finalErrorCount, storedRemotely: true })
+      const completion = await recordSchulteMemorizationCompletion({
+        setId: batch.setId,
+        durationMs,
+        errorCount: finalErrorCount,
+      })
+      setResult({
+        durationMs,
+        errorCount: finalErrorCount,
+        preview: completion?.preview === true,
+        storedRemotely: completion?.preview !== true,
+      })
     } catch (error) {
       setResult({ durationMs, errorCount: finalErrorCount, remoteError: error.message })
     } finally {
@@ -160,6 +169,7 @@ export default function SchulteMemorizationGame() {
             {batch ? (
               <>
                 <p>測驗日期：<b>{formatDate(batch.testDate)}</b>。本模式不播放語音，只提供釋義；任一句答錯都必須從第 1 句重新開始。</p>
+                {batch.preview && <p className="schulte-save-note">目前為管理員／教師預覽模式，可完整作答，但不會寫入任何學生的通過紀錄。</p>}
                 <div className="memorization-rule-list">
                   <span><Target aria-hidden="true" />共 5 句</span>
                   <span><RotateCcw aria-hidden="true" />答錯回到第 1 句</span>
@@ -217,6 +227,7 @@ export default function SchulteMemorizationGame() {
               <div className="memorization-result-list">
                 {phrases.map((item, index) => <blockquote key={item.id}><b>{index + 1}．{item.content}</b><span>{item.meaning}</span><cite>{item.source || '題庫內容'}</cite></blockquote>)}
               </div>
+              {result?.preview && <p className="schulte-save-note">預覽已完成；本次結果未計入學生進度。</p>}
               {result?.remoteError && <p className="schulte-save-note">紀錄尚未同步：{result.remoteError}。關閉後任務仍會保留，請稍後再試。</p>}
               <p className="memorization-close-note">結果會持續顯示，請按右上角「×」返回任務頁。</p>
             </section>
