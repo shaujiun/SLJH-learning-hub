@@ -17,6 +17,10 @@ function dateString(value) {
     const day = String(value.getDate()).padStart(2, '0')
     return `${year}-${month}-${day}`
   }
+  if (value && typeof value === 'object') {
+    if ('result' in value) return dateString(value.result)
+    if ('text' in value) return dateString(value.text)
+  }
   const normalized = text(value).replace(/[.／]/g, '/').replace(/-/g, '/')
   const match = normalized.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/)
   if (!match) return ''
@@ -37,8 +41,9 @@ export function normalizeMemorizationImportRows(rawRows) {
     const rowNumber = raw.rowNumber || index + 2
     const content = text(raw.content ?? raw['名言佳句'])
     const meaning = text(raw.meaning ?? raw['釋義'])
-    const rawTestDate = text(raw.testDate ?? raw['測驗日期'])
-    const testDate = dateString(rawTestDate)
+    const rawTestDateValue = raw.testDate ?? raw['測驗日期']
+    const rawTestDate = text(rawTestDateValue)
+    const testDate = dateString(rawTestDateValue)
     const source = text(raw.source ?? raw['出處'])
     if (!content && !meaning && !rawTestDate) return
     if (!content || !meaning) {
