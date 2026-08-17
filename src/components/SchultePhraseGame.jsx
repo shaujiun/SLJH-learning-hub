@@ -37,6 +37,12 @@ function learningHubUrl(query = '') {
   return url.toString()
 }
 
+export function phrasePromptHeading(phrase) {
+  return phrase?.category === 'poem'
+    ? '請依提示完成這句詩'
+    : '請依提示完成這句名言'
+}
+
 function SchulteNavigation() {
   return (
     <nav className="schulte-floating-nav" aria-label="學習系統導覽">
@@ -205,7 +211,7 @@ export default function SchultePhraseGame() {
         {phase === 'playing' && phrase && layout && (
           <section className="schulte-play-card phrase-schulte-play-card">
             <div className="schulte-play-heading">
-              <div><small>{phrase.category === 'poem' ? '詩句' : '名言佳句'}・{promptMode === 'audio' ? '語音提示' : '句義提示'}</small><h1>{phrase.title}</h1></div>
+              <div><small>{phrase.category === 'poem' ? '詩句' : '名言佳句'}・{promptMode === 'audio' ? '語音提示' : '句義提示'}</small><h1>{phrasePromptHeading(phrase)}</h1></div>
               <span><Target aria-hidden="true" />已完成 {selectedCount}／{layout.totalCharacters}</span>
             </div>
             <div className="phrase-prompt-card">
