@@ -27,6 +27,7 @@ import {
   loadSchulteRecords,
   recordDynamicSchulteCompletion,
 } from '../services/schulteService.js'
+import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
 import './schulteGame.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
@@ -65,7 +66,7 @@ function ringPosition(index, total, ringIndex) {
 
 export default function SchulteDynamicGame() {
   const query = useMemo(() => new URLSearchParams(window.location.search), [])
-  const focusTaskId = query.get('focusTask') || ''
+  const focusTaskId = resolveFocusTaskId(query, { activityPrefix: 'schulte_dynamic_' })
   const [itemCount, setItemCount] = useState(normalizeDynamicSchulteCount(query.get('count')))
   const [phase, setPhase] = useState('setup')
   const [layout, setLayout] = useState(null)

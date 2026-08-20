@@ -31,6 +31,7 @@ import {
   loadPeriodicTableContext,
   recordPeriodicTableAttempt,
 } from '../services/periodicTableService.js'
+import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
 import PeriodicBattle from './PeriodicBattle.jsx'
 import PeriodicTableGrid from './PeriodicTableGrid.jsx'
 import './periodicTableGame.css'
@@ -66,7 +67,10 @@ function GameNavigation() {
 
 export default function PeriodicTableGame() {
   const query = useMemo(() => new URLSearchParams(window.location.search), [])
-  const focusTaskId = query.get('focusTask') || ''
+  const focusTaskId = resolveFocusTaskId(query, {
+    subjectCode: 'science',
+    activityPrefix: 'periodic_',
+  })
   const [context, setContext] = useState(null)
   const [loadError, setLoadError] = useState('')
   const [phase, setPhase] = useState('loading')
