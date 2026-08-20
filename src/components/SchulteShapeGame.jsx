@@ -27,6 +27,7 @@ import {
   loadSchulteRecords,
   recordShapeSchulteCompletion,
 } from '../services/schulteService.js'
+import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
 import './schulteGame.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
@@ -59,7 +60,7 @@ function SchulteNavigation() {
 
 export default function SchulteShapeGame() {
   const query = useMemo(() => new URLSearchParams(window.location.search), [])
-  const focusTaskId = query.get('focusTask') || ''
+  const focusTaskId = resolveFocusTaskId(query, { activityPrefix: 'schulte_shape_' })
   const [phase, setPhase] = useState('setup')
   const [layout, setLayout] = useState(null)
   const [selectedTileIds, setSelectedTileIds] = useState([])

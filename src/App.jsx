@@ -38,6 +38,7 @@ import {
 } from './services/learningAdminService.js'
 import { learningAudienceOptions } from './lib/learningAudiences.js'
 import { learningSystemLaunchUrl, subjectGamesFor } from './lib/subjectGames.js'
+import { rememberFocusTaskLaunch } from './lib/focusTaskLaunch.js'
 
 const HistoryAtlas = lazy(() => import('./components/HistoryAtlas.jsx'))
 const FocusTrainingHub = lazy(() => import('./components/FocusTrainingHub.jsx'))
@@ -183,7 +184,11 @@ function FocusTask({ task, position, total }) {
           {isSchulte ? '已完成本次專注力訓練' : `已完成，最高 ${task.bestScore ?? task.targetScore} 分`}
         </div>
       ) : (
-        <a className="task-start-button" href={buildTaskLaunchUrl(task)}>
+        <a
+          className="task-start-button"
+          href={buildTaskLaunchUrl(task)}
+          onClick={() => rememberFocusTaskLaunch(task)}
+        >
           <Play aria-hidden="true" />開始這項任務
         </a>
       )}

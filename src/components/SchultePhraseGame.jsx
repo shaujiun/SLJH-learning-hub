@@ -25,6 +25,7 @@ import {
   loadSchulteRecords,
   recordPhraseSchulteCompletion,
 } from '../services/schulteService.js'
+import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
 import './schulteGame.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
@@ -55,7 +56,7 @@ function SchulteNavigation() {
 
 export default function SchultePhraseGame() {
   const query = useMemo(() => new URLSearchParams(window.location.search), [])
-  const focusTaskId = query.get('focusTask') || ''
+  const focusTaskId = resolveFocusTaskId(query, { activityPrefix: 'schulte_phrase_' })
   const [phase, setPhase] = useState('setup')
   const [phrases, setPhrases] = useState([])
   const [phrase, setPhrase] = useState(null)

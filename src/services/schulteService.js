@@ -1,4 +1,5 @@
 import { isSupabaseConfigured, requireSupabase } from '../lib/supabase.js'
+import { clearRememberedFocusTask } from '../lib/focusTaskLaunch.js'
 import {
   calculateDynamicSchulteResult,
   calculatePhraseSchulteResult,
@@ -115,6 +116,7 @@ export async function recordSchulteCompletion({
     }
   }
 
+  if (focusTaskId && data?.taskCompleted) clearRememberedFocusTask(focusTaskId)
   return {
     record: localRecord,
     records: localRecords,
@@ -164,6 +166,7 @@ export async function recordDynamicSchulteCompletion({
     }
   }
 
+  if (focusTaskId && data?.taskCompleted) clearRememberedFocusTask(focusTaskId)
   return {
     record: localRecord,
     records: localRecords,
@@ -211,6 +214,7 @@ export async function recordShapeSchulteCompletion({
     }
   }
 
+  if (focusTaskId && data?.taskCompleted) clearRememberedFocusTask(focusTaskId)
   return {
     record: localRecord,
     records: localRecords,
@@ -452,6 +456,7 @@ export async function recordPhraseSchulteCompletion({
       remoteError: focusTaskId ? error.message : '',
     }
   }
+  if (focusTaskId && data?.taskCompleted) clearRememberedFocusTask(focusTaskId)
   return {
     record: localRecord,
     records: localRecords,

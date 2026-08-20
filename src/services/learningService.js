@@ -214,5 +214,6 @@ export function buildTaskLaunchUrl(task) {
   url.searchParams.set('focusActivity', task.activityCode)
   url.searchParams.set('focusQuestions', String(task.questionCount))
   url.searchParams.set('focusTarget', String(task.targetScore))
+  url.searchParams.set('focusSource', 'daily-task')
   return url.toString()
 }

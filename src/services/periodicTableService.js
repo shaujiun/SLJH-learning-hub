@@ -1,4 +1,5 @@
 import { requireSupabase } from '../lib/supabase.js'
+import { clearRememberedFocusTask } from '../lib/focusTaskLaunch.js'
 import {
   getIntroGroupForProgress,
   normalizePeriodicLevel,
@@ -135,6 +136,7 @@ export async function recordPeriodicTableAttempt({
   }
   const { data, error } = await client.rpc(rpcName, parameters)
   if (error) throw new Error(`無法儲存元素週期表進度：${error.message}`)
+  if (focusTaskId && data?.passed) clearRememberedFocusTask(focusTaskId)
   return data
 }
 
