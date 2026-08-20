@@ -52,6 +52,38 @@ function mapTask(row) {
   }
 }
 
+export function mapMemorizationTask(batch, assignedDate, currentUrl = window.location.href) {
+  if (!batch?.setId) return null
+  const launchUrl = new URL(currentUrl)
+  launchUrl.search = 'game=schulte-memorization'
+  launchUrl.hash = ''
+  const passed = batch.passed === true
+  return {
+    id: `schulte-memorization:${batch.setId}`,
+    assignedDate,
+    subjectCode: 'focus_training',
+    subjectName: '專注力訓練',
+    activityCode: 'schulte_memorization',
+    activityName: `週五名言佳句背誦（${batch.items?.length || 5} 句）`,
+    launchUrl: launchUrl.toString(),
+    groupCode: 'COMMON',
+    questionCount: 5,
+    targetScore: 100,
+    status: passed ? 'completed' : 'pending',
+    bestScore: passed ? 100 : null,
+    completedAt: null,
+    attemptCount: Number(batch.attemptCount || 0),
+    isWeekendCarryover: true,
+  }
+}
+
+export function buildDashboardTaskLists(dailyTasks, weeklyTasks, memorizationTask) {
+  return {
+    tasks: dailyTasks,
+    weeklyTasks: memorizationTask ? [memorizationTask, ...weeklyTasks] : weeklyTasks,
+  }
+}
+
 export async function loadLearningDashboard(referenceDate = new Date()) {
   const client = requireSupabase()
   const date = typeof referenceDate === 'string'
@@ -150,27 +182,23 @@ export async function loadLearningDashboard(referenceDate = new Date()) {
   const visibleWeeklyRows = (weeklyRows || []).filter((row) => visibleSystemCodes.has(row.subject_code_snapshot))
   const mappedTasks = visibleTaskRows.map(mapTask)
   const memorizationBatch = memorizationResult.data
-  if (memorizationBatch && visibleSystemCodes.has('focus_training')) {
-    const launchUrl = new URL(window.location.href)
-    launchUrl.search = 'game=schulte-memorization'
-    launchUrl.hash = ''
-    mappedTasks.unshift({
-      id: `schulte-memorization:${memorizationBatch.setId}`,
-      assignedDate: date,
-      subjectCode: 'focus_training',
-      subjectName: '專注力訓練',
-      activityCode: 'schulte_memorization',
-      activityName: `週五名言佳句背誦（${memorizationBatch.items?.length || 5} 句）`,
-      launchUrl: launchUrl.toString(),
-      groupCode: 'COMMON',
-      questionCount: 5,
-      targetScore: 100,
-      status: 'pending',
-      bestScore: null,
-      completedAt: null,
-      isWeekendCarryover: true,
-    })
-  }
+  const memorizationTask = memorizationBatch && visibleSystemCodes.has('focus_training')
+    ? mapMemorizationTask(memorizationBatch, date)
+    : null
+
+  const mappedWeeklyTasks = visibleWeeklyRows.map((row) => ({
+    id: row.id,
+    status: row.status,
+    subjectCode: row.subject_code_snapshot,
+    subjectName: row.subject_name_snapshot,
+    activityName: row.activity_name_snapshot,
+    groupCode: row.group_code_snapshot,
+    questionCount: row.question_count,
+    targetScore: row.target_score,
+    bestScore: row.best_score,
+    assignedDate: row.assigned_date,
+  }))
+  const taskLists = buildDashboardTaskLists(mappedTasks, mappedWeeklyTasks, memorizationTask)
 
   return {
     authenticated: true,
@@ -186,19 +214,8 @@ export async function loadLearningDashboard(referenceDate = new Date()) {
     },
     systems: visibleSystems,
     groupBySubject,
-    tasks: mappedTasks.slice(0, 4),
-    weeklyTasks: visibleWeeklyRows.map((row) => ({
-      id: row.id,
-      status: row.status,
-      subjectCode: row.subject_code_snapshot,
-      subjectName: row.subject_name_snapshot,
-      activityName: row.activity_name_snapshot,
-      groupCode: row.group_code_snapshot,
-      questionCount: row.question_count,
-      targetScore: row.target_score,
-      bestScore: row.best_score,
-      assignedDate: row.assigned_date,
-    })),
+    tasks: taskLists.tasks,
+    weeklyTasks: taskLists.weeklyTasks,
   }
 }
 

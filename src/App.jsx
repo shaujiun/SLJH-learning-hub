@@ -604,7 +604,7 @@ function LearningHub({ requestedSubject = '' }) {
                   <span><b>數學</b>{groupBySubject.math || 'B'} 組</span>
                   <span><b>英語</b>{groupBySubject.english || 'B'} 組</span>
                 </div>
-                <p>每天會有 1～4 項任務；一次專注一項，遊戲內也一次只呈現一題。</p>
+                <p>每天會有 1～3 項任務；一次專注一項，遊戲內也一次只呈現一題。</p>
               </div>
               <div className="welcome-figure"><Brain aria-hidden="true" /></div>
             </section>
@@ -616,7 +616,7 @@ function LearningHub({ requestedSubject = '' }) {
                     <p className="eyebrow">TODAY</p>
                     <h2 id="today-title">今天的專注任務</h2>
                   </div>
-                  <span className="daily-count">最多 4 項</span>
+                  <span className="daily-count">最多 3 項</span>
                 </div>
 
                 {currentTask ? (

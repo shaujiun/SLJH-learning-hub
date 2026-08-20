@@ -55,16 +55,30 @@ function questionCountFor(activity, groupCode) {
   return activity.questionCountB ?? 10
 }
 
+function dailyLoadWeight(currentCount) {
+  if (currentCount === 0) return 5
+  if (currentCount === 1) return 8
+  return 1
+}
+
+function pickWeightedDay(availableDays, dailyCounts, random) {
+  const weightedDays = availableDays.flatMap((day) => (
+    Array.from({ length: dailyLoadWeight(dailyCounts.get(day)) }, () => day)
+  ))
+  return weightedDays[Math.floor(random() * weightedDays.length)]
+}
+
 /**
  * 建立一週的專注任務草稿。
- * 每科先決定 1～3 次的週目標，再分配到週一至週五；每天最多 4 項。
+ * 每科先決定 1～3 次的週目標，再分配到週一至週五；每天最多 3 項。
+ * 分配時以形成 2 項的權重最高、1 項其次、3 項最低，並保留每日變化。
  */
 export function buildWeeklyDraft({
   studentId,
   weekStart,
   subjects,
   groupBySubject = {},
-  dailyMaximum = 4,
+  dailyMaximum = 3,
   seed = `${studentId}:${weekStart}`,
 }) {
   const random = createSeededRandom(seed)
@@ -89,9 +103,7 @@ export function buildWeeklyDraft({
       )
       if (availableDays.length === 0) break
 
-      const minimumLoad = Math.min(...availableDays.map((day) => dailyCounts.get(day)))
-      const balancedDays = availableDays.filter((day) => dailyCounts.get(day) <= minimumLoad + 1)
-      const dayOffset = balancedDays[Math.floor(random() * balancedDays.length)]
+      const dayOffset = pickWeightedDay(availableDays, dailyCounts, random)
       const activity = activityBag[taskIndex % activityBag.length]
       const groupCode = groupBySubject[subject.code] || 'B'
 
