@@ -48,7 +48,7 @@ describe('focus planner', () => {
     expect(tasks.every((task) => task.questionCount === 10)).toBe(true)
   })
 
-  it('每天不超過 4 項任務', () => {
+  it('每天不超過 3 項任務', () => {
     const manySubjects = Array.from({ length: 6 }, (_, index) => ({
       code: `subject-${index}`,
       name: `科目 ${index}`,
@@ -62,7 +62,34 @@ describe('focus planner', () => {
       subjects: manySubjects,
     })
     const counts = Object.groupBy(tasks, (task) => task.assignedDate)
-    expect(Math.max(...Object.values(counts).map((items) => items.length))).toBeLessThanOrEqual(4)
+    expect(Math.max(...Object.values(counts).map((items) => items.length))).toBeLessThanOrEqual(3)
+  })
+
+  it('跨多組隨機安排時以每天 2 項最多、1 項其次、3 項最少', () => {
+    const mediumSubjects = Array.from({ length: 4 }, (_, index) => ({
+      code: `subject-${index}`,
+      name: `科目 ${index}`,
+      weeklyMinimum: 2,
+      weeklyMaximum: 2,
+      activities: [{ code: 'practice', name: '練習' }],
+    }))
+    const loadFrequency = { 1: 0, 2: 0, 3: 0 }
+
+    for (let index = 0; index < 200; index += 1) {
+      const tasks = buildWeeklyDraft({
+        studentId: `student-random-${index}`,
+        weekStart: '2026-08-10',
+        subjects: mediumSubjects,
+        seed: `distribution-${index}`,
+      })
+      const counts = Object.groupBy(tasks, (task) => task.assignedDate)
+      Object.values(counts).forEach((items) => {
+        loadFrequency[items.length] += 1
+      })
+    }
+
+    expect(loadFrequency[2]).toBeGreaterThan(loadFrequency[1])
+    expect(loadFrequency[1]).toBeGreaterThan(loadFrequency[3])
   })
 
   it('週末只保留約七成未完成任務，全部完成時不新增任務', () => {
