@@ -2509,35 +2509,90 @@ p {
   transform: translateY(-1px);
 }
 
-.later-box {
+.task-choice-box {
+  display: grid;
+  gap: 0.7rem;
   margin-top: 0.75rem;
+  margin-bottom: 0.85rem;
+  padding: 0.8rem;
   border: 2px dashed #baa96f;
   border-radius: 18px;
   background: #fff8df;
 }
 
-.later-box > button {
+.task-choice-box > div:first-child {
   display: flex;
-  width: 100%;
   align-items: center;
   justify-content: space-between;
-  padding: 0.7rem 0.85rem;
-  border: 0;
+  gap: 0.6rem;
   color: #64583a;
-  background: transparent;
+}
+
+.task-choice-box > div:first-child span {
+  font-size: 0.88rem;
+}
+
+.task-choice-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.55rem;
+}
+
+.task-choice-list button {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 64px;
+  padding: 0.55rem;
+  border: 2px solid #c7b77f;
+  border-radius: 14px;
+  color: #64583a;
+  background: rgba(255, 255, 255, 0.82);
+  text-align: left;
   cursor: pointer;
 }
 
-.later-list {
+.task-choice-list button > span:first-child {
   display: grid;
-  gap: 0.45rem;
-  padding: 0 0.85rem 0.8rem;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #9b8951;
+  font-family: Arial, sans-serif;
+  font-weight: 900;
 }
 
-.later-list span {
-  padding-top: 0.45rem;
-  border-top: 1px solid rgba(100, 88, 58, 0.18);
-  color: #64583a;
+.task-choice-list button > span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.task-choice-list button b,
+.task-choice-list button small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-choice-list button small {
+  color: #756948;
+  font-size: 0.82rem;
+}
+
+.task-choice-list button:hover,
+.task-choice-list button.is-selected {
+  border-color: #397c63;
+  background: #e4f7ed;
+  box-shadow: 0 3px 0 rgba(36, 102, 79, 0.18);
+  transform: translateY(-1px);
+}
+
+.task-choice-list button.is-selected > span:first-child {
+  background: #397c63;
 }
 
 .weekly-card {

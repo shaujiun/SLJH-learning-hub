@@ -5,8 +5,6 @@ import {
   BookOpenCheck,
   Brain,
   Check,
-  ChevronDown,
-  ChevronUp,
   CircleAlert,
   Eye,
   EyeOff,
@@ -39,6 +37,7 @@ import {
 import { learningAudienceOptions } from './lib/learningAudiences.js'
 import { learningSystemLaunchUrl, subjectGamesFor } from './lib/subjectGames.js'
 import { rememberFocusTaskLaunch } from './lib/focusTaskLaunch.js'
+import { resolveSelectedFocusTask } from './lib/focusTaskSelection.js'
 
 const HistoryAtlas = lazy(() => import('./components/HistoryAtlas.jsx'))
 const FocusTrainingHub = lazy(() => import('./components/FocusTrainingHub.jsx'))
@@ -142,7 +141,7 @@ function WeeklyProgress({ tasks }) {
   )
 }
 
-function FocusTask({ task, position, total }) {
+function FocusTask({ task, position, total, freelySelectable = false }) {
   const isSchulte = task.activityCode?.startsWith('schulte_')
   const isMemorization = task.activityCode === 'schulte_memorization'
   const ActivityIcon = isSchulte
@@ -160,7 +159,9 @@ function FocusTask({ task, position, total }) {
   return (
     <article className={`focus-task ${completed ? 'task-completed' : ''}`}>
       <div className="task-topline">
-        <span className="task-position">今日任務 {position}／{total}</span>
+        <span className="task-position">
+          {freelySelectable ? `今日任務 ${position}／${total}・可自由選擇` : `今日任務 ${position}／${total}`}
+        </span>
         <span className="group-badge">{groupLabel}</span>
       </div>
       <div className="task-main">
@@ -519,7 +520,7 @@ function LearningSystemManager({ onSystemsChanged }) {
 
 function LearningHub({ requestedSubject = '' }) {
   const [state, setState] = useState({ loading: true, data: null, error: '' })
-  const [showLater, setShowLater] = useState(false)
+  const [selectedTaskId, setSelectedTaskId] = useState('')
 
   const load = async () => {
     if (!isSupabaseConfigured) {
@@ -548,8 +549,10 @@ function LearningHub({ requestedSubject = '' }) {
     () => state.data?.tasks?.filter((task) => task.status === 'completed') || [],
     [state.data],
   )
-  const currentTask = pendingTasks[0]
-  const laterTasks = pendingTasks.slice(1)
+  const currentTask = resolveSelectedFocusTask(pendingTasks, selectedTaskId)
+  const currentTaskPosition = currentTask
+    ? completedTasks.length + pendingTasks.findIndex((task) => task.id === currentTask.id) + 1
+    : 0
 
   if (state.loading) return <LoadingScreen />
   if (state.error) return <ErrorScreen message={state.error} onRetry={load} />
@@ -621,22 +624,34 @@ function LearningHub({ requestedSubject = '' }) {
 
                 {currentTask ? (
                   <>
-                    <FocusTask task={currentTask} position={completedTasks.length + 1} total={visibleTotal} />
-                    {laterTasks.length > 0 && (
-                      <div className="later-box">
-                        <button type="button" onClick={() => setShowLater((value) => !value)}>
-                          <span>稍後還有 {laterTasks.length} 項任務</span>
-                          {showLater ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
-                        </button>
-                        {showLater && (
-                          <div className="later-list">
-                            {laterTasks.map((task) => (
-                              <span key={task.id}>{task.subjectName}・{task.activityName}</span>
-                            ))}
-                          </div>
-                        )}
+                    {pendingTasks.length > 1 && (
+                      <div className="task-choice-box" aria-label="選擇優先完成的任務">
+                        <div>
+                          <strong>你想先完成哪一項？</strong>
+                          <span>今天的任務可自由選擇順序</span>
+                        </div>
+                        <div className="task-choice-list">
+                          {pendingTasks.map((task, index) => (
+                            <button
+                              className={task.id === currentTask.id ? 'is-selected' : ''}
+                              key={task.id}
+                              type="button"
+                              aria-pressed={task.id === currentTask.id}
+                              onClick={() => setSelectedTaskId(task.id)}
+                            >
+                              <span>{index + 1}</span>
+                              <span><b>{task.subjectName}</b><small>{task.activityName}</small></span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     )}
+                    <FocusTask
+                      task={currentTask}
+                      position={currentTaskPosition}
+                      total={visibleTotal}
+                      freelySelectable={pendingTasks.length > 1}
+                    />
                   </>
                 ) : (
                   <div className="empty-task">
