@@ -1,0 +1,527 @@
+.geography-shell {
+  --geo-ink: #173b4a;
+  --geo-muted: #57717c;
+  --geo-teal: #168b86;
+  --geo-teal-dark: #0e6a68;
+  --geo-sky: #dff4f1;
+  --geo-paper: #fffdf6;
+  --geo-yellow: #ffd878;
+  min-height: 100vh;
+  color: var(--geo-ink);
+  background:
+    radial-gradient(circle at 5% 8%, rgba(255, 216, 120, 0.45), transparent 24rem),
+    radial-gradient(circle at 96% 18%, rgba(111, 199, 196, 0.32), transparent 28rem),
+    #eef8f5;
+  font-family: "Iansui", "標楷體", DFKai-SB, system-ui, sans-serif;
+  font-size: max(19px, 1rem);
+}
+
+.geography-shell *,
+.geography-shell *::before,
+.geography-shell *::after { box-sizing: border-box; }
+
+.geography-header {
+  position: sticky;
+  z-index: 30;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 72px;
+  padding: 0.7rem max(1rem, calc((100vw - 1380px) / 2));
+  border-bottom: 1px solid rgba(23, 59, 74, 0.14);
+  background: rgba(255, 253, 246, 0.92);
+  backdrop-filter: blur(12px);
+}
+
+.geography-header > span {
+  padding: 0.42rem 0.75rem;
+  border-radius: 999px;
+  color: #5c4931;
+  background: #fff0be;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.geography-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--geo-ink);
+  text-decoration: none;
+  font-size: 1.24rem;
+  font-weight: 900;
+}
+
+.geography-brand svg {
+  width: 34px;
+  height: 34px;
+  padding: 0.35rem;
+  border-radius: 11px;
+  color: #fff;
+  background: var(--geo-teal);
+}
+
+.geography-main {
+  width: min(100% - 2rem, 1380px);
+  margin: 0 auto;
+  padding: 1.2rem 0 7rem;
+}
+
+.geography-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  align-items: center;
+  min-height: 220px;
+  padding: clamp(1.3rem, 4vw, 2.6rem);
+  overflow: hidden;
+  border: 2px solid rgba(23, 59, 74, 0.15);
+  border-radius: 30px;
+  background:
+    linear-gradient(125deg, rgba(255, 255, 255, 0.9), rgba(222, 247, 241, 0.82)),
+    repeating-linear-gradient(45deg, transparent 0 18px, rgba(22, 139, 134, 0.05) 18px 20px);
+  box-shadow: 0 20px 50px rgba(26, 74, 82, 0.12);
+}
+
+.geography-hero p,
+.geography-section-heading p,
+.geography-question-copy > p,
+.geography-result-panel > p:first-of-type {
+  margin: 0;
+  color: var(--geo-teal-dark);
+  font-family: system-ui, sans-serif;
+  font-size: 0.83rem;
+  font-weight: 950;
+  letter-spacing: 0.14em;
+}
+
+.geography-hero h1 {
+  margin: 0.3rem 0 0.55rem;
+  font-size: clamp(2rem, 5vw, 3.7rem);
+  line-height: 1.15;
+}
+
+.geography-hero span { color: var(--geo-muted); line-height: 1.6; font-weight: 800; }
+
+.geography-hero-art {
+  display: grid;
+  place-items: center;
+  width: 132px;
+  height: 132px;
+  border: 6px solid rgba(255, 255, 255, 0.8);
+  border-radius: 40% 60% 54% 46%;
+  color: #67502d;
+  background: var(--geo-yellow);
+  box-shadow: 0 16px 28px rgba(99, 78, 39, 0.15);
+  transform: rotate(5deg);
+}
+
+.geography-hero-art svg { width: 66px; height: 66px; transform: rotate(-5deg); }
+
+.geography-orientation-tip {
+  display: none;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border: 1.5px solid #e0bd62;
+  border-radius: 16px;
+  color: #634c23;
+  background: #fff3c8;
+}
+
+.geography-orientation-tip svg { flex: 0 0 auto; width: 30px; height: 30px; }
+
+.geography-panel {
+  margin-top: 1rem;
+  padding: clamp(1rem, 2.4vw, 1.5rem);
+  border: 1.5px solid rgba(23, 59, 74, 0.16);
+  border-radius: 24px;
+  background: rgba(255, 253, 246, 0.96);
+  box-shadow: 0 12px 32px rgba(28, 83, 87, 0.08);
+}
+
+.geography-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.geography-section-heading.compact { margin-bottom: 0.8rem; }
+.geography-section-heading h2 { margin: 0.18rem 0 0; font-size: clamp(1.4rem, 3vw, 1.9rem); }
+.geography-section-heading > small { color: var(--geo-muted); font-weight: 800; }
+
+.geography-area-grid,
+.geography-chapter-grid,
+.geography-topic-grid,
+.geography-setup-grid {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.geography-area-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.geography-chapter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.geography-topic-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.geography-topic-grid.topic-count-1 { grid-template-columns: minmax(0, 520px); }
+.geography-topic-grid.topic-count-2 { grid-template-columns: repeat(2, minmax(0, 520px)); }
+.geography-setup-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.geography-setup-grid > .geography-panel { min-width: 0; }
+
+.geography-area-grid button,
+.geography-chapter-grid button,
+.geography-topic-grid button,
+.geography-option-list button {
+  min-width: 0;
+  border: 2px solid #c9ded9;
+  border-radius: 17px;
+  color: var(--geo-ink);
+  background: #f7fbf8;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.geography-area-grid button,
+.geography-chapter-grid button,
+.geography-topic-grid button {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  min-height: 108px;
+  padding: 0.9rem;
+  text-align: left;
+}
+
+.geography-area-grid button:hover:not(:disabled),
+.geography-chapter-grid button:hover,
+.geography-topic-grid button:hover,
+.geography-option-list button:hover { transform: translateY(-2px); }
+
+.geography-area-grid button.is-active,
+.geography-chapter-grid button.is-active,
+.geography-topic-grid button.is-active,
+.geography-option-list button.is-active {
+  border-color: var(--geo-teal);
+  background: #def4ee;
+  box-shadow: inset 0 0 0 2px rgba(22, 139, 134, 0.12);
+}
+
+.geography-area-grid button:disabled { opacity: 0.58; cursor: not-allowed; }
+.geography-area-grid svg,
+.geography-topic-grid svg { flex: 0 0 auto; width: 31px; height: 31px; color: var(--geo-teal-dark); }
+
+.geography-area-grid span,
+.geography-chapter-grid span:not(.geography-chapter-number),
+.geography-topic-grid span,
+.geography-option-list span { display: flex; min-width: 0; flex-direction: column; }
+.geography-area-grid b,
+.geography-chapter-grid b,
+.geography-topic-grid b,
+.geography-option-list b { font-size: 1.08rem; }
+.geography-area-grid small,
+.geography-chapter-grid small,
+.geography-topic-grid small,
+.geography-option-list small { margin-top: 0.25rem; color: var(--geo-muted); line-height: 1.35; }
+.geography-topic-grid em { margin-top: 0.45rem; color: #775726; font-size: 0.76rem; font-style: normal; font-weight: 900; }
+
+.geography-chapter-number {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  color: #fff;
+  background: var(--geo-teal);
+  font-family: system-ui, sans-serif;
+  font-weight: 950;
+}
+
+.geography-option-list { display: grid; gap: 0.55rem; }
+.geography-option-list button { min-height: 70px; padding: 0.7rem 0.85rem; text-align: left; }
+
+.geography-start-button,
+.geography-next-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 55px;
+  border: 0;
+  border-radius: 16px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--geo-teal), var(--geo-teal-dark));
+  box-shadow: 0 10px 24px rgba(14, 106, 104, 0.22);
+  font: inherit;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+button.geography-start-button {
+  width: min(100%, 560px);
+  margin: 1rem auto 0;
+  font-size: 1.15rem;
+}
+
+.geography-start-button svg,
+.geography-next-button svg { width: 24px; height: 24px; }
+
+.geography-question-panel { margin-top: 1rem; }
+
+.geography-progress-row {
+  display: grid;
+  grid-template-columns: auto minmax(120px, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  color: var(--geo-muted);
+  font-weight: 900;
+}
+
+.geography-progress-row > div {
+  height: 13px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #dbe8e5;
+}
+
+.geography-progress-row i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #55bcb3, #ffd878);
+}
+
+.geography-question-copy { margin: 1.1rem 0 0.8rem; text-align: center; }
+.geography-question-copy h2 { margin: 0.25rem 0 0.35rem; font-size: clamp(1.65rem, 4vw, 2.4rem); }
+.geography-question-copy span { color: var(--geo-muted); font-weight: 800; }
+
+.geography-drag-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: fit-content;
+  margin: 0.5rem auto 0.8rem;
+  padding: 0.6rem 1rem;
+  border: 2px dashed #b7872e;
+  border-radius: 14px;
+  color: #654817;
+  background: #fff0bb;
+  box-shadow: 0 7px 15px rgba(102, 72, 23, 0.12);
+}
+
+.geography-map-stage {
+  position: relative;
+  width: min(100%, 1020px);
+  margin: 0 auto;
+  padding: 0.65rem;
+  overflow: hidden;
+  border: 2px solid #a9ceca;
+  border-radius: 22px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.78), rgba(237, 250, 247, 0.88)),
+    repeating-linear-gradient(0deg, transparent 0 39px, rgba(22, 139, 134, 0.07) 39px 40px),
+    repeating-linear-gradient(90deg, transparent 0 39px, rgba(22, 139, 134, 0.07) 39px 40px);
+}
+
+.geography-china-map { display: block; width: 100%; max-height: 66vh; touch-action: manipulation; }
+
+.geography-province {
+  stroke: #62888a;
+  stroke-width: 1.1;
+  fill: #f8f2d8;
+  cursor: pointer;
+  transition: fill 130ms ease, stroke 130ms ease;
+}
+
+.geography-province:hover,
+.geography-province:focus { outline: none; fill: #d9eee5; stroke: #126f6b; stroke-width: 2; }
+.geography-province.is-wrong { fill: #ffd8d0; stroke: #c4473b; stroke-width: 2.4; }
+.geography-province.is-target { fill: #79d2b3; stroke: #0b7268; stroke-width: 3; filter: drop-shadow(0 0 7px rgba(20, 126, 113, 0.65)); }
+
+.geography-feature-line-visible {
+  fill: none;
+  stroke: #2b86bd;
+  stroke-width: 4;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.geography-feature-line-hit {
+  fill: none;
+  stroke: rgba(43, 134, 189, 0.01);
+  stroke-width: 22;
+  stroke-linecap: round;
+  cursor: pointer;
+}
+
+.geography-feature-line-hit:hover,
+.geography-feature-line-hit:focus { outline: none; stroke: rgba(255, 202, 70, 0.62); }
+.geography-feature-line-hit.is-wrong { stroke: rgba(214, 67, 58, 0.72); }
+.geography-feature-line-hit.is-target { stroke: rgba(41, 191, 135, 0.82); filter: drop-shadow(0 0 6px rgba(20, 126, 113, 0.75)); }
+
+.geography-map-point { cursor: pointer; }
+.geography-map-point-halo { fill: rgba(255, 255, 255, 0.7); stroke: #236f76; stroke-width: 2; }
+.geography-map-point-dot { fill: #236f76; pointer-events: none; }
+.geography-map-point:hover .geography-map-point-halo,
+.geography-map-point:focus .geography-map-point-halo { outline: none; fill: #ffe9a8; stroke: #9a6812; stroke-width: 3; }
+.geography-map-point.is-wrong .geography-map-point-halo { fill: #ffd1c8; stroke: #c4473b; stroke-width: 4; }
+.geography-map-point.is-target .geography-map-point-halo { fill: #8de0bd; stroke: #08756a; stroke-width: 5; filter: drop-shadow(0 0 7px rgba(20, 126, 113, 0.75)); }
+
+.geography-map-compass {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  place-items: center;
+  width: 47px;
+  height: 47px;
+  border: 2px solid rgba(23, 59, 74, 0.2);
+  border-radius: 50%;
+  color: var(--geo-teal-dark);
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.geography-map-compass svg { width: 30px; height: 30px; }
+
+.geography-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.65rem;
+  width: min(100%, 980px);
+  margin: 0.9rem auto 0;
+}
+
+.geography-choice-grid button {
+  min-height: 52px;
+  padding: 0.55rem;
+  border: 2px solid #9fc9c4;
+  border-radius: 14px;
+  color: var(--geo-ink);
+  background: #f4fffc;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.geography-choice-grid button:hover { border-color: var(--geo-teal); background: #def4ee; }
+
+.geography-feedback {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 0.7rem;
+  width: min(100%, 980px);
+  margin: 0.9rem auto 0;
+  padding: 0.8rem 0.95rem;
+  border: 2px solid #e3c467;
+  border-radius: 16px;
+  color: #5f491d;
+  background: #fff4c9;
+}
+
+.geography-feedback.is-correct { border-color: #68b695; color: #155c4a; background: #ddf5e9; }
+.geography-feedback.is-answer { border-color: #cf8078; color: #71372f; background: #ffebe7; }
+.geography-feedback svg { width: 32px; height: 32px; }
+.geography-feedback strong { font-size: 1.03rem; }
+.geography-feedback p { margin: 0.22rem 0 0; line-height: 1.55; }
+
+.geography-next-button { width: min(100%, 420px); margin: 0.85rem auto 0; }
+
+.geography-game-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.55rem;
+  margin-top: 0.8rem;
+}
+
+.geography-game-actions button,
+.geography-result-actions > button:not(.geography-start-button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 46px;
+  padding: 0.5rem 0.8rem;
+  border: 1.5px solid #7fa9a6;
+  border-radius: 13px;
+  color: #275963;
+  background: #f5fffc;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.geography-game-actions svg { width: 20px; height: 20px; }
+
+.geography-result-panel { max-width: 760px; margin: 1rem auto 0; text-align: center; }
+.geography-result-icon { display: grid; place-items: center; width: 92px; height: 92px; margin: 0 auto 0.7rem; border-radius: 30px; color: #76551c; background: #ffe19a; }
+.geography-result-icon svg { width: 52px; height: 52px; }
+.geography-result-panel h2 { margin: 0.25rem 0; font-size: 2rem; }
+.geography-result-score strong { font-family: system-ui, sans-serif; font-size: 4rem; line-height: 1; color: var(--geo-teal-dark); }
+.geography-result-score span { font-weight: 900; }
+.geography-result-panel > p { font-size: 1.15rem; }
+.geography-result-panel > small { display: block; color: var(--geo-muted); line-height: 1.5; }
+.geography-result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-top: 1rem; }
+.geography-result-actions .geography-start-button { width: 100%; margin: 0; font-size: 1rem; }
+
+.geography-source-note {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-top: 1rem;
+  padding: 0.75rem 0.2rem;
+  color: #60777c;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.geography-source-note a { color: #126f6b; font-weight: 900; }
+
+@media (max-width: 980px) {
+  .geography-orientation-tip { display: flex; }
+  .geography-topic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .geography-chapter-grid { grid-template-columns: 1fr; }
+  .geography-setup-grid { grid-template-columns: 1fr; }
+  .geography-china-map { max-height: none; }
+}
+
+@media (max-width: 680px) {
+  .geography-shell { font-size: 18px; }
+  .geography-header { position: static; align-items: flex-start; gap: 0.5rem; }
+  .geography-brand { font-size: 1rem; }
+  .geography-brand svg { width: 30px; height: 30px; }
+  .geography-header > span { font-size: 0.72rem; }
+  .geography-main { width: min(100% - 1rem, 1380px); padding-top: 0.6rem; }
+  .geography-hero { grid-template-columns: minmax(0, 1fr) 74px; min-height: 165px; padding: 1rem; border-radius: 21px; }
+  .geography-hero h1 { font-size: 1.65rem; }
+  .geography-hero-art { width: 70px; height: 70px; border-width: 4px; border-radius: 24px; }
+  .geography-hero-art svg { width: 38px; height: 38px; }
+  .geography-panel { padding: 0.85rem; border-radius: 18px; }
+  .geography-section-heading { align-items: flex-start; flex-direction: column; gap: 0.25rem; }
+  .geography-area-grid { grid-template-columns: 1fr; }
+  .geography-chapter-grid { grid-template-columns: 1fr; }
+  .geography-area-grid button { min-height: 76px; }
+  .geography-topic-grid { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .geography-topic-grid button { min-height: 114px; padding: 0.65rem; }
+  .geography-topic-grid svg { width: 25px; height: 25px; }
+  .geography-progress-row { grid-template-columns: auto auto; }
+  .geography-progress-row > div { grid-column: 1 / -1; grid-row: 2; }
+  .geography-map-stage { padding: 0.25rem; border-radius: 15px; }
+  .geography-map-compass { width: 38px; height: 38px; top: 0.5rem; right: 0.5rem; }
+  .geography-map-compass svg { width: 25px; height: 25px; }
+  .geography-map-point-halo { r: 18; }
+  .geography-choice-grid { grid-template-columns: 1fr 1fr; gap: 0.45rem; }
+  .geography-choice-grid button { min-height: 50px; padding: 0.4rem; }
+  .geography-game-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .geography-result-actions { grid-template-columns: 1fr; }
+  .geography-source-note { font-size: 0.72rem; }
+}
+
+@media (max-width: 680px) and (orientation: landscape) {
+  .geography-orientation-tip { display: none; }
+  .geography-header { min-height: 58px; }
+  .geography-hero { min-height: 130px; }
+  .geography-china-map { max-height: calc(100vh - 160px); }
+}

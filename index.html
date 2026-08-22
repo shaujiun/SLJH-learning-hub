@@ -8,7 +8,18 @@
     <title>各科學習系統</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main class="app-boot-screen" role="status">
+        <div class="app-boot-spinner" aria-hidden="true"></div>
+        <h1>正在載入學習系統</h1>
+        <p>若畫面停留過久，請重新整理以取得最新版本。</p>
+        <button
+          class="app-boot-reload"
+          type="button"
+          onclick="const url = new URL(window.location.href); url.searchParams.set('_reload', Date.now()); window.location.replace(url.toString())"
+        >重新載入最新版</button>
+      </main>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

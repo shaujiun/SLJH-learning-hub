@@ -25,6 +25,15 @@ const subjectGameTemplates = {
       launchUrl: '?history=atlas',
     },
   ],
+  geography: [
+    {
+      code: 'geography-fill-map',
+      name: '地理填圖學習系統',
+      description: '依翰林版課本練習臺灣、中國與世界地理；第一階段先開放中國行政區、地形、河流與氣候。',
+      availability: '翰林八上・中國地理第一版',
+      launchUrl: '?geography=maps',
+    },
+  ],
 }
 
 function configuredLaunchUrl(system, englishVocabUrl) {
