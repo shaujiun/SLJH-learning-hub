@@ -46,6 +46,7 @@ const SchulteDynamicGame = lazy(() => import('./components/SchulteDynamicGame.js
 const SchulteShapeGame = lazy(() => import('./components/SchulteShapeGame.jsx'))
 const SchultePhraseGame = lazy(() => import('./components/SchultePhraseGame.jsx'))
 const SchulteMemorizationGame = lazy(() => import('./components/SchulteMemorizationGame.jsx'))
+const GeographyFillMap = lazy(() => import('./components/GeographyFillMap.jsx'))
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
@@ -722,6 +723,9 @@ export default function App() {
   }
   if (searchParams.get('history') === 'atlas') {
     return <Suspense fallback={<LoadingScreen />}><HistoryAtlas /></Suspense>
+  }
+  if (searchParams.get('geography') === 'maps') {
+    return <Suspense fallback={<LoadingScreen />}><GeographyFillMap /></Suspense>
   }
   return <LearningHub requestedSubject={searchParams.get('subject') || ''} />
 }

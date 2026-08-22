@@ -6,6 +6,7 @@ describe('各科遊戲選擇入口', () => {
     ['english', '?subject=english'],
     ['science', '?subject=science'],
     ['history', '?subject=history'],
+    ['geography', '?subject=geography'],
     ['math', '?subject=math'],
   ])('%s 自由練習先進入該科遊戲選擇頁', (code, expected) => {
     expect(learningSystemLaunchUrl({
@@ -31,9 +32,12 @@ describe('各科遊戲選擇入口', () => {
       }))
   })
 
-  it('尚未建立遊戲網址的其他科目維持準備中', () => {
-    expect(learningSystemLaunchUrl({ code: 'geography', name: '地理', launchUrl: '' }, '')).toBe('')
-    expect(subjectGamesFor({ code: 'geography', name: '地理', launchUrl: '' }, '')).toEqual([])
+  it('地理科提供翰林八上中國填圖第一版', () => {
+    expect(subjectGamesFor({ code: 'geography', name: '地理', launchUrl: '' }, '')).toContainEqual(expect.objectContaining({
+      code: 'geography-fill-map',
+      launchUrl: '?geography=maps',
+      availability: '翰林八上・中國地理第一版',
+    }))
   })
 
   it('歷史科先提供八年級歷史時光地圖', () => {
