@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import PeriodicTableGame from './components/PeriodicTableGame.jsx'
 import ScienceLevelManager from './components/ScienceLevelManager.jsx'
+import LearningSystemOrderButtons from './components/LearningSystemOrderButtons.jsx'
 import { isSupabaseConfigured } from './lib/supabase.js'
 import {
   buildTaskLaunchUrl,
@@ -495,10 +496,13 @@ function LearningSystemManager({ onSystemsChanged }) {
         <div className="manager-system-list">
           {systems.map((system, index) => (
             <article className={`manager-system-row ${system.isActive ? '' : 'manager-system-hidden'}`} key={system.id}>
-              <div className="manager-order-buttons">
-                <button type="button" onClick={() => moveSystem(index, -1)} disabled={index === 0 || status.saving} aria-label={`將${system.subjectName}往前移`}><ChevronUp aria-hidden="true" /></button>
-                <button type="button" onClick={() => moveSystem(index, 1)} disabled={index === systems.length - 1 || status.saving} aria-label={`將${system.subjectName}往後移`}><ChevronDown aria-hidden="true" /></button>
-              </div>
+              <LearningSystemOrderButtons
+                subjectName={system.subjectName}
+                index={index}
+                total={systems.length}
+                saving={status.saving}
+                onMove={(direction) => moveSystem(index, direction)}
+              />
               <div className="manager-system-copy">
                 <div><strong>{system.subjectName}</strong><code>{system.subjectCode}</code><span>{system.audienceLabel}</span><span>{system.isActive ? '顯示中' : '已隱藏'}</span></div>
                 <p>{system.description || '尚未填寫說明'}</p>
