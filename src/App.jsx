@@ -39,6 +39,7 @@ import { learningAudienceOptions } from './lib/learningAudiences.js'
 import { learningSystemLaunchUrl, subjectGamesFor } from './lib/subjectGames.js'
 import { rememberFocusTaskLaunch } from './lib/focusTaskLaunch.js'
 import { resolveSelectedFocusTask } from './lib/focusTaskSelection.js'
+import { describePendingTask, summarizeWeeklyProgress } from './lib/weeklyProgress.js'
 
 const HistoryAtlas = lazy(() => import('./components/HistoryAtlas.jsx'))
 const FocusTrainingHub = lazy(() => import('./components/FocusTrainingHub.jsx'))
@@ -104,20 +105,7 @@ function ErrorScreen({ message, onRetry }) {
 }
 
 function WeeklyProgress({ tasks }) {
-  const completed = tasks.filter((task) => task.status === 'completed').length
-  const active = tasks.filter((task) => task.status !== 'expired').length
-  const percentage = active === 0 ? 0 : Math.round((completed / active) * 100)
-  const subjectSummary = Object.values(tasks.reduce((summary, task) => {
-    const current = summary[task.subjectCode] || {
-      name: task.subjectName,
-      total: 0,
-      completed: 0,
-    }
-    if (task.status !== 'expired') current.total += 1
-    if (task.status === 'completed') current.completed += 1
-    summary[task.subjectCode] = current
-    return summary
-  }, {}))
+  const summary = summarizeWeeklyProgress(tasks)
 
   return (
     <section className="weekly-card" aria-labelledby="weekly-title">
@@ -126,18 +114,38 @@ function WeeklyProgress({ tasks }) {
           <p className="eyebrow">THIS WEEK</p>
           <h2 id="weekly-title">本週練習進度</h2>
         </div>
-        <strong className="progress-number">{completed}／{active}</strong>
+        <strong className="progress-number">{summary.completed}／{summary.total}</strong>
       </div>
-      <div className="progress-track" aria-label={`本週已完成 ${percentage}%`}>
-        <span style={{ width: `${percentage}%` }} />
+      <div className="progress-track" aria-label={`本週已完成 ${summary.percentage}%`}>
+        <span style={{ width: `${summary.percentage}%` }} />
       </div>
       <div className="subject-progress-list">
-        {subjectSummary.map((subject) => (
-          <span key={subject.name}>
+        {summary.subjects.map((subject) => (
+          <span key={subject.code}>
             {subject.name} {subject.completed}／{subject.total}
           </span>
         ))}
       </div>
+      {summary.pendingTasks.length > 0 ? (
+        <div className="weekly-pending-panel">
+          <strong><CircleAlert aria-hidden="true" />尚未完成的項目</strong>
+          <ul>
+            {summary.pendingTasks.map((task) => (
+              <li key={task.id}>
+                <span>{task.subjectName}・{task.activityName}</span>
+                <small>
+                  {task.assignedDate?.slice(5).replace('-', '/')}・{describePendingTask(task)}
+                </small>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : summary.total > 0 ? (
+        <p className="weekly-complete-note"><Check aria-hidden="true" />截至今天的任務已全部完成。</p>
+      ) : null}
+      {summary.futureCount > 0 && (
+        <p className="weekly-future-note">另有 {summary.futureCount} 項尚未到指定日期，暫不列入完成率。</p>
+      )}
       <p className="weekend-note">平日未完成時，週末只保留約 70％ 任務；平日全部完成，就不加派週末任務。</p>
     </section>
   )

@@ -181,6 +181,7 @@ export default function PeriodicTableGame() {
       const progress = reviewing ? null : await recordPeriodicTableAttempt({
           focusTaskId,
           level,
+          mode,
           introGroup,
           trackStudentProgress: Boolean(context?.student),
           score,
@@ -403,6 +404,12 @@ export default function PeriodicTableGame() {
               <div className="result-progress-message">
                 個人升級進度：{result.progress.consecutivePasses}／{result.progress.requiredPasses}
               </div>
+            )}
+            {result.progress?.passed && result.progress?.matchedFocusTaskId && (
+              <p className="periodic-task-sync-note"><Check aria-hidden="true" />本次已計入每日任務。</p>
+            )}
+            {result.score >= (context.task?.targetScore || 80) && !result.progress?.matchedFocusTaskId && (
+              <p className="periodic-free-practice-note">本次為自由練習；目前沒有相符的待完成任務。</p>
             )}
             {result.saveError && <p className="result-save-error">{result.saveError}</p>}
 
