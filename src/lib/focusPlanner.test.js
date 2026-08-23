@@ -92,9 +92,9 @@ describe('focus planner', () => {
     expect(loadFrequency[1]).toBeGreaterThan(loadFrequency[3])
   })
 
-  it('週末只保留約七成未完成任務，全部完成時不新增任務', () => {
+  it('週末保留所有未完成任務，全部完成時不新增任務', () => {
     const pending = Array.from({ length: 10 }, (_, index) => ({ id: index, status: 'pending' }))
-    expect(selectWeekendCarryover(pending, 'weekend-seed')).toHaveLength(7)
+    expect(selectWeekendCarryover(pending, 'weekend-seed')).toHaveLength(10)
     expect(selectWeekendCarryover(
       pending.map((task) => ({ ...task, status: 'completed' })),
       'weekend-seed',

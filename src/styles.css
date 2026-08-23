@@ -2798,6 +2798,85 @@ p {
   line-height: 1.6;
 }
 
+.eye-care-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(31, 42, 54, 0.62);
+  backdrop-filter: blur(5px);
+}
+
+.eye-care-dialog {
+  width: min(540px, 100%);
+  padding: 1.5rem;
+  border: 2px solid #345f76;
+  border-radius: 26px;
+  color: #253a47;
+  background: linear-gradient(145deg, #f5fcff, #fff8dd);
+  box-shadow: 0 24px 70px rgba(24, 40, 52, 0.28);
+  text-align: center;
+}
+
+.eye-care-icon {
+  display: grid;
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 0.8rem;
+  place-items: center;
+  border-radius: 24px;
+  color: #fff;
+  background: linear-gradient(145deg, #4d8ba5, #36677c);
+}
+
+.eye-care-icon svg {
+  width: 38px;
+  height: 38px;
+}
+
+.eye-care-dialog h2 {
+  margin: 0.15rem 0 0.65rem;
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+}
+
+.eye-care-dialog > p:not(.eyebrow) {
+  margin: 0.5rem 0;
+  line-height: 1.75;
+}
+
+.eye-care-time {
+  color: #32647a;
+  font-weight: 900;
+}
+
+.eye-care-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  margin: 1rem 0 0.8rem;
+}
+
+.eye-care-actions button {
+  min-height: 52px;
+}
+
+.eye-care-dialog > small {
+  color: #687680;
+  line-height: 1.5;
+}
+
+@media (max-width: 560px) {
+  .eye-care-dialog {
+    padding: 1.15rem;
+  }
+
+  .eye-care-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 .systems-section {
   margin-top: 1.3rem;
   padding: 1.2rem;
