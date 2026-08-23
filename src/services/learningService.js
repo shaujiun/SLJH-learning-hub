@@ -165,7 +165,7 @@ export async function loadLearningDashboard(referenceDate = new Date()) {
   const weekStart = startOfWeek(new Date(`${date}T12:00:00`))
   const { data: weeklyRows, error: weeklyError } = await client
     .from('student_focus_tasks')
-    .select('id,status,subject_code_snapshot,subject_name_snapshot,activity_name_snapshot,group_code_snapshot,question_count,target_score,best_score,assigned_date')
+    .select('id,status,subject_code_snapshot,subject_name_snapshot,activity_name_snapshot,group_code_snapshot,question_count,target_score,best_score,assigned_date,completed_at')
     .eq('student_id', student.id)
     .eq('week_start', weekStart)
     .order('assigned_date')
@@ -197,6 +197,7 @@ export async function loadLearningDashboard(referenceDate = new Date()) {
     targetScore: row.target_score,
     bestScore: row.best_score,
     assignedDate: row.assigned_date,
+    completedAt: row.completed_at,
   }))
   const taskLists = buildDashboardTaskLists(mappedTasks, mappedWeeklyTasks, memorizationTask)
 

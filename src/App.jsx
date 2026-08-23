@@ -39,6 +39,8 @@ import { learningAudienceOptions } from './lib/learningAudiences.js'
 import { learningSystemLaunchUrl, subjectGamesFor } from './lib/subjectGames.js'
 import { rememberFocusTaskLaunch } from './lib/focusTaskLaunch.js'
 import { resolveSelectedFocusTask } from './lib/focusTaskSelection.js'
+import { describePendingTask, summarizeWeeklyProgress } from './lib/weeklyProgress.js'
+import { getEyeCareReminder } from './lib/eyeCareReminder.js'
 
 const HistoryAtlas = lazy(() => import('./components/HistoryAtlas.jsx'))
 const FocusTrainingHub = lazy(() => import('./components/FocusTrainingHub.jsx'))
@@ -104,20 +106,7 @@ function ErrorScreen({ message, onRetry }) {
 }
 
 function WeeklyProgress({ tasks }) {
-  const completed = tasks.filter((task) => task.status === 'completed').length
-  const active = tasks.filter((task) => task.status !== 'expired').length
-  const percentage = active === 0 ? 0 : Math.round((completed / active) * 100)
-  const subjectSummary = Object.values(tasks.reduce((summary, task) => {
-    const current = summary[task.subjectCode] || {
-      name: task.subjectName,
-      total: 0,
-      completed: 0,
-    }
-    if (task.status !== 'expired') current.total += 1
-    if (task.status === 'completed') current.completed += 1
-    summary[task.subjectCode] = current
-    return summary
-  }, {}))
+  const summary = summarizeWeeklyProgress(tasks)
 
   return (
     <section className="weekly-card" aria-labelledby="weekly-title">
@@ -126,20 +115,62 @@ function WeeklyProgress({ tasks }) {
           <p className="eyebrow">THIS WEEK</p>
           <h2 id="weekly-title">本週練習進度</h2>
         </div>
-        <strong className="progress-number">{completed}／{active}</strong>
+        <strong className="progress-number">{summary.completed}／{summary.total}</strong>
       </div>
-      <div className="progress-track" aria-label={`本週已完成 ${percentage}%`}>
-        <span style={{ width: `${percentage}%` }} />
+      <div className="progress-track" aria-label={`本週已完成 ${summary.percentage}%`}>
+        <span style={{ width: `${summary.percentage}%` }} />
       </div>
       <div className="subject-progress-list">
-        {subjectSummary.map((subject) => (
-          <span key={subject.name}>
+        {summary.subjects.map((subject) => (
+          <span key={subject.code}>
             {subject.name} {subject.completed}／{subject.total}
           </span>
         ))}
       </div>
-      <p className="weekend-note">平日未完成時，週末只保留約 70％ 任務；平日全部完成，就不加派週末任務。</p>
+      {summary.pendingTasks.length > 0 ? (
+        <div className="weekly-pending-panel">
+          <strong><CircleAlert aria-hidden="true" />尚未完成的項目</strong>
+          <ul>
+            {summary.pendingTasks.map((task) => (
+              <li key={task.id}>
+                <span>{task.subjectName}・{task.activityName}</span>
+                <small>
+                  {task.assignedDate?.slice(5).replace('-', '/')}・{describePendingTask(task)}
+                </small>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : summary.total > 0 ? (
+        <p className="weekly-complete-note"><Check aria-hidden="true" />截至今天的任務已全部完成。</p>
+      ) : null}
+      {summary.futureCount > 0 && (
+        <p className="weekly-future-note">另有 {summary.futureCount} 項尚未到指定日期，暫不列入完成率。</p>
+      )}
+      <p className="weekend-note">本週截至今天的未完成任務都會保留，可依自己的狀況安排補做順序。</p>
     </section>
+  )
+}
+
+function EyeCareReminderDialog({ reminder, onContinue, onRest }) {
+  if (!reminder) return null
+  return (
+    <div className="eye-care-backdrop" role="presentation">
+      <section className="eye-care-dialog" role="dialog" aria-modal="true" aria-labelledby="eye-care-title">
+        <div className="eye-care-icon"><Eye aria-hidden="true" /></div>
+        <p className="eyebrow">EYE CARE BREAK</p>
+        <h2 id="eye-care-title">先讓眼睛休息一下</h2>
+        <p>
+          目前還有 <strong>{reminder.pendingCount} 項</strong>任務。為避免長時間注視螢幕，建議距離最近一次完成任務後休息滿 1 小時。
+        </p>
+        <p className="eye-care-time">建議再休息約 {reminder.remainingMinutes} 分鐘</p>
+        <div className="eye-care-actions">
+          <button className="secondary-button" type="button" onClick={onRest}>先休息，返回聯絡簿</button>
+          <button className="primary-button" type="button" onClick={onContinue}>我知道了，繼續練習</button>
+        </div>
+        <small>這只是護眼提醒，不會取消任務，也不會強制中止作答。</small>
+      </section>
+    </div>
   )
 }
 
@@ -162,7 +193,7 @@ function FocusTask({ task, position, total, freelySelectable = false }) {
     <article className={`focus-task ${completed ? 'task-completed' : ''}`}>
       <div className="task-topline">
         <span className="task-position">
-          {freelySelectable ? `今日任務 ${position}／${total}・可自由選擇` : `今日任務 ${position}／${total}`}
+          {freelySelectable ? `待完成任務 ${position}／${total}・可自由選擇` : `待完成任務 ${position}／${total}`}
         </span>
         <span className="group-badge">{groupLabel}</span>
       </div>
@@ -526,6 +557,7 @@ function LearningSystemManager({ onSystemsChanged }) {
 function LearningHub({ requestedSubject = '' }) {
   const [state, setState] = useState({ loading: true, data: null, error: '' })
   const [selectedTaskId, setSelectedTaskId] = useState('')
+  const [dismissedEyeCareKey, setDismissedEyeCareKey] = useState('')
 
   const load = async () => {
     if (!isSupabaseConfigured) {
@@ -559,6 +591,16 @@ function LearningHub({ requestedSubject = '' }) {
     ? completedTasks.length + pendingTasks.findIndex((task) => task.id === currentTask.id) + 1
     : 0
 
+  const eyeCareReminder = useMemo(
+    () => getEyeCareReminder(state.data?.weeklyTasks || []),
+    [state.data],
+  )
+  const visibleEyeCareReminder = eyeCareReminder
+    && dismissedEyeCareKey !== eyeCareReminder.key
+    && window.sessionStorage.getItem('sljh-eye-care-dismissed') !== eyeCareReminder.key
+    ? eyeCareReminder
+    : null
+
   if (state.loading) return <LoadingScreen />
   if (state.error) return <ErrorScreen message={state.error} onRetry={load} />
   if (!state.data?.authenticated) return <LoginRequired />
@@ -575,8 +617,24 @@ function LearningHub({ requestedSubject = '' }) {
     window.location.assign(contactBookUrl)
   }
 
+  const dismissEyeCareReminder = () => {
+    if (!visibleEyeCareReminder) return
+    window.sessionStorage.setItem('sljh-eye-care-dismissed', visibleEyeCareReminder.key)
+    setDismissedEyeCareKey(visibleEyeCareReminder.key)
+  }
+
+  const handleEyeCareRest = () => {
+    dismissEyeCareReminder()
+    window.location.assign(contactBookUrl)
+  }
+
   return (
     <div className="app-shell">
+      <EyeCareReminderDialog
+        reminder={visibleEyeCareReminder}
+        onContinue={dismissEyeCareReminder}
+        onRest={handleEyeCareRest}
+      />
       <header className="site-header">
         <a className="brand" href={contactBookUrl}>
           <span><BookOpenCheck aria-hidden="true" /></span>
@@ -622,9 +680,9 @@ function LearningHub({ requestedSubject = '' }) {
                 <div className="section-heading">
                   <div>
                     <p className="eyebrow">TODAY</p>
-                    <h2 id="today-title">今天的專注任務</h2>
+                    <h2 id="today-title">待完成的專注任務</h2>
                   </div>
-                  <span className="daily-count">最多 3 項</span>
+                  <span className="daily-count">剩餘 {pendingTasks.length} 項</span>
                 </div>
 
                 {currentTask ? (
@@ -633,7 +691,7 @@ function LearningHub({ requestedSubject = '' }) {
                       <div className="task-choice-box" aria-label="選擇優先完成的任務">
                         <div>
                           <strong>你想先完成哪一項？</strong>
-                          <span>今天的任務可自由選擇順序</span>
+                          <span>截至今天的任務可自由選擇順序</span>
                         </div>
                         <div className="task-choice-list">
                           {pendingTasks.map((task, index) => (

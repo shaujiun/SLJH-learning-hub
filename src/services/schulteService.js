@@ -1,5 +1,6 @@
 import { isSupabaseConfigured, requireSupabase } from '../lib/supabase.js'
 import { clearRememberedFocusTask } from '../lib/focusTaskLaunch.js'
+import { findPendingFocusTaskId } from './focusTaskRecoveryService.js'
 import {
   calculateDynamicSchulteResult,
   calculatePhraseSchulteResult,
@@ -100,8 +101,16 @@ export async function recordSchulteCompletion({
     return { record: localRecord, records: localRecords, storedRemotely: false }
   }
 
+  const recoveredTaskId = !focusTaskId
+    ? await findPendingFocusTaskId({
+        subjectCode: 'focus_training',
+        activityCode: `schulte_static_${result.size}`,
+      }, client)
+    : ''
+  const effectiveFocusTaskId = focusTaskId || recoveredTaskId
+
   const { data, error } = await client.rpc('record_schulte_attempt', {
-    p_focus_task_id: focusTaskId || null,
+    p_focus_task_id: effectiveFocusTaskId || null,
     p_grid_size: result.size,
     p_duration_ms: result.durationMs,
     p_error_count: result.errorCount,
@@ -112,16 +121,17 @@ export async function recordSchulteCompletion({
       record: localRecord,
       records: localRecords,
       storedRemotely: false,
-      remoteError: focusTaskId ? error.message : '',
+      remoteError: effectiveFocusTaskId ? error.message : '',
     }
   }
 
-  if (focusTaskId && data?.taskCompleted) clearRememberedFocusTask(focusTaskId)
+  if (effectiveFocusTaskId && data?.taskCompleted) clearRememberedFocusTask(effectiveFocusTaskId)
   return {
     record: localRecord,
     records: localRecords,
     storedRemotely: true,
     taskCompleted: Boolean(data?.taskCompleted),
+    recoveredFocusTask: Boolean(recoveredTaskId),
     personalBestMs: data?.personalBestMs || result.durationMs,
   }
 }
@@ -150,8 +160,16 @@ export async function recordDynamicSchulteCompletion({
     return { record: localRecord, records: localRecords, storedRemotely: false }
   }
 
+  const recoveredTaskId = !focusTaskId
+    ? await findPendingFocusTaskId({
+        subjectCode: 'focus_training',
+        activityCode: `schulte_dynamic_${result.size}`,
+      }, client)
+    : ''
+  const effectiveFocusTaskId = focusTaskId || recoveredTaskId
+
   const { data, error } = await client.rpc('record_dynamic_schulte_attempt', {
-    p_focus_task_id: focusTaskId || null,
+    p_focus_task_id: effectiveFocusTaskId || null,
     p_item_count: result.size,
     p_duration_ms: result.durationMs,
     p_error_count: result.errorCount,
@@ -162,16 +180,17 @@ export async function recordDynamicSchulteCompletion({
       record: localRecord,
       records: localRecords,
       storedRemotely: false,
-      remoteError: focusTaskId ? error.message : '',
+      remoteError: effectiveFocusTaskId ? error.message : '',
     }
   }
 
-  if (focusTaskId && data?.taskCompleted) clearRememberedFocusTask(focusTaskId)
+  if (effectiveFocusTaskId && data?.taskCompleted) clearRememberedFocusTask(effectiveFocusTaskId)
   return {
     record: localRecord,
     records: localRecords,
     storedRemotely: true,
     taskCompleted: Boolean(data?.taskCompleted),
+    recoveredFocusTask: Boolean(recoveredTaskId),
     personalBestMs: data?.personalBestMs || result.durationMs,
   }
 }
@@ -199,8 +218,16 @@ export async function recordShapeSchulteCompletion({
     return { record: localRecord, records: localRecords, storedRemotely: false }
   }
 
+  const recoveredTaskId = !focusTaskId
+    ? await findPendingFocusTaskId({
+        subjectCode: 'focus_training',
+        activityCode: 'schulte_shape_5',
+      }, client)
+    : ''
+  const effectiveFocusTaskId = focusTaskId || recoveredTaskId
+
   const { data, error } = await client.rpc('record_shape_schulte_attempt', {
-    p_focus_task_id: focusTaskId || null,
+    p_focus_task_id: effectiveFocusTaskId || null,
     p_duration_ms: result.durationMs,
     p_error_count: result.errorCount,
   })
@@ -210,16 +237,17 @@ export async function recordShapeSchulteCompletion({
       record: localRecord,
       records: localRecords,
       storedRemotely: false,
-      remoteError: focusTaskId ? error.message : '',
+      remoteError: effectiveFocusTaskId ? error.message : '',
     }
   }
 
-  if (focusTaskId && data?.taskCompleted) clearRememberedFocusTask(focusTaskId)
+  if (effectiveFocusTaskId && data?.taskCompleted) clearRememberedFocusTask(effectiveFocusTaskId)
   return {
     record: localRecord,
     records: localRecords,
     storedRemotely: true,
     taskCompleted: Boolean(data?.taskCompleted),
+    recoveredFocusTask: Boolean(recoveredTaskId),
     personalBestMs: data?.personalBestMs || result.durationMs,
   }
 }
@@ -440,9 +468,16 @@ export async function recordPhraseSchulteCompletion({
   if (!sessionData.session?.user) {
     return { record: localRecord, records: localRecords, storedRemotely: false }
   }
+  const recoveredTaskId = !focusTaskId
+    ? await findPendingFocusTaskId({
+        subjectCode: 'focus_training',
+        activityCode: 'schulte_sentence',
+      }, client)
+    : ''
+  const effectiveFocusTaskId = focusTaskId || recoveredTaskId
   const remotePhraseId = String(phraseId).startsWith('default-') ? null : phraseId || null
   const { data, error } = await client.rpc('record_phrase_schulte_attempt', {
-    p_focus_task_id: focusTaskId || null,
+    p_focus_task_id: effectiveFocusTaskId || null,
     p_phrase_id: remotePhraseId,
     p_character_count: result.size,
     p_duration_ms: result.durationMs,
@@ -453,15 +488,16 @@ export async function recordPhraseSchulteCompletion({
       record: localRecord,
       records: localRecords,
       storedRemotely: false,
-      remoteError: focusTaskId ? error.message : '',
+      remoteError: effectiveFocusTaskId ? error.message : '',
     }
   }
-  if (focusTaskId && data?.taskCompleted) clearRememberedFocusTask(focusTaskId)
+  if (effectiveFocusTaskId && data?.taskCompleted) clearRememberedFocusTask(effectiveFocusTaskId)
   return {
     record: localRecord,
     records: localRecords,
     storedRemotely: true,
     taskCompleted: Boolean(data?.taskCompleted),
+    recoveredFocusTask: Boolean(recoveredTaskId),
     personalBestMs: data?.personalBestMs || result.durationMs,
   }
 }

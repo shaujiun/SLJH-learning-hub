@@ -138,7 +138,12 @@ export default function SchultePhraseGame() {
         errorCount: nextErrorCount,
       })
       setRecords(saved.records)
-      setResult({ ...saved.record, remoteError: saved.remoteError })
+      setResult({
+        ...saved.record,
+        remoteError: saved.remoteError,
+        taskCompleted: saved.taskCompleted,
+        recoveredFocusTask: saved.recoveredFocusTask,
+      })
     } catch (error) {
       setResult({
         mode: 'sentence',
@@ -257,6 +262,7 @@ export default function SchultePhraseGame() {
                   <div><Target aria-hidden="true" /><span>平均點按</span><strong>{formatSchulteDuration(result.averageTapMs)}</strong></div>
                   <div><Sparkles aria-hidden="true" /><span>個人最佳</span><strong>{formatSchulteDuration((bestPhraseSchulteRecord(records) || result).durationMs)}</strong></div>
                 </div>
+                {result.taskCompleted && <p className="schulte-task-sync-note"><Check aria-hidden="true" />本次已計入每日任務。</p>}
                 {result.remoteError && <p className="schulte-save-note">本機紀錄已保留；每日任務紀錄需待資料庫更新後同步。</p>}
               </>
             )}

@@ -130,15 +130,14 @@ export function buildWeeklyDraft({
 }
 
 /**
- * 週末不新增任務，只從未完成的平日任務中保留約 70％。
+ * 週末不新增任務，保留本週所有尚未完成的任務供學生自行補做。
  */
 export function selectWeekendCarryover(tasks, seed) {
   const unfinished = tasks.filter((task) => task.status !== 'completed')
   if (unfinished.length === 0) return []
 
   const random = createSeededRandom(seed)
-  const carryCount = Math.max(1, Math.round(unfinished.length * 0.7))
-  return shuffled(unfinished, random).slice(0, carryCount)
+  return shuffled(unfinished, random)
 }
 
 export function tasksForDate(tasks, referenceDate, weekStart, seed) {

@@ -1,8 +1,10 @@
 import { requireSupabase } from '../lib/supabase.js'
 import { clearRememberedFocusTask } from '../lib/focusTaskLaunch.js'
+import { findPendingFocusTaskId } from './focusTaskRecoveryService.js'
 import {
   getIntroGroupForProgress,
   normalizePeriodicLevel,
+  normalizePeriodicMode,
   parsePeriodicActivityCode,
   periodicLevels,
 } from '../lib/periodicTable.js'
@@ -114,6 +116,7 @@ export async function loadPeriodicTableContext(focusTaskId = '', client = requir
 export async function recordPeriodicTableAttempt({
   focusTaskId,
   level,
+  mode,
   introGroup,
   trackStudentProgress = false,
   score,
@@ -121,10 +124,20 @@ export async function recordPeriodicTableAttempt({
   questionCount,
 }, client = requireSupabase()) {
   const normalizedScore = Math.max(0, Math.min(100, Math.round(Number(score) || 0)))
-  if (!focusTaskId && (!trackStudentProgress || normalizePeriodicLevel(level) !== 'intro')) return null
-  const rpcName = focusTaskId ? 'record_focus_task_attempt' : 'record_periodic_intro_attempt'
-  const parameters = focusTaskId ? {
-    p_focus_task_id: focusTaskId,
+  const normalizedLevel = normalizePeriodicLevel(level)
+  const normalizedMode = normalizePeriodicMode(mode)
+  const recoveredTaskId = !focusTaskId && trackStudentProgress
+    ? await findPendingFocusTaskId({
+        subjectCode: 'science',
+        activityCode: `periodic_${normalizedLevel}_${normalizedMode}`,
+      }, client)
+    : ''
+  const effectiveFocusTaskId = focusTaskId || recoveredTaskId
+
+  if (!effectiveFocusTaskId && (!trackStudentProgress || normalizedLevel !== 'intro')) return null
+  const rpcName = effectiveFocusTaskId ? 'record_focus_task_attempt' : 'record_periodic_intro_attempt'
+  const parameters = effectiveFocusTaskId ? {
+    p_focus_task_id: effectiveFocusTaskId,
     p_score: normalizedScore,
     p_correct_count: Number(correctCount),
     p_question_count: Number(questionCount),
@@ -136,8 +149,12 @@ export async function recordPeriodicTableAttempt({
   }
   const { data, error } = await client.rpc(rpcName, parameters)
   if (error) throw new Error(`無法儲存元素週期表進度：${error.message}`)
-  if (focusTaskId && data?.passed) clearRememberedFocusTask(focusTaskId)
-  return data
+  if (effectiveFocusTaskId && data?.passed) clearRememberedFocusTask(effectiveFocusTaskId)
+  return {
+    ...data,
+    matchedFocusTaskId: effectiveFocusTaskId || null,
+    recoveredFocusTask: Boolean(recoveredTaskId),
+  }
 }
 
 export async function loadScienceStudentLevels(client = requireSupabase()) {

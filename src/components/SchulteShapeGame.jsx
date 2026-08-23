@@ -106,6 +106,8 @@ export default function SchulteShapeGame() {
         ...saved.record,
         remoteError: saved.remoteError,
         personalBestMs: saved.personalBestMs,
+        taskCompleted: saved.taskCompleted,
+        recoveredFocusTask: saved.recoveredFocusTask,
       })
     } catch (error) {
       setResult({
@@ -238,6 +240,7 @@ export default function SchulteShapeGame() {
                   <div><Target aria-hidden="true" /><span>平均點按</span><strong>{formatSchulteDuration(result.averageTapMs)}</strong></div>
                   <div><Sparkles aria-hidden="true" /><span>個人最佳</span><strong>{formatSchulteDuration((bestShapeSchulteRecord(records) || result).durationMs)}</strong></div>
                 </div>
+                {result.taskCompleted && <p className="schulte-task-sync-note"><Check aria-hidden="true" />本次已計入每日任務。</p>}
                 {result.remoteError && <p className="schulte-save-note">本機紀錄已保留；每日任務紀錄需待資料庫更新後同步。</p>}
               </>
             )}
