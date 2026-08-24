@@ -326,6 +326,131 @@ button.geography-start-button {
 }
 
 .geography-china-map { display: block; width: 100%; max-height: 66vh; touch-action: manipulation; }
+.geography-region-map.is-taiwan {
+  width: min(100%, 620px);
+  margin: 0 auto;
+  max-height: 74vh;
+}
+
+.geography-fill-board { display: grid; gap: 0.8rem; }
+
+.geography-fill-instruction {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: min(100%, 1020px);
+  margin: 0 auto;
+  padding: 0.65rem 0.85rem;
+  border: 1.5px solid #d5ae53;
+  border-radius: 14px;
+  color: #624817;
+  background: #fff2bd;
+}
+.geography-fill-instruction span { color: #705f3d; font-size: 0.86rem; font-weight: 800; }
+
+.geography-fill-label-bank {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.55rem;
+  width: min(100%, 1020px);
+  margin: 0 auto;
+  padding: 0.75rem;
+  border: 2px dashed #7fa9a6;
+  border-radius: 18px;
+  background: #f5fffc;
+}
+
+.geography-fill-label-bank button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 48px;
+  padding: 0.5rem 0.7rem;
+  border: 2px solid #8ebbb5;
+  border-radius: 13px;
+  color: #244f58;
+  background: #fff;
+  font: inherit;
+  font-weight: 950;
+  cursor: grab;
+}
+.geography-fill-label-bank button:active { cursor: grabbing; }
+.geography-fill-label-bank button.is-selected { border-color: #b47714; background: #ffe7a0; box-shadow: 0 0 0 4px rgba(255, 205, 83, 0.28); }
+.geography-fill-label-bank button.is-completed { border-color: #74b99a; color: #155c4a; background: #ddf5e9; cursor: default; }
+.geography-fill-label-bank svg { width: 22px; height: 22px; }
+.geography-diagram-stage.is-fill-board .geography-diagram-card { cursor: crosshair; }
+
+.geography-diagram-stage {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.75rem;
+  width: min(100%, 1020px);
+  margin: 0 auto;
+  padding: 1rem;
+  border: 2px solid #a9ceca;
+  border-radius: 22px;
+  background: linear-gradient(145deg, #f8fffd, #eef8f5);
+}
+
+.geography-diagram-card {
+  display: grid;
+  place-items: center;
+  min-height: 150px;
+  padding: 0.85rem;
+  border: 2px solid #9fc9c4;
+  border-radius: 18px;
+  color: var(--geo-ink);
+  background: #fffdf6;
+  cursor: pointer;
+}
+
+.geography-diagram-card:disabled { opacity: 1; cursor: default; }
+.geography-diagram-card:hover:not(:disabled),
+.geography-diagram-card:focus-visible { outline: none; border-color: #c28b22; background: #fff4ca; }
+.geography-diagram-card.is-wrong { border-color: #c4473b; background: #ffe3dd; }
+.geography-diagram-card.is-target { border-color: #08756a; background: #dff7ec; box-shadow: 0 0 0 4px rgba(20, 126, 113, 0.15); }
+.geography-diagram-card > span { margin-top: 0.5rem; color: #075e56; font-weight: 950; }
+
+.geography-scale-number { font-family: system-ui, sans-serif; font-size: clamp(1.65rem, 4vw, 2.4rem); }
+.geography-scale-text { max-width: 12em; text-align: center; line-height: 1.5; }
+.geography-scale-bar {
+  display: grid;
+  grid-template-columns: auto 62px 62px auto;
+  align-items: end;
+  color: #263f49;
+  font-family: system-ui, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+.geography-scale-bar i { height: 18px; border: 2px solid #263f49; border-right: 0; background: #f7d267; }
+.geography-scale-bar i:nth-of-type(2) { border-right: 2px solid #263f49; background: #fff; }
+.geography-scale-bar span,
+.geography-scale-bar b { padding: 0 0.35rem; white-space: nowrap; }
+
+.geography-scale-map {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  width: 145px;
+  height: 95px;
+  padding: 8px;
+  border: 3px solid #54787c;
+  border-radius: 12px;
+  background: repeating-linear-gradient(45deg, #e4f4e9 0 8px, #d3eadf 8px 16px);
+}
+.geography-scale-map i { border-radius: 5px; background: #da8d5e; }
+.geography-scale-map.is-large-scale i:nth-child(2n) { background: #6aa5be; }
+.geography-scale-map.is-small-scale { gap: 13px; padding: 17px; transform: scale(0.9); }
+.geography-scale-map.is-small-scale i { border-radius: 50%; background: #6e9c71; }
+
+.geography-contour-graphic { width: min(100%, 210px); height: 128px; }
+.geography-contour-graphic path,
+.geography-contour-graphic ellipse { fill: none; stroke: #8a5c28; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.geography-contour-graphic text { fill: #60401f; font-family: system-ui, sans-serif; font-size: 11px; font-weight: 800; text-anchor: middle; }
+.geography-contour-graphic .geography-contour-water { stroke: #258abb; stroke-width: 4; }
+.geography-contour-graphic .geography-contour-ridge-line { stroke: #4b8b56; stroke-dasharray: 7 6; stroke-width: 3; }
 
 .geography-province {
   stroke: #62888a;
@@ -582,6 +707,7 @@ button.geography-start-button {
   .geography-chapter-grid { grid-template-columns: 1fr; }
   .geography-setup-grid { grid-template-columns: 1fr; }
   .geography-china-map { max-height: none; }
+  .geography-region-map.is-taiwan { max-height: 78vh; }
 }
 
 @media (max-width: 680px) {
@@ -606,6 +732,12 @@ button.geography-start-button {
   .geography-progress-row { grid-template-columns: auto auto; }
   .geography-progress-row > div { grid-column: 1 / -1; grid-row: 2; }
   .geography-map-stage { padding: 0.25rem; border-radius: 15px; }
+  .geography-fill-instruction { align-items: flex-start; flex-direction: column; gap: 0.2rem; }
+  .geography-fill-label-bank { gap: 0.4rem; padding: 0.5rem; }
+  .geography-fill-label-bank button { flex: 1 1 calc(50% - 0.4rem); justify-content: center; min-width: 0; padding: 0.45rem; }
+  .geography-diagram-stage { grid-template-columns: 1fr 1fr; gap: 0.45rem; padding: 0.45rem; border-radius: 15px; }
+  .geography-diagram-card { min-height: 124px; padding: 0.45rem; border-radius: 13px; }
+  .geography-region-map.is-taiwan { width: min(100%, 520px); max-height: none; }
   .geography-map-compass { width: 38px; height: 38px; top: 0.5rem; right: 0.5rem; }
   .geography-map-compass svg { width: 25px; height: 25px; }
   .geography-relief-step-band { min-height: 56px; }

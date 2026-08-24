@@ -21,6 +21,16 @@ export function buildGeographyChoices(item, pool, size = 4, random = Math.random
   return shuffleGeographyItems([item, ...distractors], random)
 }
 
+export function geographyMixedFillStart(total) {
+  return Math.max(2, Math.floor(total * 0.7))
+}
+
+export function geographyEffectiveMode(modeId, questionIndex, total) {
+  if (modeId !== 'mixed') return modeId
+  if (questionIndex >= geographyMixedFillStart(total)) return 'fill'
+  return questionIndex % 2 === 0 ? 'locate' : 'identify'
+}
+
 export function geographyFeedback(item, mistakeCount) {
   if (mistakeCount <= 1) {
     return {
@@ -40,6 +50,28 @@ export function geographyFeedback(item, mistakeCount) {
     level: 'answer',
     message: `答案是「${item?.name || ''}」。${item?.reason || ''}`,
     revealAnswer: true,
+  }
+}
+
+export function evaluateGeographyFillPlacement(item, targetId, previousMistakeCount = 0) {
+  if (!item) return { correct: false, mistakeCount: previousMistakeCount, feedback: null }
+  const correctTarget = item.mapKind === 'province' ? item.mapId : item.id
+  if (targetId === correctTarget) {
+    return {
+      correct: true,
+      mistakeCount: previousMistakeCount,
+      feedback: {
+        level: 'correct',
+        message: `「${item.name}」放置正確。${item.reason || ''}`,
+        revealAnswer: false,
+      },
+    }
+  }
+  const mistakeCount = previousMistakeCount + 1
+  return {
+    correct: false,
+    mistakeCount,
+    feedback: geographyFeedback(item, mistakeCount),
   }
 }
 

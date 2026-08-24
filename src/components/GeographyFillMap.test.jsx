@@ -1,8 +1,10 @@
 import React from 'react'
 import { renderToString } from 'react-dom/server'
+import taiwanMap from '@svg-maps/taiwan'
 import { afterEach, describe, expect, it } from 'vitest'
 import { chinaReliefStepItems } from '../data/chinaGeography.js'
-import GeographyFillMap, { ChinaMap } from './GeographyFillMap.jsx'
+import { taiwanContourItems, taiwanScaleItems } from '../data/taiwanGeography.js'
+import GeographyFillMap, { ChinaMap, GeographyConceptDiagram, GeographyFillBoard } from './GeographyFillMap.jsx'
 
 const originalWindow = globalThis.window
 
@@ -11,7 +13,7 @@ afterEach(() => {
 })
 
 describe('GeographyFillMap', () => {
-  it('先顯示正式課本章節，再顯示目前章節的主題與練習方式', () => {
+  it('預設顯示臺灣地理正式課本章節，再顯示目前章節的主題與練習方式', () => {
     globalThis.window = {
       location: new URL('http://127.0.0.1:4173/?geography=maps'),
       scrollTo: () => {},
@@ -23,12 +25,13 @@ describe('GeographyFillMap', () => {
     expect(html).toContain('臺灣地理')
     expect(html).toContain('中國地理')
     expect(html).toContain('世界地理')
-    expect(html).toContain('八上第 1 章　中國的地形')
-    expect(html).toContain('八上第 2 章　中國的氣候')
-    expect(html).not.toContain('八上第 3 章　中國的傳統農業區')
-    expect(html).toContain('地勢三級階梯')
-    expect(html).toContain('行政區填圖')
-    expect(html).toContain('地形與山脈')
+    expect(html).toContain('七上第 1 章　認識位置與地圖')
+    expect(html).toContain('七上第 2 章　世界中的臺灣')
+    expect(html).toContain('七上第 6 章　水文')
+    expect(html).toContain('地圖基本功')
+    expect(html).toContain('比例尺判讀')
+    expect(html).toContain('等高線判讀')
+    expect(html).not.toContain('地勢三級階梯')
     expect(html).not.toContain('<em>翰林八上 L03</em>')
     expect(html).toContain('看名稱找位置')
     expect(html).toContain('看位置選名稱')
@@ -76,5 +79,57 @@ describe('GeographyFillMap', () => {
     )
 
     expect(html).toContain('第一級階梯')
+  })
+
+  it('比例尺與等高線以不洩漏答案名稱的互動圖卡呈現', () => {
+    const scaleHtml = renderToString(
+      <GeographyConceptDiagram
+        currentItem={taiwanScaleItems[0]}
+        topicItems={taiwanScaleItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+    const contourHtml = renderToString(
+      <GeographyConceptDiagram
+        currentItem={taiwanContourItems[0]}
+        topicItems={taiwanContourItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+
+    expect(scaleHtml).toContain('1：50,000')
+    expect(scaleHtml).toContain('圖上 1 公分代表實地 500 公尺')
+    expect(scaleHtml).not.toContain('數字比例尺')
+    expect(contourHtml).toContain('geography-contour-graphic')
+    expect(contourHtml).not.toContain('陡坡')
+  })
+
+  it('標籤填圖同時提供多張可拖曳標籤與多個空白圖卡', () => {
+    const items = taiwanScaleItems.slice(0, 3)
+    const html = renderToString(
+      <GeographyFillBoard
+        mapDefinition={taiwanMap}
+        mapLabel="臺灣地圖"
+        areaId="taiwan"
+        items={items}
+        onProgress={() => {}}
+        onScore={() => {}}
+        onFinish={() => {}}
+      />,
+    )
+
+    expect(html.match(/draggable="true"/g)).toHaveLength(3)
+    expect(html.match(/geography-diagram-card /g)).toHaveLength(3)
+    expect(html).toContain('先選標籤，再點位置')
+    expect(html).toContain('手機和平板可先點標籤')
+    expect(html).not.toContain('查看本回合結果')
   })
 })

@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   buildGeographyChoices,
   buildGeographyRound,
+  evaluateGeographyFillPlacement,
   geographyDifficultyLabel,
+  geographyEffectiveMode,
   geographyFeedback,
 } from './geographyGame.js'
 
@@ -36,5 +38,36 @@ describe('地理填圖回合', () => {
     expect(geographyDifficultyLabel(5, 10)).toBe('入門')
     expect(geographyDifficultyLabel(7, 10)).toBe('基礎')
     expect(geographyDifficultyLabel(9, 10)).toBe('進階')
+  })
+
+  it('標籤填圖為每張標籤獨立累計錯誤，第三次才公布答案', () => {
+    const item = {
+      id: 'river-test',
+      mapKind: 'line',
+      name: '測試河流',
+      hint: '位於地圖中部。',
+      reason: '這是判斷依據。',
+    }
+    const first = evaluateGeographyFillPlacement(item, 'wrong-one', 0)
+    expect(first).toMatchObject({ correct: false, mistakeCount: 1 })
+    expect(first.feedback.revealAnswer).toBe(false)
+
+    const second = evaluateGeographyFillPlacement(item, 'wrong-two', first.mistakeCount)
+    expect(second.feedback).toMatchObject({ message: '位於地圖中部。', revealAnswer: false })
+
+    const third = evaluateGeographyFillPlacement(item, 'wrong-three', second.mistakeCount)
+    expect(third.mistakeCount).toBe(3)
+    expect(third.feedback.revealAnswer).toBe(true)
+    expect(third.feedback.message).toContain('這是判斷依據。')
+
+    const correct = evaluateGeographyFillPlacement(item, 'river-test', 0)
+    expect(correct).toMatchObject({ correct: true, feedback: { level: 'correct' } })
+  })
+
+  it('混合挑戰先交替定位與辨認，最後加入多標籤填圖', () => {
+    expect(Array.from({ length: 10 }, (_, index) => geographyEffectiveMode('mixed', index, 10))).toEqual([
+      'locate', 'identify', 'locate', 'identify', 'locate', 'identify', 'locate', 'fill', 'fill', 'fill',
+    ])
+    expect(geographyEffectiveMode('fill', 0, 10)).toBe('fill')
   })
 })
