@@ -3,7 +3,11 @@ import chinaMap from '@svg-maps/china'
 import {
   chinaGeographyChapters,
   chinaGeographyTopics,
+  chinaAgricultureItems,
+  chinaClimateItems,
   chinaProvinceItems,
+  chinaReliefStepItems,
+  chinaTerrainItems,
 } from './chinaGeography.js'
 
 describe('中國地理填圖資料', () => {
@@ -38,5 +42,34 @@ describe('中國地理填圖資料', () => {
     expect(chinaGeographyChapters).toHaveLength(2)
     expect(chapterTopicIds).toEqual(['relief-steps', 'terrain', 'administrative', 'rivers', 'climate', 'agriculture'])
     expect(new Set(chapterTopicIds)).toEqual(new Set(chinaGeographyTopics.map((topic) => topic.id)))
+  })
+
+  it('使用雙箭頭範圍而不是單一定位點表示三個階梯', () => {
+    const steps = chinaReliefStepItems.filter((item) => item.id.startsWith('relief-step-'))
+
+    expect(steps).toHaveLength(3)
+    steps.forEach((step) => {
+      expect(step.mapKind).toBe('range')
+      expect(step.x2).toBeGreaterThan(step.x1)
+      expect(step.x2 - step.x1).toBeGreaterThanOrEqual(180)
+      expect(step).not.toHaveProperty('x')
+    })
+  })
+
+  it('主要山脈與秦嶺—淮河使用線狀範圍，不以單點表示', () => {
+    const mountainIds = [
+      'terrain-tianshan',
+      'terrain-kunlun',
+      'terrain-himalaya',
+      'terrain-qinling',
+      'terrain-hengduan',
+    ]
+    const mountains = chinaTerrainItems.filter((item) => mountainIds.includes(item.id))
+
+    expect(mountains).toHaveLength(mountainIds.length)
+    expect(mountains.every((item) => item.mapKind === 'line' && item.path.startsWith('M '))).toBe(true)
+    expect(chinaClimateItems.some((item) => item.id === 'climate-qinling-huaihe' && item.mapKind === 'line')).toBe(true)
+    expect(chinaAgricultureItems.some((item) => item.id === 'agriculture-qinling-huaihe-750' && item.mapKind === 'line')).toBe(true)
+    expect(chinaAgricultureItems.some((item) => item.id === 'agriculture-rainfall-750')).toBe(false)
   })
 })

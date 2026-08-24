@@ -64,35 +64,35 @@ export const chinaTerrainItems = [
   { id: 'terrain-northeast-plain', mapKind: 'point', x: 620, y: 196, name: '東北平原', hint: '它位於大興安嶺以東、中國東北部。', reason: '東北平原面積廣大，黑土肥沃，是中國重要農業區。' },
   { id: 'terrain-north-china-plain', mapKind: 'point', x: 548, y: 326, name: '華北平原', hint: '它位於太行山以東、黃河下游。', reason: '華北平原由黃河、淮河等河流沖積形成。' },
   { id: 'terrain-yangtze-plain', mapKind: 'point', x: 558, y: 402, name: '長江中下游平原', hint: '沿著長江中下游向東尋找。', reason: '長江中下游平原河湖密布，是中國重要的水田農業區。' },
-  { id: 'terrain-tianshan', mapKind: 'point', x: 205, y: 202, name: '天山山脈', hint: '它橫貫新疆中部。', reason: '天山山脈大致東西走向，分隔準噶爾盆地與塔里木盆地。' },
-  { id: 'terrain-kunlun', mapKind: 'point', x: 244, y: 309, name: '崑崙山脈', hint: '它位於塔里木盆地南側、青藏高原北緣。', reason: '崑崙山脈大致東西走向，是青藏高原北部的重要山脈。' },
-  { id: 'terrain-himalaya', mapKind: 'point', x: 236, y: 457, name: '喜馬拉雅山脈', hint: '它位於中國西南邊界。', reason: '喜馬拉雅山脈位於青藏高原南緣，為中國與南亞的重要界山。' },
-  { id: 'terrain-qinling', mapKind: 'point', x: 439, y: 354, name: '秦嶺', hint: '它位於黃土高原以南、四川盆地以北。', reason: '秦嶺大致東西走向，和淮河構成中國重要自然地理分界。' },
+  { id: 'terrain-tianshan', mapKind: 'line', path: 'M 125 205 C 166 196 207 201 247 209 C 278 215 307 219 333 225', name: '天山山脈', hint: '它橫貫新疆中部。', reason: '天山山脈大致東西走向，分隔準噶爾盆地與塔里木盆地。' },
+  { id: 'terrain-kunlun', mapKind: 'line', path: 'M 160 300 C 204 302 250 311 294 320 C 321 326 345 332 367 339', name: '崑崙山脈', hint: '它位於塔里木盆地南側、青藏高原北緣。', reason: '崑崙山脈大致東西走向，是青藏高原北部的重要山脈。' },
+  { id: 'terrain-himalaya', mapKind: 'line', path: 'M 145 430 C 184 439 225 451 267 462 C 300 471 330 476 360 478', name: '喜馬拉雅山脈', hint: '它沿著中國西南邊界延伸。', reason: '喜馬拉雅山脈沿青藏高原南緣延伸，為中國與南亞的重要界山。' },
+  { id: 'terrain-qinling', mapKind: 'line', path: 'M 395 355 C 421 351 449 355 478 366', name: '秦嶺', hint: '它位於黃土高原以南、四川盆地以北。', reason: '秦嶺大致東西走向，和淮河構成中國重要自然地理分界。' },
   { id: 'terrain-turpan-depression', mapKind: 'point', x: 238, y: 221, name: '吐魯番窪地', hint: '往新疆東部、天山山脈附近尋找。', reason: '吐魯番窪地位於天山東段，是中國地勢較低且氣候乾燥的盆地。' },
   { id: 'terrain-qaidam', mapKind: 'point', x: 330, y: 333, name: '柴達木盆地', hint: '往青藏高原東北部、祁連山以南尋找。', reason: '柴達木盆地位於青海省西北部，介於祁連山與崑崙山之間。' },
   { id: 'terrain-yangtze-delta', mapKind: 'point', x: 646, y: 405, name: '長江三角洲', hint: '沿長江向東找到出海口附近。', reason: '長江三角洲位於長江出海口，是中國人口與經濟活動密集的地區。' },
   { id: 'terrain-southeast-hills', mapKind: 'point', x: 604, y: 450, name: '東南丘陵', hint: '往長江以南、東南沿海的內陸側尋找。', reason: '東南丘陵分布在中國東南部，地勢起伏且低山丘陵廣布。' },
   { id: 'terrain-lingnan-hills', mapKind: 'point', x: 535, y: 476, name: '嶺南丘陵', hint: '往南嶺以南、珠江流域北側尋找。', reason: '嶺南丘陵位於中國南部，範圍大致在南嶺以南。' },
   { id: 'terrain-pearl-delta', mapKind: 'point', x: 580, y: 505, name: '珠江三角洲', hint: '往中國南部、珠江接近南海的河口尋找。', reason: '珠江三角洲位於珠江出海口，是中國南部重要的平原與都市群。' },
-  { id: 'terrain-hengduan', mapKind: 'point', x: 388, y: 430, name: '橫斷山脈', hint: '往四川盆地以西、青藏高原東南緣尋找。', reason: '橫斷山脈南北縱走，是青藏高原東南側的重要山地。' },
+  { id: 'terrain-hengduan', mapKind: 'line', path: 'M 390 368 C 402 396 402 424 397 452 C 393 474 397 493 404 510', name: '橫斷山脈', hint: '往四川盆地以西、青藏高原東南緣尋找。', reason: '橫斷山脈南北縱走，是青藏高原東南側的重要山地。' },
 ]
 
 export const chinaReliefStepItems = [
-  { id: 'relief-step-one', mapKind: 'point', x: 235, y: 382, name: '第一級階梯', hint: '先找中國西南部海拔最高、面積廣大的高原。', reason: '第一級階梯以青藏高原為主，平均海拔最高。' },
-  { id: 'relief-step-two', mapKind: 'point', x: 438, y: 325, name: '第二級階梯', hint: '位於青藏高原以東、大興安嶺至太行山一線以西。', reason: '第二級階梯以高原與盆地為主，包括內蒙古高原、黃土高原、四川盆地等。' },
-  { id: 'relief-step-three', mapKind: 'point', x: 590, y: 338, name: '第三級階梯', hint: '往中國東部沿海的平原與丘陵區尋找。', reason: '第三級階梯位於中國東部，主要由平原與丘陵構成。' },
-  { id: 'relief-greater-khingan', mapKind: 'line', name: '大興安嶺', path: 'M 552 126 C 543 171 545 220 535 261 C 527 289 527 315 531 337', hint: '它位於中國東北部，走向大致為東北—西南。', reason: '大興安嶺是中國第二、三級階梯北段的重要分界。' },
-  { id: 'relief-taihang', mapKind: 'line', name: '太行山', path: 'M 531 337 C 527 352 526 370 523 387', hint: '往黃土高原以東、華北平原以西尋找。', reason: '太行山位於黃土高原與華北平原之間，是第二、三級階梯的重要分界。' },
-  { id: 'relief-wushan', mapKind: 'line', name: '巫山', path: 'M 500 386 C 500 404 499 420 496 437', hint: '往四川盆地東側、長江三峽附近尋找。', reason: '巫山位於四川盆地與長江中下游地區之間，是第二、三級階梯的重要分界。' },
-  { id: 'relief-qilian', mapKind: 'line', name: '祁連山', path: 'M 306 316 C 338 320 365 328 393 344', hint: '往青藏高原東北緣、甘肅與青海交界尋找。', reason: '祁連山位於青藏高原東北緣，是第一、二級階梯的重要分界。' },
-  { id: 'relief-kunlun', mapKind: 'line', name: '崑崙山脈', path: 'M 175 294 C 220 302 267 311 314 323', hint: '往塔里木盆地南側、青藏高原北緣尋找。', reason: '崑崙山脈是中國第一、二級階梯西段的重要分界。' },
-  { id: 'relief-hengduan', mapKind: 'line', name: '橫斷山脈', path: 'M 391 366 C 398 390 397 419 390 453 C 387 470 388 486 391 500', hint: '往青藏高原東南緣、四川盆地以西尋找。', reason: '橫斷山脈南北縱走，是中國第一、二級階梯東南段的重要分界。' },
+  { id: 'relief-step-one', mapKind: 'range', x1: 135, x2: 390, y: 410, name: '第一級階梯', hint: '觀察中國西南部以青藏高原為主的一大片高海拔範圍，不是尋找單一地點。', reason: '第一級階梯以青藏高原為主，是中國西南部一大片平均海拔最高的範圍。' },
+  { id: 'relief-step-two', mapKind: 'range', x1: 185, x2: 535, y: 260, name: '第二級階梯', hint: '觀察第一級階梯以北、以東，以及大興安嶺—太行山—巫山一線以西的廣大範圍。', reason: '第二級階梯涵蓋廣大的高原與盆地，包括內蒙古高原、黃土高原、四川盆地等，不是只有一個中心點。' },
+  { id: 'relief-step-three', mapKind: 'range', x1: 520, x2: 700, y: 375, name: '第三級階梯', hint: '觀察大興安嶺—太行山—巫山一線以東，延伸到東部沿海的廣大範圍。', reason: '第三級階梯涵蓋中國東部的平原與丘陵，從第二、三級階梯分界延伸至海岸。' },
+  { id: 'relief-greater-khingan', mapKind: 'line', name: '大興安嶺', path: 'M 620 135 C 603 174 590 215 570 255 C 555 285 541 315 530 340', hint: '它位於中國東北部，走向大致為東北—西南。', reason: '大興安嶺是中國第二、三級階梯北段的重要分界。' },
+  { id: 'relief-taihang', mapKind: 'line', name: '太行山', path: 'M 530 337 C 526 352 521 370 515 390', hint: '往黃土高原以東、華北平原以西尋找。', reason: '太行山位於黃土高原與華北平原之間，是第二、三級階梯的重要分界。' },
+  { id: 'relief-wushan', mapKind: 'line', name: '巫山', path: 'M 505 390 C 503 407 501 424 498 441', hint: '往四川盆地東側、長江三峽附近尋找。', reason: '巫山位於四川盆地與長江中下游地區之間，是第二、三級階梯的重要分界。' },
+  { id: 'relief-qilian', mapKind: 'line', name: '祁連山', path: 'M 330 286 C 361 291 393 299 425 312', hint: '往青藏高原東北緣、甘肅與青海交界尋找。', reason: '祁連山位於柴達木盆地北側、甘肅與青海交界，是第一、二級階梯的重要分界。' },
+  { id: 'relief-kunlun', mapKind: 'line', name: '崑崙山脈', path: 'M 160 300 C 204 302 250 311 294 320 C 321 326 345 332 367 339', hint: '往塔里木盆地南側、青藏高原北緣尋找。', reason: '崑崙山脈是中國第一、二級階梯西段的重要分界。' },
+  { id: 'relief-hengduan', mapKind: 'line', name: '橫斷山脈', path: 'M 390 368 C 402 396 402 424 397 452 C 393 474 397 493 404 510', hint: '往青藏高原東南緣、四川盆地以西尋找。', reason: '橫斷山脈南北縱走，是中國第一、二級階梯東南段的重要分界。' },
 ]
 
 export const chinaRiverItems = [
   {
     id: 'river-yellow', mapKind: 'line', name: '黃河',
-    path: 'M 320 250 C 365 266 405 272 417 305 C 423 327 445 330 475 315 C 510 297 545 304 575 289 C 600 276 620 286 638 301',
+    path: 'M 305 352 C 340 359 370 344 390 320 C 405 301 402 278 398 255 C 395 236 411 226 431 232 C 455 239 476 236 493 244 C 508 252 507 274 503 293 C 499 314 493 334 501 348 C 512 363 534 349 553 340 C 576 328 600 324 621 314 C 636 307 647 305 659 306',
     hint: '它源於青藏高原，流經黃土高原後注入渤海。',
     reason: '黃河呈「幾」字形流經中國北部，含沙量大，最後注入渤海。',
   },
@@ -116,12 +116,11 @@ export const chinaClimateItems = [
   { id: 'climate-temperate-grassland', mapKind: 'point', x: 424, y: 286, name: '溫帶草原氣候', hint: '往季風區西側與乾燥區東側的過渡帶尋找。', reason: '中國北部內陸降水由東向西減少，草原氣候位於季風與沙漠氣候之間。' },
   { id: 'climate-temperate-desert', mapKind: 'point', x: 251, y: 270, name: '溫帶沙漠氣候', hint: '往深居內陸的中國西北部尋找。', reason: '中國西北部距海遠，水氣不易到達，降水少而形成溫帶沙漠氣候。' },
   { id: 'climate-highland', mapKind: 'point', x: 250, y: 390, name: '高地氣候區', hint: '往海拔最高的青藏高原尋找。', reason: '青藏高原因海拔高，夏季氣溫仍偏低，形成高地氣候。' },
-  { id: 'climate-qinling', mapKind: 'point', x: 440, y: 354, name: '秦嶺山脈', hint: '往黃土高原以南、四川盆地以北尋找。', reason: '秦嶺山脈與淮河共同形成中國東部重要的氣候分界。' },
   {
-    id: 'climate-huaihe', mapKind: 'line', name: '淮河',
-    path: 'M 475 355 C 510 360 548 354 584 359 C 597 361 609 360 621 358',
-    hint: '從秦嶺向東，在黃河與長江之間尋找。',
-    reason: '淮河與秦嶺大致相接，是中國東部南北氣候的重要分界。',
+    id: 'climate-qinling-huaihe', mapKind: 'line', name: '秦嶺—淮河',
+    path: 'M 395 355 C 422 351 449 355 478 366 C 505 376 536 374 566 381 C 593 388 618 384 641 386',
+    hint: '由黃土高原南側的秦嶺向東，接到黃河與長江之間的淮河。',
+    reason: '秦嶺—淮河一線大致與一月 0℃ 等溫線及年雨量 750 毫米等雨量線相近，是中國東部重要的南北氣候分界。',
   },
 ]
 
@@ -130,10 +129,8 @@ export const chinaAgricultureItems = [
   { id: 'agriculture-farming', mapKind: 'point', x: 555, y: 382, name: '農業區', hint: '往降水較多、平原較集中的中國東部尋找。', reason: '中國東部受季風影響，雨量較多，平原與河谷適合發展農業。' },
   { id: 'agriculture-wheat', mapKind: 'point', x: 548, y: 327, name: '旱田農業區', hint: '往秦嶺—淮河以北的華北平原尋找。', reason: '中國北方降水較少，主要發展旱田農業，常見作物包括小麥。' },
   { id: 'agriculture-rice', mapKind: 'point', x: 552, y: 430, name: '水田農業區', hint: '往秦嶺—淮河以南、氣候較溫暖濕潤處尋找。', reason: '中國南方雨量較多、熱量充足，水田農業發達，稻米為重要作物。' },
-  { id: 'agriculture-qinling', mapKind: 'point', x: 440, y: 354, name: '秦嶺山脈', hint: '往黃土高原以南、四川盆地以北尋找。', reason: '秦嶺山脈與淮河共同形成中國東部重要的農業分界。' },
-  { id: 'agriculture-huaihe', mapKind: 'line', name: '淮河', path: 'M 475 355 C 510 360 548 354 584 359 C 597 361 609 360 621 358', hint: '從秦嶺向東，在黃河與長江之間尋找。', reason: '淮河以北雨量較少，多旱田；以南較濕潤，多水田。' },
-  { id: 'agriculture-rainfall-500', mapKind: 'line', name: '年雨量 500 毫米等雨量線', path: 'M 520 122 C 515 183 518 235 500 283 C 486 319 474 343 466 368', hint: '它大致由中國東北向西南延伸，分隔較乾燥與較濕潤地區。', reason: '年雨量 500 毫米等雨量線大致是中國傳統畜牧區與農業區的重要分界。' },
-  { id: 'agriculture-rainfall-750', mapKind: 'line', name: '年雨量 750 毫米等雨量線', path: 'M 440 354 C 478 356 514 360 551 356 C 581 354 602 360 623 361', hint: '它大致接近秦嶺—淮河一線。', reason: '年雨量 750 毫米等雨量線大致分隔北方旱田與南方水田農業。' },
+  { id: 'agriculture-rainfall-500', mapKind: 'line', name: '年雨量 500 毫米等雨量線', path: 'M 615 120 C 601 165 589 210 560 250 C 533 280 505 306 475 329 C 449 349 425 373 408 400 C 390 428 382 462 380 497', hint: '它大致由中國東北向西南延伸，經內蒙古、黃土高原西側與青藏高原東緣，分隔較乾燥與較濕潤地區。', reason: '年雨量 500 毫米等雨量線大致是中國傳統畜牧區與農業區的重要分界。' },
+  { id: 'agriculture-qinling-huaihe-750', mapKind: 'line', name: '秦嶺—淮河（約 750 毫米等雨量線）', path: 'M 395 355 C 422 351 449 355 478 366 C 505 376 536 374 566 381 C 593 388 618 384 641 386', hint: '先找黃土高原南側的秦嶺，再沿淮河向東；這條線大致也接近年雨量 750 毫米等雨量線。', reason: '秦嶺—淮河一線大致接近年雨量 750 毫米等雨量線，分隔北方旱田與南方水田農業。' },
 ]
 
 export const chinaGeographyTopics = [

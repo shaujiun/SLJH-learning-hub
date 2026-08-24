@@ -86,11 +86,12 @@ function OrientationTip() {
   )
 }
 
-function ChinaMap({ currentItem, topicItems, effectiveMode, revealed, solved, wrongTargetId, onAnswer }) {
+export function ChinaMap({ currentItem, topicItems, effectiveMode, revealed, solved, wrongTargetId, onAnswer }) {
   const targetKey = currentItem?.mapKind === 'province' ? currentItem.mapId : currentItem?.id
   const showCurrentTarget = effectiveMode === 'identify' || revealed || solved
   const pointItems = topicItems.filter((item) => item.mapKind === 'point')
   const lineItems = topicItems.filter((item) => item.mapKind === 'line')
+  const rangeItems = topicItems.filter((item) => item.mapKind === 'range')
 
   const answer = (id) => {
     if (effectiveMode === 'identify' || revealed || solved) return
@@ -157,6 +158,42 @@ function ChinaMap({ currentItem, topicItems, effectiveMode, revealed, solved, wr
           })}
         </g>
 
+        <g className="geography-range-layer">
+          {rangeItems.map((item) => {
+            const isTarget = item.id === targetKey
+            const isWrong = wrongTargetId === item.id
+            const isInteractive = effectiveMode !== 'identify' && !revealed && !solved
+            const midpoint = (item.x1 + item.x2) / 2
+            const labelWidth = 104
+            const showName = isTarget && (revealed || solved)
+            return (
+              <g
+                className={`geography-map-range ${showCurrentTarget && isTarget ? 'is-target' : ''} ${isWrong ? 'is-wrong' : ''}`}
+                key={item.id}
+                tabIndex={isInteractive ? 0 : -1}
+                role={isInteractive ? 'button' : undefined}
+                aria-label={isInteractive ? '可選擇的階梯分布範圍' : undefined}
+                onClick={() => answer(item.id)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    answer(item.id)
+                  }
+                }}
+              >
+                <line className="geography-map-range-line" x1={item.x1} y1={item.y} x2={item.x2} y2={item.y} />
+                <path className="geography-map-range-arrow" d={`M ${item.x1 + 16} ${item.y - 10} L ${item.x1} ${item.y} L ${item.x1 + 16} ${item.y + 10}`} />
+                <path className="geography-map-range-arrow" d={`M ${item.x2 - 16} ${item.y - 10} L ${item.x2} ${item.y} L ${item.x2 - 16} ${item.y + 10}`} />
+                <rect className="geography-map-range-label" x={midpoint - labelWidth / 2} y={item.y - 19} width={labelWidth} height="38" rx="7" />
+                <text className="geography-map-range-text" x={midpoint} y={item.y + 6} textAnchor="middle">
+                  {showName ? item.name : '階梯範圍'}
+                </text>
+                <line className="geography-map-range-hit" x1={item.x1} y1={item.y} x2={item.x2} y2={item.y} />
+              </g>
+            )
+          })}
+        </g>
+
         <g className="geography-point-layer">
           {pointItems.map((item) => {
             const isTarget = item.id === targetKey
@@ -185,6 +222,7 @@ function ChinaMap({ currentItem, topicItems, effectiveMode, revealed, solved, wr
         </g>
       </svg>
       <div className="geography-map-compass" aria-hidden="true"><Compass /></div>
+      {rangeItems.length > 0 && <div className="geography-map-range-note">雙箭頭表示階梯分布範圍</div>}
     </div>
   )
 }

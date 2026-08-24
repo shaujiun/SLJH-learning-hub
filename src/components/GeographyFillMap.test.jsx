@@ -1,7 +1,8 @@
 import React from 'react'
 import { renderToString } from 'react-dom/server'
 import { afterEach, describe, expect, it } from 'vitest'
-import GeographyFillMap from './GeographyFillMap.jsx'
+import { chinaReliefStepItems } from '../data/chinaGeography.js'
+import GeographyFillMap, { ChinaMap } from './GeographyFillMap.jsx'
 
 const originalWindow = globalThis.window
 
@@ -35,5 +36,42 @@ describe('GeographyFillMap', () => {
     expect(html).toContain('混合挑戰')
     expect(html).toContain('返回任務頁')
     expect(html).toContain('返回聯絡簿')
+  })
+
+  it('以三組可選雙箭頭呈現階梯範圍，作答前不顯示階梯名稱', () => {
+    const html = renderToString(
+      <ChinaMap
+        currentItem={chinaReliefStepItems[0]}
+        topicItems={chinaReliefStepItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+
+    expect(html.match(/geography-map-range /g)).toHaveLength(3)
+    expect(html).toContain('雙箭頭表示階梯分布範圍')
+    expect(html).toContain('可選擇的階梯分布範圍')
+    expect(html).toContain('階梯範圍')
+    expect(html).not.toContain('第一級階梯')
+    expect(html).not.toContain('geography-map-point ')
+  })
+
+  it('公布答案後在雙箭頭中央顯示正確階梯名稱', () => {
+    const html = renderToString(
+      <ChinaMap
+        currentItem={chinaReliefStepItems[0]}
+        topicItems={chinaReliefStepItems}
+        effectiveMode="locate"
+        revealed
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+
+    expect(html).toContain('第一級階梯')
   })
 })

@@ -361,6 +361,63 @@ button.geography-start-button {
 .geography-feature-line-hit.is-wrong { stroke: rgba(214, 67, 58, 0.72); }
 .geography-feature-line-hit.is-target { stroke: rgba(41, 191, 135, 0.82); filter: drop-shadow(0 0 6px rgba(20, 126, 113, 0.75)); }
 
+.geography-map-range { cursor: pointer; }
+.geography-map-range-line,
+.geography-map-range-arrow {
+  fill: none;
+  stroke: #704f1c;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.geography-map-range-label {
+  fill: #fffdf5;
+  stroke: #704f1c;
+  stroke-width: 2;
+  pointer-events: none;
+}
+.geography-map-range-text {
+  fill: #5a3d12;
+  font-size: 17px;
+  font-weight: 950;
+  pointer-events: none;
+}
+.geography-map-range-hit {
+  stroke: rgba(112, 79, 28, 0.01);
+  stroke-width: 34;
+}
+.geography-map-range:hover .geography-map-range-hit,
+.geography-map-range:focus .geography-map-range-hit {
+  outline: none;
+  stroke: rgba(255, 202, 70, 0.5);
+}
+.geography-map-range.is-wrong .geography-map-range-line,
+.geography-map-range.is-wrong .geography-map-range-arrow,
+.geography-map-range.is-wrong .geography-map-range-label { stroke: #c4473b; }
+.geography-map-range.is-wrong .geography-map-range-label { fill: #ffd8d0; }
+.geography-map-range.is-wrong .geography-map-range-text { fill: #8b3027; }
+.geography-map-range.is-target .geography-map-range-line,
+.geography-map-range.is-target .geography-map-range-arrow,
+.geography-map-range.is-target .geography-map-range-label { stroke: #08756a; }
+.geography-map-range.is-target .geography-map-range-line,
+.geography-map-range.is-target .geography-map-range-arrow { filter: drop-shadow(0 0 6px rgba(20, 126, 113, 0.72)); }
+.geography-map-range.is-target .geography-map-range-label { fill: #8de0bd; }
+.geography-map-range.is-target .geography-map-range-text { fill: #075e56; }
+.geography-map-range-note {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid rgba(112, 79, 28, 0.35);
+  border-radius: 999px;
+  color: #61471e;
+  background: rgba(255, 253, 245, 0.9);
+  font-size: 0.78rem;
+  font-weight: 900;
+  pointer-events: none;
+}
+
 .geography-map-point { cursor: pointer; }
 .geography-map-point-halo { fill: rgba(255, 255, 255, 0.7); stroke: #236f76; stroke-width: 2; }
 .geography-map-point-dot { fill: #236f76; pointer-events: none; }
@@ -511,6 +568,7 @@ button.geography-start-button {
   .geography-map-stage { padding: 0.25rem; border-radius: 15px; }
   .geography-map-compass { width: 38px; height: 38px; top: 0.5rem; right: 0.5rem; }
   .geography-map-compass svg { width: 25px; height: 25px; }
+  .geography-map-range-note { left: 0.45rem; bottom: 0.45rem; font-size: 0.68rem; }
   .geography-map-point-halo { r: 18; }
   .geography-choice-grid { grid-template-columns: 1fr 1fr; gap: 0.45rem; }
   .geography-choice-grid button { min-height: 50px; padding: 0.4rem; }
