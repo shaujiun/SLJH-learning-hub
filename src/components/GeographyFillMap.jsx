@@ -87,6 +87,7 @@ function OrientationTip() {
 }
 
 export function ChinaMap({ currentItem, topicItems, effectiveMode, revealed, solved, wrongTargetId, onAnswer }) {
+  const mapViewBoxWidth = Number(chinaMap.viewBox.split(' ')[2])
   const targetKey = currentItem?.mapKind === 'province' ? currentItem.mapId : currentItem?.id
   const showCurrentTarget = effectiveMode === 'identify' || revealed || solved
   const pointItems = topicItems.filter((item) => item.mapKind === 'point')
@@ -194,12 +195,14 @@ export function ChinaMap({ currentItem, topicItems, effectiveMode, revealed, sol
               const isWrong = wrongTargetId === item.id
               const isInteractive = effectiveMode !== 'identify' && !revealed && !solved
               const showName = isTarget && (revealed || solved)
+              const rangeStart = `${(item.bandStart / mapViewBoxWidth) * 100}%`
+              const rangeWidth = `${((item.bandEnd - item.bandStart) / mapViewBoxWidth) * 100}%`
               return (
                 <button
                   type="button"
                   className={`geography-map-range ${showCurrentTarget && isTarget ? 'is-target' : ''} ${isWrong ? 'is-wrong' : ''}`}
                   key={item.id}
-                  style={{ '--range-weight': item.bandWeight }}
+                  style={{ '--range-start': rangeStart, '--range-width': rangeWidth }}
                   disabled={!isInteractive}
                   aria-label={isInteractive ? '可選擇的階梯分布範圍' : undefined}
                   onClick={() => answer(item.id)}
@@ -212,7 +215,7 @@ export function ChinaMap({ currentItem, topicItems, effectiveMode, revealed, sol
               )
             })}
           </div>
-          <div className="geography-map-range-note">雙箭頭表示階梯分布範圍</div>
+          <div className="geography-map-range-note">依北緯 36° 地形剖面線分段；雙箭頭表示階梯範圍</div>
         </div>
       )}
     </div>

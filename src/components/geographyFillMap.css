@@ -365,19 +365,18 @@ button.geography-start-button {
   display: grid;
   gap: 0.2rem;
   margin-top: 0.15rem;
-  padding: 0.15rem 0.35rem 0.05rem;
+  padding: 0.15rem 0 0.05rem;
 }
 .geography-relief-step-band {
-  display: flex;
-  align-items: center;
+  position: relative;
   width: 100%;
   min-height: 64px;
-  gap: 0.35rem;
 }
 .geography-map-range {
-  position: relative;
-  flex: var(--range-weight, 1) 1 0;
-  min-width: 0;
+  position: absolute;
+  top: 0;
+  left: var(--range-start, 0%);
+  width: var(--range-width, 0%);
   height: 58px;
   padding: 0;
   border: 0;
@@ -609,7 +608,7 @@ button.geography-start-button {
   .geography-map-stage { padding: 0.25rem; border-radius: 15px; }
   .geography-map-compass { width: 38px; height: 38px; top: 0.5rem; right: 0.5rem; }
   .geography-map-compass svg { width: 25px; height: 25px; }
-  .geography-relief-step-band { gap: 0.15rem; min-height: 56px; }
+  .geography-relief-step-band { min-height: 56px; }
   .geography-map-range { height: 52px; }
   .geography-map-range-line { right: 6px; left: 6px; }
   .geography-map-range-label { min-width: 66px; padding: 0.3rem 0.25rem; font-size: 0.72rem; }
