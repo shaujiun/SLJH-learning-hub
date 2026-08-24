@@ -50,10 +50,19 @@ describe('中國地理填圖資料', () => {
     expect(steps).toHaveLength(3)
     steps.forEach((step) => {
       expect(step.mapKind).toBe('range')
-      expect(step.x2).toBeGreaterThan(step.x1)
-      expect(step.x2 - step.x1).toBeGreaterThanOrEqual(180)
+      expect(step.bandWeight).toBeGreaterThan(0)
       expect(step).not.toHaveProperty('x')
+      expect(step).not.toHaveProperty('y')
     })
+    expect(steps.map((step) => step.bandWeight)).toEqual([1.7, 1.05, 0.8])
+  })
+
+  it('大興安嶺與太行山依實際山脈範圍分開，不再切割同一條階梯分界線', () => {
+    const greaterKhingan = chinaReliefStepItems.find((item) => item.id === 'relief-greater-khingan')
+    const taihang = chinaReliefStepItems.find((item) => item.id === 'relief-taihang')
+
+    expect(greaterKhingan.path).toBe('M 603 62 C 600 91 595 121 587 150 C 579 181 566 208 551 234')
+    expect(taihang.path).toBe('M 523 271 C 519 293 516 317 510 341 C 506 359 502 376 499 392')
   })
 
   it('主要山脈與秦嶺—淮河使用線狀範圍，不以單點表示', () => {

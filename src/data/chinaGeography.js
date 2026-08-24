@@ -78,11 +78,11 @@ export const chinaTerrainItems = [
 ]
 
 export const chinaReliefStepItems = [
-  { id: 'relief-step-one', mapKind: 'range', x1: 135, x2: 390, y: 410, name: '第一級階梯', hint: '觀察中國西南部以青藏高原為主的一大片高海拔範圍，不是尋找單一地點。', reason: '第一級階梯以青藏高原為主，是中國西南部一大片平均海拔最高的範圍。' },
-  { id: 'relief-step-two', mapKind: 'range', x1: 185, x2: 535, y: 260, name: '第二級階梯', hint: '觀察第一級階梯以北、以東，以及大興安嶺—太行山—巫山一線以西的廣大範圍。', reason: '第二級階梯涵蓋廣大的高原與盆地，包括內蒙古高原、黃土高原、四川盆地等，不是只有一個中心點。' },
-  { id: 'relief-step-three', mapKind: 'range', x1: 520, x2: 700, y: 375, name: '第三級階梯', hint: '觀察大興安嶺—太行山—巫山一線以東，延伸到東部沿海的廣大範圍。', reason: '第三級階梯涵蓋中國東部的平原與丘陵，從第二、三級階梯分界延伸至海岸。' },
-  { id: 'relief-greater-khingan', mapKind: 'line', name: '大興安嶺', path: 'M 620 135 C 603 174 590 215 570 255 C 555 285 541 315 530 340', hint: '它位於中國東北部，走向大致為東北—西南。', reason: '大興安嶺是中國第二、三級階梯北段的重要分界。' },
-  { id: 'relief-taihang', mapKind: 'line', name: '太行山', path: 'M 530 337 C 526 352 521 370 515 390', hint: '往黃土高原以東、華北平原以西尋找。', reason: '太行山位於黃土高原與華北平原之間，是第二、三級階梯的重要分界。' },
+  { id: 'relief-step-one', mapKind: 'range', bandWeight: 1.7, name: '第一級階梯', hint: '觀察中國西南部以青藏高原為主的一大片高海拔範圍，不是尋找單一地點。', reason: '第一級階梯以青藏高原為主，是中國西南部一大片平均海拔最高的範圍。' },
+  { id: 'relief-step-two', mapKind: 'range', bandWeight: 1.05, name: '第二級階梯', hint: '觀察第一級階梯以北、以東，以及大興安嶺—太行山—巫山一線以西的廣大範圍。', reason: '第二級階梯涵蓋廣大的高原與盆地，包括內蒙古高原、黃土高原、四川盆地等，不是只有一個中心點。' },
+  { id: 'relief-step-three', mapKind: 'range', bandWeight: 0.8, name: '第三級階梯', hint: '觀察大興安嶺—太行山—巫山一線以東，延伸到東部沿海的廣大範圍。', reason: '第三級階梯涵蓋中國東部的平原與丘陵，從第二、三級階梯分界延伸至海岸。' },
+  { id: 'relief-greater-khingan', mapKind: 'line', name: '大興安嶺', path: 'M 603 62 C 600 91 595 121 587 150 C 579 181 566 208 551 234', hint: '它位於中國東北平原西側，走向大致為東北—西南。', reason: '大興安嶺沿中國東北平原西側延伸，是中國第二、三級階梯北段的重要分界；它與太行山之間另有燕山一帶的過渡區。' },
+  { id: 'relief-taihang', mapKind: 'line', name: '太行山', path: 'M 523 271 C 519 293 516 317 510 341 C 506 359 502 376 499 392', hint: '往黃土高原以東、華北平原以西尋找，北端不要和大興安嶺連成同一條山脈。', reason: '太行山位於黃土高原與華北平原之間，是第二、三級階梯的重要分界；它不是大興安嶺向南直接延伸的同一條山脈。' },
   { id: 'relief-wushan', mapKind: 'line', name: '巫山', path: 'M 505 390 C 503 407 501 424 498 441', hint: '往四川盆地東側、長江三峽附近尋找。', reason: '巫山位於四川盆地與長江中下游地區之間，是第二、三級階梯的重要分界。' },
   { id: 'relief-qilian', mapKind: 'line', name: '祁連山', path: 'M 330 286 C 361 291 393 299 425 312', hint: '往青藏高原東北緣、甘肅與青海交界尋找。', reason: '祁連山位於柴達木盆地北側、甘肅與青海交界，是第一、二級階梯的重要分界。' },
   { id: 'relief-kunlun', mapKind: 'line', name: '崑崙山脈', path: 'M 160 300 C 204 302 250 311 294 320 C 321 326 345 332 367 339', hint: '往塔里木盆地南側、青藏高原北緣尋找。', reason: '崑崙山脈是中國第一、二級階梯西段的重要分界。' },

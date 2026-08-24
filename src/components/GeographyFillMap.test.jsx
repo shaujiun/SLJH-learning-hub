@@ -52,6 +52,7 @@ describe('GeographyFillMap', () => {
     )
 
     expect(html.match(/geography-map-range /g)).toHaveLength(3)
+    expect(html).toContain('geography-relief-step-band')
     expect(html).toContain('雙箭頭表示階梯分布範圍')
     expect(html).toContain('可選擇的階梯分布範圍')
     expect(html).toContain('階梯範圍')
