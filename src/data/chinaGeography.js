@@ -1,3 +1,9 @@
+import {
+  chinaLakeGeometry,
+  chinaRiverGeometry,
+  chinaSeaGeometry,
+} from './geographyHydrography.js'
+
 const provinceRegionHints = {
   northeast: '先找中國東北部，觀察它與俄羅斯、北韓及渤海的位置關係。',
   north: '先找華北與內蒙古一帶，再用海岸線或鄰近省區縮小範圍。',
@@ -92,22 +98,48 @@ export const chinaReliefStepItems = [
 export const chinaRiverItems = [
   {
     id: 'river-yellow', mapKind: 'line', name: '黃河',
-    path: 'M 305 352 C 340 359 370 344 390 320 C 405 301 402 278 398 255 C 395 236 411 226 431 232 C 455 239 476 236 493 244 C 508 252 507 274 503 293 C 499 314 493 334 501 348 C 512 363 534 349 553 340 C 576 328 600 324 621 314 C 636 307 647 305 659 306',
+    path: chinaRiverGeometry['river-yellow'].path,
     hint: '它源於青藏高原，流經黃土高原後注入渤海。',
     reason: '黃河呈「幾」字形流經中國北部，含沙量大，最後注入渤海。',
   },
   {
     id: 'river-yangtze', mapKind: 'line', name: '長江',
-    path: 'M 292 382 C 340 395 370 376 411 392 C 451 410 490 398 528 409 C 563 419 599 401 642 413 C 659 418 675 414 691 407',
+    path: chinaRiverGeometry['river-yangtze'].path,
     hint: '它源於青藏高原，向東流經四川盆地與中下游平原。',
     reason: '長江是中國最長河流，自西向東注入東海。',
   },
   {
     id: 'river-pearl', mapKind: 'line', name: '珠江',
-    path: 'M 442 468 C 468 475 487 488 510 486 C 533 485 552 500 575 507',
+    path: chinaRiverGeometry['river-pearl'].path,
     hint: '它位於中國南部，河口形成珠江三角洲。',
     reason: '珠江水系流經中國南部，最後注入南海。',
   },
+  {
+    id: 'river-amur', mapKind: 'line', name: '黑龍江',
+    path: chinaRiverGeometry['river-amur'].path,
+    hint: '往中國東北北緣、中俄邊界一帶尋找。',
+    reason: '黑龍江由額爾古納河與石勒喀河匯流形成，沿中俄邊界向東流；本圖於中國東北邊界截斷，完整河道最後注入韃靼海峽。',
+  },
+  {
+    id: 'river-huai', mapKind: 'line', name: '淮河',
+    path: chinaRiverGeometry['river-huai'].path,
+    hint: '往黃河與長江之間、秦嶺—淮河線東段尋找。',
+    reason: '淮河發源於河南桐柏山，位於黃河與長江之間，也是中國重要南北地理分界的一部分。',
+  },
+]
+
+export const chinaLakeItems = [
+  { id: 'lake-qinghai', mapKind: 'area', areaType: 'water', path: chinaLakeGeometry['lake-qinghai'].path, name: '青海湖', hint: '往青藏高原東北緣、青海省內尋找。', reason: '青海湖是中國面積最大的湖泊，位於青藏高原東北部。' },
+  { id: 'lake-poyang', mapKind: 'area', areaType: 'water', path: chinaLakeGeometry['lake-poyang'].path, name: '鄱陽湖', hint: '往江西省北部、長江南側尋找。', reason: '鄱陽湖與長江相通，水位與湖面面積具有明顯季節變化。' },
+  { id: 'lake-dongting', mapKind: 'area', areaType: 'water', path: chinaLakeGeometry['lake-dongting'].path, name: '洞庭湖', hint: '往湖南省北部、長江南側尋找。', reason: '洞庭湖承接湖南多條河流，再向北與長江相通。' },
+  { id: 'lake-tai', mapKind: 'area', areaType: 'water', path: chinaLakeGeometry['lake-tai'].path, name: '太湖', hint: '往長江三角洲西側、江蘇與浙江交界附近尋找。', reason: '太湖位於長江三角洲，周邊都市、農業與水運發達。' },
+]
+
+export const chinaSeaItems = [
+  { id: 'sea-bohai', mapKind: 'area', areaType: 'sea', path: chinaSeaGeometry['sea-bohai'].path, name: '渤海', hint: '往山東半島與遼東半島之間的內海尋找。', reason: '渤海是被遼東半島、華北平原沿海與山東半島包圍的內海，黃河注入其中。' },
+  { id: 'sea-yellow', mapKind: 'area', areaType: 'sea', path: chinaSeaGeometry['sea-yellow'].path, name: '黃海', hint: '往山東半島與朝鮮半島之間尋找。', reason: '黃海位於中國東部與朝鮮半島之間，北接渤海，南連東海。' },
+  { id: 'sea-east', mapKind: 'area', areaType: 'sea', path: chinaSeaGeometry['sea-east'].path, name: '東海', hint: '往長江出海口與臺灣以北的海域尋找。', reason: '東海位於中國東部沿海外側，長江注入其中。' },
+  { id: 'sea-south', mapKind: 'area', areaType: 'sea', path: chinaSeaGeometry['sea-south'].path, name: '南海', hint: '往中國南部沿海與海南島外側尋找。', reason: '南海位於中國南部，珠江水系最後注入其中。' },
 ]
 
 export const chinaClimateItems = [
@@ -158,9 +190,23 @@ export const chinaGeographyTopics = [
   {
     id: 'rivers',
     name: '主要河流',
-    description: '黃河、長江與珠江的空間位置',
+    description: '黃河、長江、珠江、黑龍江與淮河的空間位置',
     semester: '翰林八上 L01',
     items: chinaRiverItems,
+  },
+  {
+    id: 'lakes',
+    name: '重要湖泊',
+    description: '青海湖、鄱陽湖、洞庭湖與太湖的實際輪廓',
+    semester: '翰林八上 L01',
+    items: chinaLakeItems,
+  },
+  {
+    id: 'seas',
+    name: '周邊海域',
+    description: '渤海、黃海、東海與南海的範圍',
+    semester: '翰林八上 L01',
+    items: chinaSeaItems,
   },
   {
     id: 'climate',
@@ -184,7 +230,7 @@ export const chinaGeographyChapters = [
     name: '八上第 1 章　中國的地形',
     shortName: '八上第 1 章',
     description: '依正式目錄練習位置、行政區、三級階梯、地形與主要河流。',
-    topicIds: ['relief-steps', 'terrain', 'administrative', 'rivers'],
+    topicIds: ['relief-steps', 'terrain', 'administrative', 'rivers', 'lakes', 'seas'],
   },
   {
     id: 'grade8-upper-l02',

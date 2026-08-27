@@ -5,10 +5,29 @@ import {
   chinaGeographyTopics,
   chinaAgricultureItems,
   chinaClimateItems,
+  chinaLakeItems,
   chinaProvinceItems,
   chinaReliefStepItems,
+  chinaRiverItems,
+  chinaSeaItems,
   chinaTerrainItems,
 } from './chinaGeography.js'
+import { chinaSeaGeometry } from './geographyHydrography.js'
+
+function isPointInsideAreaPath(path, [x, y]) {
+  const points = [...path.matchAll(/(?:M|L) (-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g)]
+    .map((match) => [Number(match[1]), Number(match[2])])
+  let isInside = false
+  for (let index = 0, previous = points.length - 1; index < points.length; previous = index, index += 1) {
+    const [currentX, currentY] = points[index]
+    const [previousX, previousY] = points[previous]
+    if ((currentY > y) !== (previousY > y)
+      && x < ((previousX - currentX) * (y - currentY)) / (previousY - currentY) + currentX) {
+      isInside = !isInside
+    }
+  }
+  return isInside
+}
 
 describe('中國地理填圖資料', () => {
   it('每個行政區題目都能對應到向量地圖區塊', () => {
@@ -17,12 +36,14 @@ describe('中國地理填圖資料', () => {
     expect(chinaProvinceItems.every((item) => mapIds.has(item.mapId))).toBe(true)
   })
 
-  it('八上前三課的六個主題都有提示與判斷依據', () => {
+  it('八上目前八個主題都有提示與判斷依據', () => {
     expect(chinaGeographyTopics.map((topic) => topic.id)).toEqual([
       'relief-steps',
       'administrative',
       'terrain',
       'rivers',
+      'lakes',
+      'seas',
       'climate',
       'agriculture',
     ])
@@ -37,10 +58,10 @@ describe('中國地理填圖資料', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('兩個正式課本章節涵蓋且只涵蓋目前六個主題', () => {
+  it('兩個正式課本章節涵蓋且只涵蓋目前八個主題', () => {
     const chapterTopicIds = chinaGeographyChapters.flatMap((chapter) => chapter.topicIds)
     expect(chinaGeographyChapters).toHaveLength(2)
-    expect(chapterTopicIds).toEqual(['relief-steps', 'terrain', 'administrative', 'rivers', 'climate', 'agriculture'])
+    expect(chapterTopicIds).toEqual(['relief-steps', 'terrain', 'administrative', 'rivers', 'lakes', 'seas', 'climate', 'agriculture'])
     expect(new Set(chapterTopicIds)).toEqual(new Set(chinaGeographyTopics.map((topic) => topic.id)))
   })
 
@@ -84,5 +105,99 @@ describe('中國地理填圖資料', () => {
     expect(chinaClimateItems.some((item) => item.id === 'climate-qinling-huaihe' && item.mapKind === 'line')).toBe(true)
     expect(chinaAgricultureItems.some((item) => item.id === 'agriculture-qinling-huaihe-750' && item.mapKind === 'line')).toBe(true)
     expect(chinaAgricultureItems.some((item) => item.id === 'agriculture-rainfall-750')).toBe(false)
+  })
+
+  it('五條河川使用連續的實際河道折線，不再使用人工貝茲概略線', () => {
+    expect(chinaRiverItems.map((item) => item.name)).toEqual(['黃河', '長江', '珠江', '黑龍江', '淮河'])
+    chinaRiverItems.forEach((item) => {
+      expect(item.mapKind).toBe('line')
+      expect(item.path).not.toContain(' C ')
+      expect((item.path.match(/M /g) || [])).toHaveLength(1)
+      expect((item.path.match(/ L /g) || []).length).toBeGreaterThan(8)
+    })
+  })
+
+  it('主要河流在教學地圖的海岸或國界處結束，不延伸到外海或俄羅斯境內', () => {
+    const expectedBoundaryEnds = {
+      'river-yellow': [602, 290.7],
+      'river-yangtze': [612, 383],
+      'river-pearl': [542.7, 504.7],
+      'river-amur': [755.4, 157.4],
+    }
+
+    for (const [id, expected] of Object.entries(expectedBoundaryEnds)) {
+      const item = chinaRiverItems.find((river) => river.id === id)
+      const points = [...item.path.matchAll(/(?:M|L) (-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g)]
+        .map((match) => [Number(match[1]), Number(match[2])])
+      expect([points[0], points.at(-1)]).toContainEqual(expected)
+    }
+  })
+
+  it('四座湖泊與四個海域使用可互動的實際範圍輪廓', () => {
+    expect(chinaLakeItems).toHaveLength(4)
+    expect(chinaSeaItems).toHaveLength(4)
+    ;[...chinaLakeItems, ...chinaSeaItems].forEach((item) => {
+      expect(item.mapKind).toBe('area')
+      expect(item.path.startsWith('M ')).toBe(true)
+      expect(item.path).toContain(' Z')
+      expect((item.path.match(/ L /g) || []).length).toBeGreaterThan(3)
+    })
+  })
+
+  it('四座湖泊位於對應省區，不因底圖投影偏移到鄰省或海上', () => {
+    const expectedCenters = {
+      'lake-qinghai': [338, 299],
+      'lake-poyang': [540, 418],
+      'lake-dongting': [495, 417],
+      'lake-tai': [590, 388],
+    }
+
+    for (const item of chinaLakeItems) {
+      const points = [...item.path.matchAll(/(?:M|L) (-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g)]
+        .map((match) => [Number(match[1]), Number(match[2])])
+      const xs = points.map((point) => point[0])
+      const ys = points.map((point) => point[1])
+      const center = [
+        Number(((Math.min(...xs) + Math.max(...xs)) / 2).toFixed(1)),
+        Number(((Math.min(...ys) + Math.max(...ys)) / 2).toFixed(1)),
+      ]
+      expect(center).toEqual(expectedCenters[item.id])
+    }
+  })
+
+  it('四個海域與行政區使用相同座標系，向陸地延伸後由省區圖層裁出海岸線', () => {
+    const expectedBounds = {
+      'sea-bohai': [535, 630, 225, 303],
+      'sea-yellow': [535, 705, 285, 383],
+      'sea-east': [530, 710, 350, 525],
+      'sea-south': [380, 690, 490, 569],
+    }
+
+    for (const item of chinaSeaItems) {
+      expect(chinaSeaGeometry[item.id].alignedTo).toBe('@svg-maps/china coastline')
+      const points = [...item.path.matchAll(/(?:M|L) (-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g)]
+        .map((match) => [Number(match[1]), Number(match[2])])
+      const xs = points.map((point) => point[0])
+      const ys = points.map((point) => point[1])
+      expect([Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)]).toEqual(expectedBounds[item.id])
+    }
+
+    expect(chinaSeaGeometry['sea-bohai'].path).toContain('L 620 225 L 630 245 L 625 270 L 610 294')
+    expect(chinaSeaGeometry['sea-bohai'].path).not.toContain('L 610 329')
+    ;[[615, 255], [620, 265]].forEach((point) => {
+      expect(isPointInsideAreaPath(chinaSeaGeometry['sea-bohai'].path, point)).toBe(true)
+      expect(isPointInsideAreaPath(chinaSeaGeometry['sea-yellow'].path, point)).toBe(false)
+    })
+    expect(chinaSeaGeometry['sea-yellow'].path).toMatch(/^M 610 294 .* L 590 300 Z$/)
+    expect(chinaSeaGeometry['sea-yellow'].path).not.toContain('L 610 329')
+    expect(chinaSeaGeometry['sea-yellow'].path).toContain('L 690 350 L 612 383 L 570 383 L 540 365')
+    expect(chinaSeaGeometry['sea-yellow'].path).toContain('L 535 340 L 535 305 L 550 300 L 590 300')
+    ;[[595, 315], [590, 325], [590, 340], [600, 350], [605, 365]].forEach((point) => {
+      expect(isPointInsideAreaPath(chinaSeaGeometry['sea-bohai'].path, point)).toBe(false)
+      expect(isPointInsideAreaPath(chinaSeaGeometry['sea-yellow'].path, point)).toBe(true)
+    })
+    expect(chinaSeaGeometry['sea-east'].path).toMatch(/^M 612 383 L 690 350 /)
+    expect(chinaSeaGeometry['sea-east'].path).toContain('L 680 525 L 600 505 L 530 490')
+    expect(chinaSeaGeometry['sea-south'].path).toMatch(/^M 530 490 L 600 505 L 680 525 /)
   })
 })

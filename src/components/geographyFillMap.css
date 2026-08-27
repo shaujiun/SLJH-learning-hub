@@ -465,6 +465,97 @@ button.geography-start-button {
 .geography-province.is-wrong { fill: #ffd8d0; stroke: #c4473b; stroke-width: 2.4; }
 .geography-province.is-target { fill: #79d2b3; stroke: #0b7268; stroke-width: 3; filter: drop-shadow(0 0 7px rgba(20, 126, 113, 0.65)); }
 
+.geography-macau-callout { cursor: pointer; }
+.geography-macau-callout-pointer,
+.geography-macau-callout-body,
+.geography-macau-callout-pin,
+.geography-macau-callout-shape,
+.geography-macau-callout-caption,
+.geography-macau-callout-name { pointer-events: none; }
+.geography-macau-callout-pointer {
+  fill: #fff8d8;
+  stroke: #7f6750;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.geography-macau-callout-body {
+  fill: #fff8d8;
+  stroke: #7f6750;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 4px 6px rgba(50, 62, 65, 0.2));
+}
+.geography-macau-callout-pin { fill: #e66a4f; stroke: #fff; stroke-width: 1.7; }
+.geography-macau-callout-shape {
+  fill: #f8f2d8;
+  stroke: #365f66;
+  stroke-width: 2.2;
+  vector-effect: non-scaling-stroke;
+}
+.geography-macau-callout-caption,
+.geography-macau-callout-name {
+  fill: #534637;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+  text-anchor: middle;
+}
+.geography-macau-callout-name { fill: #075e56; font-size: 15px; }
+.geography-macau-callout-hit { fill: rgba(255, 255, 255, 0.001); stroke: transparent; }
+.geography-macau-callout:hover .geography-macau-callout-body,
+.geography-macau-callout:focus .geography-macau-callout-body {
+  fill: #fff0bb;
+  stroke: #b47714;
+  stroke-width: 3;
+}
+.geography-macau-callout:focus { outline: none; }
+.geography-macau-callout.is-wrong .geography-macau-callout-body,
+.geography-macau-callout.is-wrong .geography-macau-callout-pointer { fill: #ffd8d0; stroke: #c4473b; }
+.geography-macau-callout.is-wrong .geography-macau-callout-shape { fill: #f2a99d; stroke: #9c352d; }
+.geography-macau-callout.is-target .geography-macau-callout-body,
+.geography-macau-callout.is-target .geography-macau-callout-pointer { fill: #dff7ec; stroke: #08756a; }
+.geography-macau-callout.is-target .geography-macau-callout-shape { fill: #79d2b3; stroke: #075e56; }
+.geography-macau-callout.is-target .geography-macau-callout-pin { fill: #08756a; }
+
+.geography-area-layer.is-sea .geography-feature-area-visible {
+  fill: rgba(106, 190, 224, 0.3);
+  stroke: rgba(40, 128, 170, 0.56);
+  stroke-width: 1.2;
+}
+
+.geography-area-layer.is-water .geography-feature-area-visible {
+  fill: #70bce0;
+  stroke: #176f9d;
+  stroke-width: 1.8;
+}
+
+.geography-feature-area-visible { pointer-events: none; }
+
+.geography-feature-area-hit {
+  fill: rgba(43, 134, 189, 0.01);
+  stroke: rgba(43, 134, 189, 0.01);
+  stroke-width: 14;
+  stroke-linejoin: round;
+  cursor: pointer;
+}
+
+.geography-feature-area-hit:hover,
+.geography-feature-area-hit:focus {
+  outline: none;
+  fill: rgba(255, 202, 70, 0.45);
+  stroke: rgba(255, 176, 30, 0.72);
+}
+
+.geography-feature-area-hit.is-wrong {
+  fill: rgba(214, 67, 58, 0.5);
+  stroke: rgba(176, 46, 39, 0.76);
+}
+
+.geography-feature-area-hit.is-target {
+  fill: rgba(41, 191, 135, 0.72);
+  stroke: rgba(11, 114, 104, 0.9);
+  filter: drop-shadow(0 0 6px rgba(20, 126, 113, 0.75));
+}
+
 .geography-feature-line-visible {
   fill: none;
   stroke: #2b86bd;

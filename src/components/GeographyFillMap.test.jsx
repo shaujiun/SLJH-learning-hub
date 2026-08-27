@@ -1,9 +1,10 @@
 import React from 'react'
 import { renderToString } from 'react-dom/server'
+import chinaMap from '@svg-maps/china'
 import taiwanMap from '@svg-maps/taiwan'
 import { afterEach, describe, expect, it } from 'vitest'
-import { chinaReliefStepItems } from '../data/chinaGeography.js'
-import { taiwanContourItems, taiwanScaleItems } from '../data/taiwanGeography.js'
+import { chinaLakeItems, chinaProvinceItems, chinaReliefStepItems, chinaSeaItems } from '../data/chinaGeography.js'
+import { taiwanContourItems, taiwanScaleItems, taiwanWaterItems } from '../data/taiwanGeography.js'
 import GeographyFillMap, { ChinaMap, GeographyConceptDiagram, GeographyFillBoard } from './GeographyFillMap.jsx'
 
 const originalWindow = globalThis.window
@@ -131,5 +132,80 @@ describe('GeographyFillMap', () => {
     expect(html).toContain('先選標籤，再點位置')
     expect(html).toContain('手機和平板可先點標籤')
     expect(html).not.toContain('查看本回合結果')
+  })
+
+  it('湖泊、水庫與海域輪廓都能成為鍵盤及點選作答區', () => {
+    const lakeHtml = renderToString(
+      <ChinaMap
+        currentItem={chinaLakeItems[0]}
+        topicItems={chinaLakeItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+    const seaHtml = renderToString(
+      <ChinaMap
+        currentItem={chinaSeaItems[0]}
+        topicItems={chinaSeaItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+    const fillHtml = renderToString(
+      <GeographyFillBoard
+        mapDefinition={taiwanMap}
+        mapLabel="臺灣地圖"
+        areaId="taiwan"
+        items={taiwanWaterItems.slice(0, 3)}
+        onProgress={() => {}}
+        onScore={() => {}}
+        onFinish={() => {}}
+      />,
+    )
+
+    expect(lakeHtml.match(/geography-feature-area-hit/g)).toHaveLength(4)
+    expect(lakeHtml).toContain('選擇這個湖泊或水庫')
+    expect(seaHtml.match(/geography-feature-area-hit/g)).toHaveLength(4)
+    expect(seaHtml).toContain('選擇這個海域')
+    expect(fillHtml.match(/湖泊或水庫標籤放置區/g)).toHaveLength(3)
+  })
+
+  it('中國行政區提供尖端指向實際位置的澳門放大作答氣泡', () => {
+    const macau = chinaProvinceItems.find((item) => item.mapId === 'macau')
+    const mapHtml = renderToString(
+      <ChinaMap
+        currentItem={macau}
+        topicItems={chinaProvinceItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+    const fillHtml = renderToString(
+      <GeographyFillBoard
+        mapDefinition={chinaMap}
+        mapLabel="中國地圖"
+        areaId="china"
+        items={chinaProvinceItems}
+        onProgress={() => {}}
+        onScore={() => {}}
+        onFinish={() => {}}
+      />,
+    )
+
+    expect(mapHtml).toContain('data-map-id="macau-callout"')
+    expect(mapHtml).toContain('M 505.9 515 L 622 468 L 622 498 Z')
+    expect(mapHtml).toContain('小區域放大圖')
+    expect(mapHtml).toContain('澳門小區域放大作答區')
+    expect(mapHtml).not.toContain('geography-macau-callout-name')
+    expect(fillHtml).toContain('data-map-id="macau-callout"')
   })
 })

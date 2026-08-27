@@ -87,6 +87,8 @@ const topicIcons = {
   administrative: MapPinned,
   terrain: Mountain,
   rivers: Waves,
+  lakes: Waves,
+  seas: Waves,
   climate: CloudSun,
   agriculture: CloudSun,
   'tw-map-skills': Compass,
@@ -186,6 +188,33 @@ function fillTargetKey(item) {
   return item.mapKind === 'province' ? item.mapId : item.id
 }
 
+function MacauCallout({ location, isTarget, isWrong, isInteractive, showName, interactionProps = {} }) {
+  if (!location) return null
+
+  return (
+    <g
+      className={`geography-macau-callout ${isTarget ? 'is-target' : ''} ${isWrong ? 'is-wrong' : ''}`}
+      data-map-id="macau-callout"
+      role={isInteractive ? 'button' : undefined}
+      tabIndex={isInteractive ? 0 : -1}
+      aria-label={isInteractive ? '澳門小區域放大作答區' : '澳門小區域放大圖'}
+      {...interactionProps}
+    >
+      <path className="geography-macau-callout-pointer" d="M 505.9 515 L 622 468 L 622 498 Z" />
+      <circle className="geography-macau-callout-pin" cx="505.9" cy="515" r="3.5" />
+      <rect className="geography-macau-callout-body" x="620" y="425" width="134" height="112" rx="26" />
+      <text className="geography-macau-callout-caption" x="687" y="451">小區域放大圖</text>
+      <path
+        className="geography-macau-callout-shape"
+        d={location.path}
+        transform="translate(687 487) scale(30) translate(-505.75 -515.05)"
+      />
+      {showName && <text className="geography-macau-callout-name" x="687" y="526">澳門</text>}
+      <rect className="geography-macau-callout-hit" x="618" y="423" width="138" height="116" rx="28" />
+    </g>
+  )
+}
+
 function FillLabelBank({ items, completed, selectedItemId, onSelect }) {
   return (
     <div className="geography-fill-label-bank" aria-label="待填入標籤">
@@ -259,8 +288,13 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
   const selectedItem = items.find((item) => item.id === selectedItemId)
   const pointItems = items.filter((item) => item.mapKind === 'point')
   const lineItems = items.filter((item) => item.mapKind === 'line')
+  const areaItems = items.filter((item) => item.mapKind === 'area')
+  const seaItems = areaItems.filter((item) => item.areaType === 'sea')
+  const waterItems = areaItems.filter((item) => item.areaType !== 'sea')
   const rangeItems = items.filter((item) => item.mapKind === 'range')
   const mapViewBoxWidth = Number(mapDefinition.viewBox.split(' ')[2])
+  const macauLocation = mapDefinition.locations.find((location) => location.id === 'macau')
+  const showMacauCallout = areaId === 'china' && items.some((item) => item.mapKind === 'province' && item.mapId === 'macau')
   const completedTargetIds = new Set(
     Object.keys(completed).map((itemId) => fillTargetKey(items.find((item) => item.id === itemId))),
   )
@@ -323,6 +357,25 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
       ) : (
         <div className="geography-map-stage">
           <svg className={`geography-china-map geography-region-map is-${areaId}`} viewBox={mapDefinition.viewBox} role="img" aria-label={`${mapLabel}標籤填圖`}>
+            <g className="geography-area-layer is-sea">
+              {seaItems.map((item) => {
+                const isDone = completedTargetIds.has(item.id)
+                return (
+                  <g key={item.id}>
+                    <path className="geography-feature-area-visible" d={item.path} fillRule="evenodd" />
+                    <path
+                      className={`geography-feature-area-hit ${isDone ? 'is-target' : ''} ${wrongTargetId === item.id ? 'is-wrong' : ''}`}
+                      d={item.path}
+                      fillRule="evenodd"
+                      role="button"
+                      tabIndex={0}
+                      aria-label="海域標籤放置區"
+                      {...dropTargetProps(item.id)}
+                    />
+                  </g>
+                )
+              })}
+            </g>
             <g className="geography-province-layer">
               {mapDefinition.locations.map((location) => {
                 const isDone = completedTargetIds.has(location.id)
@@ -336,6 +389,35 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
                     aria-label="行政區標籤放置位置"
                     {...dropTargetProps(location.id)}
                   />
+                )
+              })}
+            </g>
+            {showMacauCallout && (
+              <MacauCallout
+                location={macauLocation}
+                isTarget={completedTargetIds.has('macau')}
+                isWrong={wrongTargetId === 'macau'}
+                isInteractive
+                showName={completedTargetIds.has('macau')}
+                interactionProps={dropTargetProps('macau')}
+              />
+            )}
+            <g className="geography-area-layer is-water">
+              {waterItems.map((item) => {
+                const isDone = completedTargetIds.has(item.id)
+                return (
+                  <g key={item.id}>
+                    <path className="geography-feature-area-visible" d={item.path} fillRule="evenodd" />
+                    <path
+                      className={`geography-feature-area-hit ${isDone ? 'is-target' : ''} ${wrongTargetId === item.id ? 'is-wrong' : ''}`}
+                      d={item.path}
+                      fillRule="evenodd"
+                      role="button"
+                      tabIndex={0}
+                      aria-label="湖泊或水庫標籤放置區"
+                      {...dropTargetProps(item.id)}
+                    />
+                  </g>
                 )
               })}
             </g>
@@ -425,7 +507,12 @@ export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, top
   const showCurrentTarget = effectiveMode === 'identify' || revealed || solved
   const pointItems = topicItems.filter((item) => item.mapKind === 'point')
   const lineItems = topicItems.filter((item) => item.mapKind === 'line')
+  const areaItems = topicItems.filter((item) => item.mapKind === 'area')
+  const seaItems = areaItems.filter((item) => item.areaType === 'sea')
+  const waterItems = areaItems.filter((item) => item.areaType !== 'sea')
   const rangeItems = topicItems.filter((item) => item.mapKind === 'range')
+  const macauLocation = mapDefinition.locations.find((location) => location.id === 'macau')
+  const showMacauCallout = areaId === 'china' && topicItems.some((item) => item.mapKind === 'province' && item.mapId === 'macau')
 
   const answer = (id) => {
     if (effectiveMode === 'identify' || revealed || solved) return
@@ -440,6 +527,33 @@ export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, top
         role="img"
         aria-label={mapLabel}
       >
+        <g className="geography-area-layer is-sea">
+          {seaItems.map((item) => {
+            const isTarget = item.id === targetKey
+            const isWrong = wrongTargetId === item.id
+            const isInteractive = currentItem?.mapKind === 'area' && effectiveMode !== 'identify' && !revealed && !solved
+            return (
+              <g key={item.id}>
+                <path className="geography-feature-area-visible" d={item.path} fillRule="evenodd" />
+                <path
+                  className={`geography-feature-area-hit ${showCurrentTarget && isTarget ? 'is-target' : ''} ${isWrong ? 'is-wrong' : ''}`}
+                  d={item.path}
+                  fillRule="evenodd"
+                  tabIndex={isInteractive ? 0 : -1}
+                  role={isInteractive ? 'button' : undefined}
+                  aria-label={isInteractive ? '選擇這個海域' : undefined}
+                  onClick={() => answer(item.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      answer(item.id)
+                    }
+                  }}
+                />
+              </g>
+            )
+          })}
+        </g>
         <g className="geography-province-layer">
           {mapDefinition.locations.map((location) => {
             const isTarget = currentItem?.mapKind === 'province' && location.id === targetKey
@@ -462,6 +576,52 @@ export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, top
                   }
                 }}
               />
+            )
+          })}
+        </g>
+        {showMacauCallout && (
+          <MacauCallout
+            location={macauLocation}
+            isTarget={showCurrentTarget && targetKey === 'macau'}
+            isWrong={wrongTargetId === 'macau'}
+            isInteractive={currentItem?.mapKind === 'province' && effectiveMode !== 'identify' && !revealed && !solved}
+            showName={targetKey === 'macau' && (revealed || solved)}
+            interactionProps={{
+              onClick: () => answer('macau'),
+              onKeyDown: (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  answer('macau')
+                }
+              },
+            }}
+          />
+        )}
+
+        <g className="geography-area-layer is-water">
+          {waterItems.map((item) => {
+            const isTarget = item.id === targetKey
+            const isWrong = wrongTargetId === item.id
+            const isInteractive = currentItem?.mapKind === 'area' && effectiveMode !== 'identify' && !revealed && !solved
+            return (
+              <g key={item.id}>
+                <path className="geography-feature-area-visible" d={item.path} fillRule="evenodd" />
+                <path
+                  className={`geography-feature-area-hit ${showCurrentTarget && isTarget ? 'is-target' : ''} ${isWrong ? 'is-wrong' : ''}`}
+                  d={item.path}
+                  fillRule="evenodd"
+                  tabIndex={isInteractive ? 0 : -1}
+                  role={isInteractive ? 'button' : undefined}
+                  aria-label={isInteractive ? '選擇這個湖泊或水庫' : undefined}
+                  onClick={() => answer(item.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      answer(item.id)
+                    }
+                  }}
+                />
+              </g>
             )
           })}
         </g>
@@ -892,8 +1052,10 @@ export default function GeographyFillMap() {
         )}
 
         <footer className="geography-source-note">
-          <span>內容依翰林版國中地理架構與教師提供的填圖資料整理；自然地理線位會持續依可靠資料校對。</span>
+          <span>內容依翰林版國中地理架構與教師提供的填圖資料整理；河川、湖泊及海域已改用地理向量輪廓。</span>
           <a href={area.attributionUrl} target="_blank" rel="noreferrer">{area.name}行政區向量圖來源與授權：SVG Maps／CC BY 4.0</a>
+          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">河川、湖泊與水庫資料：OpenStreetMap contributors／ODbL 1.0</a>
+          {areaId === 'china' && <a href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/" target="_blank" rel="noreferrer">海域資料：Natural Earth 1：10m Physical Vectors／Public Domain</a>}
         </footer>
       </main>
     </div>
