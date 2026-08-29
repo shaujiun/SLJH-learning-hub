@@ -9,10 +9,10 @@ export const taiwanCoastlineGeometry = {
 }
 
 export const taiwanPortPointGeometry = {
-  'tw-port-keelung': { x: 947, y: 368 },
+  'tw-port-keelung': { x: 930, y: 373 },
   'tw-port-taichung': { x: 603, y: 624 },
   'tw-port-kaohsiung': { x: 536, y: 1063 },
-  'tw-port-hualien': { x: 900, y: 687 },
+  'tw-port-hualien': { x: 885, y: 700 },
   'tw-coast-hengchun': { x: 675, y: 1185 },
 }
 

@@ -5,6 +5,7 @@ import taiwanMap from '@svg-maps/taiwan'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
   chinaBeltRoadItems,
+  chinaEconomicZoneItems,
   chinaLakeItems,
   chinaPopulationChangeItems,
   chinaProvinceItems,
@@ -258,5 +259,29 @@ describe('GeographyFillMap', () => {
     expect(mapHtml).toContain('澳門小區域放大作答區')
     expect(mapHtml).not.toContain('geography-macau-callout-name')
     expect(fillHtml).toContain('data-map-id="macau-callout"')
+  })
+
+  it('經濟特區使用同一個 SVG 座標系，並提供可在手機點選的東南沿海放大圖', () => {
+    const html = renderToString(
+      <ChinaMap
+        currentItem={chinaEconomicZoneItems[0]}
+        topicItems={chinaEconomicZoneItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+
+    expect(html).toContain('viewBox="0 0 774 569"')
+    expect(html).toContain('中國東南沿海經濟特區放大圖')
+    expect(html).toContain('viewBox="485 465 82 56"')
+    expect(html.match(/translate\(512 509\)/g)).toHaveLength(2)
+    expect(html.match(/translate\(501 512\)/g)).toHaveLength(2)
+    expect(html.match(/translate\(544 497\)/g)).toHaveLength(2)
+    expect(html.match(/translate\(560 480\)/g)).toHaveLength(2)
+    expect(html).toContain('geography-map-point-hit')
+    expect(html).not.toContain('深圳經濟特區')
   })
 })

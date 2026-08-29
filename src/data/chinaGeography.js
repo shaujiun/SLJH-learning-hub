@@ -76,10 +76,10 @@ export const chinaTerrainItems = [
   { id: 'terrain-qinling', mapKind: 'line', path: 'M 395 355 C 421 351 449 355 478 366', name: '秦嶺', hint: '它位於黃土高原以南、四川盆地以北。', reason: '秦嶺大致東西走向，和淮河構成中國重要自然地理分界。' },
   { id: 'terrain-turpan-depression', mapKind: 'point', x: 238, y: 221, name: '吐魯番窪地', hint: '往新疆東部、天山山脈附近尋找。', reason: '吐魯番窪地位於天山東段，是中國地勢較低且氣候乾燥的盆地。' },
   { id: 'terrain-qaidam', mapKind: 'point', x: 330, y: 333, name: '柴達木盆地', hint: '往青藏高原東北部、祁連山以南尋找。', reason: '柴達木盆地位於青海省西北部，介於祁連山與崑崙山之間。' },
-  { id: 'terrain-yangtze-delta', mapKind: 'point', x: 646, y: 405, name: '長江三角洲', hint: '沿長江向東找到出海口附近。', reason: '長江三角洲位於長江出海口，是中國人口與經濟活動密集的地區。' },
-  { id: 'terrain-southeast-hills', mapKind: 'point', x: 604, y: 450, name: '東南丘陵', hint: '往長江以南、東南沿海的內陸側尋找。', reason: '東南丘陵分布在中國東南部，地勢起伏且低山丘陵廣布。' },
+  { id: 'terrain-yangtze-delta', mapKind: 'point', x: 609, y: 389, name: '長江三角洲', hint: '沿長江向東找到出海口附近。', reason: '長江三角洲位於長江出海口，是中國人口與經濟活動密集的地區。' },
+  { id: 'terrain-southeast-hills', mapKind: 'point', x: 560, y: 438, name: '東南丘陵', hint: '往長江以南、東南沿海的內陸側尋找。', reason: '東南丘陵分布在中國東南部，地勢起伏且低山丘陵廣布。' },
   { id: 'terrain-lingnan-hills', mapKind: 'point', x: 535, y: 476, name: '嶺南丘陵', hint: '往南嶺以南、珠江流域北側尋找。', reason: '嶺南丘陵位於中國南部，範圍大致在南嶺以南。' },
-  { id: 'terrain-pearl-delta', mapKind: 'point', x: 580, y: 505, name: '珠江三角洲', hint: '往中國南部、珠江接近南海的河口尋找。', reason: '珠江三角洲位於珠江出海口，是中國南部重要的平原與都市群。' },
+  { id: 'terrain-pearl-delta', mapKind: 'point', x: 510, y: 510, name: '珠江三角洲', hint: '往中國南部、珠江接近南海的河口尋找。', reason: '珠江三角洲位於珠江出海口，是中國南部重要的平原與都市群。' },
   { id: 'terrain-hengduan', mapKind: 'line', path: 'M 390 368 C 402 396 402 424 397 452 C 393 474 397 493 404 510', name: '橫斷山脈', hint: '往四川盆地以西、青藏高原東南緣尋找。', reason: '橫斷山脈南北縱走，是青藏高原東南側的重要山地。' },
 ]
 
@@ -206,10 +206,10 @@ export const chinaPopulationChangeItems = [
 ]
 
 export const chinaEconomicZoneItems = [
-  { id: 'economy-zone-shenzhen', mapKind: 'point', x: 583, y: 507, name: '深圳經濟特區', hint: '往珠江口東側、香港北方尋找。', reason: '深圳鄰近香港，是改革開放初期設立的經濟特區之一。' },
-  { id: 'economy-zone-zhuhai', mapKind: 'point', x: 563, y: 516, name: '珠海經濟特區', hint: '往珠江口西側、澳門北方尋找。', reason: '珠海鄰近澳門，是改革開放初期設立的經濟特區之一。' },
-  { id: 'economy-zone-shantou', mapKind: 'point', x: 619, y: 486, name: '汕頭經濟特區', hint: '往廣東東部沿海尋找。', reason: '汕頭利用沿海與僑鄉條件，成為改革開放初期設立的經濟特區之一。' },
-  { id: 'economy-zone-xiamen', mapKind: 'point', x: 628, y: 458, name: '廈門經濟特區', hint: '往福建東南沿海、臺灣海峽西側尋找。', reason: '廈門位於福建沿海，是改革開放初期設立的經濟特區之一。' },
+  { id: 'economy-zone-shenzhen', mapKind: 'point', x: 512, y: 509, markerRadius: 5, hitRadius: 8, name: '深圳經濟特區', hint: '往珠江口東側、香港北方尋找。', reason: '深圳鄰近香港，是改革開放初期設立的經濟特區之一。' },
+  { id: 'economy-zone-zhuhai', mapKind: 'point', x: 501, y: 512, markerRadius: 5, hitRadius: 8, name: '珠海經濟特區', hint: '往珠江口西側、澳門北方尋找。', reason: '珠海鄰近澳門，是改革開放初期設立的經濟特區之一。' },
+  { id: 'economy-zone-shantou', mapKind: 'point', x: 544, y: 497, markerRadius: 5, hitRadius: 8, name: '汕頭經濟特區', hint: '往廣東東部沿海尋找。', reason: '汕頭利用沿海與僑鄉條件，成為改革開放初期設立的經濟特區之一。' },
+  { id: 'economy-zone-xiamen', mapKind: 'point', x: 560, y: 480, markerRadius: 5, hitRadius: 8, name: '廈門經濟特區', hint: '往福建東南沿海、臺灣海峽西側尋找。', reason: '廈門位於福建沿海，是改革開放初期設立的經濟特區之一。' },
   { id: 'economy-zone-hainan', mapId: 'hainan', mapKind: 'province', name: '海南經濟特區', hint: '往雷州半島以南的海南島尋找。', reason: '海南全省均為經濟特區，是中國面積最大的經濟特區。' },
 ]
 

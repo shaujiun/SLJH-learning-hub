@@ -293,6 +293,44 @@ function MacauCallout({ location, isTarget, isWrong, isInteractive, showName, in
   )
 }
 
+function EconomicZoneInset({ mapDefinition, items, getPointState, getInteractionProps }) {
+  const cityItems = items.filter((item) => item.id.startsWith('economy-zone-') && item.mapKind === 'point')
+  if (cityItems.length !== 4) return null
+
+  return (
+    <aside className="geography-economic-zone-inset" aria-label="中國東南沿海經濟特區放大圖">
+      <div>
+        <strong>東南沿海放大圖</strong>
+        <span>由上方同一張中國底圖直接放大；海南經濟特區請在主圖點選海南島。</span>
+      </div>
+      <svg viewBox="485 465 82 56" role="img" aria-label="福建與廣東沿海經濟特區位置放大圖">
+        <g className="geography-province-layer">
+          {mapDefinition.locations.map((location) => (
+            <path className="geography-province" d={location.path} key={location.id} aria-hidden="true" />
+          ))}
+        </g>
+        <g className="geography-point-layer">
+          {cityItems.map((item) => {
+            const { isTarget, isWrong } = getPointState(item)
+            return (
+              <g
+                className={`geography-map-point ${isTarget ? 'is-target' : ''} ${isWrong ? 'is-wrong' : ''}`}
+                key={item.id}
+                transform={`translate(${item.x} ${item.y})`}
+                {...getInteractionProps(item)}
+              >
+                <circle className="geography-map-point-hit" r="5.5" />
+                <circle className="geography-map-point-halo" r="2.8" />
+                <circle className="geography-map-point-dot" r="1.25" />
+              </g>
+            )
+          })}
+        </g>
+      </svg>
+    </aside>
+  )
+}
+
 function FillLabelBank({ items, completed, selectedItemId, onSelect }) {
   return (
     <div className="geography-fill-label-bank" aria-label="待填入標籤">
@@ -530,13 +568,28 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
                     aria-label="點狀地理標籤放置位置"
                     {...dropTargetProps(item.id)}
                   >
-                    <circle className="geography-map-point-halo" r="15" />
-                    <circle className="geography-map-point-dot" r="6" />
+                    <circle className="geography-map-point-hit" r={item.hitRadius || 20} />
+                    <circle className="geography-map-point-halo" r={item.markerRadius || 15} />
+                    <circle className="geography-map-point-dot" r={Math.min(6, (item.markerRadius || 15) * 0.45)} />
                   </g>
                 )
               })}
             </g>
           </svg>
+          <EconomicZoneInset
+            mapDefinition={mapDefinition}
+            items={pointItems}
+            getPointState={(item) => ({
+              isTarget: completedTargetIds.has(item.id),
+              isWrong: wrongTargetId === item.id,
+            })}
+            getInteractionProps={(item) => ({
+              role: 'button',
+              tabIndex: 0,
+              'aria-label': '東南沿海經濟特區標籤放置位置',
+              ...dropTargetProps(item.id),
+            })}
+          />
           <div className="geography-map-compass" aria-hidden="true"><Compass /></div>
           {rangeItems.length > 0 && (
             <div className="geography-relief-step-panel">
@@ -750,13 +803,34 @@ export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, top
                   }
                 }}
               >
-                <circle className="geography-map-point-halo" r="15" />
-                <circle className="geography-map-point-dot" r="6" />
+                <circle className="geography-map-point-hit" r={item.hitRadius || 20} />
+                <circle className="geography-map-point-halo" r={item.markerRadius || 15} />
+                <circle className="geography-map-point-dot" r={Math.min(6, (item.markerRadius || 15) * 0.45)} />
               </g>
             )
           })}
         </g>
       </svg>
+      <EconomicZoneInset
+        mapDefinition={mapDefinition}
+        items={pointItems}
+        getPointState={(item) => ({
+          isTarget: showCurrentTarget && item.id === targetKey,
+          isWrong: wrongTargetId === item.id,
+        })}
+        getInteractionProps={(item) => ({
+          tabIndex: effectiveMode !== 'identify' && !revealed && !solved ? 0 : -1,
+          role: effectiveMode !== 'identify' && !revealed && !solved ? 'button' : undefined,
+          'aria-label': effectiveMode !== 'identify' && !revealed && !solved ? '可選擇的東南沿海經濟特區位置' : undefined,
+          onClick: () => answer(item.id),
+          onKeyDown: (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault()
+              answer(item.id)
+            }
+          },
+        })}
+      />
       <div className="geography-map-compass" aria-hidden="true"><Compass /></div>
       {rangeItems.length > 0 && (
         <div className="geography-relief-step-panel">

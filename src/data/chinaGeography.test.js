@@ -107,6 +107,36 @@ describe('中國地理填圖資料', () => {
     expect(chinaIndustryTransitionItems).toHaveLength(4)
   })
 
+  it('四個沿海經濟特區使用目前中國底圖的福建與廣東座標，海南使用整座省區', () => {
+    const expectedCityPoints = {
+      'economy-zone-shenzhen': [512, 509],
+      'economy-zone-zhuhai': [501, 512],
+      'economy-zone-shantou': [544, 497],
+      'economy-zone-xiamen': [560, 480],
+    }
+
+    for (const [id, [x, y]] of Object.entries(expectedCityPoints)) {
+      expect(chinaEconomicZoneItems.find((item) => item.id === id)).toMatchObject({
+        mapKind: 'point', x, y, markerRadius: 5, hitRadius: 8,
+      })
+    }
+    expect(chinaEconomicZoneItems.find((item) => item.id === 'economy-zone-hainan')).toMatchObject({
+      mapKind: 'province', mapId: 'hainan',
+    })
+  })
+
+  it('長江三角洲、東南丘陵與珠江三角洲校正回中國陸地', () => {
+    const expectedPoints = {
+      'terrain-yangtze-delta': [609, 389],
+      'terrain-southeast-hills': [560, 438],
+      'terrain-pearl-delta': [510, 510],
+    }
+
+    for (const [id, [x, y]] of Object.entries(expectedPoints)) {
+      expect(chinaTerrainItems.find((item) => item.id === id)).toMatchObject({ mapKind: 'point', x, y })
+    }
+  })
+
   it('使用雙箭頭範圍而不是單一定位點表示三個階梯', () => {
     const steps = chinaReliefStepItems.filter((item) => item.id.startsWith('relief-step-'))
 

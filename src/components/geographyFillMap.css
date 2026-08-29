@@ -713,12 +713,41 @@ button.geography-start-button {
 }
 
 .geography-map-point { cursor: pointer; }
+.geography-map-point-hit { fill: rgba(255, 255, 255, 0.001); stroke: none; }
 .geography-map-point-halo { fill: rgba(255, 255, 255, 0.7); stroke: #236f76; stroke-width: 2; }
 .geography-map-point-dot { fill: #236f76; pointer-events: none; }
 .geography-map-point:hover .geography-map-point-halo,
 .geography-map-point:focus .geography-map-point-halo { outline: none; fill: #ffe9a8; stroke: #9a6812; stroke-width: 3; }
 .geography-map-point.is-wrong .geography-map-point-halo { fill: #ffd1c8; stroke: #c4473b; stroke-width: 4; }
 .geography-map-point.is-target .geography-map-point-halo { fill: #8de0bd; stroke: #08756a; stroke-width: 5; filter: drop-shadow(0 0 7px rgba(20, 126, 113, 0.75)); }
+
+.geography-economic-zone-inset {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.62fr) minmax(300px, 1.38fr);
+  align-items: center;
+  gap: 0.65rem;
+  width: min(100%, 780px);
+  margin: 0.7rem auto 0;
+  padding: 0.65rem;
+  border: 2px solid rgba(35, 111, 118, 0.34);
+  border-radius: 18px;
+  background: rgba(255, 253, 245, 0.94);
+  box-shadow: 0 7px 18px rgba(38, 73, 78, 0.1);
+}
+.geography-economic-zone-inset > div { display: grid; gap: 0.28rem; }
+.geography-economic-zone-inset strong { color: #075e56; font-size: 1.08rem; }
+.geography-economic-zone-inset span { color: #5d6e72; font-size: 0.82rem; font-weight: 800; line-height: 1.5; }
+.geography-economic-zone-inset svg {
+  display: block;
+  width: 100%;
+  min-height: 210px;
+  border: 1px solid rgba(35, 111, 118, 0.2);
+  border-radius: 14px;
+  background: #eaf6fa;
+}
+.geography-economic-zone-inset .geography-province { cursor: default; pointer-events: none; }
+.geography-economic-zone-inset .geography-map-point-halo { stroke-width: 0.65; }
+.geography-economic-zone-inset .geography-map-point.is-target .geography-map-point-halo { stroke-width: 1.2; }
 
 .geography-map-compass {
   position: absolute;
@@ -861,6 +890,8 @@ button.geography-start-button {
   .geography-progress-row { grid-template-columns: auto auto; }
   .geography-progress-row > div { grid-column: 1 / -1; grid-row: 2; }
   .geography-map-stage { padding: 0.25rem; border-radius: 15px; }
+  .geography-economic-zone-inset { grid-template-columns: 1fr; gap: 0.4rem; margin-top: 0.4rem; padding: 0.45rem; }
+  .geography-economic-zone-inset svg { min-height: 190px; }
   .geography-fill-instruction { align-items: flex-start; flex-direction: column; gap: 0.2rem; }
   .geography-fill-label-bank { gap: 0.4rem; padding: 0.5rem; }
   .geography-fill-label-bank button { flex: 1 1 calc(50% - 0.4rem); justify-content: center; min-width: 0; padding: 0.45rem; }

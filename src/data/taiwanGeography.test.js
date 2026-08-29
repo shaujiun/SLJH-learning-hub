@@ -127,6 +127,8 @@ describe('taiwanGeography', () => {
     taiwanIslandPortItems.forEach((item) => {
       expect(item).toMatchObject(taiwanPortPointGeometry[item.id])
     })
+    expect(taiwanPortPointGeometry['tw-port-keelung']).toEqual({ x: 930, y: 373 })
+    expect(taiwanPortPointGeometry['tw-port-hualien']).toEqual({ x: 885, y: 700 })
     expect(taiwanPortPointGeometry['tw-coast-hengchun']).toEqual({ x: 675, y: 1185 })
   })
 
