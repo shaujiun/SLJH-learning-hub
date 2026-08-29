@@ -394,6 +394,24 @@ button.geography-start-button {
   background: linear-gradient(145deg, #f8fffd, #eef8f5);
 }
 
+.geography-diagram-stage.is-rcep { grid-template-columns: repeat(2, minmax(240px, 1fr)); }
+
+.geography-course-connection {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-top: 0.85rem;
+  padding: 0.8rem 0.9rem;
+  border: 2px solid #b5d3cb;
+  border-radius: 16px;
+  color: #254f56;
+  background: linear-gradient(135deg, #f2fbf7, #fff8dd);
+}
+.geography-course-connection > svg { flex: 0 0 auto; width: 27px; height: 27px; color: #15746c; }
+.geography-course-connection > div { display: grid; gap: 0.18rem; }
+.geography-course-connection strong { color: #075e56; font-size: 1rem; }
+.geography-course-connection span { font-size: 0.88rem; font-weight: 800; line-height: 1.55; }
+
 .geography-diagram-card {
   display: grid;
   place-items: center;
@@ -518,6 +536,36 @@ button.geography-start-button {
   stroke-width: 3px;
   stroke-linejoin: round;
 }
+
+.geography-rcep-graphic {
+  width: min(100%, 310px);
+  height: auto;
+  aspect-ratio: 26 / 15;
+}
+.geography-rcep-graphic .geography-rcep-background { fill: #f8fcfb; stroke: #b6d6d2; stroke-width: 2; }
+.geography-rcep-graphic .geography-rcep-arrow-head { fill: #c95f43; stroke: none; }
+.geography-rcep-graphic .geography-rcep-region { stroke-width: 2; }
+.geography-rcep-graphic .geography-rcep-region.is-northeast { fill: #f4c66c; stroke: #93671f; }
+.geography-rcep-graphic .geography-rcep-region.is-southeast { fill: #83bad0; stroke: #315e69; }
+.geography-rcep-graphic .geography-rcep-region.is-oceania { fill: #9bd0a8; stroke: #397347; }
+.geography-rcep-graphic .geography-rcep-network { fill: none; stroke: #c95f43; stroke-width: 4; stroke-dasharray: 7 5; }
+.geography-rcep-graphic .geography-rcep-node { fill: #fff; stroke: #27545d; stroke-width: 2; }
+.geography-rcep-graphic .geography-rcep-customs path { stroke: #52747a; stroke-width: 4; }
+.geography-rcep-graphic .geography-rcep-cargo { stroke-width: 3; }
+.geography-rcep-graphic .geography-rcep-flow { fill: none; stroke: #c95f43; stroke-width: 4; }
+.geography-rcep-graphic .geography-rcep-down { fill: none; stroke: #2785b3; stroke-width: 4; }
+.geography-rcep-graphic .geography-rcep-symbol { fill: #173b4a; font-size: 19px; }
+.geography-rcep-graphic .geography-rcep-open-gate { fill: none; stroke: #79a782; stroke-width: 5; }
+.geography-rcep-graphic .geography-rcep-stage circle { stroke-width: 3; }
+.geography-rcep-graphic .geography-rcep-stage path { fill: #fff9e8; stroke-width: 3; }
+.geography-rcep-graphic .geography-rcep-market-node { fill: #ead9b4; stroke: #846c36; }
+.geography-rcep-graphic .geography-rcep-loop { fill: none; stroke: #2785b3; stroke-width: 4; stroke-dasharray: 7 5; }
+.geography-rcep-graphic .geography-rcep-market-core { fill: #f4c66c; stroke: #8b5b15; stroke-width: 3; }
+.geography-rcep-graphic .geography-rcep-bag { fill: #fff8df; stroke: #6e581f; stroke-width: 3; }
+.geography-rcep-graphic .geography-rcep-economy circle { fill: #d9edf1; stroke: #315e69; stroke-width: 3; }
+.geography-rcep-graphic .geography-rcep-economy rect { fill: #fff; stroke: #315e69; stroke-width: 2; }
+.geography-rcep-graphic .geography-rcep-flow.is-two-way { stroke: #2785b3; stroke-width: 3.5; }
+.geography-rcep-graphic .geography-rcep-investment { fill: none; stroke: #4b8b56; stroke-width: 4; }
 
 .geography-province {
   stroke: #62888a;
@@ -926,7 +974,11 @@ button.geography-start-button {
   .geography-fill-label-bank { gap: 0.4rem; padding: 0.5rem; }
   .geography-fill-label-bank button { flex: 1 1 calc(50% - 0.4rem); justify-content: center; min-width: 0; padding: 0.45rem; }
   .geography-diagram-stage { grid-template-columns: 1fr 1fr; gap: 0.45rem; padding: 0.45rem; border-radius: 15px; }
+  .geography-diagram-stage.is-rcep { grid-template-columns: 1fr 1fr; }
   .geography-diagram-card { min-height: 124px; padding: 0.45rem; border-radius: 13px; }
+  .geography-course-connection { gap: 0.5rem; padding: 0.65rem; }
+  .geography-course-connection > svg { width: 23px; height: 23px; }
+  .geography-course-connection span { font-size: 0.78rem; }
   .geography-region-map.is-taiwan { width: min(100%, 520px); max-height: none; }
   .geography-map-compass { width: 38px; height: 38px; top: 0.5rem; right: 0.5rem; }
   .geography-map-compass svg { width: 25px; height: 25px; }

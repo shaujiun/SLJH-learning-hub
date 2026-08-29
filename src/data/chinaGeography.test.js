@@ -97,9 +97,9 @@ describe('中國地理填圖資料', () => {
     expect(chinaPopulationChangeItems.every((item) => item.mapKind === 'diagram' && item.diagramKind)).toBe(true)
   })
 
-  it('經濟章包含五個經濟特區、三大經濟地帶與全球關連圖卡', () => {
+  it('經濟章包含東南沿海五個經濟特區、喀什、三大經濟地帶與全球關連圖卡', () => {
     expect(chinaEconomicZoneItems.map((item) => item.name)).toEqual([
-      '深圳經濟特區', '珠海經濟特區', '汕頭經濟特區', '廈門經濟特區', '海南經濟特區',
+      '深圳經濟特區', '珠海經濟特區', '汕頭經濟特區', '廈門經濟特區', '海南經濟特區', '喀什經濟特區',
     ])
     expect(chinaEconomicRegionItems.map((item) => item.name)).toEqual(['西部經濟地帶', '中部經濟地帶', '東部經濟地帶'])
     expect(chinaBeltRoadItems.every((item) => item.mapKind === 'diagram')).toBe(true)
@@ -123,6 +123,20 @@ describe('中國地理填圖資料', () => {
     expect(chinaEconomicZoneItems.find((item) => item.id === 'economy-zone-hainan')).toMatchObject({
       mapKind: 'province', mapId: 'hainan',
     })
+    expect(chinaEconomicZoneItems.find((item) => item.id === 'economy-zone-kashgar')).toMatchObject({
+      mapKind: 'point', x: 24, y: 261, markerRadius: 7, hitRadius: 12,
+    })
+  })
+
+  it('RCEP 題型連結八上經濟章，並改為關稅、市場與供應鏈判讀', () => {
+    const topic = chinaGeographyTopics.find((candidate) => candidate.id === 'rcep')
+    expect(topic.courseConnection).toContain('中國的經濟發展與全球關連')
+    expect(chinaRcepItems.map((item) => item.id)).toEqual([
+      'rcep-members', 'rcep-tariff', 'rcep-supply-chain', 'rcep-market',
+    ])
+    expect(chinaRcepItems.map((item) => item.name)).toEqual([
+      'RCEP 的亞太成員範圍', '降低關稅與貿易障礙', '區域供應鏈與產業分工', '擴大市場與投資往來',
+    ])
   })
 
   it('長江三角洲、東南丘陵與珠江三角洲校正回中國陸地', () => {

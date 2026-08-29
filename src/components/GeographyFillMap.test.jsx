@@ -14,7 +14,7 @@ import {
   chinaSeaItems,
 } from '../data/chinaGeography.js'
 import { taiwanContourItems, taiwanScaleItems, taiwanWaterItems } from '../data/taiwanGeography.js'
-import GeographyFillMap, { ChinaMap, GeographyConceptDiagram, GeographyFillBoard } from './GeographyFillMap.jsx'
+import GeographyFillMap, { ChinaMap, GeographyConceptDiagram, GeographyCourseConnection, GeographyFillBoard } from './GeographyFillMap.jsx'
 
 const originalWindow = globalThis.window
 
@@ -165,8 +165,19 @@ describe('GeographyFillMap', () => {
     expect(beltRoadHtml).not.toContain('東南亞')
     expect(beltRoadHtml).toContain('marker-end="url(#belt-road-land-land-arrow)"')
     expect(beltRoadHtml).not.toContain('絲綢之路經濟帶')
-    expect(rcepHtml).toContain('>10<')
-    expect(rcepHtml).not.toContain('東南亞國家協會十國')
+    expect(rcepHtml).toContain('geography-rcep-graphic')
+    expect(rcepHtml).toContain('geography-rcep-network')
+    expect(rcepHtml).toContain('geography-rcep-customs')
+    expect(rcepHtml).toContain('geography-rcep-loop')
+    expect(rcepHtml).not.toContain('>10<')
+    expect(rcepHtml).not.toContain('RCEP 的亞太成員範圍')
+  })
+
+  it('RCEP 顯示與八上經濟章的課程連結說明', () => {
+    const html = renderToString(<GeographyCourseConnection text="對應八上第 4 章「中國的經濟發展與全球關連」。" />)
+    expect(html).toContain('與本章的連結')
+    expect(html).toContain('中國的經濟發展與全球關連')
+    expect(html).toContain('geography-course-connection')
   })
 
   it('一帶一路雙路線圖分別呈現陸路與海路的主要節點', () => {
@@ -308,6 +319,7 @@ describe('GeographyFillMap', () => {
     expect(html.match(/translate\(501 512\)/g)).toHaveLength(2)
     expect(html.match(/translate\(544 497\)/g)).toHaveLength(2)
     expect(html.match(/translate\(560 480\)/g)).toHaveLength(2)
+    expect(html.match(/translate\(24 261\)/g)).toHaveLength(1)
     expect(html).toContain('geography-map-point-hit')
     expect(html).not.toContain('深圳經濟特區')
   })

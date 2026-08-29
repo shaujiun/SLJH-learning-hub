@@ -231,15 +231,57 @@ function DiagramGraphic({ kind }) {
   }
 
   if (kind.startsWith('rcep-')) {
-    const groups = kind === 'rcep-asean' ? [10] : kind === 'rcep-northeast-asia' ? [3] : kind === 'rcep-oceania' ? [2] : [10, 3, 2]
+    const arrowId = `${kind}-arrow`
     return (
-      <svg className={`geography-concept-graphic is-${kind}`} viewBox="0 0 240 130" aria-hidden="true">
-        {groups.map((count, index) => {
-          const x = groups.length === 1 ? 120 : [57, 124, 190][index]
-          const colorClass = index === 0 ? 'is-soft' : index === 1 ? 'is-accent' : 'is-third'
-          return <g key={`${kind}-${count}-${index}`}><circle className={colorClass} cx={x} cy="64" r={groups.length === 1 ? 42 : 31} /><text x={x} y="73">{count}</text></g>
-        })}
-        {groups.length > 1 && <path className="geography-concept-link" d="M88 64 H93 M155 64 H159" />}
+      <svg className={`geography-concept-graphic geography-rcep-graphic is-${kind}`} viewBox="0 0 260 150" aria-hidden="true">
+        <defs>
+          <marker id={arrowId} markerWidth="7" markerHeight="7" refX="8" refY="5" orient="auto" viewBox="0 0 10 10">
+            <path className="geography-rcep-arrow-head" d="M0 0 L10 5 L0 10 Z" />
+          </marker>
+        </defs>
+        <rect className="geography-rcep-background" x="4" y="4" width="252" height="142" rx="18" />
+        {kind === 'rcep-members' && (
+          <>
+            <path className="geography-rcep-region is-northeast" d="M83 24 Q116 7 151 27 L143 65 Q112 72 80 54 Z" />
+            <path className="geography-rcep-region is-southeast" d="M107 65 Q140 57 164 82 L149 119 Q118 116 92 92 Z" />
+            <path className="geography-rcep-region is-oceania" d="M166 104 Q196 90 225 111 L217 136 Q185 142 161 124 Z" />
+            <path className="geography-rcep-network" d="M112 43 C127 64 133 76 130 91 C149 101 170 114 190 120" />
+            {[91, 111, 132, 147].map((x, index) => <circle className="geography-rcep-node" cx={x} cy={index % 2 ? 45 : 36} r="5" key={`north-${x}`} />)}
+            {[108, 126, 145, 157].map((x, index) => <circle className="geography-rcep-node" cx={x} cy={80 + (index % 2) * 18} r="5" key={`south-${x}`} />)}
+            <circle className="geography-rcep-node" cx="183" cy="119" r="5" />
+            <circle className="geography-rcep-node" cx="207" cy="124" r="5" />
+          </>
+        )}
+        {kind === 'rcep-tariff' && (
+          <>
+            <g className="geography-rcep-customs"><path d="M40 121 V54 H84 V121 M50 121 V73 H74 V121" /><path d="M34 54 H90" /></g>
+            <g className="geography-rcep-customs"><path d="M178 121 V54 H222 V121 M188 121 V73 H212 V121" /><path d="M172 54 H228" /></g>
+            <rect className="geography-rcep-cargo is-soft" x="103" y="77" width="54" height="36" rx="5" />
+            <path className="geography-rcep-flow" markerEnd={`url(#${arrowId})`} d="M87 95 H98 M160 95 H174" />
+            <path className="geography-rcep-down" markerEnd={`url(#${arrowId})`} d="M130 24 V57" />
+            <text className="geography-rcep-symbol" x="130" y="34">％</text>
+            <path className="geography-rcep-open-gate" d="M96 60 L111 72 M164 60 L149 72" />
+          </>
+        )}
+        {kind === 'rcep-supply-chain' && (
+          <>
+            <g className="geography-rcep-stage"><circle className="is-soft" cx="42" cy="78" r="25" /><path d="M31 85 L42 60 L53 85 Z" /></g>
+            <g className="geography-rcep-stage"><circle className="is-third" cx="102" cy="78" r="25" /><circle cx="102" cy="78" r="10" /><path d="M102 54 V63 M102 93 V102 M78 78 H87 M117 78 H126" /></g>
+            <g className="geography-rcep-stage"><circle className="is-accent" cx="164" cy="78" r="25" /><path d="M149 91 V72 L159 78 V67 L170 76 V91 Z" /></g>
+            <g className="geography-rcep-stage"><circle className="geography-rcep-market-node" cx="224" cy="78" r="25" /><path d="M212 90 V70 H236 V90 M216 70 L224 61 L232 70" /></g>
+            <path className="geography-rcep-flow" markerEnd={`url(#${arrowId})`} d="M68 78 H74 M128 78 H136 M190 78 H196" />
+            <path className="geography-rcep-loop" markerEnd={`url(#${arrowId})`} d="M221 111 C177 137 89 137 45 111" />
+          </>
+        )}
+        {kind === 'rcep-market' && (
+          <>
+            <circle className="geography-rcep-market-core" cx="130" cy="75" r="29" />
+            <path className="geography-rcep-bag" d="M114 84 V65 H146 V84 Z M121 65 C121 53 139 53 139 65" />
+            {[[48, 38], [212, 38], [48, 116], [212, 116]].map(([x, y]) => <g className="geography-rcep-economy" key={`${x}-${y}`}><circle cx={x} cy={y} r="18" /><rect x={x - 8} y={y - 7} width="16" height="14" rx="3" /></g>)}
+            <path className="geography-rcep-flow is-two-way" markerEnd={`url(#${arrowId})`} d="M68 48 L101 64 M192 48 L159 64 M68 107 L101 88 M192 107 L159 88" />
+            <path className="geography-rcep-investment" d="M118 114 H142 M122 123 H138 M126 132 H134" />
+          </>
+        )}
       </svg>
     )
   }
@@ -271,8 +313,9 @@ export function GeographyConceptDiagram({ currentItem, topicItems, effectiveMode
   const showCurrentTarget = effectiveMode === 'identify' || revealed || solved
   const isInteractive = effectiveMode !== 'identify' && !revealed && !solved
   const isBeltRoad = topicItems.some((item) => item.diagramKind?.startsWith('belt-road-'))
+  const isRcep = topicItems.some((item) => item.diagramKind?.startsWith('rcep-'))
   return (
-    <div className={`geography-diagram-stage ${isBeltRoad ? 'is-belt-road' : ''}`} role="group" aria-label="地圖判讀圖卡">
+    <div className={`geography-diagram-stage ${isBeltRoad ? 'is-belt-road' : ''} ${isRcep ? 'is-rcep' : ''}`} role="group" aria-label="地圖判讀圖卡">
       {topicItems.map((item, index) => {
         const isTarget = item.id === currentItem?.id
         const isWrong = item.id === wrongTargetId
@@ -325,8 +368,18 @@ function MacauCallout({ location, isTarget, isWrong, isInteractive, showName, in
   )
 }
 
+export function GeographyCourseConnection({ text }) {
+  if (!text) return null
+  return (
+    <aside className="geography-course-connection">
+      <BookOpen aria-hidden="true" />
+      <div><strong>與本章的連結</strong><span>{text}</span></div>
+    </aside>
+  )
+}
+
 function EconomicZoneInset({ mapDefinition, items, getPointState, getInteractionProps }) {
-  const cityItems = items.filter((item) => item.id.startsWith('economy-zone-') && item.mapKind === 'point')
+  const cityItems = items.filter((item) => item.insetGroup === 'southeast-coast')
   if (cityItems.length !== 4) return null
 
   return (
@@ -1106,6 +1159,7 @@ export default function GeographyFillMap() {
                   )
                 })}
               </div>
+              <GeographyCourseConnection text={topic.courseConnection} />
             </section>
 
             <div className="geography-setup-grid">
@@ -1150,6 +1204,7 @@ export default function GeographyFillMap() {
                 <h2>{isFillRound ? `完成 ${fillItems.length} 個標籤填圖` : effectiveMode === 'identify' ? (currentItem.mapKind === 'diagram' ? '這張圖卡表示什麼？' : '這個位置是什麼？') : `請找出「${currentItem.name}」`}</h2>
                 <span>{isFillRound ? '先選標籤，再將它放到正確位置；全部完成後一次查看結果。' : questionInstruction}</span>
               </div>
+              <GeographyCourseConnection text={topic.courseConnection} />
 
               {isFillRound ? (
                 <GeographyFillBoard

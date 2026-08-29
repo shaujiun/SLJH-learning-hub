@@ -206,11 +206,12 @@ export const chinaPopulationChangeItems = [
 ]
 
 export const chinaEconomicZoneItems = [
-  { id: 'economy-zone-shenzhen', mapKind: 'point', x: 512, y: 509, markerRadius: 5, hitRadius: 8, name: '深圳經濟特區', hint: '往珠江口東側、香港北方尋找。', reason: '深圳鄰近香港，是改革開放初期設立的經濟特區之一。' },
-  { id: 'economy-zone-zhuhai', mapKind: 'point', x: 501, y: 512, markerRadius: 5, hitRadius: 8, name: '珠海經濟特區', hint: '往珠江口西側、澳門北方尋找。', reason: '珠海鄰近澳門，是改革開放初期設立的經濟特區之一。' },
-  { id: 'economy-zone-shantou', mapKind: 'point', x: 544, y: 497, markerRadius: 5, hitRadius: 8, name: '汕頭經濟特區', hint: '往廣東東部沿海尋找。', reason: '汕頭利用沿海與僑鄉條件，成為改革開放初期設立的經濟特區之一。' },
-  { id: 'economy-zone-xiamen', mapKind: 'point', x: 560, y: 480, markerRadius: 5, hitRadius: 8, name: '廈門經濟特區', hint: '往福建東南沿海、臺灣海峽西側尋找。', reason: '廈門位於福建沿海，是改革開放初期設立的經濟特區之一。' },
+  { id: 'economy-zone-shenzhen', mapKind: 'point', insetGroup: 'southeast-coast', x: 512, y: 509, markerRadius: 5, hitRadius: 8, name: '深圳經濟特區', hint: '往珠江口東側、香港北方尋找。', reason: '深圳鄰近香港，是改革開放初期設立的經濟特區之一。' },
+  { id: 'economy-zone-zhuhai', mapKind: 'point', insetGroup: 'southeast-coast', x: 501, y: 512, markerRadius: 5, hitRadius: 8, name: '珠海經濟特區', hint: '往珠江口西側、澳門北方尋找。', reason: '珠海鄰近澳門，是改革開放初期設立的經濟特區之一。' },
+  { id: 'economy-zone-shantou', mapKind: 'point', insetGroup: 'southeast-coast', x: 544, y: 497, markerRadius: 5, hitRadius: 8, name: '汕頭經濟特區', hint: '往廣東東部沿海尋找。', reason: '汕頭利用沿海與僑鄉條件，成為改革開放初期設立的經濟特區之一。' },
+  { id: 'economy-zone-xiamen', mapKind: 'point', insetGroup: 'southeast-coast', x: 560, y: 480, markerRadius: 5, hitRadius: 8, name: '廈門經濟特區', hint: '往福建東南沿海、臺灣海峽西側尋找。', reason: '廈門位於福建沿海，是改革開放初期設立的經濟特區之一。' },
   { id: 'economy-zone-hainan', mapId: 'hainan', mapKind: 'province', name: '海南經濟特區', hint: '往雷州半島以南的海南島尋找。', reason: '海南全省均為經濟特區，是中國面積最大的經濟特區。' },
+  { id: 'economy-zone-kashgar', mapKind: 'point', x: 24, y: 261, markerRadius: 7, hitRadius: 12, name: '喀什經濟特區', hint: '往新疆維吾爾自治區的西部、接近中國最西端的位置尋找。', reason: '課本所稱的喀什經濟特區，正式名稱為喀什經濟開發區；它位於新疆西部，是中國向中亞、南亞與西亞開放的重要門戶，也是絲綢之路經濟帶與中巴經濟走廊的重要節點。' },
 ]
 
 export const chinaEconomicRegionItems = [
@@ -226,10 +227,10 @@ export const chinaBeltRoadItems = [
 ]
 
 export const chinaRcepItems = [
-  { id: 'rcep-asean', mapKind: 'diagram', diagramKind: 'rcep-asean', name: '東南亞國家協會十國', hint: '觀察圖卡是否以十個相連圓點呈現核心成員。', reason: 'RCEP 由東南亞國家協會發起，東協十國是協定的重要核心。' },
-  { id: 'rcep-northeast-asia', mapKind: 'diagram', diagramKind: 'rcep-northeast-asia', name: '中國、日本與韓國', hint: '觀察圖卡是否以三個彼此連結的經濟體呈現。', reason: '中國、日本與韓國皆為 RCEP 成員，協定加深東北亞與東南亞的產業及貿易連結。' },
-  { id: 'rcep-oceania', mapKind: 'diagram', diagramKind: 'rcep-oceania', name: '澳洲與紐西蘭', hint: '觀察圖卡是否顯示南方兩個相連成員。', reason: '澳洲與紐西蘭是 RCEP 中位於大洋洲的兩個成員。' },
-  { id: 'rcep-region', mapKind: 'diagram', diagramKind: 'rcep-region', name: '區域全面經濟夥伴協定（RCEP）', hint: '觀察圖卡是否整合十國、三國與兩國三組成員。', reason: 'RCEP 整合東協十國、中日韓、澳洲與紐西蘭，降低貿易障礙並強化區域供應鏈。' },
+  { id: 'rcep-members', mapKind: 'diagram', diagramKind: 'rcep-members', name: 'RCEP 的亞太成員範圍', hint: '觀察哪張圖把東北亞、東南亞與大洋洲串成同一個區域合作網絡，而不是只連向歐洲。', reason: 'RCEP 由東協十國與中國、日本、韓國、澳洲、紐西蘭共同組成，呈現中國參與亞太區域經濟整合。' },
+  { id: 'rcep-tariff', mapKind: 'diagram', diagramKind: 'rcep-tariff', name: '降低關稅與貿易障礙', hint: '觀察貨物跨越關卡時，費用符號與阻礙是增加還是減少。', reason: 'RCEP 透過關稅減讓、原產地規則與貿易便利化，降低成員間貨物流通的成本與障礙。' },
+  { id: 'rcep-supply-chain', mapKind: 'diagram', diagramKind: 'rcep-supply-chain', name: '區域供應鏈與產業分工', hint: '觀察原料、零件、組裝與市場是否分布在不同地點，卻由箭頭連成一條生產流程。', reason: '不同成員可分別提供原料、零組件、組裝與市場，形成跨國產業分工並強化區域供應鏈。' },
+  { id: 'rcep-market', mapKind: 'diagram', diagramKind: 'rcep-market', name: '擴大市場與投資往來', hint: '觀察商品、資金與市場節點是否在多個經濟體之間雙向流動。', reason: 'RCEP 擴大成員間的商品、服務與投資往來，使中國與亞太市場的經濟連結更緊密。' },
 ]
 
 export const chinaIndustryTransitionItems = [
@@ -320,7 +321,7 @@ export const chinaGeographyTopics = [
   {
     id: 'economic-zones',
     name: '經濟特區',
-    description: '深圳、珠海、汕頭、廈門與海南',
+    description: '東南沿海五大經濟特區與新疆喀什',
     semester: '翰林八上第 4 章',
     items: chinaEconomicZoneItems,
   },
@@ -341,8 +342,9 @@ export const chinaGeographyTopics = [
   {
     id: 'rcep',
     name: 'RCEP 區域連結',
-    description: '東協、中日韓與澳紐的區域合作',
+    description: '從成員範圍判讀關稅、市場與供應鏈影響',
     semester: '翰林八上第 4 章',
+    courseConnection: '對應八上第 4 章「中國的經濟發展與全球關連」：理解中國如何透過區域貿易協定連結亞太市場、產業分工與供應鏈。',
     items: chinaRcepItems,
   },
   {
