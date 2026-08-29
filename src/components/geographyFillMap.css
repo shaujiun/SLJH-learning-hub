@@ -490,6 +490,35 @@ button.geography-start-button {
 .geography-concept-graphic .geography-concept-water { fill: none; stroke-width: 4; }
 .geography-concept-graphic .geography-concept-smoke { fill: none; stroke: #66757b; stroke-dasharray: 7 6; }
 
+.geography-belt-road-graphic {
+  width: min(100%, 320px);
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+.geography-belt-road-graphic .geography-belt-background { fill: #f8fcfb; stroke: #b6d6d2; stroke-width: 2; }
+.geography-belt-road-graphic .geography-belt-land-context { fill: #f1e6bd; stroke: #aa9060; stroke-width: 1.5; }
+.geography-belt-road-graphic .geography-belt-sea-context { fill: #dff2f8; stroke: #83bdd0; stroke-width: 1.5; }
+.geography-belt-road-graphic .geography-concept-route { stroke-width: 5; stroke-dasharray: none; }
+.geography-belt-road-graphic .geography-belt-arrow { stroke: none; }
+.geography-belt-road-graphic .geography-belt-arrow.is-land { fill: #c76b3c; }
+.geography-belt-road-graphic .geography-belt-arrow.is-sea { fill: #2785b3; }
+.geography-belt-road-graphic .geography-belt-node { stroke: #fff; stroke-width: 2.5; }
+.geography-belt-road-graphic .geography-belt-node.is-land { fill: #c76b3c; }
+.geography-belt-road-graphic .geography-belt-node.is-sea { fill: #2785b3; }
+.geography-belt-road-graphic .geography-belt-place circle { fill: #fffdf5; stroke: #455f65; stroke-width: 2.5; }
+.geography-belt-road-graphic .geography-belt-place.is-china circle { fill: #ffd66f; stroke: #8b5b15; }
+.geography-belt-road-graphic .geography-belt-place text,
+.geography-belt-road-graphic .geography-belt-label {
+  fill: #274650;
+  font-family: system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  paint-order: stroke;
+  stroke: #fffdf5;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
 .geography-province {
   stroke: #62888a;
   stroke-width: 1.1;
@@ -864,6 +893,7 @@ button.geography-start-button {
   .geography-topic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .geography-chapter-grid { grid-template-columns: 1fr; }
   .geography-setup-grid { grid-template-columns: 1fr; }
+  .geography-diagram-stage.is-belt-road { grid-template-columns: 1fr; }
   .geography-china-map { max-height: none; }
   .geography-region-map.is-taiwan { max-height: 78vh; }
 }

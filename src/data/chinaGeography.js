@@ -220,9 +220,9 @@ export const chinaEconomicRegionItems = [
 ]
 
 export const chinaBeltRoadItems = [
-  { id: 'belt-road-land', mapKind: 'diagram', diagramKind: 'belt-road-land', name: '絲綢之路經濟帶', hint: '觀察路線是否主要經由陸地向西延伸。', reason: '絲綢之路經濟帶以陸路交通連結中國、中亞與歐洲。' },
-  { id: 'belt-road-sea', mapKind: 'diagram', diagramKind: 'belt-road-sea', name: '21 世紀海上絲綢之路', hint: '觀察路線是否沿港口與海洋向西延伸。', reason: '21 世紀海上絲綢之路以海運航線連結東南亞、南亞、非洲與歐洲。' },
-  { id: 'belt-road-dual', mapKind: 'diagram', diagramKind: 'belt-road-dual', name: '一帶一路', hint: '觀察圖中是否同時出現陸路與海路。', reason: '「一帶一路」結合絲綢之路經濟帶與 21 世紀海上絲綢之路，擴大跨區域交通、貿易與投資連結。' },
+  { id: 'belt-road-land', mapKind: 'diagram', diagramKind: 'belt-road-land', name: '絲綢之路經濟帶', hint: '從中國出發，沿橘色路線查看中亞、西亞到歐洲的陸路節點。', reason: '絲綢之路經濟帶以陸路交通由中國向西，經中亞、西亞連結歐洲。' },
+  { id: 'belt-road-sea', mapKind: 'diagram', diagramKind: 'belt-road-sea', name: '21 世紀海上絲綢之路', hint: '從中國沿海出發，沿藍色路線查看東南亞、南亞、東非到歐洲的海路節點。', reason: '21 世紀海上絲綢之路由中國沿海出發，經東南亞、南亞與東非等海運節點連結歐洲。' },
+  { id: 'belt-road-dual', mapKind: 'diagram', diagramKind: 'belt-road-dual', name: '一帶一路', hint: '觀察圖中是否同時呈現橘色陸路與藍色海路。', reason: '「一帶一路」結合向西延伸的陸上經濟帶與串聯港口的海上絲綢之路，擴大跨區域交通、貿易與投資連結。' },
 ]
 
 export const chinaRcepItems = [

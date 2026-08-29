@@ -190,11 +190,42 @@ function DiagramGraphic({ kind }) {
   if (kind.startsWith('belt-road-')) {
     const showLand = kind !== 'belt-road-sea'
     const showSea = kind !== 'belt-road-land'
+    const landArrowId = `${kind}-land-arrow`
+    const seaArrowId = `${kind}-sea-arrow`
     return (
-      <svg className={`geography-concept-graphic is-${kind}`} viewBox="0 0 240 130" aria-hidden="true">
-        <path className="geography-concept-landmass" d="M18 35 C45 12 76 20 94 36 C116 18 151 21 166 40 C190 31 218 42 225 60 L215 89 C181 86 156 92 130 80 C99 96 68 83 42 92 L18 74 Z" />
-        {showLand && <path className="geography-concept-route is-land" d="M25 59 C65 32 103 57 139 43 C172 30 193 48 220 48" />}
-        {showSea && <><path className="geography-concept-water" d="M18 101 Q31 91 44 101 T70 101 T96 101 T122 101 T148 101 T174 101 T200 101 T226 101" /><path className="geography-concept-route is-sea" d="M35 82 C76 115 120 111 151 92 C177 76 201 86 222 66" /></>}
+      <svg className={`geography-concept-graphic geography-belt-road-graphic is-${kind}`} viewBox="0 0 320 180" aria-hidden="true">
+        <defs>
+          <marker id={landArrowId} markerWidth="7" markerHeight="7" refX="8" refY="5" orient="auto" viewBox="0 0 10 10">
+            <path className="geography-belt-arrow is-land" d="M0 0 L10 5 L0 10 Z" />
+          </marker>
+          <marker id={seaArrowId} markerWidth="7" markerHeight="7" refX="8" refY="5" orient="auto" viewBox="0 0 10 10">
+            <path className="geography-belt-arrow is-sea" d="M0 0 L10 5 L0 10 Z" />
+          </marker>
+        </defs>
+        <rect className="geography-belt-background" x="4" y="4" width="312" height="172" rx="18" />
+        <path className="geography-belt-land-context" d="M19 51 C40 24 72 23 95 35 C118 18 155 20 178 38 C204 22 251 26 286 45 L301 72 C273 85 246 88 223 82 C198 94 168 91 143 82 C117 96 86 91 63 80 C42 86 25 76 19 51 Z" />
+        <path className="geography-belt-sea-context" d="M22 114 Q43 101 64 114 T106 114 T148 114 T190 114 T232 114 T274 114 T309 114 V171 H22 Z" />
+
+        {showLand && (
+          <>
+            <path className="geography-concept-route is-land" markerEnd={`url(#${landArrowId})`} d="M276 57 C231 41 198 58 160 49 C119 39 84 52 42 56" />
+            <circle className="geography-belt-node is-land" cx="205" cy="52" r="6" />
+            <circle className="geography-belt-node is-land" cx="126" cy="47" r="6" />
+          </>
+        )}
+        {showSea && (
+          <>
+            <path className="geography-concept-route is-sea" markerEnd={`url(#${seaArrowId})`} d="M282 72 C274 105 247 121 219 126 C180 134 153 153 115 148 C77 143 57 113 38 76" />
+            <circle className="geography-belt-node is-sea" cx="250" cy="111" r="6" />
+            <circle className="geography-belt-node is-sea" cx="196" cy="133" r="6" />
+            <circle className="geography-belt-node is-sea" cx="115" cy="148" r="6" />
+          </>
+        )}
+
+        <g className="geography-belt-place is-china"><circle cx="282" cy="57" r="12" /><text x="282" y="38">中國</text></g>
+        <g className="geography-belt-place"><circle cx="38" cy="61" r="10" /><text x="38" y="39">歐洲</text></g>
+        {showLand && <><text className="geography-belt-label" x="205" y="36">中亞</text><text className="geography-belt-label" x="126" y="72">西亞</text></>}
+        {showSea && <><text className="geography-belt-label" x="250" y="139">東南亞</text><text className="geography-belt-label" x="196" y="157">南亞</text><text className="geography-belt-label" x="115" y="171">東非</text></>}
       </svg>
     )
   }
@@ -239,8 +270,9 @@ function DiagramGraphic({ kind }) {
 export function GeographyConceptDiagram({ currentItem, topicItems, effectiveMode, revealed, solved, wrongTargetId, onAnswer }) {
   const showCurrentTarget = effectiveMode === 'identify' || revealed || solved
   const isInteractive = effectiveMode !== 'identify' && !revealed && !solved
+  const isBeltRoad = topicItems.some((item) => item.diagramKind?.startsWith('belt-road-'))
   return (
-    <div className="geography-diagram-stage" role="group" aria-label="地圖判讀圖卡">
+    <div className={`geography-diagram-stage ${isBeltRoad ? 'is-belt-road' : ''}`} role="group" aria-label="地圖判讀圖卡">
       {topicItems.map((item, index) => {
         const isTarget = item.id === currentItem?.id
         const isWrong = item.id === wrongTargetId
@@ -366,6 +398,7 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
   const [wrongTargetId, setWrongTargetId] = useState('')
   const [feedback, setFeedback] = useState(null)
   const isDiagram = items.every((item) => item.mapKind === 'diagram')
+  const isBeltRoad = items.some((item) => item.diagramKind?.startsWith('belt-road-'))
 
   const placeLabel = (targetId, draggedItemId = '') => {
     const itemId = draggedItemId || selectedItemId
@@ -452,7 +485,7 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
       />
 
       {isDiagram ? (
-        <div className="geography-diagram-stage is-fill-board" role="group" aria-label="判讀圖卡放置區">
+        <div className={`geography-diagram-stage is-fill-board ${isBeltRoad ? 'is-belt-road' : ''}`} role="group" aria-label="判讀圖卡放置區">
           {items.map((item, index) => {
             const targetId = item.id
             const isDone = completedTargetIds.has(targetId)

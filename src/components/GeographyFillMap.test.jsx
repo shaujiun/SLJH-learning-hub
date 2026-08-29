@@ -137,7 +137,7 @@ describe('GeographyFillMap', () => {
     const beltRoadHtml = renderToString(
       <GeographyConceptDiagram
         currentItem={chinaBeltRoadItems[0]}
-        topicItems={chinaBeltRoadItems}
+        topicItems={[chinaBeltRoadItems[0]]}
         effectiveMode="locate"
         revealed={false}
         solved={false}
@@ -160,9 +160,36 @@ describe('GeographyFillMap', () => {
     expect(populationHtml).toContain('geography-concept-graphic')
     expect(populationHtml).not.toContain('一胎化政策')
     expect(beltRoadHtml).toContain('geography-concept-route')
+    expect(beltRoadHtml).toContain('中亞')
+    expect(beltRoadHtml).toContain('西亞')
+    expect(beltRoadHtml).not.toContain('東南亞')
+    expect(beltRoadHtml).toContain('marker-end="url(#belt-road-land-land-arrow)"')
     expect(beltRoadHtml).not.toContain('絲綢之路經濟帶')
     expect(rcepHtml).toContain('>10<')
     expect(rcepHtml).not.toContain('東南亞國家協會十國')
+  })
+
+  it('一帶一路雙路線圖分別呈現陸路與海路的主要節點', () => {
+    const html = renderToString(
+      <GeographyConceptDiagram
+        currentItem={chinaBeltRoadItems[2]}
+        topicItems={[chinaBeltRoadItems[2]]}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+
+    expect(html).toContain('中亞')
+    expect(html).toContain('西亞')
+    expect(html).toContain('東南亞')
+    expect(html).toContain('南亞')
+    expect(html).toContain('東非')
+    expect(html).toContain('geography-concept-route is-land')
+    expect(html).toContain('geography-concept-route is-sea')
+    expect(html).not.toContain('一帶一路</span>')
   })
 
   it('標籤填圖同時提供多張可拖曳標籤與多個空白圖卡', () => {
