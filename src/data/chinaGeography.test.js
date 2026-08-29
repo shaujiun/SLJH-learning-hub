@@ -5,8 +5,16 @@ import {
   chinaGeographyTopics,
   chinaAgricultureItems,
   chinaClimateItems,
+  chinaAutonomousRegionItems,
+  chinaBeltRoadItems,
+  chinaEconomicRegionItems,
+  chinaEconomicZoneItems,
+  chinaIndustryTransitionItems,
   chinaLakeItems,
+  chinaPopulationChangeItems,
+  chinaPopulationDistributionItems,
   chinaProvinceItems,
+  chinaRcepItems,
   chinaReliefStepItems,
   chinaRiverItems,
   chinaSeaItems,
@@ -36,7 +44,7 @@ describe('中國地理填圖資料', () => {
     expect(chinaProvinceItems.every((item) => mapIds.has(item.mapId))).toBe(true)
   })
 
-  it('八上目前八個主題都有提示與判斷依據', () => {
+  it('八上四章目前十六個主題都有提示與判斷依據', () => {
     expect(chinaGeographyTopics.map((topic) => topic.id)).toEqual([
       'relief-steps',
       'administrative',
@@ -46,6 +54,14 @@ describe('中國地理填圖資料', () => {
       'seas',
       'climate',
       'agriculture',
+      'population-distribution',
+      'autonomous-regions',
+      'population-change',
+      'economic-zones',
+      'economic-regions',
+      'belt-and-road',
+      'rcep',
+      'industry-transition',
     ])
     for (const topic of chinaGeographyTopics) {
       expect(topic.items.length).toBeGreaterThan(0)
@@ -58,11 +74,37 @@ describe('中國地理填圖資料', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('兩個正式課本章節涵蓋且只涵蓋目前八個主題', () => {
+  it('四個正式課本章節涵蓋且只涵蓋目前十六個主題', () => {
     const chapterTopicIds = chinaGeographyChapters.flatMap((chapter) => chapter.topicIds)
-    expect(chinaGeographyChapters).toHaveLength(2)
-    expect(chapterTopicIds).toEqual(['relief-steps', 'terrain', 'administrative', 'rivers', 'lakes', 'seas', 'climate', 'agriculture'])
+    expect(chinaGeographyChapters).toHaveLength(4)
+    expect(chapterTopicIds).toEqual([
+      'relief-steps', 'terrain', 'administrative', 'rivers', 'lakes', 'seas',
+      'climate', 'agriculture',
+      'population-distribution', 'autonomous-regions', 'population-change',
+      'economic-zones', 'economic-regions', 'belt-and-road', 'rcep', 'industry-transition',
+    ])
     expect(new Set(chapterTopicIds)).toEqual(new Set(chinaGeographyTopics.map((topic) => topic.id)))
+  })
+
+  it('人口章使用同一套中國地圖位置與概念圖卡，不把人口政策誤畫成定位點', () => {
+    expect(chinaPopulationDistributionItems.find((item) => item.id === 'population-heihe-tengchong')).toMatchObject({
+      mapKind: 'line',
+      name: '黑河—騰衝線',
+    })
+    expect(chinaAutonomousRegionItems).toHaveLength(5)
+    expect(chinaAutonomousRegionItems.every((item) => item.mapKind === 'province')).toBe(true)
+    expect(chinaPopulationChangeItems).toHaveLength(4)
+    expect(chinaPopulationChangeItems.every((item) => item.mapKind === 'diagram' && item.diagramKind)).toBe(true)
+  })
+
+  it('經濟章包含五個經濟特區、三大經濟地帶與全球關連圖卡', () => {
+    expect(chinaEconomicZoneItems.map((item) => item.name)).toEqual([
+      '深圳經濟特區', '珠海經濟特區', '汕頭經濟特區', '廈門經濟特區', '海南經濟特區',
+    ])
+    expect(chinaEconomicRegionItems.map((item) => item.name)).toEqual(['西部經濟地帶', '中部經濟地帶', '東部經濟地帶'])
+    expect(chinaBeltRoadItems.every((item) => item.mapKind === 'diagram')).toBe(true)
+    expect(chinaRcepItems).toHaveLength(4)
+    expect(chinaIndustryTransitionItems).toHaveLength(4)
   })
 
   it('使用雙箭頭範圍而不是單一定位點表示三個階梯', () => {

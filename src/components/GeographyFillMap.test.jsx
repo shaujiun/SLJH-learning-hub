@@ -3,7 +3,15 @@ import { renderToString } from 'react-dom/server'
 import chinaMap from '@svg-maps/china'
 import taiwanMap from '@svg-maps/taiwan'
 import { afterEach, describe, expect, it } from 'vitest'
-import { chinaLakeItems, chinaProvinceItems, chinaReliefStepItems, chinaSeaItems } from '../data/chinaGeography.js'
+import {
+  chinaBeltRoadItems,
+  chinaLakeItems,
+  chinaPopulationChangeItems,
+  chinaProvinceItems,
+  chinaRcepItems,
+  chinaReliefStepItems,
+  chinaSeaItems,
+} from '../data/chinaGeography.js'
 import { taiwanContourItems, taiwanScaleItems, taiwanWaterItems } from '../data/taiwanGeography.js'
 import GeographyFillMap, { ChinaMap, GeographyConceptDiagram, GeographyFillBoard } from './GeographyFillMap.jsx'
 
@@ -111,6 +119,49 @@ describe('GeographyFillMap', () => {
     expect(scaleHtml).not.toContain('數字比例尺')
     expect(contourHtml).toContain('geography-contour-graphic')
     expect(contourHtml).not.toContain('陡坡')
+  })
+
+  it('人口政策、一帶一路與 RCEP 使用不洩漏名稱的概念圖卡', () => {
+    const populationHtml = renderToString(
+      <GeographyConceptDiagram
+        currentItem={chinaPopulationChangeItems[0]}
+        topicItems={chinaPopulationChangeItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+    const beltRoadHtml = renderToString(
+      <GeographyConceptDiagram
+        currentItem={chinaBeltRoadItems[0]}
+        topicItems={chinaBeltRoadItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+    const rcepHtml = renderToString(
+      <GeographyConceptDiagram
+        currentItem={chinaRcepItems[0]}
+        topicItems={chinaRcepItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+
+    expect(populationHtml).toContain('geography-concept-graphic')
+    expect(populationHtml).not.toContain('一胎化政策')
+    expect(beltRoadHtml).toContain('geography-concept-route')
+    expect(beltRoadHtml).not.toContain('絲綢之路經濟帶')
+    expect(rcepHtml).toContain('>10<')
+    expect(rcepHtml).not.toContain('東南亞國家協會十國')
   })
 
   it('標籤填圖同時提供多張可拖曳標籤與多個空白圖卡', () => {

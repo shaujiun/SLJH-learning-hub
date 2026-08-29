@@ -91,6 +91,14 @@ const topicIcons = {
   seas: Waves,
   climate: CloudSun,
   agriculture: CloudSun,
+  'population-distribution': MapPinned,
+  'autonomous-regions': MapPinned,
+  'population-change': BookOpen,
+  'economic-zones': MapPinned,
+  'economic-regions': MapPinned,
+  'belt-and-road': Map,
+  rcep: Map,
+  'industry-transition': BookOpen,
   'tw-map-skills': Compass,
   'tw-location': MapPinned,
   'tw-administrative': MapPinned,
@@ -143,6 +151,76 @@ function DiagramGraphic({ kind }) {
       <div className={`geography-scale-map ${kind === 'scale-large' ? 'is-large-scale' : 'is-small-scale'}`} aria-hidden="true">
         <i /><i /><i /><i /><i /><i />
       </div>
+    )
+  }
+
+  if (kind.startsWith('policy-') || kind.startsWith('population-')) {
+    const isOneChild = kind === 'policy-one-child'
+    const isMoreChildren = kind === 'policy-two-three-child'
+    const isAging = kind === 'population-aging'
+    return (
+      <svg className={`geography-concept-graphic is-${kind}`} viewBox="0 0 220 130" aria-hidden="true">
+        {(isOneChild || isMoreChildren) && (
+          <>
+            <circle cx="75" cy="31" r="13" /><circle cx="145" cy="31" r="13" />
+            <path d="M75 47 L75 84 M55 64 L95 64 M145 47 L145 84 M125 64 L165 64" />
+            <circle className="is-accent" cx="110" cy="78" r="10" />
+            <path className="is-accent" d="M110 89 L110 116 M96 101 L124 101" />
+            {isMoreChildren && <><circle className="is-accent" cx="67" cy="91" r="8" /><circle className="is-accent" cx="153" cy="91" r="8" /><path className="is-accent" d="M67 99 L67 119 M153 99 L153 119" /><path className="geography-concept-arrow" d="M190 104 L190 48 M178 60 L190 48 L202 60" /></>}
+          </>
+        )}
+        {isAging && (
+          <>
+            <path className="geography-concept-axis" d="M35 108 H190 M110 18 V112" />
+            <path className="is-soft" d="M110 102 H62 V88 H110 M110 83 H70 V69 H110 M110 64 H78 V50 H110 M110 45 H88 V31 H110 M110 26 H98 V15 H110" />
+            <path className="is-accent" d="M110 102 H158 V88 H110 M110 83 H150 V69 H110 M110 64 H142 V50 H110 M110 45 H132 V31 H110 M110 26 H122 V15 H110" />
+          </>
+        )}
+        {kind === 'population-sex-ratio' && (
+          <>
+            {[45, 75, 105, 135, 165].map((x) => <circle className="is-soft" cx={x} cy="42" r="12" key={`top-${x}`} />)}
+            {[65, 105, 145].map((x) => <circle className="is-accent" cx={x} cy="95" r="12" key={`bottom-${x}`} />)}
+            <path className="geography-concept-divider" d="M25 68 H195" />
+          </>
+        )}
+      </svg>
+    )
+  }
+
+  if (kind.startsWith('belt-road-')) {
+    const showLand = kind !== 'belt-road-sea'
+    const showSea = kind !== 'belt-road-land'
+    return (
+      <svg className={`geography-concept-graphic is-${kind}`} viewBox="0 0 240 130" aria-hidden="true">
+        <path className="geography-concept-landmass" d="M18 35 C45 12 76 20 94 36 C116 18 151 21 166 40 C190 31 218 42 225 60 L215 89 C181 86 156 92 130 80 C99 96 68 83 42 92 L18 74 Z" />
+        {showLand && <path className="geography-concept-route is-land" d="M25 59 C65 32 103 57 139 43 C172 30 193 48 220 48" />}
+        {showSea && <><path className="geography-concept-water" d="M18 101 Q31 91 44 101 T70 101 T96 101 T122 101 T148 101 T174 101 T200 101 T226 101" /><path className="geography-concept-route is-sea" d="M35 82 C76 115 120 111 151 92 C177 76 201 86 222 66" /></>}
+      </svg>
+    )
+  }
+
+  if (kind.startsWith('rcep-')) {
+    const groups = kind === 'rcep-asean' ? [10] : kind === 'rcep-northeast-asia' ? [3] : kind === 'rcep-oceania' ? [2] : [10, 3, 2]
+    return (
+      <svg className={`geography-concept-graphic is-${kind}`} viewBox="0 0 240 130" aria-hidden="true">
+        {groups.map((count, index) => {
+          const x = groups.length === 1 ? 120 : [57, 124, 190][index]
+          const colorClass = index === 0 ? 'is-soft' : index === 1 ? 'is-accent' : 'is-third'
+          return <g key={`${kind}-${count}-${index}`}><circle className={colorClass} cx={x} cy="64" r={groups.length === 1 ? 42 : 31} /><text x={x} y="73">{count}</text></g>
+        })}
+        {groups.length > 1 && <path className="geography-concept-link" d="M88 64 H93 M155 64 H159" />}
+      </svg>
+    )
+  }
+
+  if (kind.startsWith('industry-')) {
+    return (
+      <svg className={`geography-concept-graphic is-${kind}`} viewBox="0 0 230 130" aria-hidden="true">
+        {kind === 'industry-world-factory' && <><path className="is-soft" d="M25 108 V55 L67 76 V48 L110 75 V38 L155 64 V108 Z" /><path className="is-accent" d="M155 108 V31 H181 V108 Z" /><path className="geography-concept-smoke" d="M169 24 C152 13 164 2 149 0" /><rect x="45" y="86" width="25" height="18" /><rect x="88" y="86" width="25" height="18" /></>}
+        {kind === 'industry-technology' && <><rect className="is-accent" x="67" y="25" width="96" height="80" rx="12" /><rect x="89" y="45" width="52" height="40" rx="5" />{[45, 65, 85, 105, 125, 145, 165, 185].map((x) => <path d={`M${x} 15 V25 M${x} 105 V115`} key={x} />)}<path d="M55 43 H67 M55 65 H67 M55 87 H67 M163 43 H175 M163 65 H175 M163 87 H175" /></>}
+        {kind === 'industry-world-market' && <><circle className="is-soft" cx="70" cy="50" r="24" /><circle className="is-soft" cx="116" cy="43" r="24" /><circle className="is-soft" cx="160" cy="54" r="24" /><path className="is-accent" d="M39 108 H189 L176 72 H54 Z" /><path className="geography-concept-arrow" d="M23 38 H50 M35 26 L50 38 L35 50 M207 38 H180 M195 26 L180 38 L195 50" /></>}
+        {kind === 'industry-environment' && <><path className="is-soft" d="M26 108 V65 L72 85 V53 L118 80 V108 Z" /><path className="is-accent" d="M118 108 V30 H145 V108 Z" /><path className="geography-concept-smoke" d="M132 24 C112 11 129 0 107 0 M155 31 C174 17 158 5 181 1" /><path className="geography-concept-water" d="M20 116 Q35 105 50 116 T80 116 T110 116 T140 116 T170 116 T200 116" /></>}
+      </svg>
     )
   }
 

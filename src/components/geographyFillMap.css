@@ -452,6 +452,44 @@ button.geography-start-button {
 .geography-contour-graphic .geography-contour-water { stroke: #258abb; stroke-width: 4; }
 .geography-contour-graphic .geography-contour-ridge-line { stroke: #4b8b56; stroke-dasharray: 7 6; stroke-width: 3; }
 
+.geography-concept-graphic {
+  width: min(100%, 240px);
+  height: 132px;
+  overflow: visible;
+}
+
+.geography-concept-graphic circle,
+.geography-concept-graphic rect,
+.geography-concept-graphic path {
+  fill: none;
+  stroke: #315e69;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.geography-concept-graphic .is-soft { fill: #83bad0; stroke: #315e69; }
+.geography-concept-graphic .is-accent { fill: #f4b85f; stroke: #8b5b15; }
+.geography-concept-graphic .is-third { fill: #9bd0a8; stroke: #397347; }
+.geography-concept-graphic text {
+  fill: #173b4a;
+  font-family: system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 950;
+  text-anchor: middle;
+}
+.geography-concept-graphic .geography-concept-axis,
+.geography-concept-graphic .geography-concept-divider,
+.geography-concept-graphic .geography-concept-link { stroke: #6c7f84; stroke-width: 3; }
+.geography-concept-graphic .geography-concept-arrow { stroke: #d46345; stroke-width: 5; }
+.geography-concept-graphic .geography-concept-landmass { fill: #e8ddad; stroke: #7c6a3d; stroke-width: 2; }
+.geography-concept-graphic .geography-concept-route { fill: none; stroke-width: 6; stroke-dasharray: 10 7; }
+.geography-concept-graphic .geography-concept-route.is-land { stroke: #c76b3c; }
+.geography-concept-graphic .geography-concept-route.is-sea,
+.geography-concept-graphic .geography-concept-water { stroke: #2785b3; }
+.geography-concept-graphic .geography-concept-water { fill: none; stroke-width: 4; }
+.geography-concept-graphic .geography-concept-smoke { fill: none; stroke: #66757b; stroke-dasharray: 7 6; }
+
 .geography-province {
   stroke: #62888a;
   stroke-width: 1.1;
