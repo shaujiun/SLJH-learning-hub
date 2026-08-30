@@ -27,6 +27,12 @@ import {
   taiwanGeographyTopics,
 } from '../data/taiwanGeography.js'
 import {
+  europeMap,
+  filterWorldItemsByDifficulty,
+  worldGeographyChapters,
+  worldGeographyTopics,
+} from '../data/worldGeography.js'
+import {
   buildGeographyChoices,
   buildGeographyRound,
   evaluateGeographyFillPlacement,
@@ -43,7 +49,7 @@ const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
 const areas = [
   { id: 'taiwan', name: '臺灣地理', caption: '七年級', status: '已開放' },
   { id: 'china', name: '中國地理', caption: '八年級', status: '已開放' },
-  { id: 'world', name: '世界地理', caption: '九年級', status: '後續建立' },
+  { id: 'world', name: '世界地理', caption: '九年級', status: '第一階段已開放' },
 ]
 
 const geographyAreas = {
@@ -66,6 +72,16 @@ const geographyAreas = {
     defaultTopicId: 'relief-steps',
     attributionUrl: 'https://github.com/VictorCazanave/svg-maps/tree/master/packages/china',
     mapLabel: '中國行政區與地理填圖地圖',
+  },
+  world: {
+    name: '世界地理',
+    map: europeMap,
+    chapters: worldGeographyChapters,
+    topics: worldGeographyTopics,
+    defaultChapterId: 'grade9-upper-l01',
+    defaultTopicId: 'world-europe-countries',
+    attributionUrl: 'https://github.com/VictorCazanave/svg-maps/tree/master/packages/world',
+    mapLabel: '歐洲國家精確國界填圖地圖',
   },
 }
 
@@ -109,6 +125,7 @@ const topicIcons = {
   'tw-climate': CloudSun,
   'tw-rivers': Waves,
   'tw-water': Waves,
+  'world-europe-countries': MapPinned,
 }
 
 function learningHubUrl() {
@@ -957,6 +974,10 @@ export function ChinaMap(props) {
   return <GeographyMap {...props} areaId="china" mapDefinition={chinaMap} mapLabel="中國行政區與地理填圖地圖" />
 }
 
+export function EuropeMap(props) {
+  return <GeographyMap {...props} areaId="world" mapDefinition={europeMap} mapLabel="歐洲國家精確國界填圖地圖" />
+}
+
 export default function GeographyFillMap() {
   const [areaId, setAreaId] = useState('taiwan')
   const [chapterId, setChapterId] = useState('grade7-upper-l01')
@@ -981,7 +1002,11 @@ export default function GeographyFillMap() {
   const difficulty = difficulties.find((candidate) => candidate.id === difficultyId) || difficulties[1]
   const topicItems = areaId === 'taiwan'
     ? filterTaiwanItemsByDifficulty(topic.items, difficultyId)
-    : topic.items
+    : areaId === 'world'
+      ? filterWorldItemsByDifficulty(topic.items, difficultyId)
+      : topic.items
+  const mapDefinition = topic.map || area.map
+  const mapLabel = topic.mapLabel || area.mapLabel
   const currentItem = round[questionIndex]
   const mixedFillStartIndex = geographyMixedFillStart(round.length)
   const effectiveMode = geographyEffectiveMode(modeId, questionIndex, round.length)
@@ -1088,7 +1113,7 @@ export default function GeographyFillMap() {
           <div>
             <p>GEOGRAPHY MAP LAB</p>
             <h1>把地理位置，真正放進腦中的地圖</h1>
-            <span>臺灣與中國地理已開放，依課本章節選擇目前學到的內容再開始練習。</span>
+            <span>臺灣、中國與世界地理已分階段開放，依課本章節選擇目前學到的內容再開始練習。</span>
           </div>
           <div className="geography-hero-art"><MapPinned aria-hidden="true" /></div>
         </section>
@@ -1209,8 +1234,8 @@ export default function GeographyFillMap() {
               {isFillRound ? (
                 <GeographyFillBoard
                   key={`${modeId}-${round.map((item) => item.id).join('-')}`}
-                  mapDefinition={area.map}
-                  mapLabel={area.mapLabel}
+                  mapDefinition={mapDefinition}
+                  mapLabel={mapLabel}
                   areaId={areaId}
                   items={fillItems}
                   onProgress={setFillCompletedCount}
@@ -1232,8 +1257,8 @@ export default function GeographyFillMap() {
                 />
               ) : (
                 <GeographyMap
-                  mapDefinition={area.map}
-                  mapLabel={area.mapLabel}
+                  mapDefinition={mapDefinition}
+                  mapLabel={mapLabel}
                   areaId={areaId}
                   currentItem={currentItem}
                   topicItems={topicItems}

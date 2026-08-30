@@ -14,7 +14,8 @@ import {
   chinaSeaItems,
 } from '../data/chinaGeography.js'
 import { taiwanContourItems, taiwanScaleItems, taiwanWaterItems } from '../data/taiwanGeography.js'
-import GeographyFillMap, { ChinaMap, GeographyConceptDiagram, GeographyCourseConnection, GeographyFillBoard } from './GeographyFillMap.jsx'
+import { europeCountryItems } from '../data/worldGeography.js'
+import GeographyFillMap, { ChinaMap, EuropeMap, GeographyConceptDiagram, GeographyCourseConnection, GeographyFillBoard } from './GeographyFillMap.jsx'
 
 const originalWindow = globalThis.window
 
@@ -35,6 +36,8 @@ describe('GeographyFillMap', () => {
     expect(html).toContain('臺灣地理')
     expect(html).toContain('中國地理')
     expect(html).toContain('世界地理')
+    expect(html).toContain('九年級')
+    expect(html).toContain('第一階段已開放')
     expect(html).toContain('七上第 1 章　認識位置與地圖')
     expect(html).toContain('七上第 2 章　世界中的臺灣')
     expect(html).toContain('七上第 6 章　水文')
@@ -120,6 +123,27 @@ describe('GeographyFillMap', () => {
     expect(scaleHtml).not.toContain('數字比例尺')
     expect(contourHtml).toContain('geography-contour-graphic')
     expect(contourHtml).not.toContain('陡坡')
+  })
+
+  it('歐洲地圖使用共用精確國界並裁切到歐洲範圍', () => {
+    const html = renderToString(
+      <EuropeMap
+        currentItem={europeCountryItems[0]}
+        topicItems={europeCountryItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+
+    expect(html).toContain('viewBox="390 170 205 205"')
+    expect(html).toContain('data-map-id="gb"')
+    expect(html).toContain('data-map-id="fr"')
+    expect(html).toContain('data-map-id="ru"')
+    expect(html).toContain('aria-label="歐洲國家精確國界填圖地圖"')
+    expect(html).not.toContain('>英國<')
   })
 
   it('人口政策、一帶一路與 RCEP 使用不洩漏名稱的概念圖卡', () => {
