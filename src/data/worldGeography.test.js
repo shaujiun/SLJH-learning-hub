@@ -6,15 +6,21 @@ import {
   europeMap,
   europeMountainItems,
   europePhysicalMap,
+  europeRegionalMap,
   europeRiverItems,
   europeWaterItems,
   filterWorldItemsByDifficulty,
+  northEastEuropeItems,
+  russiaLandformItems,
+  russiaMountainWaterItems,
+  russiaPhysicalMap,
+  southWestEuropeItems,
   worldGeographyChapters,
   worldGeographyTopics,
 } from './worldGeography.js'
 
 describe('worldGeography', () => {
-  it('以九上第 1 章開放歐洲國家與自然環境填圖', () => {
+  it('以九上第 1、2 章開放歐洲與俄羅斯填圖', () => {
     expect(worldGeographyChapters).toEqual([
       expect.objectContaining({
         id: 'grade9-upper-l01',
@@ -25,6 +31,15 @@ describe('worldGeography', () => {
           'world-europe-rivers',
           'world-europe-waters',
           'world-europe-climate',
+        ],
+      }),
+      expect.objectContaining({
+        id: 'grade9-upper-l02',
+        topicIds: [
+          'world-north-east-europe-regions',
+          'world-south-west-europe-regions',
+          'world-russia-landforms',
+          'world-russia-mountains-waters',
         ],
       }),
     ])
@@ -44,11 +59,16 @@ describe('worldGeography', () => {
     expect(europeLandformItems.every((item) => item.path && item.areaType === 'landform')).toBe(true)
     expect(europeMountainItems.every((item) => item.path && item.lineType === 'mountain')).toBe(true)
     expect(europeRiverItems.every((item) => item.path?.startsWith('M'))).toBe(true)
-    expect(europeWaterItems.every((item) => Number.isFinite(item.x) && Number.isFinite(item.y))).toBe(true)
+    const waterAreas = europeWaterItems.filter((item) => item.mapKind === 'area')
+    const waterPoints = europeWaterItems.filter((item) => item.mapKind === 'point')
+    expect(waterAreas.map((item) => item.name)).toEqual(['黑海', '裏海'])
+    expect(waterAreas.every((item) => item.path?.startsWith('M') && item.areaType === 'water')).toBe(true)
+    expect(waterPoints).toHaveLength(7)
+    expect(waterPoints.every((item) => Number.isFinite(item.x) && Number.isFinite(item.y))).toBe(true)
     expect(europeClimateItems.every((item) => item.path && item.areaType === 'climate')).toBe(true)
   })
 
-  it('納入教師教材列出的 20 個歐洲國家，且每個目標都有精確國界', () => {
+  it('納入第一章教師教材列出的 20 個歐洲國家，且每個目標都有精確國界', () => {
     expect(europeCountryItems).toHaveLength(20)
     expect(europeCountryItems.map((item) => item.name)).toEqual(expect.arrayContaining([
       '冰島', '挪威', '瑞典', '芬蘭', '丹麥', '英國', '法國', '德國', '荷蘭', '比利時',
@@ -83,5 +103,29 @@ describe('worldGeography', () => {
     expect(filterWorldItemsByDifficulty(europeWaterItems, 'intro')).toHaveLength(6)
     expect(filterWorldItemsByDifficulty(europeWaterItems, 'basic')).toHaveLength(9)
     expect(filterWorldItemsByDifficulty(europeWaterItems, 'advanced')).toHaveLength(9)
+  })
+
+  it('依九上第 2 章教師版建立歐洲分區與俄羅斯題庫', () => {
+    expect(northEastEuropeItems).toHaveLength(12)
+    expect(southWestEuropeItems).toHaveLength(25)
+    expect(russiaLandformItems).toHaveLength(4)
+    expect(russiaMountainWaterItems).toHaveLength(8)
+
+    expect(northEastEuropeItems.filter((item) => item.mapKind === 'point').map((item) => item.name)).toEqual([
+      '哥本哈根', '華沙', '基輔', '布拉格',
+    ])
+    expect(southWestEuropeItems.map((item) => item.name)).toEqual(expect.arrayContaining([
+      '馬爾他', '倫敦', '巴黎', '柏林', '馬德里', '羅馬', '阿姆斯特丹', '布魯塞爾', '里斯本', '雅典', '伯恩', '維也納',
+    ]))
+    expect(russiaPhysicalMap).toEqual(expect.objectContaining({
+      viewBox: '510 105 480 300',
+      clipLocationId: 'ru',
+    }))
+    expect(russiaPhysicalMap.locations.map((location) => location.id)).toEqual(['ru'])
+    expect(europeRegionalMap.viewBox).toBe('390 170 205 225')
+    expect(russiaLandformItems.every((item) => item.path?.startsWith('M') && item.areaType === 'landform')).toBe(true)
+    expect(russiaMountainWaterItems.filter((item) => item.mapKind === 'line')).toHaveLength(3)
+    expect(russiaMountainWaterItems.filter((item) => item.mapKind === 'point')).toHaveLength(3)
+    expect(russiaMountainWaterItems.filter((item) => item.mapKind === 'area')).toHaveLength(2)
   })
 })

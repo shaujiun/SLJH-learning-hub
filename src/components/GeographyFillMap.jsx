@@ -131,6 +131,10 @@ const topicIcons = {
   'world-europe-rivers': Waves,
   'world-europe-waters': Waves,
   'world-europe-climate': CloudSun,
+  'world-north-east-europe-regions': MapPinned,
+  'world-south-west-europe-regions': MapPinned,
+  'world-russia-landforms': Mountain,
+  'world-russia-mountains-waters': Waves,
 }
 
 function learningHubUrl() {
@@ -658,7 +662,7 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
                       fillRule="evenodd"
                       role="button"
                       tabIndex={0}
-                      aria-label="湖泊或水庫標籤放置區"
+                      aria-label="水域標籤放置區"
                       {...dropTargetProps(item.id)}
                     />
                   </g>
@@ -762,6 +766,10 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
 
 export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, topicItems, effectiveMode, revealed, solved, wrongTargetId, onAnswer }) {
   const mapViewBoxWidth = Number(mapDefinition.viewBox.split(' ')[2])
+  const clipLocation = mapDefinition.clipLocationId
+    ? mapDefinition.locations.find((location) => location.id === mapDefinition.clipLocationId)
+    : null
+  const clipPathId = `geography-map-clip-${areaId}-${mapDefinition.name || 'region'}`.replace(/[^a-zA-Z0-9_-]/g, '-')
   const targetKey = currentItem?.mapKind === 'province' ? currentItem.mapId : currentItem?.id
   const showCurrentTarget = effectiveMode === 'identify' || revealed || solved
   const pointItems = topicItems.filter((item) => item.mapKind === 'point')
@@ -787,6 +795,13 @@ export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, top
         role="img"
         aria-label={mapLabel}
       >
+        {clipLocation && (
+          <defs>
+            <clipPath id={clipPathId}>
+              <path d={clipLocation.path} fillRule="evenodd" />
+            </clipPath>
+          </defs>
+        )}
         <g className="geography-area-layer is-sea">
           {seaItems.map((item) => {
             const isTarget = item.id === targetKey
@@ -858,7 +873,7 @@ export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, top
           />
         )}
 
-        <g className="geography-overlay-layer">
+        <g className="geography-overlay-layer" clipPath={clipLocation ? `url(#${clipPathId})` : undefined}>
           {overlayItems.map((item) => {
             const isTarget = item.id === targetKey
             const isWrong = wrongTargetId === item.id
@@ -900,7 +915,7 @@ export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, top
                   fillRule="evenodd"
                   tabIndex={isInteractive ? 0 : -1}
                   role={isInteractive ? 'button' : undefined}
-                  aria-label={isInteractive ? '選擇這個湖泊或水庫' : undefined}
+                  aria-label={isInteractive ? '選擇這個水域' : undefined}
                   onClick={() => answer(item.id)}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' || event.key === ' ') {
@@ -1375,7 +1390,7 @@ export default function GeographyFillMap() {
           <a href={area.attributionUrl} target="_blank" rel="noreferrer">{area.name}行政區向量圖來源與授權：SVG Maps／CC BY 4.0</a>
           <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">河川、湖泊與水庫資料：OpenStreetMap contributors／ODbL 1.0</a>
           {areaId === 'china' && <a href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/" target="_blank" rel="noreferrer">海域資料：Natural Earth 1：10m Physical Vectors／Public Domain</a>}
-          {areaId === 'world' && <a href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/" target="_blank" rel="noreferrer">歐洲河川中心線：Natural Earth 1：10m Physical Vectors／Public Domain</a>}
+          {areaId === 'world' && <a href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/" target="_blank" rel="noreferrer">歐洲河川與海域輪廓：Natural Earth 1：10m Physical Vectors／Public Domain</a>}
         </footer>
       </main>
     </div>

@@ -20,8 +20,14 @@ import {
   europeLandformItems,
   europeMountainItems,
   europePhysicalMap,
+  europeRegionalMap,
   europeRiverItems,
   europeWaterItems,
+  northEastEuropeItems,
+  russiaLandformItems,
+  russiaMountainWaterItems,
+  russiaPhysicalMap,
+  southWestEuropeItems,
 } from '../data/worldGeography.js'
 import GeographyFillMap, { ChinaMap, EuropeMap, GeographyConceptDiagram, GeographyCourseConnection, GeographyFillBoard, GeographyMap } from './GeographyFillMap.jsx'
 
@@ -174,14 +180,85 @@ describe('GeographyFillMap', () => {
     const riverHtml = renderMap(europeRiverItems[0], europeRiverItems)
     const landformHtml = renderMap(europeLandformItems[0], europeLandformItems)
     const climateHtml = renderMap(europeClimateItems[0], europeClimateItems)
-    const waterHtml = renderMap(europeWaterItems[0], europeWaterItems)
+    const waterHtml = renderMap(europeWaterItems.find((item) => item.name === '黑海'), europeWaterItems)
 
     expect(mountainHtml).toContain('viewBox="390 155 320 245"')
     expect(mountainHtml.match(/geography-feature-line-visible is-mountain/g)).toHaveLength(5)
     expect(riverHtml.match(/geography-feature-line-visible "/g)).toHaveLength(2)
     expect(landformHtml.match(/geography-area-layer is-landform/g)).toHaveLength(6)
     expect(climateHtml.match(/geography-area-layer is-climate/g)).toHaveLength(4)
-    expect(waterHtml.match(/geography-map-point /g)).toHaveLength(9)
+    expect(waterHtml.match(/geography-map-point /g)).toHaveLength(7)
+    expect(waterHtml.match(/geography-feature-area-hit/g)).toHaveLength(2)
+    expect(waterHtml).toContain('選擇這個水域')
+  })
+
+  it('九上第 2 章以同一套歐洲座標顯示分區首都，並把俄羅斯地形裁在國界內', () => {
+    const northEastHtml = renderToString(
+      <GeographyMap
+        mapDefinition={europePhysicalMap}
+        mapLabel="北歐與東歐國家及首都地圖"
+        areaId="world"
+        currentItem={northEastEuropeItems.find((item) => item.name === '華沙')}
+        topicItems={northEastEuropeItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+    const southWestHtml = renderToString(
+      <GeographyMap
+        mapDefinition={europeRegionalMap}
+        mapLabel="南歐與西歐國家及首都地圖"
+        areaId="world"
+        currentItem={southWestEuropeItems.find((item) => item.name === '馬爾他')}
+        topicItems={southWestEuropeItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+    const russiaLandformHtml = renderToString(
+      <GeographyMap
+        mapDefinition={russiaPhysicalMap}
+        mapLabel="俄羅斯四大地形區地圖"
+        areaId="world"
+        currentItem={russiaLandformItems[0]}
+        topicItems={russiaLandformItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+    const russiaWaterHtml = renderToString(
+      <GeographyMap
+        mapDefinition={russiaPhysicalMap}
+        mapLabel="俄羅斯山脈與海域地圖"
+        areaId="world"
+        currentItem={russiaMountainWaterItems[0]}
+        topicItems={russiaMountainWaterItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+
+    expect(northEastHtml.match(/geography-map-point /g)).toHaveLength(4)
+    expect(southWestHtml.match(/geography-map-point /g)).toHaveLength(12)
+    expect(russiaLandformHtml).toContain('viewBox="510 105 480 300"')
+    expect(russiaLandformHtml).toContain('<clipPath id="geography-map-clip-world-RussiaPhysical"')
+    expect(russiaLandformHtml).toContain('clip-path="url(#geography-map-clip-world-RussiaPhysical)"')
+    expect(russiaLandformHtml.match(/geography-area-layer is-landform/g)).toHaveLength(4)
+    expect(russiaWaterHtml.match(/geography-feature-line-visible is-mountain/g)).toHaveLength(3)
+    expect(russiaWaterHtml.match(/geography-map-point /g)).toHaveLength(3)
+    expect(russiaWaterHtml.match(/geography-feature-area-hit/g)).toHaveLength(2)
   })
 
   it('人口政策、一帶一路與 RCEP 使用不洩漏名稱的概念圖卡', () => {
@@ -322,10 +399,10 @@ describe('GeographyFillMap', () => {
     )
 
     expect(lakeHtml.match(/geography-feature-area-hit/g)).toHaveLength(4)
-    expect(lakeHtml).toContain('選擇這個湖泊或水庫')
+    expect(lakeHtml).toContain('選擇這個水域')
     expect(seaHtml.match(/geography-feature-area-hit/g)).toHaveLength(4)
     expect(seaHtml).toContain('選擇這個海域')
-    expect(fillHtml.match(/湖泊或水庫標籤放置區/g)).toHaveLength(3)
+    expect(fillHtml.match(/水域標籤放置區/g)).toHaveLength(3)
   })
 
   it('中國行政區提供尖端指向實際位置的澳門放大作答氣泡', () => {
