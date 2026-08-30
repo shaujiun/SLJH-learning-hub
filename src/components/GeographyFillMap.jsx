@@ -132,7 +132,9 @@ const topicIcons = {
   'world-europe-waters': Waves,
   'world-europe-climate': CloudSun,
   'world-north-east-europe-regions': MapPinned,
+  'world-north-east-europe-capitals': MapPinned,
   'world-south-west-europe-regions': MapPinned,
+  'world-south-west-europe-capitals': MapPinned,
   'world-russia-landforms': Mountain,
   'world-russia-mountains-waters': Waves,
 }
@@ -470,6 +472,61 @@ function FillLabelBank({ items, completed, selectedItemId, onSelect }) {
   )
 }
 
+function GeographyPointMarker({ item }) {
+  const markerRadius = item.markerRadius || 15
+  const hitRadius = item.hitRadius || 20
+
+  if (item.pointType === 'country-location') {
+    const halfSize = Math.max(7, markerRadius * 0.72)
+    return (
+      <>
+        <circle className="geography-map-point-hit" r={hitRadius} />
+        <rect
+          className="geography-map-point-halo geography-map-point-country-marker"
+          x={-halfSize}
+          y={-halfSize}
+          width={halfSize * 2}
+          height={halfSize * 2}
+          rx={halfSize * 0.18}
+          transform="rotate(45)"
+        />
+        <circle className="geography-map-point-dot" r={Math.min(4.5, markerRadius * 0.34)} />
+      </>
+    )
+  }
+
+  return (
+    <>
+      <circle className="geography-map-point-hit" r={hitRadius} />
+      <circle className="geography-map-point-halo" r={markerRadius} />
+      <circle className="geography-map-point-dot" r={Math.min(6, markerRadius * 0.45)} />
+    </>
+  )
+}
+
+function GeographyPointLegend({ items }) {
+  const hasCapital = items.some((item) => item.pointType === 'capital')
+  const hasCountryLocation = items.some((item) => item.pointType === 'country-location')
+  if (!hasCapital && !hasCountryLocation) return null
+
+  return (
+    <aside className="geography-point-legend" role="note" aria-label="地圖點位說明">
+      {hasCapital && (
+        <span>
+          <i className="is-capital" aria-hidden="true" />
+          圓點只代表首都所在位置，不代表整個國家範圍。
+        </span>
+      )}
+      {hasCountryLocation && (
+        <span>
+          <i className="is-country-location" aria-hidden="true" />
+          菱形代表面積較小的國家位置（馬爾他）。
+        </span>
+      )}
+    </aside>
+  )
+}
+
 export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onProgress, onScore, onFinish }) {
   const [selectedItemId, setSelectedItemId] = useState('')
   const [completed, setCompleted] = useState({})
@@ -700,14 +757,13 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
                     aria-label="點狀地理標籤放置位置"
                     {...dropTargetProps(item.id)}
                   >
-                    <circle className="geography-map-point-hit" r={item.hitRadius || 20} />
-                    <circle className="geography-map-point-halo" r={item.markerRadius || 15} />
-                    <circle className="geography-map-point-dot" r={Math.min(6, (item.markerRadius || 15) * 0.45)} />
+                    <GeographyPointMarker item={item} />
                   </g>
                 )
               })}
             </g>
           </svg>
+          <GeographyPointLegend items={pointItems} />
           <EconomicZoneInset
             mapDefinition={mapDefinition}
             items={pointItems}
@@ -975,14 +1031,13 @@ export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, top
                   }
                 }}
               >
-                <circle className="geography-map-point-hit" r={item.hitRadius || 20} />
-                <circle className="geography-map-point-halo" r={item.markerRadius || 15} />
-                <circle className="geography-map-point-dot" r={Math.min(6, (item.markerRadius || 15) * 0.45)} />
+                <GeographyPointMarker item={item} />
               </g>
             )
           })}
         </g>
       </svg>
+      <GeographyPointLegend items={pointItems} />
       <EconomicZoneInset
         mapDefinition={mapDefinition}
         items={pointItems}

@@ -27,6 +27,25 @@ export const europeRegionalMap = {
   viewBox: '390 170 205 225',
 }
 
+// europeMap 取自 MapSVG 的地理校準世界底圖；原始座標範圍與 SVG 尺寸如下。
+// 經度採線性換算，緯度則必須使用 Mercator 投影，不能用固定倍數近似，
+// 否則里斯本、雅典、馬爾他等較低緯度位置會明顯向南偏移。
+const worldGeoBounds = {
+  west: -169.110266,
+  north: 83.600842,
+  east: 190.486279,
+  south: -58.508473,
+}
+
+const worldSvgSize = {
+  width: 1009.6727,
+  height: 665.96301,
+}
+
+function mercatorLatitude(latitude) {
+  return Math.log(Math.tan((Math.PI / 4) + ((latitude * Math.PI) / 360)))
+}
+
 export const russiaLandformGeometry = {
   'world-russia-landform-east-european-plain': projectedPath([
     [15, 42], [15, 78], [58, 78], [58, 70], [59, 65], [59, 60], [58.5, 55], [60, 42],
@@ -63,9 +82,19 @@ export const russiaWaterPointGeometry = {
 }
 
 export function projectWorldPoint(lon, lat, markerRadius = 5, hitRadius = 10) {
+  const top = mercatorLatitude(worldGeoBounds.north)
+  const bottom = mercatorLatitude(worldGeoBounds.south)
+  const projectedLatitude = mercatorLatitude(lat)
+
   return {
-    x: Number((476 + (2.8 * lon)).toFixed(1)),
-    y: Number((600 - (6 * lat)).toFixed(1)),
+    x: Number((
+      ((lon - worldGeoBounds.west) / (worldGeoBounds.east - worldGeoBounds.west))
+      * worldSvgSize.width
+    ).toFixed(1)),
+    y: Number((
+      ((top - projectedLatitude) / (top - bottom))
+      * worldSvgSize.height
+    ).toFixed(1)),
     markerRadius,
     hitRadius,
   }

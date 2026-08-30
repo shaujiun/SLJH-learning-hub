@@ -128,6 +128,7 @@ function capitalItem(id, name, lon, lat, locationHint, reason, levels = allLevel
   return {
     id: `world-europe-capital-${id}`,
     mapKind: 'point',
+    pointType: 'capital',
     name,
     levels,
     hint: locationHint,
@@ -136,7 +137,7 @@ function capitalItem(id, name, lon, lat, locationHint, reason, levels = allLevel
   }
 }
 
-export const northEastEuropeItems = [
+export const northEastEuropeCountryItems = [
   regionalCountry('is', basicLevels),
   regionalCountry('dk'),
   regionalCountry('no'),
@@ -145,13 +146,18 @@ export const northEastEuropeItems = [
   regionalCountry('pl'),
   regionalCountry('ua'),
   regionalCountry('cz'),
+]
+
+export const northEastEuropeCapitalItems = [
   capitalItem('copenhagen', '哥本哈根', 12.5683, 55.6761, '先找丹麥，再找日德蘭半島東側的島嶼。', '哥本哈根是丹麥首都，位於西蘭島東岸。'),
   capitalItem('warsaw', '華沙', 21.0122, 52.2297, '先找波蘭，再往國土中東部尋找。', '華沙是波蘭首都，位於維斯瓦河沿岸。'),
   capitalItem('kyiv', '基輔', 30.5234, 50.4501, '先找烏克蘭，再往國土北部偏中尋找。', '基輔是烏克蘭首都，位於第聶伯河沿岸。'),
   capitalItem('prague', '布拉格', 14.4378, 50.0755, '先找捷克，再往國土西部偏中尋找。', '布拉格是捷克首都，位於伏爾塔瓦河沿岸。'),
 ]
 
-export const southWestEuropeItems = [
+export const northEastEuropeItems = [...northEastEuropeCountryItems, ...northEastEuropeCapitalItems]
+
+export const southWestEuropeCountryItems = [
   regionalCountry('ie', basicLevels),
   regionalCountry('gb'),
   regionalCountry('nl', basicLevels),
@@ -168,12 +174,16 @@ export const southWestEuropeItems = [
   {
     id: 'world-europe-country-mt',
     mapKind: 'point',
+    pointType: 'country-location',
     name: '馬爾他',
     levels: advancedOnly,
     hint: '往義大利西西里島南方的地中海尋找小島國。',
     reason: '馬爾他位於地中海中部、義大利西西里島南方。',
     ...projectWorldPoint(14.3754, 35.9375, 5, 11),
   },
+]
+
+export const southWestEuropeCapitalItems = [
   capitalItem('london', '倫敦', -0.1276, 51.5074, '先找英國，再往英格蘭東南部尋找。', '倫敦是英國首都，位於泰晤士河沿岸。'),
   capitalItem('paris', '巴黎', 2.3522, 48.8566, '先找法國，再往國土北部尋找。', '巴黎是法國首都，位於塞納河沿岸。'),
   capitalItem('berlin', '柏林', 13.405, 52.52, '先找德國，再往國土東北部尋找。', '柏林是德國首都，位置較接近德國東部。'),
@@ -186,6 +196,8 @@ export const southWestEuropeItems = [
   capitalItem('bern', '伯恩', 7.4474, 46.948, '先找瑞士，再往國土西部尋找。', '伯恩是瑞士聯邦政府所在地，位於瑞士西部。', advancedOnly),
   capitalItem('vienna', '維也納', 16.3738, 48.2082, '先找奧地利，再往國土東部尋找。', '維也納是奧地利首都，位於多瑙河沿岸。', advancedOnly),
 ]
+
+export const southWestEuropeItems = [...southWestEuropeCountryItems, ...southWestEuropeCapitalItems]
 
 export const russiaLandformItems = [
   { id: 'world-russia-landform-east-european-plain', mapKind: 'area', areaType: 'landform', name: '歐俄平原', levels: allLevels, hint: '往烏拉爾山以西、俄羅斯歐洲部分尋找。', reason: '歐俄平原位於烏拉爾山以西，是俄羅斯人口與都市較集中的核心區。' },
@@ -264,23 +276,43 @@ export const worldGeographyTopics = [
   },
   {
     id: 'world-north-east-europe-regions',
-    name: '北歐與東歐國家、首都',
-    description: '依教師版填圖辨識 8 個國家與 4 個首都',
+    name: '北歐與東歐國家',
+    description: '依教師版填圖辨識 8 個國家',
     semester: '翰林九上 L02',
-    courseConnection: '國家以精確國界作答；首都以城市點位作答，避免把國家範圍和都市位置混為一談。',
+    courseConnection: '國家題請依整個國土範圍判斷，不使用首都圓點代替國家位置。',
     map: europeMap,
-    mapLabel: '北歐與東歐國家及首都精確填圖地圖',
-    items: northEastEuropeItems,
+    mapLabel: '北歐與東歐國家精確填圖地圖',
+    items: northEastEuropeCountryItems,
+  },
+  {
+    id: 'world-north-east-europe-capitals',
+    name: '北歐與東歐首都',
+    description: '依教師版填圖辨識 4 個首都',
+    semester: '翰林九上 L02',
+    courseConnection: '圖上的圓點只代表首都所在位置，不代表整個國家範圍。',
+    map: europeMap,
+    mapLabel: '北歐與東歐首都精確點位地圖',
+    items: northEastEuropeCapitalItems,
   },
   {
     id: 'world-south-west-europe-regions',
-    name: '南歐與西歐國家、首都',
-    description: '依教師版填圖辨識 14 個國家與 11 個首都',
+    name: '南歐與西歐國家',
+    description: '依教師版填圖辨識 14 個國家',
     semester: '翰林九上 L02',
-    courseConnection: '小國與首都會使用較大的點按範圍；馬爾他以島嶼位置點作答，其餘國家維持精確國界。',
+    courseConnection: '國家題請依整個國土範圍判斷；馬爾他因國土很小，改用菱形定位點，其餘國家維持精確國界。',
     map: europeRegionalMap,
-    mapLabel: '南歐與西歐國家及首都精確填圖地圖',
-    items: southWestEuropeItems,
+    mapLabel: '南歐與西歐國家精確填圖地圖',
+    items: southWestEuropeCountryItems,
+  },
+  {
+    id: 'world-south-west-europe-capitals',
+    name: '南歐與西歐首都',
+    description: '依教師版填圖辨識 11 個首都',
+    semester: '翰林九上 L02',
+    courseConnection: '圖上的圓點只代表首都所在位置，不代表整個國家範圍。',
+    map: europeRegionalMap,
+    mapLabel: '南歐與西歐首都精確點位地圖',
+    items: southWestEuropeCapitalItems,
   },
   {
     id: 'world-russia-landforms',
@@ -319,7 +351,9 @@ export const worldGeographyChapters = [
     description: '練習歐洲分區國家與首都，以及俄羅斯地形、山脈與周邊海域。',
     topicIds: [
       'world-north-east-europe-regions',
+      'world-north-east-europe-capitals',
       'world-south-west-europe-regions',
+      'world-south-west-europe-capitals',
       'world-russia-landforms',
       'world-russia-mountains-waters',
     ],

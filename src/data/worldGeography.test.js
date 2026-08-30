@@ -10,10 +10,14 @@ import {
   europeRiverItems,
   europeWaterItems,
   filterWorldItemsByDifficulty,
+  northEastEuropeCapitalItems,
+  northEastEuropeCountryItems,
   northEastEuropeItems,
   russiaLandformItems,
   russiaMountainWaterItems,
   russiaPhysicalMap,
+  southWestEuropeCapitalItems,
+  southWestEuropeCountryItems,
   southWestEuropeItems,
   worldGeographyChapters,
   worldGeographyTopics,
@@ -37,7 +41,9 @@ describe('worldGeography', () => {
         id: 'grade9-upper-l02',
         topicIds: [
           'world-north-east-europe-regions',
+          'world-north-east-europe-capitals',
           'world-south-west-europe-regions',
+          'world-south-west-europe-capitals',
           'world-russia-landforms',
           'world-russia-mountains-waters',
         ],
@@ -108,6 +114,10 @@ describe('worldGeography', () => {
   it('依九上第 2 章教師版建立歐洲分區與俄羅斯題庫', () => {
     expect(northEastEuropeItems).toHaveLength(12)
     expect(southWestEuropeItems).toHaveLength(25)
+    expect(northEastEuropeCountryItems).toHaveLength(8)
+    expect(northEastEuropeCapitalItems).toHaveLength(4)
+    expect(southWestEuropeCountryItems).toHaveLength(14)
+    expect(southWestEuropeCapitalItems).toHaveLength(11)
     expect(russiaLandformItems).toHaveLength(4)
     expect(russiaMountainWaterItems).toHaveLength(8)
 
@@ -117,6 +127,14 @@ describe('worldGeography', () => {
     expect(southWestEuropeItems.map((item) => item.name)).toEqual(expect.arrayContaining([
       '馬爾他', '倫敦', '巴黎', '柏林', '馬德里', '羅馬', '阿姆斯特丹', '布魯塞爾', '里斯本', '雅典', '伯恩', '維也納',
     ]))
+    expect(southWestEuropeCapitalItems.every((item) => item.pointType === 'capital')).toBe(true)
+    expect(southWestEuropeCountryItems.find((item) => item.name === '馬爾他')).toEqual(expect.objectContaining({
+      pointType: 'country-location',
+      x: 515.2,
+      y: 354.8,
+    }))
+    expect(southWestEuropeCapitalItems.find((item) => item.name === '里斯本')).toEqual(expect.objectContaining({ x: 449.2, y: 345 }))
+    expect(southWestEuropeCapitalItems.find((item) => item.name === '雅典')).toEqual(expect.objectContaining({ x: 541.4, y: 347.7 }))
     expect(russiaPhysicalMap).toEqual(expect.objectContaining({
       viewBox: '510 105 480 300',
       clipLocationId: 'ru',
