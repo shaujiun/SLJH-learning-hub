@@ -49,7 +49,7 @@ const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
 const areas = [
   { id: 'taiwan', name: '臺灣地理', caption: '七年級', status: '已開放' },
   { id: 'china', name: '中國地理', caption: '八年級', status: '已開放' },
-  { id: 'world', name: '世界地理', caption: '九年級', status: '第一階段已開放' },
+  { id: 'world', name: '世界地理', caption: '九年級', status: '第二階段測試中' },
 ]
 
 const geographyAreas = {
@@ -126,6 +126,11 @@ const topicIcons = {
   'tw-rivers': Waves,
   'tw-water': Waves,
   'world-europe-countries': MapPinned,
+  'world-europe-landforms': Mountain,
+  'world-europe-mountains': Mountain,
+  'world-europe-rivers': Waves,
+  'world-europe-waters': Waves,
+  'world-europe-climate': CloudSun,
 }
 
 function learningHubUrl() {
@@ -509,7 +514,8 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
   const lineItems = items.filter((item) => item.mapKind === 'line')
   const areaItems = items.filter((item) => item.mapKind === 'area')
   const seaItems = areaItems.filter((item) => item.areaType === 'sea')
-  const waterItems = areaItems.filter((item) => item.areaType !== 'sea')
+  const waterItems = areaItems.filter((item) => !item.areaType || item.areaType === 'water')
+  const overlayItems = areaItems.filter((item) => !['sea', 'water'].includes(item.areaType))
   const rangeItems = items.filter((item) => item.mapKind === 'range')
   const mapViewBoxWidth = Number(mapDefinition.viewBox.split(' ')[2])
   const macauLocation = mapDefinition.locations.find((location) => location.id === 'macau')
@@ -621,6 +627,25 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
                 interactionProps={dropTargetProps('macau')}
               />
             )}
+            <g className="geography-overlay-layer">
+              {overlayItems.map((item) => {
+                const isDone = completedTargetIds.has(item.id)
+                return (
+                  <g className={`geography-area-layer is-${item.areaType}`} key={item.id}>
+                    <path className="geography-feature-area-visible" d={item.path} fillRule="evenodd" />
+                    <path
+                      className={`geography-feature-area-hit ${isDone ? 'is-target' : ''} ${wrongTargetId === item.id ? 'is-wrong' : ''}`}
+                      d={item.path}
+                      fillRule="evenodd"
+                      role="button"
+                      tabIndex={0}
+                      aria-label="地形或氣候區標籤放置區"
+                      {...dropTargetProps(item.id)}
+                    />
+                  </g>
+                )
+              })}
+            </g>
             <g className="geography-area-layer is-water">
               {waterItems.map((item) => {
                 const isDone = completedTargetIds.has(item.id)
@@ -645,7 +670,7 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
                 const isDone = completedTargetIds.has(item.id)
                 return (
                   <g key={item.id}>
-                    <path className="geography-feature-line-visible" d={item.path} />
+                    <path className={`geography-feature-line-visible ${item.lineType ? `is-${item.lineType}` : ''}`} d={item.path} />
                     <path
                       className={`geography-feature-line-hit ${isDone ? 'is-target' : ''} ${wrongTargetId === item.id ? 'is-wrong' : ''}`}
                       d={item.path}
@@ -743,7 +768,8 @@ export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, top
   const lineItems = topicItems.filter((item) => item.mapKind === 'line')
   const areaItems = topicItems.filter((item) => item.mapKind === 'area')
   const seaItems = areaItems.filter((item) => item.areaType === 'sea')
-  const waterItems = areaItems.filter((item) => item.areaType !== 'sea')
+  const waterItems = areaItems.filter((item) => !item.areaType || item.areaType === 'water')
+  const overlayItems = areaItems.filter((item) => !['sea', 'water'].includes(item.areaType))
   const rangeItems = topicItems.filter((item) => item.mapKind === 'range')
   const macauLocation = mapDefinition.locations.find((location) => location.id === 'macau')
   const showMacauCallout = areaId === 'china' && topicItems.some((item) => item.mapKind === 'province' && item.mapId === 'macau')
@@ -832,6 +858,34 @@ export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, top
           />
         )}
 
+        <g className="geography-overlay-layer">
+          {overlayItems.map((item) => {
+            const isTarget = item.id === targetKey
+            const isWrong = wrongTargetId === item.id
+            const isInteractive = currentItem?.mapKind === 'area' && effectiveMode !== 'identify' && !revealed && !solved
+            return (
+              <g className={`geography-area-layer is-${item.areaType}`} key={item.id}>
+                <path className="geography-feature-area-visible" d={item.path} fillRule="evenodd" />
+                <path
+                  className={`geography-feature-area-hit ${showCurrentTarget && isTarget ? 'is-target' : ''} ${isWrong ? 'is-wrong' : ''}`}
+                  d={item.path}
+                  fillRule="evenodd"
+                  tabIndex={isInteractive ? 0 : -1}
+                  role={isInteractive ? 'button' : undefined}
+                  aria-label={isInteractive ? '選擇這個地形或氣候區' : undefined}
+                  onClick={() => answer(item.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      answer(item.id)
+                    }
+                  }}
+                />
+              </g>
+            )
+          })}
+        </g>
+
         <g className="geography-area-layer is-water">
           {waterItems.map((item) => {
             const isTarget = item.id === targetKey
@@ -866,7 +920,7 @@ export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, top
             const isWrong = wrongTargetId === item.id
             return (
               <g key={item.id}>
-                <path className="geography-feature-line-visible" d={item.path} />
+                <path className={`geography-feature-line-visible ${item.lineType ? `is-${item.lineType}` : ''}`} d={item.path} />
                 <path
                   className={`geography-feature-line-hit ${showCurrentTarget && isTarget ? 'is-target' : ''} ${isWrong ? 'is-wrong' : ''}`}
                   d={item.path}
@@ -1321,6 +1375,7 @@ export default function GeographyFillMap() {
           <a href={area.attributionUrl} target="_blank" rel="noreferrer">{area.name}行政區向量圖來源與授權：SVG Maps／CC BY 4.0</a>
           <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">河川、湖泊與水庫資料：OpenStreetMap contributors／ODbL 1.0</a>
           {areaId === 'china' && <a href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/" target="_blank" rel="noreferrer">海域資料：Natural Earth 1：10m Physical Vectors／Public Domain</a>}
+          {areaId === 'world' && <a href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/" target="_blank" rel="noreferrer">歐洲河川中心線：Natural Earth 1：10m Physical Vectors／Public Domain</a>}
         </footer>
       </main>
     </div>

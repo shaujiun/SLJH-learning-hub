@@ -14,8 +14,16 @@ import {
   chinaSeaItems,
 } from '../data/chinaGeography.js'
 import { taiwanContourItems, taiwanScaleItems, taiwanWaterItems } from '../data/taiwanGeography.js'
-import { europeCountryItems } from '../data/worldGeography.js'
-import GeographyFillMap, { ChinaMap, EuropeMap, GeographyConceptDiagram, GeographyCourseConnection, GeographyFillBoard } from './GeographyFillMap.jsx'
+import {
+  europeClimateItems,
+  europeCountryItems,
+  europeLandformItems,
+  europeMountainItems,
+  europePhysicalMap,
+  europeRiverItems,
+  europeWaterItems,
+} from '../data/worldGeography.js'
+import GeographyFillMap, { ChinaMap, EuropeMap, GeographyConceptDiagram, GeographyCourseConnection, GeographyFillBoard, GeographyMap } from './GeographyFillMap.jsx'
 
 const originalWindow = globalThis.window
 
@@ -37,7 +45,7 @@ describe('GeographyFillMap', () => {
     expect(html).toContain('中國地理')
     expect(html).toContain('世界地理')
     expect(html).toContain('九年級')
-    expect(html).toContain('第一階段已開放')
+    expect(html).toContain('第二階段測試中')
     expect(html).toContain('七上第 1 章　認識位置與地圖')
     expect(html).toContain('七上第 2 章　世界中的臺灣')
     expect(html).toContain('七上第 6 章　水文')
@@ -144,6 +152,36 @@ describe('GeographyFillMap', () => {
     expect(html).toContain('data-map-id="ru"')
     expect(html).toContain('aria-label="歐洲國家精確國界填圖地圖"')
     expect(html).not.toContain('>英國<')
+  })
+
+  it('歐洲自然環境共用延伸底圖，並區分山脈、河流、區域與海域標記', () => {
+    const renderMap = (currentItem, topicItems) => renderToString(
+      <GeographyMap
+        mapDefinition={europePhysicalMap}
+        mapLabel="歐洲自然環境填圖地圖"
+        areaId="world"
+        currentItem={currentItem}
+        topicItems={topicItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+
+    const mountainHtml = renderMap(europeMountainItems[0], europeMountainItems)
+    const riverHtml = renderMap(europeRiverItems[0], europeRiverItems)
+    const landformHtml = renderMap(europeLandformItems[0], europeLandformItems)
+    const climateHtml = renderMap(europeClimateItems[0], europeClimateItems)
+    const waterHtml = renderMap(europeWaterItems[0], europeWaterItems)
+
+    expect(mountainHtml).toContain('viewBox="390 155 320 245"')
+    expect(mountainHtml.match(/geography-feature-line-visible is-mountain/g)).toHaveLength(5)
+    expect(riverHtml.match(/geography-feature-line-visible "/g)).toHaveLength(2)
+    expect(landformHtml.match(/geography-area-layer is-landform/g)).toHaveLength(6)
+    expect(climateHtml.match(/geography-area-layer is-climate/g)).toHaveLength(4)
+    expect(waterHtml.match(/geography-map-point /g)).toHaveLength(9)
   })
 
   it('人口政策、一帶一路與 RCEP 使用不洩漏名稱的概念圖卡', () => {

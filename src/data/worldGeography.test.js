@@ -1,24 +1,51 @@
 import { describe, expect, it } from 'vitest'
 import {
+  europeClimateItems,
   europeCountryItems,
+  europeLandformItems,
   europeMap,
+  europeMountainItems,
+  europePhysicalMap,
+  europeRiverItems,
+  europeWaterItems,
   filterWorldItemsByDifficulty,
   worldGeographyChapters,
   worldGeographyTopics,
 } from './worldGeography.js'
 
 describe('worldGeography', () => {
-  it('以九上第 1 章開放歐洲國家填圖', () => {
+  it('以九上第 1 章開放歐洲國家與自然環境填圖', () => {
     expect(worldGeographyChapters).toEqual([
       expect.objectContaining({
         id: 'grade9-upper-l01',
-        topicIds: ['world-europe-countries'],
+        topicIds: [
+          'world-europe-countries',
+          'world-europe-landforms',
+          'world-europe-mountains',
+          'world-europe-rivers',
+          'world-europe-waters',
+          'world-europe-climate',
+        ],
       }),
     ])
     expect(worldGeographyTopics[0]).toEqual(expect.objectContaining({
       id: 'world-europe-countries',
       map: europeMap,
     }))
+  })
+
+  it('依教師教材建立歐洲自然環境與主要氣候題庫', () => {
+    expect(europeLandformItems).toHaveLength(6)
+    expect(europeMountainItems).toHaveLength(5)
+    expect(europeRiverItems).toHaveLength(2)
+    expect(europeWaterItems).toHaveLength(9)
+    expect(europeClimateItems).toHaveLength(4)
+
+    expect(europeLandformItems.every((item) => item.path && item.areaType === 'landform')).toBe(true)
+    expect(europeMountainItems.every((item) => item.path && item.lineType === 'mountain')).toBe(true)
+    expect(europeRiverItems.every((item) => item.path?.startsWith('M'))).toBe(true)
+    expect(europeWaterItems.every((item) => Number.isFinite(item.x) && Number.isFinite(item.y))).toBe(true)
+    expect(europeClimateItems.every((item) => item.path && item.areaType === 'climate')).toBe(true)
   })
 
   it('納入教師教材列出的 20 個歐洲國家，且每個目標都有精確國界', () => {
@@ -48,5 +75,13 @@ describe('worldGeography', () => {
   it('所有歐洲主題共用同一個裁切底圖', () => {
     expect(europeMap.viewBox).toBe('390 170 205 205')
     expect(europeMap.locations.length).toBeGreaterThan(europeCountryItems.length)
+    expect(europePhysicalMap.viewBox).toBe('390 155 320 245')
+    expect(europePhysicalMap.locations.map((location) => location.id)).toEqual(expect.arrayContaining(['am', 'az', 'cy', 'ge']))
+  })
+
+  it('海域題庫依難度加入裏海與兩個海峽', () => {
+    expect(filterWorldItemsByDifficulty(europeWaterItems, 'intro')).toHaveLength(6)
+    expect(filterWorldItemsByDifficulty(europeWaterItems, 'basic')).toHaveLength(9)
+    expect(filterWorldItemsByDifficulty(europeWaterItems, 'advanced')).toHaveLength(9)
   })
 })
