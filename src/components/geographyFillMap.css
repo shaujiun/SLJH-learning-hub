@@ -331,6 +331,11 @@ button.geography-start-button {
   margin: 0 auto;
   max-height: 74vh;
 }
+.geography-region-map.is-world {
+  width: min(100%, 760px);
+  margin: 0 auto;
+  max-height: 74vh;
+}
 
 .geography-fill-board { display: grid; gap: 0.8rem; }
 
@@ -394,6 +399,24 @@ button.geography-start-button {
   background: linear-gradient(145deg, #f8fffd, #eef8f5);
 }
 
+.geography-diagram-stage.is-rcep { grid-template-columns: repeat(2, minmax(240px, 1fr)); }
+
+.geography-course-connection {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-top: 0.85rem;
+  padding: 0.8rem 0.9rem;
+  border: 2px solid #b5d3cb;
+  border-radius: 16px;
+  color: #254f56;
+  background: linear-gradient(135deg, #f2fbf7, #fff8dd);
+}
+.geography-course-connection > svg { flex: 0 0 auto; width: 27px; height: 27px; color: #15746c; }
+.geography-course-connection > div { display: grid; gap: 0.18rem; }
+.geography-course-connection strong { color: #075e56; font-size: 1rem; }
+.geography-course-connection span { font-size: 0.88rem; font-weight: 800; line-height: 1.55; }
+
 .geography-diagram-card {
   display: grid;
   place-items: center;
@@ -451,6 +474,103 @@ button.geography-start-button {
 .geography-contour-graphic text { fill: #60401f; font-family: system-ui, sans-serif; font-size: 11px; font-weight: 800; text-anchor: middle; }
 .geography-contour-graphic .geography-contour-water { stroke: #258abb; stroke-width: 4; }
 .geography-contour-graphic .geography-contour-ridge-line { stroke: #4b8b56; stroke-dasharray: 7 6; stroke-width: 3; }
+
+.geography-concept-graphic {
+  width: min(100%, 240px);
+  height: 132px;
+  overflow: visible;
+}
+
+.geography-concept-graphic circle,
+.geography-concept-graphic rect,
+.geography-concept-graphic path {
+  fill: none;
+  stroke: #315e69;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.geography-concept-graphic .is-soft { fill: #83bad0; stroke: #315e69; }
+.geography-concept-graphic .is-accent { fill: #f4b85f; stroke: #8b5b15; }
+.geography-concept-graphic .is-third { fill: #9bd0a8; stroke: #397347; }
+.geography-concept-graphic text {
+  fill: #173b4a;
+  font-family: system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 950;
+  text-anchor: middle;
+}
+.geography-concept-graphic .geography-concept-axis,
+.geography-concept-graphic .geography-concept-divider,
+.geography-concept-graphic .geography-concept-link { stroke: #6c7f84; stroke-width: 3; }
+.geography-concept-graphic .geography-concept-arrow { stroke: #d46345; stroke-width: 5; }
+.geography-concept-graphic .geography-concept-landmass { fill: #e8ddad; stroke: #7c6a3d; stroke-width: 2; }
+.geography-concept-graphic .geography-concept-route { fill: none; stroke-width: 6; stroke-dasharray: 10 7; }
+.geography-concept-graphic .geography-concept-route.is-land { stroke: #c76b3c; }
+.geography-concept-graphic .geography-concept-route.is-sea,
+.geography-concept-graphic .geography-concept-water { stroke: #2785b3; }
+.geography-concept-graphic .geography-concept-water { fill: none; stroke-width: 4; }
+.geography-concept-graphic .geography-concept-smoke { fill: none; stroke: #66757b; stroke-dasharray: 7 6; }
+
+.geography-belt-road-graphic {
+  width: min(100%, 320px);
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+.geography-belt-road-graphic .geography-belt-background { fill: #f8fcfb; stroke: #b6d6d2; stroke-width: 2; }
+.geography-belt-road-graphic .geography-belt-land-context { fill: #f1e6bd; stroke: #aa9060; stroke-width: 1.5; }
+.geography-belt-road-graphic .geography-belt-sea-context { fill: #dff2f8; stroke: #83bdd0; stroke-width: 1.5; }
+.geography-belt-road-graphic .geography-concept-route { stroke-width: 5; stroke-dasharray: none; }
+.geography-belt-road-graphic .geography-belt-arrow { stroke: none; }
+.geography-belt-road-graphic .geography-belt-arrow.is-land { fill: #c76b3c; }
+.geography-belt-road-graphic .geography-belt-arrow.is-sea { fill: #2785b3; }
+.geography-belt-road-graphic .geography-belt-node { stroke: #fff; stroke-width: 2.5; }
+.geography-belt-road-graphic .geography-belt-node.is-land { fill: #c76b3c; }
+.geography-belt-road-graphic .geography-belt-node.is-sea { fill: #2785b3; }
+.geography-belt-road-graphic .geography-belt-place circle { fill: #fffdf5; stroke: #455f65; stroke-width: 2.5; }
+.geography-belt-road-graphic .geography-belt-place.is-china circle { fill: #ffd66f; stroke: #8b5b15; }
+.geography-belt-road-graphic .geography-belt-place text,
+.geography-belt-road-graphic .geography-belt-label {
+  fill: #274650;
+  font-family: system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  paint-order: stroke;
+  stroke: #fffdf5;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+.geography-rcep-graphic {
+  width: min(100%, 310px);
+  height: auto;
+  aspect-ratio: 26 / 15;
+}
+.geography-rcep-graphic .geography-rcep-background { fill: #f8fcfb; stroke: #b6d6d2; stroke-width: 2; }
+.geography-rcep-graphic .geography-rcep-arrow-head { fill: #c95f43; stroke: none; }
+.geography-rcep-graphic .geography-rcep-region { stroke-width: 2; }
+.geography-rcep-graphic .geography-rcep-region.is-northeast { fill: #f4c66c; stroke: #93671f; }
+.geography-rcep-graphic .geography-rcep-region.is-southeast { fill: #83bad0; stroke: #315e69; }
+.geography-rcep-graphic .geography-rcep-region.is-oceania { fill: #9bd0a8; stroke: #397347; }
+.geography-rcep-graphic .geography-rcep-network { fill: none; stroke: #c95f43; stroke-width: 4; stroke-dasharray: 7 5; }
+.geography-rcep-graphic .geography-rcep-node { fill: #fff; stroke: #27545d; stroke-width: 2; }
+.geography-rcep-graphic .geography-rcep-customs path { stroke: #52747a; stroke-width: 4; }
+.geography-rcep-graphic .geography-rcep-cargo { stroke-width: 3; }
+.geography-rcep-graphic .geography-rcep-flow { fill: none; stroke: #c95f43; stroke-width: 4; }
+.geography-rcep-graphic .geography-rcep-down { fill: none; stroke: #2785b3; stroke-width: 4; }
+.geography-rcep-graphic .geography-rcep-symbol { fill: #173b4a; font-size: 19px; }
+.geography-rcep-graphic .geography-rcep-open-gate { fill: none; stroke: #79a782; stroke-width: 5; }
+.geography-rcep-graphic .geography-rcep-stage circle { stroke-width: 3; }
+.geography-rcep-graphic .geography-rcep-stage path { fill: #fff9e8; stroke-width: 3; }
+.geography-rcep-graphic .geography-rcep-market-node { fill: #ead9b4; stroke: #846c36; }
+.geography-rcep-graphic .geography-rcep-loop { fill: none; stroke: #2785b3; stroke-width: 4; stroke-dasharray: 7 5; }
+.geography-rcep-graphic .geography-rcep-market-core { fill: #f4c66c; stroke: #8b5b15; stroke-width: 3; }
+.geography-rcep-graphic .geography-rcep-bag { fill: #fff8df; stroke: #6e581f; stroke-width: 3; }
+.geography-rcep-graphic .geography-rcep-economy circle { fill: #d9edf1; stroke: #315e69; stroke-width: 3; }
+.geography-rcep-graphic .geography-rcep-economy rect { fill: #fff; stroke: #315e69; stroke-width: 2; }
+.geography-rcep-graphic .geography-rcep-flow.is-two-way { stroke: #2785b3; stroke-width: 3.5; }
+.geography-rcep-graphic .geography-rcep-investment { fill: none; stroke: #4b8b56; stroke-width: 4; }
 
 .geography-province {
   stroke: #62888a;
@@ -675,12 +795,41 @@ button.geography-start-button {
 }
 
 .geography-map-point { cursor: pointer; }
+.geography-map-point-hit { fill: rgba(255, 255, 255, 0.001); stroke: none; }
 .geography-map-point-halo { fill: rgba(255, 255, 255, 0.7); stroke: #236f76; stroke-width: 2; }
 .geography-map-point-dot { fill: #236f76; pointer-events: none; }
 .geography-map-point:hover .geography-map-point-halo,
 .geography-map-point:focus .geography-map-point-halo { outline: none; fill: #ffe9a8; stroke: #9a6812; stroke-width: 3; }
 .geography-map-point.is-wrong .geography-map-point-halo { fill: #ffd1c8; stroke: #c4473b; stroke-width: 4; }
 .geography-map-point.is-target .geography-map-point-halo { fill: #8de0bd; stroke: #08756a; stroke-width: 5; filter: drop-shadow(0 0 7px rgba(20, 126, 113, 0.75)); }
+
+.geography-economic-zone-inset {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.62fr) minmax(300px, 1.38fr);
+  align-items: center;
+  gap: 0.65rem;
+  width: min(100%, 780px);
+  margin: 0.7rem auto 0;
+  padding: 0.65rem;
+  border: 2px solid rgba(35, 111, 118, 0.34);
+  border-radius: 18px;
+  background: rgba(255, 253, 245, 0.94);
+  box-shadow: 0 7px 18px rgba(38, 73, 78, 0.1);
+}
+.geography-economic-zone-inset > div { display: grid; gap: 0.28rem; }
+.geography-economic-zone-inset strong { color: #075e56; font-size: 1.08rem; }
+.geography-economic-zone-inset span { color: #5d6e72; font-size: 0.82rem; font-weight: 800; line-height: 1.5; }
+.geography-economic-zone-inset svg {
+  display: block;
+  width: 100%;
+  min-height: 210px;
+  border: 1px solid rgba(35, 111, 118, 0.2);
+  border-radius: 14px;
+  background: #eaf6fa;
+}
+.geography-economic-zone-inset .geography-province { cursor: default; pointer-events: none; }
+.geography-economic-zone-inset .geography-map-point-halo { stroke-width: 0.65; }
+.geography-economic-zone-inset .geography-map-point.is-target .geography-map-point-halo { stroke-width: 1.2; }
 
 .geography-map-compass {
   position: absolute;
@@ -797,6 +946,7 @@ button.geography-start-button {
   .geography-topic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .geography-chapter-grid { grid-template-columns: 1fr; }
   .geography-setup-grid { grid-template-columns: 1fr; }
+  .geography-diagram-stage.is-belt-road { grid-template-columns: 1fr; }
   .geography-china-map { max-height: none; }
   .geography-region-map.is-taiwan { max-height: 78vh; }
 }
@@ -823,12 +973,19 @@ button.geography-start-button {
   .geography-progress-row { grid-template-columns: auto auto; }
   .geography-progress-row > div { grid-column: 1 / -1; grid-row: 2; }
   .geography-map-stage { padding: 0.25rem; border-radius: 15px; }
+  .geography-economic-zone-inset { grid-template-columns: 1fr; gap: 0.4rem; margin-top: 0.4rem; padding: 0.45rem; }
+  .geography-economic-zone-inset svg { min-height: 190px; }
   .geography-fill-instruction { align-items: flex-start; flex-direction: column; gap: 0.2rem; }
   .geography-fill-label-bank { gap: 0.4rem; padding: 0.5rem; }
   .geography-fill-label-bank button { flex: 1 1 calc(50% - 0.4rem); justify-content: center; min-width: 0; padding: 0.45rem; }
   .geography-diagram-stage { grid-template-columns: 1fr 1fr; gap: 0.45rem; padding: 0.45rem; border-radius: 15px; }
+  .geography-diagram-stage.is-rcep { grid-template-columns: 1fr 1fr; }
   .geography-diagram-card { min-height: 124px; padding: 0.45rem; border-radius: 13px; }
+  .geography-course-connection { gap: 0.5rem; padding: 0.65rem; }
+  .geography-course-connection > svg { width: 23px; height: 23px; }
+  .geography-course-connection span { font-size: 0.78rem; }
   .geography-region-map.is-taiwan { width: min(100%, 520px); max-height: none; }
+  .geography-region-map.is-world { width: min(100%, 620px); max-height: none; }
   .geography-map-compass { width: 38px; height: 38px; top: 0.5rem; right: 0.5rem; }
   .geography-map-compass svg { width: 25px; height: 25px; }
   .geography-relief-step-band { min-height: 56px; }

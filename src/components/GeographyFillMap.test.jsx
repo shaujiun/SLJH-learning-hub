@@ -3,9 +3,19 @@ import { renderToString } from 'react-dom/server'
 import chinaMap from '@svg-maps/china'
 import taiwanMap from '@svg-maps/taiwan'
 import { afterEach, describe, expect, it } from 'vitest'
-import { chinaLakeItems, chinaProvinceItems, chinaReliefStepItems, chinaSeaItems } from '../data/chinaGeography.js'
+import {
+  chinaBeltRoadItems,
+  chinaEconomicZoneItems,
+  chinaLakeItems,
+  chinaPopulationChangeItems,
+  chinaProvinceItems,
+  chinaRcepItems,
+  chinaReliefStepItems,
+  chinaSeaItems,
+} from '../data/chinaGeography.js'
 import { taiwanContourItems, taiwanScaleItems, taiwanWaterItems } from '../data/taiwanGeography.js'
-import GeographyFillMap, { ChinaMap, GeographyConceptDiagram, GeographyFillBoard } from './GeographyFillMap.jsx'
+import { europeCountryItems } from '../data/worldGeography.js'
+import GeographyFillMap, { ChinaMap, EuropeMap, GeographyConceptDiagram, GeographyCourseConnection, GeographyFillBoard } from './GeographyFillMap.jsx'
 
 const originalWindow = globalThis.window
 
@@ -26,6 +36,8 @@ describe('GeographyFillMap', () => {
     expect(html).toContain('臺灣地理')
     expect(html).toContain('中國地理')
     expect(html).toContain('世界地理')
+    expect(html).toContain('九年級')
+    expect(html).toContain('第一階段已開放')
     expect(html).toContain('七上第 1 章　認識位置與地圖')
     expect(html).toContain('七上第 2 章　世界中的臺灣')
     expect(html).toContain('七上第 6 章　水文')
@@ -111,6 +123,108 @@ describe('GeographyFillMap', () => {
     expect(scaleHtml).not.toContain('數字比例尺')
     expect(contourHtml).toContain('geography-contour-graphic')
     expect(contourHtml).not.toContain('陡坡')
+  })
+
+  it('歐洲地圖使用共用精確國界並裁切到歐洲範圍', () => {
+    const html = renderToString(
+      <EuropeMap
+        currentItem={europeCountryItems[0]}
+        topicItems={europeCountryItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+
+    expect(html).toContain('viewBox="390 170 205 205"')
+    expect(html).toContain('data-map-id="gb"')
+    expect(html).toContain('data-map-id="fr"')
+    expect(html).toContain('data-map-id="ru"')
+    expect(html).toContain('aria-label="歐洲國家精確國界填圖地圖"')
+    expect(html).not.toContain('>英國<')
+  })
+
+  it('人口政策、一帶一路與 RCEP 使用不洩漏名稱的概念圖卡', () => {
+    const populationHtml = renderToString(
+      <GeographyConceptDiagram
+        currentItem={chinaPopulationChangeItems[0]}
+        topicItems={chinaPopulationChangeItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+    const beltRoadHtml = renderToString(
+      <GeographyConceptDiagram
+        currentItem={chinaBeltRoadItems[0]}
+        topicItems={[chinaBeltRoadItems[0]]}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+    const rcepHtml = renderToString(
+      <GeographyConceptDiagram
+        currentItem={chinaRcepItems[0]}
+        topicItems={chinaRcepItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+
+    expect(populationHtml).toContain('geography-concept-graphic')
+    expect(populationHtml).not.toContain('一胎化政策')
+    expect(beltRoadHtml).toContain('geography-concept-route')
+    expect(beltRoadHtml).toContain('中亞')
+    expect(beltRoadHtml).toContain('西亞')
+    expect(beltRoadHtml).not.toContain('東南亞')
+    expect(beltRoadHtml).toContain('marker-end="url(#belt-road-land-land-arrow)"')
+    expect(beltRoadHtml).not.toContain('絲綢之路經濟帶')
+    expect(rcepHtml).toContain('geography-rcep-graphic')
+    expect(rcepHtml).toContain('geography-rcep-network')
+    expect(rcepHtml).toContain('geography-rcep-customs')
+    expect(rcepHtml).toContain('geography-rcep-loop')
+    expect(rcepHtml).not.toContain('>10<')
+    expect(rcepHtml).not.toContain('RCEP 的亞太成員範圍')
+  })
+
+  it('RCEP 顯示與八上經濟章的課程連結說明', () => {
+    const html = renderToString(<GeographyCourseConnection text="對應八上第 4 章「中國的經濟發展與全球關連」。" />)
+    expect(html).toContain('與本章的連結')
+    expect(html).toContain('中國的經濟發展與全球關連')
+    expect(html).toContain('geography-course-connection')
+  })
+
+  it('一帶一路雙路線圖分別呈現陸路與海路的主要節點', () => {
+    const html = renderToString(
+      <GeographyConceptDiagram
+        currentItem={chinaBeltRoadItems[2]}
+        topicItems={[chinaBeltRoadItems[2]]}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+
+    expect(html).toContain('中亞')
+    expect(html).toContain('西亞')
+    expect(html).toContain('東南亞')
+    expect(html).toContain('南亞')
+    expect(html).toContain('東非')
+    expect(html).toContain('geography-concept-route is-land')
+    expect(html).toContain('geography-concept-route is-sea')
+    expect(html).not.toContain('一帶一路</span>')
   })
 
   it('標籤填圖同時提供多張可拖曳標籤與多個空白圖卡', () => {
@@ -207,5 +321,30 @@ describe('GeographyFillMap', () => {
     expect(mapHtml).toContain('澳門小區域放大作答區')
     expect(mapHtml).not.toContain('geography-macau-callout-name')
     expect(fillHtml).toContain('data-map-id="macau-callout"')
+  })
+
+  it('經濟特區使用同一個 SVG 座標系，並提供可在手機點選的東南沿海放大圖', () => {
+    const html = renderToString(
+      <ChinaMap
+        currentItem={chinaEconomicZoneItems[0]}
+        topicItems={chinaEconomicZoneItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+
+    expect(html).toContain('viewBox="0 0 774 569"')
+    expect(html).toContain('中國東南沿海經濟特區放大圖')
+    expect(html).toContain('viewBox="485 465 82 56"')
+    expect(html.match(/translate\(512 509\)/g)).toHaveLength(2)
+    expect(html.match(/translate\(501 512\)/g)).toHaveLength(2)
+    expect(html.match(/translate\(544 497\)/g)).toHaveLength(2)
+    expect(html.match(/translate\(560 480\)/g)).toHaveLength(2)
+    expect(html.match(/translate\(24 261\)/g)).toHaveLength(1)
+    expect(html).toContain('geography-map-point-hit')
+    expect(html).not.toContain('深圳經濟特區')
   })
 })

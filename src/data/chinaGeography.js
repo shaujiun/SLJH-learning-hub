@@ -76,10 +76,10 @@ export const chinaTerrainItems = [
   { id: 'terrain-qinling', mapKind: 'line', path: 'M 395 355 C 421 351 449 355 478 366', name: '秦嶺', hint: '它位於黃土高原以南、四川盆地以北。', reason: '秦嶺大致東西走向，和淮河構成中國重要自然地理分界。' },
   { id: 'terrain-turpan-depression', mapKind: 'point', x: 238, y: 221, name: '吐魯番窪地', hint: '往新疆東部、天山山脈附近尋找。', reason: '吐魯番窪地位於天山東段，是中國地勢較低且氣候乾燥的盆地。' },
   { id: 'terrain-qaidam', mapKind: 'point', x: 330, y: 333, name: '柴達木盆地', hint: '往青藏高原東北部、祁連山以南尋找。', reason: '柴達木盆地位於青海省西北部，介於祁連山與崑崙山之間。' },
-  { id: 'terrain-yangtze-delta', mapKind: 'point', x: 646, y: 405, name: '長江三角洲', hint: '沿長江向東找到出海口附近。', reason: '長江三角洲位於長江出海口，是中國人口與經濟活動密集的地區。' },
-  { id: 'terrain-southeast-hills', mapKind: 'point', x: 604, y: 450, name: '東南丘陵', hint: '往長江以南、東南沿海的內陸側尋找。', reason: '東南丘陵分布在中國東南部，地勢起伏且低山丘陵廣布。' },
+  { id: 'terrain-yangtze-delta', mapKind: 'point', x: 609, y: 389, name: '長江三角洲', hint: '沿長江向東找到出海口附近。', reason: '長江三角洲位於長江出海口，是中國人口與經濟活動密集的地區。' },
+  { id: 'terrain-southeast-hills', mapKind: 'point', x: 560, y: 438, name: '東南丘陵', hint: '往長江以南、東南沿海的內陸側尋找。', reason: '東南丘陵分布在中國東南部，地勢起伏且低山丘陵廣布。' },
   { id: 'terrain-lingnan-hills', mapKind: 'point', x: 535, y: 476, name: '嶺南丘陵', hint: '往南嶺以南、珠江流域北側尋找。', reason: '嶺南丘陵位於中國南部，範圍大致在南嶺以南。' },
-  { id: 'terrain-pearl-delta', mapKind: 'point', x: 580, y: 505, name: '珠江三角洲', hint: '往中國南部、珠江接近南海的河口尋找。', reason: '珠江三角洲位於珠江出海口，是中國南部重要的平原與都市群。' },
+  { id: 'terrain-pearl-delta', mapKind: 'point', x: 510, y: 510, name: '珠江三角洲', hint: '往中國南部、珠江接近南海的河口尋找。', reason: '珠江三角洲位於珠江出海口，是中國南部重要的平原與都市群。' },
   { id: 'terrain-hengduan', mapKind: 'line', path: 'M 390 368 C 402 396 402 424 397 452 C 393 474 397 493 404 510', name: '橫斷山脈', hint: '往四川盆地以西、青藏高原東南緣尋找。', reason: '橫斷山脈南北縱走，是青藏高原東南側的重要山地。' },
 ]
 
@@ -165,6 +165,81 @@ export const chinaAgricultureItems = [
   { id: 'agriculture-qinling-huaihe-750', mapKind: 'line', name: '秦嶺—淮河（約 750 毫米等雨量線）', path: 'M 395 355 C 422 351 449 355 478 366 C 505 376 536 374 566 381 C 593 388 618 384 641 386', hint: '先找黃土高原南側的秦嶺，再沿淮河向東；這條線大致也接近年雨量 750 毫米等雨量線。', reason: '秦嶺—淮河一線大致接近年雨量 750 毫米等雨量線，分隔北方旱田與南方水田農業。' },
 ]
 
+export const chinaPopulationDistributionItems = [
+  {
+    id: 'population-heihe-tengchong', mapKind: 'line', name: '黑河—騰衝線',
+    path: 'M 661 102 L 628 151 L 596 202 L 563 254 L 530 305 L 497 356 L 464 408 L 430 458 L 401 489',
+    hint: '由中國東北的黑河，向西南連到雲南騰衝。',
+    reason: '黑河—騰衝線是中國人口分布的重要界線；線的東南側人口較密集，西北側人口較稀疏。',
+  },
+  { id: 'population-east-dense', mapKind: 'point', x: 574, y: 366, name: '東南半部人口密集區', hint: '先找黑河—騰衝線，再觀察它的東南側。', reason: '中國東南半部地勢較低、氣候較濕潤，都市、交通與產業集中，因此人口密度較高。' },
+  { id: 'population-west-sparse', mapKind: 'point', x: 274, y: 322, name: '西北半部人口稀疏區', hint: '先找黑河—騰衝線，再觀察它的西北側。', reason: '中國西北半部多高原、山地與乾燥區，環境承載力較低，因此人口密度較低。' },
+]
+
+const autonomousRegionRows = [
+  ['nei-mongol', '內蒙古自治區', '位於中國北部，呈東西狹長分布。'],
+  ['xinjiang-uygur', '新疆維吾爾自治區', '位於中國西北端，是面積最大的省級行政區。'],
+  ['xizang', '西藏自治區', '位於青藏高原西南部。'],
+  ['ningxia-hui', '寧夏回族自治區', '位於黃河上游、甘肅與內蒙古之間。'],
+  ['guangxi-zhuang', '廣西壯族自治區', '位於中國南部，西鄰越南、南臨北部灣。'],
+]
+
+export const chinaAutonomousRegionItems = autonomousRegionRows.map(([mapId, name, reason]) => ({
+  id: `population-autonomous-${mapId}`,
+  mapId,
+  mapKind: 'province',
+  name,
+  hint: provinceRegionHints[
+    mapId === 'xinjiang-uygur' ? 'northwest'
+      : mapId === 'xizang' ? 'southwest'
+        : mapId === 'guangxi-zhuang' ? 'south'
+          : 'north'
+  ],
+  reason: `${reason}中國少數民族多分布於邊疆地區，這五個省級行政區以少數民族設置自治區。`,
+}))
+
+export const chinaPopulationChangeItems = [
+  { id: 'population-policy-one-child', mapKind: 'diagram', diagramKind: 'policy-one-child', name: '一胎化政策', hint: '觀察家庭圖示中子女的人數。', reason: '為控制人口快速增加，中國曾長期實施一胎化政策；這也衍生少子化、性別比失衡與人口老化等問題。' },
+  { id: 'population-policy-two-three-child', mapKind: 'diagram', diagramKind: 'policy-two-three-child', name: '鼓勵生育與放寬生育限制', hint: '觀察家庭圖示中的多名子女，以及向上的人口箭頭。', reason: '面對低生育率與人口老化，中國逐步放寬生育限制，並改以鼓勵生育因應人口結構變化。' },
+  { id: 'population-aging', mapKind: 'diagram', diagramKind: 'population-aging', name: '人口老化', hint: '觀察人口金字塔上方年長人口的比例。', reason: '出生率下降且平均壽命延長，使老年人口比例提高，勞動力與照顧需求也隨之改變。' },
+  { id: 'population-sex-ratio', mapKind: 'diagram', diagramKind: 'population-sex-ratio', name: '性別比失衡', hint: '比較圖卡左右兩側人數是否相等。', reason: '傳統重男輕女觀念與生育限制，使部分時期男性人口明顯多於女性，形成性別比失衡。' },
+]
+
+export const chinaEconomicZoneItems = [
+  { id: 'economy-zone-shenzhen', mapKind: 'point', insetGroup: 'southeast-coast', x: 512, y: 509, markerRadius: 5, hitRadius: 8, name: '深圳經濟特區', hint: '往珠江口東側、香港北方尋找。', reason: '深圳鄰近香港，是改革開放初期設立的經濟特區之一。' },
+  { id: 'economy-zone-zhuhai', mapKind: 'point', insetGroup: 'southeast-coast', x: 501, y: 512, markerRadius: 5, hitRadius: 8, name: '珠海經濟特區', hint: '往珠江口西側、澳門北方尋找。', reason: '珠海鄰近澳門，是改革開放初期設立的經濟特區之一。' },
+  { id: 'economy-zone-shantou', mapKind: 'point', insetGroup: 'southeast-coast', x: 544, y: 497, markerRadius: 5, hitRadius: 8, name: '汕頭經濟特區', hint: '往廣東東部沿海尋找。', reason: '汕頭利用沿海與僑鄉條件，成為改革開放初期設立的經濟特區之一。' },
+  { id: 'economy-zone-xiamen', mapKind: 'point', insetGroup: 'southeast-coast', x: 560, y: 480, markerRadius: 5, hitRadius: 8, name: '廈門經濟特區', hint: '往福建東南沿海、臺灣海峽西側尋找。', reason: '廈門位於福建沿海，是改革開放初期設立的經濟特區之一。' },
+  { id: 'economy-zone-hainan', mapId: 'hainan', mapKind: 'province', name: '海南經濟特區', hint: '往雷州半島以南的海南島尋找。', reason: '海南全省均為經濟特區，是中國面積最大的經濟特區。' },
+  { id: 'economy-zone-kashgar', mapKind: 'point', x: 24, y: 261, markerRadius: 7, hitRadius: 12, name: '喀什經濟特區', hint: '往新疆維吾爾自治區的西部、接近中國最西端的位置尋找。', reason: '課本所稱的喀什經濟特區，正式名稱為喀什經濟開發區；它位於新疆西部，是中國向中亞、南亞與西亞開放的重要門戶，也是絲綢之路經濟帶與中巴經濟走廊的重要節點。' },
+]
+
+export const chinaEconomicRegionItems = [
+  { id: 'economy-region-west', mapKind: 'point', x: 280, y: 333, name: '西部經濟地帶', hint: '往中國內陸西部的高原、盆地與邊疆地區尋找。', reason: '西部地區面積廣、資源多，但交通與產業基礎相對不足，人口也較稀疏。' },
+  { id: 'economy-region-central', mapKind: 'point', x: 468, y: 354, name: '中部經濟地帶', hint: '往東部沿海與西部內陸之間尋找。', reason: '中部地區具有承東啟西的位置，承接沿海產業移轉並連結內陸市場。' },
+  { id: 'economy-region-east', mapKind: 'point', x: 598, y: 371, name: '東部經濟地帶', hint: '往中國東部沿海與主要港口都市尋找。', reason: '東部沿海交通便利、政策開放較早，人口、都市與產業高度集中，也是人口移入的重要地區。' },
+]
+
+export const chinaBeltRoadItems = [
+  { id: 'belt-road-land', mapKind: 'diagram', diagramKind: 'belt-road-land', name: '絲綢之路經濟帶', hint: '從中國出發，沿橘色路線查看中亞、西亞到歐洲的陸路節點。', reason: '絲綢之路經濟帶以陸路交通由中國向西，經中亞、西亞連結歐洲。' },
+  { id: 'belt-road-sea', mapKind: 'diagram', diagramKind: 'belt-road-sea', name: '21 世紀海上絲綢之路', hint: '從中國沿海出發，沿藍色路線查看東南亞、南亞、東非到歐洲的海路節點。', reason: '21 世紀海上絲綢之路由中國沿海出發，經東南亞、南亞與東非等海運節點連結歐洲。' },
+  { id: 'belt-road-dual', mapKind: 'diagram', diagramKind: 'belt-road-dual', name: '一帶一路', hint: '觀察圖中是否同時呈現橘色陸路與藍色海路。', reason: '「一帶一路」結合向西延伸的陸上經濟帶與串聯港口的海上絲綢之路，擴大跨區域交通、貿易與投資連結。' },
+]
+
+export const chinaRcepItems = [
+  { id: 'rcep-members', mapKind: 'diagram', diagramKind: 'rcep-members', name: 'RCEP 的亞太成員範圍', hint: '觀察哪張圖把東北亞、東南亞與大洋洲串成同一個區域合作網絡，而不是只連向歐洲。', reason: 'RCEP 由東協十國與中國、日本、韓國、澳洲、紐西蘭共同組成，呈現中國參與亞太區域經濟整合。' },
+  { id: 'rcep-tariff', mapKind: 'diagram', diagramKind: 'rcep-tariff', name: '降低關稅與貿易障礙', hint: '觀察貨物跨越關卡時，費用符號與阻礙是增加還是減少。', reason: 'RCEP 透過關稅減讓、原產地規則與貿易便利化，降低成員間貨物流通的成本與障礙。' },
+  { id: 'rcep-supply-chain', mapKind: 'diagram', diagramKind: 'rcep-supply-chain', name: '區域供應鏈與產業分工', hint: '觀察原料、零件、組裝與市場是否分布在不同地點，卻由箭頭連成一條生產流程。', reason: '不同成員可分別提供原料、零組件、組裝與市場，形成跨國產業分工並強化區域供應鏈。' },
+  { id: 'rcep-market', mapKind: 'diagram', diagramKind: 'rcep-market', name: '擴大市場與投資往來', hint: '觀察商品、資金與市場節點是否在多個經濟體之間雙向流動。', reason: 'RCEP 擴大成員間的商品、服務與投資往來，使中國與亞太市場的經濟連結更緊密。' },
+]
+
+export const chinaIndustryTransitionItems = [
+  { id: 'industry-world-factory', mapKind: 'diagram', diagramKind: 'industry-world-factory', name: '世界工廠', hint: '觀察大量工廠與外銷貨箱的圖示。', reason: '改革開放後，中國利用勞動力與外資發展出口製造業，逐漸成為「世界工廠」。' },
+  { id: 'industry-technology', mapKind: 'diagram', diagramKind: 'industry-technology', name: '高科技與自有品牌', hint: '觀察晶片、研發與品牌符號。', reason: '工資上升與產業競爭促使中國從勞力密集製造，轉向高科技、研發與自有品牌。' },
+  { id: 'industry-world-market', mapKind: 'diagram', diagramKind: 'industry-world-market', name: '世界市場', hint: '觀察龐大消費人口與商品流入的箭頭。', reason: '所得提高與人口規模形成龐大內需，中國也由生產基地逐漸成為重要的「世界市場」。' },
+  { id: 'industry-environment', mapKind: 'diagram', diagramKind: 'industry-environment', name: '工業化與環境問題', hint: '觀察工廠、煙霧與水滴警示符號。', reason: '快速工業化與都市化帶來空氣、水與土壤污染，經濟成長需兼顧環境治理。' },
+]
+
 export const chinaGeographyTopics = [
   {
     id: 'relief-steps',
@@ -222,6 +297,63 @@ export const chinaGeographyTopics = [
     semester: '翰林八上第 2 章',
     items: chinaAgricultureItems,
   },
+  {
+    id: 'population-distribution',
+    name: '人口分布',
+    description: '黑河—騰衝線與東密西疏',
+    semester: '翰林八上第 3 章',
+    items: chinaPopulationDistributionItems,
+  },
+  {
+    id: 'autonomous-regions',
+    name: '民族與自治區',
+    description: '五個少數民族自治區的位置',
+    semester: '翰林八上第 3 章',
+    items: chinaAutonomousRegionItems,
+  },
+  {
+    id: 'population-change',
+    name: '人口政策與問題',
+    description: '人口政策、低生育率、老化與性別比',
+    semester: '翰林八上第 3 章',
+    items: chinaPopulationChangeItems,
+  },
+  {
+    id: 'economic-zones',
+    name: '經濟特區',
+    description: '東南沿海五大經濟特區與新疆喀什',
+    semester: '翰林八上第 4 章',
+    items: chinaEconomicZoneItems,
+  },
+  {
+    id: 'economic-regions',
+    name: '東中西部發展',
+    description: '三大經濟地帶、區域差距與人口移動',
+    semester: '翰林八上第 4 章',
+    items: chinaEconomicRegionItems,
+  },
+  {
+    id: 'belt-and-road',
+    name: '一帶一路',
+    description: '陸上經濟帶與海上絲綢之路',
+    semester: '翰林八上第 4 章',
+    items: chinaBeltRoadItems,
+  },
+  {
+    id: 'rcep',
+    name: 'RCEP 區域連結',
+    description: '從成員範圍判讀關稅、市場與供應鏈影響',
+    semester: '翰林八上第 4 章',
+    courseConnection: '對應八上第 4 章「中國的經濟發展與全球關連」：理解中國如何透過區域貿易協定連結亞太市場、產業分工與供應鏈。',
+    items: chinaRcepItems,
+  },
+  {
+    id: 'industry-transition',
+    name: '產業轉型與環境',
+    description: '世界工廠、科技升級、內需與環境代價',
+    semester: '翰林八上第 4 章',
+    items: chinaIndustryTransitionItems,
+  },
 ]
 
 export const chinaGeographyChapters = [
@@ -238,5 +370,19 @@ export const chinaGeographyChapters = [
     shortName: '八上第 2 章',
     description: '練習氣候、秦嶺—淮河分界、傳統維生方式與農業分布。',
     topicIds: ['climate', 'agriculture'],
+  },
+  {
+    id: 'grade8-upper-l03',
+    name: '八上第 3 章　中國的人口',
+    shortName: '八上第 3 章',
+    description: '練習人口分布、民族自治區，以及人口政策與結構問題。',
+    topicIds: ['population-distribution', 'autonomous-regions', 'population-change'],
+  },
+  {
+    id: 'grade8-upper-l04',
+    name: '八上第 4 章　中國的經濟發展與全球關連',
+    shortName: '八上第 4 章',
+    description: '練習經濟特區、區域發展、一帶一路、RCEP 與產業轉型。',
+    topicIds: ['economic-zones', 'economic-regions', 'belt-and-road', 'rcep', 'industry-transition'],
   },
 ]

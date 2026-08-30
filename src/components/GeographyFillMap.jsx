@@ -27,6 +27,12 @@ import {
   taiwanGeographyTopics,
 } from '../data/taiwanGeography.js'
 import {
+  europeMap,
+  filterWorldItemsByDifficulty,
+  worldGeographyChapters,
+  worldGeographyTopics,
+} from '../data/worldGeography.js'
+import {
   buildGeographyChoices,
   buildGeographyRound,
   evaluateGeographyFillPlacement,
@@ -43,7 +49,7 @@ const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
 const areas = [
   { id: 'taiwan', name: '臺灣地理', caption: '七年級', status: '已開放' },
   { id: 'china', name: '中國地理', caption: '八年級', status: '已開放' },
-  { id: 'world', name: '世界地理', caption: '九年級', status: '後續建立' },
+  { id: 'world', name: '世界地理', caption: '九年級', status: '第一階段已開放' },
 ]
 
 const geographyAreas = {
@@ -66,6 +72,16 @@ const geographyAreas = {
     defaultTopicId: 'relief-steps',
     attributionUrl: 'https://github.com/VictorCazanave/svg-maps/tree/master/packages/china',
     mapLabel: '中國行政區與地理填圖地圖',
+  },
+  world: {
+    name: '世界地理',
+    map: europeMap,
+    chapters: worldGeographyChapters,
+    topics: worldGeographyTopics,
+    defaultChapterId: 'grade9-upper-l01',
+    defaultTopicId: 'world-europe-countries',
+    attributionUrl: 'https://github.com/VictorCazanave/svg-maps/tree/master/packages/world',
+    mapLabel: '歐洲國家精確國界填圖地圖',
   },
 }
 
@@ -91,6 +107,14 @@ const topicIcons = {
   seas: Waves,
   climate: CloudSun,
   agriculture: CloudSun,
+  'population-distribution': MapPinned,
+  'autonomous-regions': MapPinned,
+  'population-change': BookOpen,
+  'economic-zones': MapPinned,
+  'economic-regions': MapPinned,
+  'belt-and-road': Map,
+  rcep: Map,
+  'industry-transition': BookOpen,
   'tw-map-skills': Compass,
   'tw-location': MapPinned,
   'tw-administrative': MapPinned,
@@ -101,6 +125,7 @@ const topicIcons = {
   'tw-climate': CloudSun,
   'tw-rivers': Waves,
   'tw-water': Waves,
+  'world-europe-countries': MapPinned,
 }
 
 function learningHubUrl() {
@@ -146,6 +171,149 @@ function DiagramGraphic({ kind }) {
     )
   }
 
+  if (kind.startsWith('policy-') || kind.startsWith('population-')) {
+    const isOneChild = kind === 'policy-one-child'
+    const isMoreChildren = kind === 'policy-two-three-child'
+    const isAging = kind === 'population-aging'
+    return (
+      <svg className={`geography-concept-graphic is-${kind}`} viewBox="0 0 220 130" aria-hidden="true">
+        {(isOneChild || isMoreChildren) && (
+          <>
+            <circle cx="75" cy="31" r="13" /><circle cx="145" cy="31" r="13" />
+            <path d="M75 47 L75 84 M55 64 L95 64 M145 47 L145 84 M125 64 L165 64" />
+            <circle className="is-accent" cx="110" cy="78" r="10" />
+            <path className="is-accent" d="M110 89 L110 116 M96 101 L124 101" />
+            {isMoreChildren && <><circle className="is-accent" cx="67" cy="91" r="8" /><circle className="is-accent" cx="153" cy="91" r="8" /><path className="is-accent" d="M67 99 L67 119 M153 99 L153 119" /><path className="geography-concept-arrow" d="M190 104 L190 48 M178 60 L190 48 L202 60" /></>}
+          </>
+        )}
+        {isAging && (
+          <>
+            <path className="geography-concept-axis" d="M35 108 H190 M110 18 V112" />
+            <path className="is-soft" d="M110 102 H62 V88 H110 M110 83 H70 V69 H110 M110 64 H78 V50 H110 M110 45 H88 V31 H110 M110 26 H98 V15 H110" />
+            <path className="is-accent" d="M110 102 H158 V88 H110 M110 83 H150 V69 H110 M110 64 H142 V50 H110 M110 45 H132 V31 H110 M110 26 H122 V15 H110" />
+          </>
+        )}
+        {kind === 'population-sex-ratio' && (
+          <>
+            {[45, 75, 105, 135, 165].map((x) => <circle className="is-soft" cx={x} cy="42" r="12" key={`top-${x}`} />)}
+            {[65, 105, 145].map((x) => <circle className="is-accent" cx={x} cy="95" r="12" key={`bottom-${x}`} />)}
+            <path className="geography-concept-divider" d="M25 68 H195" />
+          </>
+        )}
+      </svg>
+    )
+  }
+
+  if (kind.startsWith('belt-road-')) {
+    const showLand = kind !== 'belt-road-sea'
+    const showSea = kind !== 'belt-road-land'
+    const landArrowId = `${kind}-land-arrow`
+    const seaArrowId = `${kind}-sea-arrow`
+    return (
+      <svg className={`geography-concept-graphic geography-belt-road-graphic is-${kind}`} viewBox="0 0 320 180" aria-hidden="true">
+        <defs>
+          <marker id={landArrowId} markerWidth="7" markerHeight="7" refX="8" refY="5" orient="auto" viewBox="0 0 10 10">
+            <path className="geography-belt-arrow is-land" d="M0 0 L10 5 L0 10 Z" />
+          </marker>
+          <marker id={seaArrowId} markerWidth="7" markerHeight="7" refX="8" refY="5" orient="auto" viewBox="0 0 10 10">
+            <path className="geography-belt-arrow is-sea" d="M0 0 L10 5 L0 10 Z" />
+          </marker>
+        </defs>
+        <rect className="geography-belt-background" x="4" y="4" width="312" height="172" rx="18" />
+        <path className="geography-belt-land-context" d="M19 51 C40 24 72 23 95 35 C118 18 155 20 178 38 C204 22 251 26 286 45 L301 72 C273 85 246 88 223 82 C198 94 168 91 143 82 C117 96 86 91 63 80 C42 86 25 76 19 51 Z" />
+        <path className="geography-belt-sea-context" d="M22 114 Q43 101 64 114 T106 114 T148 114 T190 114 T232 114 T274 114 T309 114 V171 H22 Z" />
+
+        {showLand && (
+          <>
+            <path className="geography-concept-route is-land" markerEnd={`url(#${landArrowId})`} d="M276 57 C231 41 198 58 160 49 C119 39 84 52 42 56" />
+            <circle className="geography-belt-node is-land" cx="205" cy="52" r="6" />
+            <circle className="geography-belt-node is-land" cx="126" cy="47" r="6" />
+          </>
+        )}
+        {showSea && (
+          <>
+            <path className="geography-concept-route is-sea" markerEnd={`url(#${seaArrowId})`} d="M282 72 C274 105 247 121 219 126 C180 134 153 153 115 148 C77 143 57 113 38 76" />
+            <circle className="geography-belt-node is-sea" cx="250" cy="111" r="6" />
+            <circle className="geography-belt-node is-sea" cx="196" cy="133" r="6" />
+            <circle className="geography-belt-node is-sea" cx="115" cy="148" r="6" />
+          </>
+        )}
+
+        <g className="geography-belt-place is-china"><circle cx="282" cy="57" r="12" /><text x="282" y="38">中國</text></g>
+        <g className="geography-belt-place"><circle cx="38" cy="61" r="10" /><text x="38" y="39">歐洲</text></g>
+        {showLand && <><text className="geography-belt-label" x="205" y="36">中亞</text><text className="geography-belt-label" x="126" y="72">西亞</text></>}
+        {showSea && <><text className="geography-belt-label" x="250" y="139">東南亞</text><text className="geography-belt-label" x="196" y="157">南亞</text><text className="geography-belt-label" x="115" y="171">東非</text></>}
+      </svg>
+    )
+  }
+
+  if (kind.startsWith('rcep-')) {
+    const arrowId = `${kind}-arrow`
+    return (
+      <svg className={`geography-concept-graphic geography-rcep-graphic is-${kind}`} viewBox="0 0 260 150" aria-hidden="true">
+        <defs>
+          <marker id={arrowId} markerWidth="7" markerHeight="7" refX="8" refY="5" orient="auto" viewBox="0 0 10 10">
+            <path className="geography-rcep-arrow-head" d="M0 0 L10 5 L0 10 Z" />
+          </marker>
+        </defs>
+        <rect className="geography-rcep-background" x="4" y="4" width="252" height="142" rx="18" />
+        {kind === 'rcep-members' && (
+          <>
+            <path className="geography-rcep-region is-northeast" d="M83 24 Q116 7 151 27 L143 65 Q112 72 80 54 Z" />
+            <path className="geography-rcep-region is-southeast" d="M107 65 Q140 57 164 82 L149 119 Q118 116 92 92 Z" />
+            <path className="geography-rcep-region is-oceania" d="M166 104 Q196 90 225 111 L217 136 Q185 142 161 124 Z" />
+            <path className="geography-rcep-network" d="M112 43 C127 64 133 76 130 91 C149 101 170 114 190 120" />
+            {[91, 111, 132, 147].map((x, index) => <circle className="geography-rcep-node" cx={x} cy={index % 2 ? 45 : 36} r="5" key={`north-${x}`} />)}
+            {[108, 126, 145, 157].map((x, index) => <circle className="geography-rcep-node" cx={x} cy={80 + (index % 2) * 18} r="5" key={`south-${x}`} />)}
+            <circle className="geography-rcep-node" cx="183" cy="119" r="5" />
+            <circle className="geography-rcep-node" cx="207" cy="124" r="5" />
+          </>
+        )}
+        {kind === 'rcep-tariff' && (
+          <>
+            <g className="geography-rcep-customs"><path d="M40 121 V54 H84 V121 M50 121 V73 H74 V121" /><path d="M34 54 H90" /></g>
+            <g className="geography-rcep-customs"><path d="M178 121 V54 H222 V121 M188 121 V73 H212 V121" /><path d="M172 54 H228" /></g>
+            <rect className="geography-rcep-cargo is-soft" x="103" y="77" width="54" height="36" rx="5" />
+            <path className="geography-rcep-flow" markerEnd={`url(#${arrowId})`} d="M87 95 H98 M160 95 H174" />
+            <path className="geography-rcep-down" markerEnd={`url(#${arrowId})`} d="M130 24 V57" />
+            <text className="geography-rcep-symbol" x="130" y="34">％</text>
+            <path className="geography-rcep-open-gate" d="M96 60 L111 72 M164 60 L149 72" />
+          </>
+        )}
+        {kind === 'rcep-supply-chain' && (
+          <>
+            <g className="geography-rcep-stage"><circle className="is-soft" cx="42" cy="78" r="25" /><path d="M31 85 L42 60 L53 85 Z" /></g>
+            <g className="geography-rcep-stage"><circle className="is-third" cx="102" cy="78" r="25" /><circle cx="102" cy="78" r="10" /><path d="M102 54 V63 M102 93 V102 M78 78 H87 M117 78 H126" /></g>
+            <g className="geography-rcep-stage"><circle className="is-accent" cx="164" cy="78" r="25" /><path d="M149 91 V72 L159 78 V67 L170 76 V91 Z" /></g>
+            <g className="geography-rcep-stage"><circle className="geography-rcep-market-node" cx="224" cy="78" r="25" /><path d="M212 90 V70 H236 V90 M216 70 L224 61 L232 70" /></g>
+            <path className="geography-rcep-flow" markerEnd={`url(#${arrowId})`} d="M68 78 H74 M128 78 H136 M190 78 H196" />
+            <path className="geography-rcep-loop" markerEnd={`url(#${arrowId})`} d="M221 111 C177 137 89 137 45 111" />
+          </>
+        )}
+        {kind === 'rcep-market' && (
+          <>
+            <circle className="geography-rcep-market-core" cx="130" cy="75" r="29" />
+            <path className="geography-rcep-bag" d="M114 84 V65 H146 V84 Z M121 65 C121 53 139 53 139 65" />
+            {[[48, 38], [212, 38], [48, 116], [212, 116]].map(([x, y]) => <g className="geography-rcep-economy" key={`${x}-${y}`}><circle cx={x} cy={y} r="18" /><rect x={x - 8} y={y - 7} width="16" height="14" rx="3" /></g>)}
+            <path className="geography-rcep-flow is-two-way" markerEnd={`url(#${arrowId})`} d="M68 48 L101 64 M192 48 L159 64 M68 107 L101 88 M192 107 L159 88" />
+            <path className="geography-rcep-investment" d="M118 114 H142 M122 123 H138 M126 132 H134" />
+          </>
+        )}
+      </svg>
+    )
+  }
+
+  if (kind.startsWith('industry-')) {
+    return (
+      <svg className={`geography-concept-graphic is-${kind}`} viewBox="0 0 230 130" aria-hidden="true">
+        {kind === 'industry-world-factory' && <><path className="is-soft" d="M25 108 V55 L67 76 V48 L110 75 V38 L155 64 V108 Z" /><path className="is-accent" d="M155 108 V31 H181 V108 Z" /><path className="geography-concept-smoke" d="M169 24 C152 13 164 2 149 0" /><rect x="45" y="86" width="25" height="18" /><rect x="88" y="86" width="25" height="18" /></>}
+        {kind === 'industry-technology' && <><rect className="is-accent" x="67" y="25" width="96" height="80" rx="12" /><rect x="89" y="45" width="52" height="40" rx="5" />{[45, 65, 85, 105, 125, 145, 165, 185].map((x) => <path d={`M${x} 15 V25 M${x} 105 V115`} key={x} />)}<path d="M55 43 H67 M55 65 H67 M55 87 H67 M163 43 H175 M163 65 H175 M163 87 H175" /></>}
+        {kind === 'industry-world-market' && <><circle className="is-soft" cx="70" cy="50" r="24" /><circle className="is-soft" cx="116" cy="43" r="24" /><circle className="is-soft" cx="160" cy="54" r="24" /><path className="is-accent" d="M39 108 H189 L176 72 H54 Z" /><path className="geography-concept-arrow" d="M23 38 H50 M35 26 L50 38 L35 50 M207 38 H180 M195 26 L180 38 L195 50" /></>}
+        {kind === 'industry-environment' && <><path className="is-soft" d="M26 108 V65 L72 85 V53 L118 80 V108 Z" /><path className="is-accent" d="M118 108 V30 H145 V108 Z" /><path className="geography-concept-smoke" d="M132 24 C112 11 129 0 107 0 M155 31 C174 17 158 5 181 1" /><path className="geography-concept-water" d="M20 116 Q35 105 50 116 T80 116 T110 116 T140 116 T170 116 T200 116" /></>}
+      </svg>
+    )
+  }
+
   const contourVariant = kind.replace('contour-', '')
   return (
     <svg className={`geography-contour-graphic is-${contourVariant}`} viewBox="0 0 180 112" aria-hidden="true">
@@ -161,8 +329,10 @@ function DiagramGraphic({ kind }) {
 export function GeographyConceptDiagram({ currentItem, topicItems, effectiveMode, revealed, solved, wrongTargetId, onAnswer }) {
   const showCurrentTarget = effectiveMode === 'identify' || revealed || solved
   const isInteractive = effectiveMode !== 'identify' && !revealed && !solved
+  const isBeltRoad = topicItems.some((item) => item.diagramKind?.startsWith('belt-road-'))
+  const isRcep = topicItems.some((item) => item.diagramKind?.startsWith('rcep-'))
   return (
-    <div className="geography-diagram-stage" role="group" aria-label="地圖判讀圖卡">
+    <div className={`geography-diagram-stage ${isBeltRoad ? 'is-belt-road' : ''} ${isRcep ? 'is-rcep' : ''}`} role="group" aria-label="地圖判讀圖卡">
       {topicItems.map((item, index) => {
         const isTarget = item.id === currentItem?.id
         const isWrong = item.id === wrongTargetId
@@ -215,6 +385,54 @@ function MacauCallout({ location, isTarget, isWrong, isInteractive, showName, in
   )
 }
 
+export function GeographyCourseConnection({ text }) {
+  if (!text) return null
+  return (
+    <aside className="geography-course-connection">
+      <BookOpen aria-hidden="true" />
+      <div><strong>與本章的連結</strong><span>{text}</span></div>
+    </aside>
+  )
+}
+
+function EconomicZoneInset({ mapDefinition, items, getPointState, getInteractionProps }) {
+  const cityItems = items.filter((item) => item.insetGroup === 'southeast-coast')
+  if (cityItems.length !== 4) return null
+
+  return (
+    <aside className="geography-economic-zone-inset" aria-label="中國東南沿海經濟特區放大圖">
+      <div>
+        <strong>東南沿海放大圖</strong>
+        <span>由上方同一張中國底圖直接放大；海南經濟特區請在主圖點選海南島。</span>
+      </div>
+      <svg viewBox="485 465 82 56" role="img" aria-label="福建與廣東沿海經濟特區位置放大圖">
+        <g className="geography-province-layer">
+          {mapDefinition.locations.map((location) => (
+            <path className="geography-province" d={location.path} key={location.id} aria-hidden="true" />
+          ))}
+        </g>
+        <g className="geography-point-layer">
+          {cityItems.map((item) => {
+            const { isTarget, isWrong } = getPointState(item)
+            return (
+              <g
+                className={`geography-map-point ${isTarget ? 'is-target' : ''} ${isWrong ? 'is-wrong' : ''}`}
+                key={item.id}
+                transform={`translate(${item.x} ${item.y})`}
+                {...getInteractionProps(item)}
+              >
+                <circle className="geography-map-point-hit" r="5.5" />
+                <circle className="geography-map-point-halo" r="2.8" />
+                <circle className="geography-map-point-dot" r="1.25" />
+              </g>
+            )
+          })}
+        </g>
+      </svg>
+    </aside>
+  )
+}
+
 function FillLabelBank({ items, completed, selectedItemId, onSelect }) {
   return (
     <div className="geography-fill-label-bank" aria-label="待填入標籤">
@@ -250,6 +468,7 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
   const [wrongTargetId, setWrongTargetId] = useState('')
   const [feedback, setFeedback] = useState(null)
   const isDiagram = items.every((item) => item.mapKind === 'diagram')
+  const isBeltRoad = items.some((item) => item.diagramKind?.startsWith('belt-road-'))
 
   const placeLabel = (targetId, draggedItemId = '') => {
     const itemId = draggedItemId || selectedItemId
@@ -336,7 +555,7 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
       />
 
       {isDiagram ? (
-        <div className="geography-diagram-stage is-fill-board" role="group" aria-label="判讀圖卡放置區">
+        <div className={`geography-diagram-stage is-fill-board ${isBeltRoad ? 'is-belt-road' : ''}`} role="group" aria-label="判讀圖卡放置區">
           {items.map((item, index) => {
             const targetId = item.id
             const isDone = completedTargetIds.has(targetId)
@@ -452,13 +671,28 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
                     aria-label="點狀地理標籤放置位置"
                     {...dropTargetProps(item.id)}
                   >
-                    <circle className="geography-map-point-halo" r="15" />
-                    <circle className="geography-map-point-dot" r="6" />
+                    <circle className="geography-map-point-hit" r={item.hitRadius || 20} />
+                    <circle className="geography-map-point-halo" r={item.markerRadius || 15} />
+                    <circle className="geography-map-point-dot" r={Math.min(6, (item.markerRadius || 15) * 0.45)} />
                   </g>
                 )
               })}
             </g>
           </svg>
+          <EconomicZoneInset
+            mapDefinition={mapDefinition}
+            items={pointItems}
+            getPointState={(item) => ({
+              isTarget: completedTargetIds.has(item.id),
+              isWrong: wrongTargetId === item.id,
+            })}
+            getInteractionProps={(item) => ({
+              role: 'button',
+              tabIndex: 0,
+              'aria-label': '東南沿海經濟特區標籤放置位置',
+              ...dropTargetProps(item.id),
+            })}
+          />
           <div className="geography-map-compass" aria-hidden="true"><Compass /></div>
           {rangeItems.length > 0 && (
             <div className="geography-relief-step-panel">
@@ -672,13 +906,34 @@ export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, top
                   }
                 }}
               >
-                <circle className="geography-map-point-halo" r="15" />
-                <circle className="geography-map-point-dot" r="6" />
+                <circle className="geography-map-point-hit" r={item.hitRadius || 20} />
+                <circle className="geography-map-point-halo" r={item.markerRadius || 15} />
+                <circle className="geography-map-point-dot" r={Math.min(6, (item.markerRadius || 15) * 0.45)} />
               </g>
             )
           })}
         </g>
       </svg>
+      <EconomicZoneInset
+        mapDefinition={mapDefinition}
+        items={pointItems}
+        getPointState={(item) => ({
+          isTarget: showCurrentTarget && item.id === targetKey,
+          isWrong: wrongTargetId === item.id,
+        })}
+        getInteractionProps={(item) => ({
+          tabIndex: effectiveMode !== 'identify' && !revealed && !solved ? 0 : -1,
+          role: effectiveMode !== 'identify' && !revealed && !solved ? 'button' : undefined,
+          'aria-label': effectiveMode !== 'identify' && !revealed && !solved ? '可選擇的東南沿海經濟特區位置' : undefined,
+          onClick: () => answer(item.id),
+          onKeyDown: (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault()
+              answer(item.id)
+            }
+          },
+        })}
+      />
       <div className="geography-map-compass" aria-hidden="true"><Compass /></div>
       {rangeItems.length > 0 && (
         <div className="geography-relief-step-panel">
@@ -719,6 +974,10 @@ export function ChinaMap(props) {
   return <GeographyMap {...props} areaId="china" mapDefinition={chinaMap} mapLabel="中國行政區與地理填圖地圖" />
 }
 
+export function EuropeMap(props) {
+  return <GeographyMap {...props} areaId="world" mapDefinition={europeMap} mapLabel="歐洲國家精確國界填圖地圖" />
+}
+
 export default function GeographyFillMap() {
   const [areaId, setAreaId] = useState('taiwan')
   const [chapterId, setChapterId] = useState('grade7-upper-l01')
@@ -743,7 +1002,11 @@ export default function GeographyFillMap() {
   const difficulty = difficulties.find((candidate) => candidate.id === difficultyId) || difficulties[1]
   const topicItems = areaId === 'taiwan'
     ? filterTaiwanItemsByDifficulty(topic.items, difficultyId)
-    : topic.items
+    : areaId === 'world'
+      ? filterWorldItemsByDifficulty(topic.items, difficultyId)
+      : topic.items
+  const mapDefinition = topic.map || area.map
+  const mapLabel = topic.mapLabel || area.mapLabel
   const currentItem = round[questionIndex]
   const mixedFillStartIndex = geographyMixedFillStart(round.length)
   const effectiveMode = geographyEffectiveMode(modeId, questionIndex, round.length)
@@ -850,7 +1113,7 @@ export default function GeographyFillMap() {
           <div>
             <p>GEOGRAPHY MAP LAB</p>
             <h1>把地理位置，真正放進腦中的地圖</h1>
-            <span>臺灣與中國地理已開放，依課本章節選擇目前學到的內容再開始練習。</span>
+            <span>臺灣、中國與世界地理已分階段開放，依課本章節選擇目前學到的內容再開始練習。</span>
           </div>
           <div className="geography-hero-art"><MapPinned aria-hidden="true" /></div>
         </section>
@@ -921,6 +1184,7 @@ export default function GeographyFillMap() {
                   )
                 })}
               </div>
+              <GeographyCourseConnection text={topic.courseConnection} />
             </section>
 
             <div className="geography-setup-grid">
@@ -965,12 +1229,13 @@ export default function GeographyFillMap() {
                 <h2>{isFillRound ? `完成 ${fillItems.length} 個標籤填圖` : effectiveMode === 'identify' ? (currentItem.mapKind === 'diagram' ? '這張圖卡表示什麼？' : '這個位置是什麼？') : `請找出「${currentItem.name}」`}</h2>
                 <span>{isFillRound ? '先選標籤，再將它放到正確位置；全部完成後一次查看結果。' : questionInstruction}</span>
               </div>
+              <GeographyCourseConnection text={topic.courseConnection} />
 
               {isFillRound ? (
                 <GeographyFillBoard
                   key={`${modeId}-${round.map((item) => item.id).join('-')}`}
-                  mapDefinition={area.map}
-                  mapLabel={area.mapLabel}
+                  mapDefinition={mapDefinition}
+                  mapLabel={mapLabel}
                   areaId={areaId}
                   items={fillItems}
                   onProgress={setFillCompletedCount}
@@ -992,8 +1257,8 @@ export default function GeographyFillMap() {
                 />
               ) : (
                 <GeographyMap
-                  mapDefinition={area.map}
-                  mapLabel={area.mapLabel}
+                  mapDefinition={mapDefinition}
+                  mapLabel={mapLabel}
                   areaId={areaId}
                   currentItem={currentItem}
                   topicItems={topicItems}
