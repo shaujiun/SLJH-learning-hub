@@ -9,6 +9,10 @@ import {
   eastAsiaCountryItems,
   eastAsiaCurrentItems,
   eastAsiaMonsoonItems,
+  japanEconomyItems,
+  japanIndustrialRegionItems,
+  koreaEconomyItems,
+  koreanPeninsulaLocationItems,
   chinaLakeItems,
   chinaPopulationChangeItems,
   chinaProvinceItems,
@@ -16,7 +20,7 @@ import {
   chinaReliefStepItems,
   chinaSeaItems,
 } from '../data/chinaGeography.js'
-import { eastAsiaMap } from '../data/eastAsiaMap.js'
+import { eastAsiaMap, japanIndustryMap, koreanPeninsulaMap } from '../data/eastAsiaMap.js'
 import { taiwanContourItems, taiwanScaleItems, taiwanWaterItems } from '../data/taiwanGeography.js'
 import {
   europeClimateItems,
@@ -76,6 +80,76 @@ describe('GeographyFillMap', () => {
     expect(currentHtml).toContain('marker-end="url(#geography-arrow-map-china-ocean-cold)"')
   })
 
+  it('以同一套東北亞底圖放大日本工業區與朝鮮半島，不用另一張近似地圖', () => {
+    const industryHtml = renderToString(
+      <GeographyMap
+        mapDefinition={japanIndustryMap}
+        mapLabel="日本主要工業區"
+        areaId="china"
+        currentItem={japanIndustrialRegionItems[0]}
+        topicItems={japanIndustrialRegionItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+    const koreaHtml = renderToString(
+      <GeographyMap
+        mapDefinition={koreanPeninsulaMap}
+        mapLabel="朝鮮半島主要都市"
+        areaId="china"
+        currentItem={koreanPeninsulaLocationItems[0]}
+        topicItems={koreanPeninsulaLocationItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+
+    expect(industryHtml).toContain('viewBox="837 350 34 15"')
+    expect(industryHtml).toContain('is-japanindustry')
+    expect(industryHtml.match(/geography-map-point-industrial-marker/g)).toHaveLength(6)
+    expect(industryHtml).toContain('虛線橢圓代表課本工業區的概略範圍')
+    expect(koreaHtml).toContain('viewBox="822 338 21 25"')
+    expect(koreaHtml).toContain('is-koreanpeninsula')
+    expect(koreaHtml).toContain('圓點代表都市所在位置')
+    expect(koreaHtml).toContain('is-political-boundary')
+  })
+
+  it('八上第六章的日本與南北韓概念圖卡在作答前不顯示答案名稱', () => {
+    const japanHtml = renderToString(
+      <GeographyConceptDiagram
+        currentItem={japanEconomyItems[0]}
+        topicItems={japanEconomyItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+    const koreaHtml = renderToString(
+      <GeographyConceptDiagram
+        currentItem={koreaEconomyItems[0]}
+        topicItems={koreaEconomyItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+
+    expect(japanHtml).toContain('is-japan-import-export')
+    expect(japanHtml).not.toContain('進口原料、出口工業產品')
+    expect(koreaHtml).toContain('is-korea-north-heavy')
+    expect(koreaHtml).not.toContain('北韓重工業與國防工業')
+  })
+
   it('預設顯示臺灣地理正式課本章節，再顯示目前章節的主題與練習方式', () => {
     globalThis.window = {
       location: new URL('http://127.0.0.1:4173/?geography=maps'),
@@ -87,6 +161,7 @@ describe('GeographyFillMap', () => {
     expect(html).toContain('地理填圖學習系統')
     expect(html).toContain('臺灣地理')
     expect(html).toContain('中國地理')
+    expect(html).toContain('八上全冊已開放')
     expect(html).toContain('世界地理')
     expect(html).toContain('九年級')
     expect(html).toContain('第 1～2 章已開放')

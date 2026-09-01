@@ -36,7 +36,7 @@ describe('各科遊戲選擇入口', () => {
     expect(subjectGamesFor({ code: 'geography', name: '地理', launchUrl: '' }, '')).toContainEqual(expect.objectContaining({
       code: 'geography-fill-map',
       launchUrl: '?geography=maps',
-      availability: '七上、八上第 1～5 章、九上第 1～2 章已開放',
+      availability: '七上、八上全冊、九上第 1～2 章已開放',
     }))
   })
 

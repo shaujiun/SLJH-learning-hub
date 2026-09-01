@@ -30,7 +30,7 @@ const subjectGameTemplates = {
       code: 'geography-fill-map',
       name: '地理填圖學習系統',
       description: '依翰林版課本章節練習臺灣、中國與世界地理，包含位置、地形、氣候、水文與區域特色。',
-      availability: '七上、八上第 1～5 章、九上第 1～2 章已開放',
+      availability: '七上、八上全冊、九上第 1～2 章已開放',
       launchUrl: '?geography=maps',
     },
   ],
