@@ -384,7 +384,18 @@ export function GeographyConceptDiagram({ currentItem, topicItems, effectiveMode
             onClick={() => onAnswer(item.id)}
           >
             <DiagramGraphic kind={item.diagramKind} />
-            {(revealed || solved) && isTarget && <span>{item.name}</span>}
+            {item.visualCue && (
+              <small className="geography-diagram-cue">
+                <strong>圖示線索</strong>
+                {item.visualCue}
+              </small>
+            )}
+            {isWrong && <span className="geography-diagram-result is-wrong">再想想</span>}
+            {(revealed || solved) && isTarget && (
+              <span className="geography-diagram-result is-correct">
+                {revealed ? `答案：${item.name}` : `答對：${item.name}`}
+              </span>
+            )}
           </button>
         )
       })}
@@ -579,6 +590,29 @@ function GeographyPointMarker({ item }) {
   )
 }
 
+function GeographyPointFeedbackLabel({ item, status }) {
+  if (!status || !['industrial-region', 'city'].includes(item.pointType)) return null
+
+  const isIndustrialRegion = item.pointType === 'industrial-region'
+  const label = status === 'wrong'
+    ? '再想想'
+    : status === 'revealed'
+      ? `答案：${item.name}`
+      : '答對'
+  const width = status === 'revealed'
+    ? (isIndustrialRegion ? 7.8 : 5.8)
+    : (isIndustrialRegion ? 4.8 : 3.8)
+  const height = isIndustrialRegion ? 1.45 : 1.15
+  const y = isIndustrialRegion ? -2.15 : -1.7
+
+  return (
+    <g className={`geography-point-feedback is-${status}`} aria-hidden="true" pointerEvents="none">
+      <rect x={-width / 2} y={y - height} width={width} height={height} rx={height * 0.32} />
+      <text x="0" y={y - height * 0.33}>{label}</text>
+    </g>
+  )
+}
+
 function GeographyPointLegend({ items }) {
   const hasCapital = items.some((item) => item.pointType === 'capital')
   const hasCountryLocation = items.some((item) => item.pointType === 'country-location')
@@ -621,6 +655,7 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
   const [completed, setCompleted] = useState({})
   const [mistakes, setMistakes] = useState({})
   const [wrongTargetId, setWrongTargetId] = useState('')
+  const [feedbackTargetId, setFeedbackTargetId] = useState('')
   const [feedback, setFeedback] = useState(null)
   const isDiagram = items.every((item) => item.mapKind === 'diagram')
   const isBeltRoad = items.some((item) => item.diagramKind?.startsWith('belt-road-'))
@@ -639,6 +674,7 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
       setCompleted(nextCompleted)
       setSelectedItemId('')
       setWrongTargetId('')
+      setFeedbackTargetId(item.id)
       setFeedback(evaluation.feedback)
       onScore(1)
       onProgress(Object.keys(nextCompleted).length)
@@ -648,12 +684,14 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
     const nextFeedback = evaluation.feedback
     setMistakes({ ...mistakes, [item.id]: evaluation.mistakeCount })
     setWrongTargetId(targetId)
+    setFeedbackTargetId(targetId)
     setFeedback(nextFeedback)
     if (nextFeedback.revealAnswer) {
       const nextCompleted = { ...completed, [item.id]: { revealed: true } }
       setCompleted(nextCompleted)
       setSelectedItemId('')
       setWrongTargetId('')
+      setFeedbackTargetId(item.id)
       onProgress(Object.keys(nextCompleted).length)
     }
   }
@@ -706,6 +744,7 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
         onSelect={(itemId) => {
           setSelectedItemId(itemId)
           setWrongTargetId('')
+          setFeedbackTargetId('')
           setFeedback(null)
         }}
       />
@@ -724,7 +763,18 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
                 {...dropTargetProps(targetId)}
               >
                 <DiagramGraphic kind={item.diagramKind} />
-                {isDone && <span>{item.name}</span>}
+                {item.visualCue && (
+                  <small className="geography-diagram-cue">
+                    <strong>圖示線索</strong>
+                    {item.visualCue}
+                  </small>
+                )}
+                {wrongTargetId === targetId && <span className="geography-diagram-result is-wrong">再想想</span>}
+                {isDone && (
+                  <span className="geography-diagram-result is-correct">
+                    {completed[item.id]?.revealed ? `答案：${item.name}` : `答對：${item.name}`}
+                  </span>
+                )}
               </button>
             )
           })}
@@ -852,6 +902,12 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
                     {...dropTargetProps(item.id)}
                   >
                     <GeographyPointMarker item={item} />
+                    <GeographyPointFeedbackLabel
+                      item={item}
+                      status={feedbackTargetId === item.id
+                        ? (completed[item.id]?.revealed ? 'revealed' : isDone ? 'correct' : wrongTargetId === item.id ? 'wrong' : '')
+                        : ''}
+                    />
                   </g>
                 )
               })}
@@ -1131,6 +1187,10 @@ export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, top
                 }}
               >
                 <GeographyPointMarker item={item} />
+                <GeographyPointFeedbackLabel
+                  item={item}
+                  status={isWrong ? 'wrong' : isTarget && revealed ? 'revealed' : isTarget && solved ? 'correct' : ''}
+                />
               </g>
             )
           })}

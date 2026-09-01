@@ -105,17 +105,35 @@ describe('GeographyFillMap', () => {
         effectiveMode="locate"
         revealed={false}
         solved={false}
-        wrongTargetId=""
+        wrongTargetId={koreanPeninsulaLocationItems[1].id}
         onAnswer={() => {}}
       />,
     )
 
     expect(industryHtml).toContain('viewBox="837 350 34 15"')
     expect(industryHtml).toContain('is-japanindustry')
+    const solvedIndustryHtml = renderToString(
+      <GeographyMap
+        mapDefinition={japanIndustryMap}
+        mapLabel="日本工業區"
+        areaId="china"
+        currentItem={japanIndustrialRegionItems[0]}
+        topicItems={japanIndustrialRegionItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+    expect(solvedIndustryHtml).toContain('geography-point-feedback is-correct')
+    expect(solvedIndustryHtml).toContain('答對')
     expect(industryHtml.match(/geography-map-point-industrial-marker/g)).toHaveLength(6)
     expect(industryHtml).toContain('虛線橢圓代表課本工業區的概略範圍')
     expect(koreaHtml).toContain('viewBox="822 338 21 25"')
     expect(koreaHtml).toContain('is-koreanpeninsula')
+    expect(koreaHtml).toContain('geography-point-feedback is-wrong')
+    expect(koreaHtml).toContain('再想想')
     expect(koreaHtml).toContain('圓點代表都市所在位置')
     expect(koreaHtml).toContain('is-political-boundary')
   })
@@ -145,8 +163,10 @@ describe('GeographyFillMap', () => {
     )
 
     expect(japanHtml).toContain('is-japan-import-export')
+    expect(japanHtml).toContain(japanEconomyItems[0].visualCue)
     expect(japanHtml).not.toContain('進口原料、出口工業產品')
     expect(koreaHtml).toContain('is-korea-north-heavy')
+    expect(koreaHtml).toContain(koreaEconomyItems[0].visualCue)
     expect(koreaHtml).not.toContain('北韓重工業與國防工業')
   })
 

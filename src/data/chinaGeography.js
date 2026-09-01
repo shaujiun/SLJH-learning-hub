@@ -327,37 +327,37 @@ export const eastAsiaCurrentItems = [
 export const japanIndustrialRegionItems = [
   {
     id: 'japan-industry-keihin', mapKind: 'point', pointType: 'industrial-region', name: '京濱工業區',
-    ...eastAsiaPoint(139.66, 35.56, { markerRadius: 0.78, hitRadius: 1.55 }),
+    ...eastAsiaPoint(139.66, 35.56, { markerRadius: 0.4, hitRadius: 0.76 }),
     hint: '往本州東部、東京與橫濱一帶的太平洋沿岸尋找。',
     reason: '京濱工業區以東京、橫濱一帶為核心，位於本州東部的太平洋沿岸。',
   },
   {
     id: 'japan-industry-tokai', mapKind: 'point', pointType: 'industrial-region', name: '東海工業區',
-    ...eastAsiaPoint(138.39, 34.98, { markerRadius: 0.72, hitRadius: 1.45 }),
+    ...eastAsiaPoint(138.39, 34.98, { markerRadius: 0.38, hitRadius: 0.72 }),
     hint: '在京濱與名古屋之間，沿靜岡附近的太平洋岸尋找。',
     reason: '東海工業區位於靜岡附近的太平洋沿岸，介於京濱與名古屋工業區之間。',
   },
   {
     id: 'japan-industry-nagoya', mapKind: 'point', pointType: 'industrial-region', name: '名古屋工業區',
-    ...eastAsiaPoint(136.91, 35.18, { markerRadius: 0.72, hitRadius: 1.45 }),
+    ...eastAsiaPoint(136.91, 35.18, { markerRadius: 0.38, hitRadius: 0.72 }),
     hint: '往本州中部、伊勢灣北側的名古屋附近尋找。',
     reason: '名古屋工業區以名古屋及伊勢灣沿岸為核心，汽車等製造業發達。',
   },
   {
     id: 'japan-industry-hanshin', mapKind: 'point', pointType: 'industrial-region', name: '阪神工業區',
-    ...eastAsiaPoint(135.35, 34.69, { markerRadius: 0.76, hitRadius: 1.5 }),
+    ...eastAsiaPoint(135.35, 34.69, { markerRadius: 0.4, hitRadius: 0.75 }),
     hint: '往本州中西部、大阪灣沿岸的大阪與神戶之間尋找。',
     reason: '阪神工業區以大阪、神戶一帶為核心，位於大阪灣沿岸。',
   },
   {
     id: 'japan-industry-setouchi', mapKind: 'point', pointType: 'industrial-region', name: '瀨戶內海工業區',
-    ...eastAsiaPoint(133.55, 34.42, { markerRadius: 0.9, hitRadius: 1.7 }),
+    ...eastAsiaPoint(133.55, 34.42, { markerRadius: 0.44, hitRadius: 0.82 }),
     hint: '沿本州西部與四國之間的瀨戶內海兩岸尋找。',
     reason: '瀨戶內海工業區沿瀨戶內海兩岸分布，港灣與海運條件有利臨海工業發展。',
   },
   {
     id: 'japan-industry-kitakyushu', mapKind: 'point', pointType: 'industrial-region', name: '北九州工業區',
-    ...eastAsiaPoint(130.64, 33.73, { markerRadius: 0.78, hitRadius: 1.55 }),
+    ...eastAsiaPoint(130.64, 33.73, { markerRadius: 0.4, hitRadius: 0.76 }),
     hint: '往九州北部、福岡與北九州附近的海岸尋找。',
     reason: '北九州工業區位於九州北部，靠近海運航線與港口。',
   },
@@ -366,26 +366,31 @@ export const japanIndustrialRegionItems = [
 export const japanEconomyItems = [
   {
     id: 'japan-economy-import-export', mapKind: 'diagram', diagramKind: 'japan-import-export', name: '進口原料、出口工業產品',
+    visualCue: '原料由船運進入工廠，製成品再由港口運出。',
     hint: '觀察原料由船運進入沿海工廠，再把製成品運往海外的流程。',
     reason: '日本礦產與能源不足，原料多仰賴進口；工業區集中在港灣沿岸，便於進口原料並出口產品。',
   },
   {
     id: 'japan-economy-high-value', mapKind: 'diagram', diagramKind: 'japan-high-value', name: '高附加價值與技術研發',
+    visualCue: '晶片、研發與精密技術提高產品價值。',
     hint: '觀察晶片、齒輪與研發光芒，判斷產業競爭力來自數量還是技術。',
     reason: '日本重視研發、專利與精密製造，以高附加價值產品維持國際競爭力。',
   },
   {
     id: 'japan-economy-overseas', mapKind: 'diagram', diagramKind: 'japan-overseas-production', name: '生產基地移往海外',
+    visualCue: '中央工廠透過箭頭向其他地區分散。',
     hint: '觀察日本工廠向其他地區分散的箭頭。',
     reason: '面對工資上升與勞力不足，日本企業將部分生產移往中國及東南亞，也透過海外投資與合作降低成本。',
   },
   {
     id: 'japan-economy-aging', mapKind: 'diagram', diagramKind: 'japan-aging-labor', name: '人口老化與勞力不足',
+    visualCue: '工作人口減少，高齡人口與照護需求增加。',
     hint: '觀察長者比例增加、工作人口減少的圖像。',
     reason: '低生育率與人口老化使勞動力減少，也促使日本發展自動化與高齡照護等服務。',
   },
   {
     id: 'japan-economy-culture-tourism', mapKind: 'diagram', diagramKind: 'japan-culture-tourism', name: '文化與觀光產業',
+    visualCue: '影視、遊戲、文創內容與旅遊服務相互連結。',
     hint: '觀察影視、遊戲、文創商品與旅行符號。',
     reason: '動漫、電玩與文創商品能輸出文化內容；地方特色、交通與服務也支持日本觀光產業。',
   },
@@ -394,19 +399,19 @@ export const japanEconomyItems = [
 export const koreanPeninsulaLocationItems = [
   {
     id: 'korea-city-pyongyang', mapKind: 'point', pointType: 'city', name: '平壤',
-    ...eastAsiaPoint(125.7625, 39.0392, { markerRadius: 0.68, hitRadius: 1.2 }),
+    ...eastAsiaPoint(125.7625, 39.0392, { markerRadius: 0.28, hitRadius: 0.58 }),
     hint: '往朝鮮半島北部、西側河谷附近尋找。',
     reason: '平壤位於朝鮮半島北部，是北韓首都。',
   },
   {
     id: 'korea-city-seoul', mapKind: 'point', pointType: 'city', name: '首爾',
-    ...eastAsiaPoint(126.978, 37.5665, { markerRadius: 0.68, hitRadius: 1.2 }),
+    ...eastAsiaPoint(126.978, 37.5665, { markerRadius: 0.28, hitRadius: 0.58 }),
     hint: '往朝鮮半島中部偏西、北緯 38° 以南尋找。',
     reason: '首爾位於朝鮮半島中部偏西，是南韓首都與主要經濟中心。',
   },
   {
     id: 'korea-city-busan', mapKind: 'point', pointType: 'city', name: '釜山',
-    ...eastAsiaPoint(129.0756, 35.1796, { markerRadius: 0.68, hitRadius: 1.2 }),
+    ...eastAsiaPoint(129.0756, 35.1796, { markerRadius: 0.28, hitRadius: 0.58 }),
     hint: '往朝鮮半島東南端的港口尋找。',
     reason: '釜山位於朝鮮半島東南端，是南韓重要港口與工業都市。',
   },
@@ -421,31 +426,37 @@ export const koreanPeninsulaLocationItems = [
 export const koreaEconomyItems = [
   {
     id: 'korea-economy-north-heavy', mapKind: 'diagram', diagramKind: 'korea-north-heavy', name: '北韓重工業與國防工業',
+    visualCue: '煤鐵資源、重型工廠與國防盾牌集中在同一張圖。',
     hint: '觀察煤鐵資源、重型工廠與國防符號。',
     reason: '北韓煤、鐵等礦產較豐富，具重工業發展條件；政府將大量資源投入國防工業，民生產業相對不足。',
   },
   {
     id: 'korea-economy-south-processing', mapKind: 'diagram', diagramKind: 'korea-south-processing', name: '南韓加工出口起步',
+    visualCue: '原料輸入、工廠加工，再把商品由港口輸出。',
     hint: '觀察進口原料經工廠加工，再由港口出口的流程。',
     reason: '南韓天然資源有限，早期利用較低廉勞動力發展加工出口產業，累積工業化基礎。',
   },
   {
     id: 'korea-economy-chaebol', mapKind: 'diagram', diagramKind: 'korea-chaebol', name: '政府扶植大型財團',
+    visualCue: '一間大型企業居中，連結周圍多個產業。',
     hint: '觀察中央的大型企業與周圍產業是否高度集中連結。',
     reason: '南韓政府曾扶植大型財團帶動出口與工業化，但經濟集中在少數企業也可能增加風險。',
   },
   {
     id: 'korea-economy-high-tech', mapKind: 'diagram', diagramKind: 'korea-high-tech', name: '高科技產業',
+    visualCue: '晶片、螢幕與通訊裝置代表技術密集產業。',
     hint: '觀察晶片、螢幕與通訊符號。',
     reason: '南韓由加工出口轉向電子、通訊、汽車等高科技與高附加價值產業。',
   },
   {
     id: 'korea-economy-culture', mapKind: 'diagram', diagramKind: 'korea-culture-wave', name: '韓流文化與觀光',
+    visualCue: '音樂、影視與跨國傳播帶動旅遊和消費。',
     hint: '觀察音樂、影視、時尚與旅行符號。',
     reason: '影視、音樂、時尚等韓流文化帶動內容產業，也吸引觀光與相關消費。',
   },
   {
     id: 'korea-economy-housing', mapKind: 'diagram', diagramKind: 'korea-housing-pressure', name: '都市居住壓力與半地下屋',
+    visualCue: '高樓下方有接近地面的小窗與居住空間。',
     hint: '觀察高樓下方、接近地面高度的小窗與居住空間。',
     reason: '首爾等大都市人口與機會集中、住宅成本高，半地下屋反映部分居民面臨的居住壓力與社會差距。',
   },
