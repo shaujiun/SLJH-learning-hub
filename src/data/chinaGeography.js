@@ -3,6 +3,7 @@ import {
   chinaRiverGeometry,
   chinaSeaGeometry,
 } from './geographyHydrography.js'
+import { eastAsiaLinePath, eastAsiaMap } from './eastAsiaMap.js'
 
 const provinceRegionHints = {
   northeast: '先找中國東北部，觀察它與俄羅斯、北韓及渤海的位置關係。',
@@ -240,6 +241,81 @@ export const chinaIndustryTransitionItems = [
   { id: 'industry-environment', mapKind: 'diagram', diagramKind: 'industry-environment', name: '工業化與環境問題', hint: '觀察工廠、煙霧與水滴警示符號。', reason: '快速工業化與都市化帶來空氣、水與土壤污染，經濟成長需兼顧環境治理。' },
 ]
 
+const eastAsiaCountryRows = [
+  ['cn', '中國', '東北亞西側的大陸國家', '中國位於東北亞西側，東部海岸面向黃海、東海與太平洋邊緣海。'],
+  ['mn', '蒙古', '中國北方、俄羅斯南方的內陸國', '蒙古位於中國與俄羅斯之間，是沒有海岸線的內陸國。'],
+  ['kp', '北韓', '朝鮮半島北部', '北韓位於朝鮮半島北部，北側與中國、俄羅斯相鄰。'],
+  ['kr', '南韓', '朝鮮半島南部', '南韓位於朝鮮半島南部，三面臨海。'],
+  ['jp', '日本', '朝鮮半島東側的島國', '日本由北海道、本州、四國、九州等島嶼組成，位於太平洋西北側。'],
+  ['ru', '俄羅斯遠東地區', '蒙古、北韓與日本北方', '俄羅斯遠東地區位於東北亞北側，面向鄂霍次克海與太平洋。'],
+]
+
+export const eastAsiaCountryItems = eastAsiaCountryRows.map(([mapId, name, locationHint, reason]) => ({
+  id: `east-asia-country-${mapId}`,
+  mapId,
+  mapKind: 'province',
+  name,
+  levels: ['intro', 'basic', 'advanced'],
+  hint: `先找${locationHint}，再觀察國界、半島或海岸線。`,
+  reason,
+}))
+
+export const eastAsiaMonsoonItems = [
+  {
+    id: 'east-asia-monsoon-winter',
+    mapKind: 'line',
+    lineType: 'wind-winter',
+    name: '冬季季風',
+    levels: ['intro', 'basic', 'advanced'],
+    hint: '從亞洲大陸內部往東南方的海洋尋找箭頭。',
+    reason: '冬季亞洲大陸降溫快、形成高壓，冷乾氣流由西北陸地吹向東南海洋；迎風側經海面增濕後可能降雪。',
+    path: eastAsiaLinePath([
+      [[105, 52], [116, 45], [127, 36]],
+      [[116, 50], [129, 42], [140, 33]],
+    ]),
+  },
+  {
+    id: 'east-asia-monsoon-summer',
+    mapKind: 'line',
+    lineType: 'wind-summer',
+    name: '夏季季風',
+    levels: ['intro', 'basic', 'advanced'],
+    hint: '從太平洋與低緯海洋往西北方陸地尋找箭頭。',
+    reason: '夏季亞洲大陸升溫快、氣壓較低，暖溼氣流由海洋吹向陸地，為東北亞帶來主要暖季降水。',
+    path: eastAsiaLinePath([
+      [[148, 25], [137, 31], [126, 39]],
+      [[137, 21], [127, 28], [117, 37]],
+    ]),
+  },
+]
+
+export const eastAsiaCurrentItems = [
+  {
+    id: 'east-asia-current-kuroshio',
+    mapKind: 'line',
+    lineType: 'ocean-warm',
+    name: '黑潮（日本暖流）',
+    levels: ['intro', 'basic', 'advanced'],
+    hint: '從臺灣東側向北，沿日本太平洋側尋找暖流箭頭。',
+    reason: '黑潮是由低緯流向較高緯的暖流，經臺灣東側、琉球群島後沿日本南側與東側向北流。',
+    path: eastAsiaLinePath([
+      [[122.5, 19], [123.5, 23], [126, 27], [130, 30], [135, 33], [140, 36]],
+    ]),
+  },
+  {
+    id: 'east-asia-current-oyashio',
+    mapKind: 'line',
+    lineType: 'ocean-cold',
+    name: '親潮（千島寒流）',
+    levels: ['intro', 'basic', 'advanced'],
+    hint: '從千島群島與北海道東側向南，尋找寒流箭頭。',
+    reason: '親潮由較高緯海域向南流經千島群島與北海道東側，與黑潮交會附近形成營養鹽豐富的漁場。',
+    path: eastAsiaLinePath([
+      [[156, 52], [151, 48], [147, 44], [144, 40], [141, 37]],
+    ]),
+  },
+]
+
 export const chinaGeographyTopics = [
   {
     id: 'relief-steps',
@@ -354,6 +430,39 @@ export const chinaGeographyTopics = [
     semester: '翰林八上第 4 章',
     items: chinaIndustryTransitionItems,
   },
+  {
+    id: 'east-asia-countries',
+    name: '東北亞國家位置',
+    description: '中國、蒙古、南北韓、日本與俄羅斯遠東地區',
+    semester: '翰林八上第 5 章',
+    courseConnection: '先用大陸、半島與島弧辨認東北亞各國，再連結季風、洋流與區域生活。',
+    map: eastAsiaMap,
+    mapLabel: '東北亞國家精確國界填圖地圖',
+    attributionUrl: 'https://github.com/VictorCazanave/svg-maps/tree/master/packages/world',
+    items: eastAsiaCountryItems,
+  },
+  {
+    id: 'east-asia-monsoons',
+    name: '冬夏季風',
+    description: '比較冬季西北季風與夏季海洋季風方向',
+    semester: '翰林八上第 5 章',
+    courseConnection: '箭頭代表風從哪裡吹向哪裡；判讀時先分辨陸地與海洋，再比較冬、夏氣壓差異。',
+    map: eastAsiaMap,
+    mapLabel: '東北亞冬夏季風方向填圖地圖',
+    attributionUrl: 'https://github.com/VictorCazanave/svg-maps/tree/master/packages/world',
+    items: eastAsiaMonsoonItems,
+  },
+  {
+    id: 'east-asia-currents',
+    name: '黑潮與親潮',
+    description: '判讀暖流、寒流方向及日本附近交會',
+    semester: '翰林八上第 5 章',
+    courseConnection: '暖流由低緯流向較高緯，寒流由較高緯流向低緯；兩者在日本東側附近交會，有利漁場形成。',
+    map: eastAsiaMap,
+    mapLabel: '東北亞黑潮與親潮方向填圖地圖',
+    attributionUrl: 'https://github.com/VictorCazanave/svg-maps/tree/master/packages/world',
+    items: eastAsiaCurrentItems,
+  },
 ]
 
 export const chinaGeographyChapters = [
@@ -384,5 +493,12 @@ export const chinaGeographyChapters = [
     shortName: '八上第 4 章',
     description: '練習經濟特區、區域發展、一帶一路、RCEP 與產業轉型。',
     topicIds: ['economic-zones', 'economic-regions', 'belt-and-road', 'rcep', 'industry-transition'],
+  },
+  {
+    id: 'grade8-upper-l05',
+    name: '八上第 5 章　東北亞的自然環境與文化',
+    shortName: '八上第 5 章',
+    description: '練習東北亞國家位置、冬夏季風，以及黑潮與親潮的流向和影響。',
+    topicIds: ['east-asia-countries', 'east-asia-monsoons', 'east-asia-currents'],
   },
 ]

@@ -19,7 +19,11 @@ import {
   chinaRiverItems,
   chinaSeaItems,
   chinaTerrainItems,
+  eastAsiaCountryItems,
+  eastAsiaCurrentItems,
+  eastAsiaMonsoonItems,
 } from './chinaGeography.js'
+import { eastAsiaMap } from './eastAsiaMap.js'
 import { chinaSeaGeometry } from './geographyHydrography.js'
 
 function isPointInsideAreaPath(path, [x, y]) {
@@ -44,7 +48,7 @@ describe('中國地理填圖資料', () => {
     expect(chinaProvinceItems.every((item) => mapIds.has(item.mapId))).toBe(true)
   })
 
-  it('八上四章目前十六個主題都有提示與判斷依據', () => {
+  it('八上前五章目前十九個主題都有提示與判斷依據', () => {
     expect(chinaGeographyTopics.map((topic) => topic.id)).toEqual([
       'relief-steps',
       'administrative',
@@ -62,6 +66,9 @@ describe('中國地理填圖資料', () => {
       'belt-and-road',
       'rcep',
       'industry-transition',
+      'east-asia-countries',
+      'east-asia-monsoons',
+      'east-asia-currents',
     ])
     for (const topic of chinaGeographyTopics) {
       expect(topic.items.length).toBeGreaterThan(0)
@@ -74,14 +81,15 @@ describe('中國地理填圖資料', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('四個正式課本章節涵蓋且只涵蓋目前十六個主題', () => {
+  it('五個正式課本章節涵蓋且只涵蓋目前十九個主題', () => {
     const chapterTopicIds = chinaGeographyChapters.flatMap((chapter) => chapter.topicIds)
-    expect(chinaGeographyChapters).toHaveLength(4)
+    expect(chinaGeographyChapters).toHaveLength(5)
     expect(chapterTopicIds).toEqual([
       'relief-steps', 'terrain', 'administrative', 'rivers', 'lakes', 'seas',
       'climate', 'agriculture',
       'population-distribution', 'autonomous-regions', 'population-change',
       'economic-zones', 'economic-regions', 'belt-and-road', 'rcep', 'industry-transition',
+      'east-asia-countries', 'east-asia-monsoons', 'east-asia-currents',
     ])
     expect(new Set(chapterTopicIds)).toEqual(new Set(chinaGeographyTopics.map((topic) => topic.id)))
   })
@@ -105,6 +113,23 @@ describe('中國地理填圖資料', () => {
     expect(chinaBeltRoadItems.every((item) => item.mapKind === 'diagram')).toBe(true)
     expect(chinaRcepItems).toHaveLength(4)
     expect(chinaIndustryTransitionItems).toHaveLength(4)
+  })
+
+  it('東北亞三個主題共用同一張精確國界底圖，季風與洋流皆保留方向', () => {
+    const countryIds = new Set(eastAsiaMap.locations.map((location) => location.id))
+    expect(eastAsiaMap.viewBox).toBe('690 230 235 205')
+    expect(eastAsiaCountryItems.map((item) => item.mapId)).toEqual(['cn', 'mn', 'kp', 'kr', 'jp', 'ru'])
+    expect(eastAsiaCountryItems.every((item) => countryIds.has(item.mapId))).toBe(true)
+    expect(eastAsiaMonsoonItems.map((item) => item.lineType)).toEqual(['wind-winter', 'wind-summer'])
+    expect(eastAsiaCurrentItems.map((item) => item.lineType)).toEqual(['ocean-warm', 'ocean-cold'])
+    ;[...eastAsiaMonsoonItems, ...eastAsiaCurrentItems].forEach((item) => {
+      expect(item.mapKind).toBe('line')
+      expect(item.path).toMatch(/^M /)
+      expect((item.path.match(/ L /g) || []).length).toBeGreaterThan(2)
+    })
+    const l05Topics = chinaGeographyTopics.filter((topic) => topic.semester === '翰林八上第 5 章')
+    expect(l05Topics).toHaveLength(3)
+    expect(l05Topics.every((topic) => topic.map === eastAsiaMap)).toBe(true)
   })
 
   it('四個沿海經濟特區使用目前中國底圖的福建與廣東座標，海南使用整座省區', () => {

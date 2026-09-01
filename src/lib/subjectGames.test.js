@@ -32,11 +32,11 @@ describe('各科遊戲選擇入口', () => {
       }))
   })
 
-  it('地理科提供翰林八上中國填圖第一版', () => {
+  it('地理科顯示目前已開放的年級與章節', () => {
     expect(subjectGamesFor({ code: 'geography', name: '地理', launchUrl: '' }, '')).toContainEqual(expect.objectContaining({
       code: 'geography-fill-map',
       launchUrl: '?geography=maps',
-      availability: '翰林八上・中國地理第一版',
+      availability: '七上、八上第 1～5 章、九上第 1～2 章已開放',
     }))
   })
 

@@ -704,6 +704,28 @@ button.geography-start-button {
   stroke-dasharray: 5 2;
 }
 
+.geography-feature-line-visible.is-wind-winter {
+  stroke: #4169a9;
+  stroke-width: 2.8;
+  stroke-dasharray: 6 3;
+}
+
+.geography-feature-line-visible.is-wind-summer {
+  stroke: #d9783b;
+  stroke-width: 2.8;
+  stroke-dasharray: 6 3;
+}
+
+.geography-feature-line-visible.is-ocean-warm {
+  stroke: #d9554d;
+  stroke-width: 3.4;
+}
+
+.geography-feature-line-visible.is-ocean-cold {
+  stroke: #337bb5;
+  stroke-width: 3.4;
+}
+
 .geography-feature-line-hit {
   fill: none;
   stroke: rgba(43, 134, 189, 0.01);
@@ -1073,4 +1095,65 @@ button.geography-start-button {
   .geography-header { min-height: 58px; }
   .geography-hero { min-height: 130px; }
   .geography-china-map { max-height: calc(100vh - 160px); }
+}
+.geography-task-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 1rem 0;
+  padding: 0.9rem 1rem;
+  color: #194b3b;
+  background: #e9f7ef;
+  border: 1px solid #a9dbc1;
+  border-radius: 18px;
+}
+
+.geography-task-banner.is-recovery {
+  color: #35516f;
+  background: #eef5fc;
+  border-color: #bfd5ea;
+}
+
+.geography-task-banner svg {
+  flex: 0 0 auto;
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.geography-task-banner div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.geography-task-banner span {
+  line-height: 1.55;
+}
+
+.geography-task-error,
+.geography-task-sync {
+  margin: 0.85rem 0;
+  padding: 0.75rem 0.9rem;
+  line-height: 1.55;
+  border-radius: 14px;
+}
+
+.geography-task-error {
+  color: #8a2f2a;
+  background: #fff0ee;
+  border: 1px solid #efbbb6;
+}
+
+.geography-task-sync {
+  color: #35516f;
+  background: #eef5fc;
+}
+
+.geography-task-sync.is-success {
+  color: #19603f;
+  background: #e9f7ef;
+}
+
+.geography-task-sync.is-pending {
+  color: #805b17;
+  background: #fff6da;
 }
