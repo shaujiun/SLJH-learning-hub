@@ -572,6 +572,13 @@ button.geography-start-button {
 .geography-rcep-graphic .geography-rcep-flow.is-two-way { stroke: #2785b3; stroke-width: 3.5; }
 .geography-rcep-graphic .geography-rcep-investment { fill: none; stroke: #4b8b56; stroke-width: 4; }
 
+.geography-east-asia-economy-graphic {
+  width: min(100%, 270px);
+  height: auto;
+  aspect-ratio: 12 / 7;
+}
+.geography-east-asia-economy-graphic .geography-concept-axis { stroke: #796b50; }
+
 .geography-province {
   stroke: #62888a;
   stroke-width: 1.1;
@@ -726,6 +733,12 @@ button.geography-start-button {
   stroke-width: 3.4;
 }
 
+.geography-feature-line-visible.is-political-boundary {
+  stroke: #b04a58;
+  stroke-width: 2.8;
+  stroke-dasharray: 7 5;
+}
+
 .geography-feature-line-hit {
   fill: none;
   stroke: rgba(43, 134, 189, 0.01);
@@ -845,6 +858,22 @@ button.geography-start-button {
 .geography-map-point.is-wrong .geography-map-point-halo { fill: #ffd1c8; stroke: #c4473b; stroke-width: 4; }
 .geography-map-point.is-target .geography-map-point-halo { fill: #8de0bd; stroke: #08756a; stroke-width: 5; filter: drop-shadow(0 0 7px rgba(20, 126, 113, 0.75)); }
 .geography-map-point-country-marker { stroke-linejoin: round; }
+.geography-map-point-industrial-marker {
+  fill: rgba(244, 184, 95, 0.28);
+  stroke: #9a6812;
+  stroke-dasharray: 4 3;
+}
+
+.geography-region-map.is-japanindustry .geography-province,
+.geography-region-map.is-koreanpeninsula .geography-province,
+.geography-region-map.is-japanindustry .geography-map-point-halo,
+.geography-region-map.is-koreanpeninsula .geography-map-point-halo,
+.geography-region-map.is-japanindustry .geography-feature-line-visible,
+.geography-region-map.is-koreanpeninsula .geography-feature-line-visible,
+.geography-region-map.is-japanindustry .geography-feature-line-hit,
+.geography-region-map.is-koreanpeninsula .geography-feature-line-hit {
+  vector-effect: non-scaling-stroke;
+}
 
 .geography-point-legend {
   position: absolute;
@@ -884,6 +913,14 @@ button.geography-start-button {
 .geography-point-legend i.is-country-location {
   border-radius: 0.12rem;
   transform: rotate(45deg);
+}
+.geography-point-legend i.is-industrial-region {
+  width: 1.1rem;
+  height: 0.7rem;
+  border-color: #9a6812;
+  border-radius: 50%;
+  border-style: dashed;
+  background: rgba(244, 184, 95, 0.28);
 }
 
 .geography-economic-zone-inset {

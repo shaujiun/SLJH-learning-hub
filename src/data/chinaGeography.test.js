@@ -22,8 +22,12 @@ import {
   eastAsiaCountryItems,
   eastAsiaCurrentItems,
   eastAsiaMonsoonItems,
+  japanEconomyItems,
+  japanIndustrialRegionItems,
+  koreaEconomyItems,
+  koreanPeninsulaLocationItems,
 } from './chinaGeography.js'
-import { eastAsiaMap } from './eastAsiaMap.js'
+import { eastAsiaMap, japanIndustryMap, koreanPeninsulaMap } from './eastAsiaMap.js'
 import { chinaSeaGeometry } from './geographyHydrography.js'
 
 function isPointInsideAreaPath(path, [x, y]) {
@@ -48,7 +52,7 @@ describe('中國地理填圖資料', () => {
     expect(chinaProvinceItems.every((item) => mapIds.has(item.mapId))).toBe(true)
   })
 
-  it('八上前五章目前十九個主題都有提示與判斷依據', () => {
+  it('八上全冊二十三個主題都有提示與判斷依據', () => {
     expect(chinaGeographyTopics.map((topic) => topic.id)).toEqual([
       'relief-steps',
       'administrative',
@@ -69,6 +73,10 @@ describe('中國地理填圖資料', () => {
       'east-asia-countries',
       'east-asia-monsoons',
       'east-asia-currents',
+      'japan-industrial-regions',
+      'japan-economy-transition',
+      'korean-peninsula-locations',
+      'korea-economy-comparison',
     ])
     for (const topic of chinaGeographyTopics) {
       expect(topic.items.length).toBeGreaterThan(0)
@@ -81,15 +89,17 @@ describe('中國地理填圖資料', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('五個正式課本章節涵蓋且只涵蓋目前十九個主題', () => {
+  it('六個正式課本章節涵蓋且只涵蓋八上全冊二十三個主題', () => {
     const chapterTopicIds = chinaGeographyChapters.flatMap((chapter) => chapter.topicIds)
-    expect(chinaGeographyChapters).toHaveLength(5)
+    expect(chinaGeographyChapters).toHaveLength(6)
     expect(chapterTopicIds).toEqual([
       'relief-steps', 'terrain', 'administrative', 'rivers', 'lakes', 'seas',
       'climate', 'agriculture',
       'population-distribution', 'autonomous-regions', 'population-change',
       'economic-zones', 'economic-regions', 'belt-and-road', 'rcep', 'industry-transition',
       'east-asia-countries', 'east-asia-monsoons', 'east-asia-currents',
+      'japan-industrial-regions', 'japan-economy-transition',
+      'korean-peninsula-locations', 'korea-economy-comparison',
     ])
     expect(new Set(chapterTopicIds)).toEqual(new Set(chinaGeographyTopics.map((topic) => topic.id)))
   })
@@ -130,6 +140,28 @@ describe('中國地理填圖資料', () => {
     const l05Topics = chinaGeographyTopics.filter((topic) => topic.semester === '翰林八上第 5 章')
     expect(l05Topics).toHaveLength(3)
     expect(l05Topics.every((topic) => topic.map === eastAsiaMap)).toBe(true)
+  })
+
+  it('八上第六章沿用東北亞座標，完成日本工業與南北韓經濟主題', () => {
+    expect(japanIndustryMap.locations).toBe(eastAsiaMap.locations)
+    expect(koreanPeninsulaMap.locations).toBe(eastAsiaMap.locations)
+    expect(japanIndustryMap.viewBox).toBe('837 350 34 15')
+    expect(koreanPeninsulaMap.viewBox).toBe('822 338 21 25')
+    expect(japanIndustrialRegionItems.map((item) => item.name)).toEqual([
+      '京濱工業區', '東海工業區', '名古屋工業區', '阪神工業區', '瀨戶內海工業區', '北九州工業區',
+    ])
+    expect(japanIndustrialRegionItems.every((item) => item.mapKind === 'point' && item.pointType === 'industrial-region')).toBe(true)
+    expect(japanEconomyItems).toHaveLength(5)
+    expect(koreanPeninsulaLocationItems.map((item) => item.name)).toEqual(['平壤', '首爾', '釜山', '北緯 38° 線'])
+    expect(koreaEconomyItems).toHaveLength(6)
+    expect([...japanEconomyItems, ...koreaEconomyItems].every((item) => item.mapKind === 'diagram' && item.diagramKind)).toBe(true)
+
+    const l06Topics = chinaGeographyTopics.filter((topic) => topic.semester === '翰林八上第 6 章')
+    expect(l06Topics.map((topic) => topic.id)).toEqual([
+      'japan-industrial-regions', 'japan-economy-transition', 'korean-peninsula-locations', 'korea-economy-comparison',
+    ])
+    expect(l06Topics.find((topic) => topic.id === 'japan-industrial-regions').map).toBe(japanIndustryMap)
+    expect(l06Topics.find((topic) => topic.id === 'korean-peninsula-locations').map).toBe(koreanPeninsulaMap)
   })
 
   it('四個沿海經濟特區使用目前中國底圖的福建與廣東座標，海南使用整座省區', () => {

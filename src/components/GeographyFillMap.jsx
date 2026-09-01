@@ -50,7 +50,7 @@ const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
 
 const areas = [
   { id: 'taiwan', name: '臺灣地理', caption: '七年級', status: '已開放' },
-  { id: 'china', name: '中國地理', caption: '八年級', status: '第 1～5 章已開放' },
+  { id: 'china', name: '中國地理', caption: '八年級', status: '八上全冊已開放' },
   { id: 'world', name: '世界地理', caption: '九年級', status: '第 1～2 章已開放' },
 ]
 
@@ -120,6 +120,10 @@ const topicIcons = {
   'east-asia-countries': MapPinned,
   'east-asia-monsoons': CloudSun,
   'east-asia-currents': Waves,
+  'japan-industrial-regions': MapPinned,
+  'japan-economy-transition': BookOpen,
+  'korean-peninsula-locations': MapPinned,
+  'korea-economy-comparison': BookOpen,
   'tw-map-skills': Compass,
   'tw-location': MapPinned,
   'tw-administrative': MapPinned,
@@ -315,6 +319,24 @@ function DiagramGraphic({ kind }) {
             <path className="geography-rcep-investment" d="M118 114 H142 M122 123 H138 M126 132 H134" />
           </>
         )}
+      </svg>
+    )
+  }
+
+  if (kind.startsWith('japan-') || kind.startsWith('korea-')) {
+    return (
+      <svg className={`geography-concept-graphic geography-east-asia-economy-graphic is-${kind}`} viewBox="0 0 240 140" aria-hidden="true">
+        {kind === 'japan-import-export' && <><path className="is-soft" d="M83 113 V65 L113 82 V58 L145 77 V113 Z" /><path className="is-accent" d="M145 113 V42 H166 V113 Z" /><path className="geography-concept-water" d="M8 122 Q22 114 36 122 T64 122 M176 122 Q190 114 204 122 T232 122" /><path d="M15 106 H58 L49 118 H24 Z M181 106 H226 L217 118 H190 Z" /><rect x="23" y="88" width="27" height="17" rx="2" /><rect x="190" y="87" width="26" height="18" rx="2" /><path className="geography-concept-arrow" d="M55 92 H78 M68 82 L78 92 L68 102 M174 92 H198 M184 82 L174 92 L184 102" /></>}
+        {kind === 'japan-high-value' && <><rect className="is-accent" x="72" y="28" width="96" height="82" rx="12" /><rect x="94" y="49" width="52" height="40" rx="6" />{[51, 72, 93, 114, 135, 156, 177, 198].map((x) => <path d={`M${x} 18 V28 M${x} 110 V121`} key={x} />)}<path d="M61 48 H72 M61 69 H72 M61 90 H72 M168 48 H179 M168 69 H179 M168 90 H179" /><path className="is-third" d="M196 30 L201 43 L215 44 L204 53 L208 67 L196 59 L184 67 L188 53 L177 44 L191 43 Z" /></>}
+        {kind === 'japan-overseas-production' && <><path className="is-accent" d="M91 105 V55 L121 72 V45 L153 69 V105 Z" /><path className="is-soft" d="M15 118 V88 L35 98 V81 L56 96 V118 Z M184 118 V88 L204 98 V81 L225 96 V118 Z" /><path className="geography-concept-arrow" d="M86 74 C67 68 56 72 45 84 M69 61 L86 74 L67 82 M158 74 C177 68 188 72 199 84 M175 61 L158 74 L177 82" /></>}
+        {kind === 'japan-aging-labor' && <><path className="geography-concept-axis" d="M21 119 H219" /><g className="is-soft"><circle cx="50" cy="53" r="14" /><path d="M50 68 V103 M34 80 H66 M50 103 L36 120 M50 103 L65 120" /><circle cx="97" cy="59" r="12" /><path d="M97 72 V103 M82 84 H112 M97 103 L85 119 M97 103 L110 119" /></g><g className="is-accent"><circle cx="162" cy="49" r="14" /><path d="M162 64 C151 75 151 95 158 105 M158 105 L151 120 M158 105 L174 119 M171 73 L187 112 M182 101 L192 101" /><circle cx="207" cy="57" r="12" /><path d="M207 70 C197 82 198 99 204 108 M204 108 L197 120 M204 108 L218 119 M216 78 L226 113" /></g></>}
+        {kind === 'japan-culture-tourism' && <><rect className="is-soft" x="22" y="28" width="74" height="57" rx="7" /><path d="M22 44 H96 M37 28 V44 M57 28 V44 M77 28 V44" /><path className="is-accent" d="M128 98 C113 98 105 87 109 74 L117 54 C121 43 133 41 142 51 L149 59 H172 L180 51 C189 41 201 43 205 54 L213 74 C217 87 209 98 194 98 L181 84 H141 Z" /><circle cx="185" cy="66" r="3" /><circle cx="196" cy="74" r="3" /><path d="M129 64 V78 M122 71 H136" /><path className="geography-concept-route is-sea" d="M35 113 C77 101 126 119 202 111" /></>}
+        {kind === 'korea-north-heavy' && <><path className="is-soft" d="M58 116 V62 L92 83 V53 L127 80 V116 Z" /><path className="is-accent" d="M127 116 V35 H151 V116 Z" /><path className="geography-concept-smoke" d="M139 29 C124 17 140 5 121 1" /><path d="M18 114 L34 81 L50 114 Z M27 91 L42 114" /><path className="is-third" d="M186 35 L215 46 V76 C215 96 203 110 186 119 C169 110 157 96 157 76 V46 Z" /><path d="M186 55 V94 M171 74 H201" /></>}
+        {kind === 'korea-south-processing' && <><rect className="is-soft" x="15" y="88" width="35" height="23" rx="3" /><path d="M14 117 H58 L51 126 H22 Z" /><path className="is-accent" d="M87 116 V66 L116 83 V58 L147 80 V116 Z" /><rect className="is-third" x="188" y="87" width="36" height="24" rx="3" /><path d="M183 117 H231 L222 126 H192 Z" /><path className="geography-concept-arrow" d="M54 92 H81 M69 81 L81 92 L69 103 M153 92 H181 M168 81 L181 92 L168 103" /></>}
+        {kind === 'korea-chaebol' && <><rect className="is-accent" x="91" y="23" width="58" height="92" rx="5" /><path d="M103 41 H116 M127 41 H140 M103 59 H116 M127 59 H140 M103 77 H116 M127 77 H140 M113 115 V94 H130 V115" />{[[28, 38], [212, 38], [28, 108], [212, 108]].map(([x, y]) => <g key={`${x}-${y}`}><rect className="is-soft" x={x - 17} y={y - 13} width="34" height="26" rx="4" /><path className="geography-concept-link" d={`M${x < 120 ? x + 18 : x - 18} ${y} L${x < 120 ? 90 : 150} ${y < 70 ? 48 : 90}`} /></g>)}</>}
+        {kind === 'korea-high-tech' && <><rect className="is-accent" x="35" y="31" width="90" height="78" rx="11" /><rect x="57" y="51" width="46" height="38" rx="5" />{[22, 41, 60, 79, 98, 117, 136].map((y) => <path d={`M23 ${y} H35 M125 ${y} H137`} key={y} />)}<rect className="is-soft" x="163" y="22" width="49" height="96" rx="9" /><path d="M175 39 H200 M175 96 H200" /><circle cx="188" cy="107" r="3" /></>}
+        {kind === 'korea-culture-wave' && <><path className="is-soft" d="M22 31 H99 V93 H22 Z M22 48 H99 M39 31 V48 M60 31 V48 M81 31 V48" /><path className="is-accent" d="M151 43 V96 C151 110 134 116 125 106 C116 96 127 84 142 86 V55 L198 41 V81 C198 95 181 101 172 91 C164 81 174 69 190 71 V34 Z" /><path className="geography-concept-route is-sea" d="M27 119 C79 104 142 126 216 113" /></>}
+        {kind === 'korea-housing-pressure' && <><path className="geography-concept-axis" d="M17 70 H223" /><path className="is-soft" d="M29 70 V23 H68 V70 M77 70 V12 H121 V70 M132 70 V30 H168 V70 M178 70 V18 H216 V70" /><path d="M39 37 H56 M39 51 H56 M88 29 H109 M88 44 H109 M88 59 H109 M142 45 H158 M189 34 H205 M189 49 H205" /><path className="is-accent" d="M58 70 V120 H181 V70 Z" /><rect x="77" y="82" width="35" height="19" rx="3" /><circle cx="143" cy="91" r="9" /><path d="M143 101 V122 M130 111 H156" /><path className="geography-concept-water" d="M18 129 Q34 121 50 129 T82 129 T114 129 T146 129 T178 129 T210 129" /></>}
       </svg>
     )
   }
@@ -516,6 +538,19 @@ function GeographyPointMarker({ item }) {
   const markerRadius = item.markerRadius || 15
   const hitRadius = item.hitRadius || 20
 
+  if (item.pointType === 'industrial-region') {
+    return (
+      <>
+        <ellipse className="geography-map-point-hit" rx={hitRadius * 1.35} ry={hitRadius} />
+        <ellipse
+          className="geography-map-point-halo geography-map-point-industrial-marker"
+          rx={markerRadius * 1.65}
+          ry={markerRadius}
+        />
+      </>
+    )
+  }
+
   if (item.pointType === 'country-location') {
     const halfSize = Math.max(7, markerRadius * 0.72)
     return (
@@ -547,7 +582,9 @@ function GeographyPointMarker({ item }) {
 function GeographyPointLegend({ items }) {
   const hasCapital = items.some((item) => item.pointType === 'capital')
   const hasCountryLocation = items.some((item) => item.pointType === 'country-location')
-  if (!hasCapital && !hasCountryLocation) return null
+  const hasCity = items.some((item) => item.pointType === 'city')
+  const hasIndustrialRegion = items.some((item) => item.pointType === 'industrial-region')
+  if (!hasCapital && !hasCountryLocation && !hasCity && !hasIndustrialRegion) return null
 
   return (
     <aside className="geography-point-legend" role="note" aria-label="地圖點位說明">
@@ -561,6 +598,18 @@ function GeographyPointLegend({ items }) {
         <span>
           <i className="is-country-location" aria-hidden="true" />
           菱形代表面積較小的國家位置（馬爾他）。
+        </span>
+      )}
+      {hasCity && (
+        <span>
+          <i className="is-capital" aria-hidden="true" />
+          圓點代表都市所在位置，不代表都市或國家的面積。
+        </span>
+      )}
+      {hasIndustrialRegion && (
+        <span>
+          <i className="is-industrial-region" aria-hidden="true" />
+          虛線橢圓代表課本工業區的概略範圍，不是行政邊界。
         </span>
       )}
     </aside>
@@ -682,7 +731,7 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
         </div>
       ) : (
         <div className="geography-map-stage">
-          <svg className={`geography-china-map geography-region-map is-${areaId}`} viewBox={mapDefinition.viewBox} role="img" aria-label={`${mapLabel}標籤填圖`}>
+          <svg className={`geography-china-map geography-region-map is-${areaId} is-${(mapDefinition.name || areaId).toLowerCase()}`} viewBox={mapDefinition.viewBox} role="img" aria-label={`${mapLabel}標籤填圖`}>
             <GeographyLineMarkers scopeId={`fill-${areaId}`} />
             <g className="geography-area-layer is-sea">
               {seaItems.map((item) => {
@@ -891,7 +940,7 @@ export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, top
   return (
     <div className="geography-map-stage">
       <svg
-        className={`geography-china-map geography-region-map is-${areaId}`}
+        className={`geography-china-map geography-region-map is-${areaId} is-${(mapDefinition.name || areaId).toLowerCase()}`}
         viewBox={mapDefinition.viewBox}
         role="img"
         aria-label={mapLabel}

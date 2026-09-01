@@ -10,6 +10,20 @@ export const eastAsiaMap = {
   locations: eastAsiaLocations,
 }
 
+// 第 6 章沿用同一套世界地圖座標，只改變裁切範圍來放大作答區。
+// 這能避免日本工業區或朝鮮半島點位在不同裝置上因另一張底圖而漂移。
+export const japanIndustryMap = {
+  name: 'JapanIndustry',
+  viewBox: '837 350 34 15',
+  locations: eastAsiaLocations,
+}
+
+export const koreanPeninsulaMap = {
+  name: 'KoreanPeninsula',
+  viewBox: '822 338 21 25',
+  locations: eastAsiaLocations,
+}
+
 export function eastAsiaLinePath(lines) {
   return lines.map((line) => line
     .map(([longitude, latitude], index) => {
@@ -18,4 +32,11 @@ export function eastAsiaLinePath(lines) {
     })
     .join(' '))
     .join(' ')
+}
+
+export function eastAsiaPoint(longitude, latitude, overrides = {}) {
+  return {
+    ...projectWorldPoint(longitude, latitude),
+    ...overrides,
+  }
 }
