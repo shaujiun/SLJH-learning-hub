@@ -6,6 +6,9 @@ import { afterEach, describe, expect, it } from 'vitest'
 import {
   chinaBeltRoadItems,
   chinaEconomicZoneItems,
+  eastAsiaCountryItems,
+  eastAsiaCurrentItems,
+  eastAsiaMonsoonItems,
   chinaLakeItems,
   chinaPopulationChangeItems,
   chinaProvinceItems,
@@ -13,6 +16,7 @@ import {
   chinaReliefStepItems,
   chinaSeaItems,
 } from '../data/chinaGeography.js'
+import { eastAsiaMap } from '../data/eastAsiaMap.js'
 import { taiwanContourItems, taiwanScaleItems, taiwanWaterItems } from '../data/taiwanGeography.js'
 import {
   europeClimateItems,
@@ -41,6 +45,37 @@ afterEach(() => {
 })
 
 describe('GeographyFillMap', () => {
+  it('renders the shared East Asia base map and directional wind/current arrows', () => {
+    const renderEastAsiaMap = (currentItem, topicItems) => renderToString(
+      <GeographyMap
+        mapDefinition={eastAsiaMap}
+        mapLabel="東北亞共用底圖"
+        areaId="china"
+        currentItem={currentItem}
+        topicItems={topicItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+
+    const countryHtml = renderEastAsiaMap(eastAsiaCountryItems[0], eastAsiaCountryItems)
+    const monsoonHtml = renderEastAsiaMap(eastAsiaMonsoonItems[0], eastAsiaMonsoonItems)
+    const currentHtml = renderEastAsiaMap(eastAsiaCurrentItems[0], eastAsiaCurrentItems)
+
+    expect(countryHtml).toContain('viewBox="690 230 235 205"')
+    expect(countryHtml.match(/data-map-id=/g)).toHaveLength(7)
+    expect(countryHtml).toContain('data-map-id="jp"')
+    expect(countryHtml).toContain('data-map-id="kr"')
+    expect(monsoonHtml.match(/class="geography-feature-line-visible is-wind-/g)).toHaveLength(2)
+    expect(monsoonHtml).toContain('marker-end="url(#geography-arrow-map-china-wind-winter)"')
+    expect(monsoonHtml).toContain('marker-end="url(#geography-arrow-map-china-wind-summer)"')
+    expect(currentHtml).toContain('marker-end="url(#geography-arrow-map-china-ocean-warm)"')
+    expect(currentHtml).toContain('marker-end="url(#geography-arrow-map-china-ocean-cold)"')
+  })
+
   it('預設顯示臺灣地理正式課本章節，再顯示目前章節的主題與練習方式', () => {
     globalThis.window = {
       location: new URL('http://127.0.0.1:4173/?geography=maps'),
@@ -54,7 +89,7 @@ describe('GeographyFillMap', () => {
     expect(html).toContain('中國地理')
     expect(html).toContain('世界地理')
     expect(html).toContain('九年級')
-    expect(html).toContain('第二階段測試中')
+    expect(html).toContain('第 1～2 章已開放')
     expect(html).toContain('七上第 1 章　認識位置與地圖')
     expect(html).toContain('七上第 2 章　世界中的臺灣')
     expect(html).toContain('七上第 6 章　水文')

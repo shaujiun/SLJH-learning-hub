@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import chinaMap from '@svg-maps/china'
 import taiwanMap from '@svg-maps/taiwan'
 import {
@@ -41,6 +41,8 @@ import {
   geographyFeedback,
   geographyMixedFillStart,
 } from '../lib/geographyGame.js'
+import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
+import { loadGeographyContext, recordGeographyAttempt } from '../services/geographyTaskService.js'
 import './geographyFillMap.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
@@ -48,8 +50,8 @@ const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
 
 const areas = [
   { id: 'taiwan', name: '臺灣地理', caption: '七年級', status: '已開放' },
-  { id: 'china', name: '中國地理', caption: '八年級', status: '已開放' },
-  { id: 'world', name: '世界地理', caption: '九年級', status: '第二階段測試中' },
+  { id: 'china', name: '中國地理', caption: '八年級', status: '第 1～5 章已開放' },
+  { id: 'world', name: '世界地理', caption: '九年級', status: '第 1～2 章已開放' },
 ]
 
 const geographyAreas = {
@@ -115,6 +117,9 @@ const topicIcons = {
   'belt-and-road': Map,
   rcep: Map,
   'industry-transition': BookOpen,
+  'east-asia-countries': MapPinned,
+  'east-asia-monsoons': CloudSun,
+  'east-asia-currents': Waves,
   'tw-map-skills': Compass,
   'tw-location': MapPinned,
   'tw-administrative': MapPinned,
@@ -396,6 +401,41 @@ function MacauCallout({ location, isTarget, isWrong, isInteractive, showName, in
   )
 }
 
+const directionalLineColors = {
+  'wind-winter': '#4169a9',
+  'wind-summer': '#d9783b',
+  'ocean-warm': '#d9554d',
+  'ocean-cold': '#337bb5',
+}
+
+function GeographyLineMarkers({ scopeId }) {
+  return (
+    <defs>
+      {Object.entries(directionalLineColors).map(([lineType, color]) => (
+        <marker
+          id={`geography-arrow-${scopeId}-${lineType}`}
+          key={lineType}
+          markerWidth="5"
+          markerHeight="5"
+          refX="4.5"
+          refY="2.5"
+          orient="auto"
+          markerUnits="strokeWidth"
+          viewBox="0 0 5 5"
+        >
+          <path d="M 0 0 L 5 2.5 L 0 5 Z" fill={color} />
+        </marker>
+      ))}
+    </defs>
+  )
+}
+
+function geographyLineMarkerEnd(item, scopeId) {
+  return directionalLineColors[item.lineType]
+    ? `url(#geography-arrow-${scopeId}-${item.lineType})`
+    : undefined
+}
+
 export function GeographyCourseConnection({ text }) {
   if (!text) return null
   return (
@@ -643,6 +683,7 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
       ) : (
         <div className="geography-map-stage">
           <svg className={`geography-china-map geography-region-map is-${areaId}`} viewBox={mapDefinition.viewBox} role="img" aria-label={`${mapLabel}標籤填圖`}>
+            <GeographyLineMarkers scopeId={`fill-${areaId}`} />
             <g className="geography-area-layer is-sea">
               {seaItems.map((item) => {
                 const isDone = completedTargetIds.has(item.id)
@@ -731,7 +772,11 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
                 const isDone = completedTargetIds.has(item.id)
                 return (
                   <g key={item.id}>
-                    <path className={`geography-feature-line-visible ${item.lineType ? `is-${item.lineType}` : ''}`} d={item.path} />
+                    <path
+                      className={`geography-feature-line-visible ${item.lineType ? `is-${item.lineType}` : ''}`}
+                      d={item.path}
+                      markerEnd={geographyLineMarkerEnd(item, `fill-${areaId}`)}
+                    />
                     <path
                       className={`geography-feature-line-hit ${isDone ? 'is-target' : ''} ${wrongTargetId === item.id ? 'is-wrong' : ''}`}
                       d={item.path}
@@ -851,6 +896,7 @@ export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, top
         role="img"
         aria-label={mapLabel}
       >
+        <GeographyLineMarkers scopeId={`map-${areaId}`} />
         {clipLocation && (
           <defs>
             <clipPath id={clipPathId}>
@@ -991,7 +1037,11 @@ export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, top
             const isWrong = wrongTargetId === item.id
             return (
               <g key={item.id}>
-                <path className={`geography-feature-line-visible ${item.lineType ? `is-${item.lineType}` : ''}`} d={item.path} />
+                <path
+                  className={`geography-feature-line-visible ${item.lineType ? `is-${item.lineType}` : ''}`}
+                  d={item.path}
+                  markerEnd={geographyLineMarkerEnd(item, `map-${areaId}`)}
+                />
                 <path
                   className={`geography-feature-line-hit ${showCurrentTarget && isTarget ? 'is-target' : ''} ${isWrong ? 'is-wrong' : ''}`}
                   d={item.path}
@@ -1103,6 +1153,11 @@ export function EuropeMap(props) {
 }
 
 export default function GeographyFillMap() {
+  const query = useMemo(() => new URLSearchParams(window.location.search), [])
+  const focusTaskId = resolveFocusTaskId(query, {
+    subjectCode: 'geography',
+    activityCode: 'geography_round',
+  })
   const [areaId, setAreaId] = useState('taiwan')
   const [chapterId, setChapterId] = useState('grade7-upper-l01')
   const [topicId, setTopicId] = useState('tw-map-skills')
@@ -1118,6 +1173,11 @@ export default function GeographyFillMap() {
   const [wrongTargetId, setWrongTargetId] = useState('')
   const [score, setScore] = useState(0)
   const [fillCompletedCount, setFillCompletedCount] = useState(0)
+  const [taskContext, setTaskContext] = useState({ student: null, task: null })
+  const [taskLoadError, setTaskLoadError] = useState('')
+  const [taskProgress, setTaskProgress] = useState(null)
+  const [taskSaveError, setTaskSaveError] = useState('')
+  const [savingTask, setSavingTask] = useState(false)
 
   const area = geographyAreas[areaId] || geographyAreas.taiwan
   const chapter = area.chapters.find((candidate) => candidate.id === chapterId) || area.chapters[0]
@@ -1131,6 +1191,7 @@ export default function GeographyFillMap() {
       : topic.items
   const mapDefinition = topic.map || area.map
   const mapLabel = topic.mapLabel || area.mapLabel
+  const attributionUrl = topic.attributionUrl || area.attributionUrl
   const currentItem = round[questionIndex]
   const mixedFillStartIndex = geographyMixedFillStart(round.length)
   const effectiveMode = geographyEffectiveMode(modeId, questionIndex, round.length)
@@ -1140,6 +1201,23 @@ export default function GeographyFillMap() {
     () => buildGeographyChoices(currentItem, topicItems, difficultyId === 'intro' ? 3 : difficultyId === 'advanced' ? 5 : 4),
     [currentItem?.id, difficultyId, topic.id, topicItems],
   )
+
+  useEffect(() => {
+    let active = true
+    const initializeTaskContext = async () => {
+      try {
+        const context = await loadGeographyContext(focusTaskId)
+        if (!active) return
+        setTaskContext(context)
+        setTaskLoadError('')
+      } catch (error) {
+        if (!active) return
+        setTaskLoadError(error.message || '無法確認地理每日任務。')
+      }
+    }
+    initializeTaskContext()
+    return () => { active = false }
+  }, [focusTaskId])
 
   const startRound = () => {
     setRound(buildGeographyRound(topicItems, difficulty.count))
@@ -1151,6 +1229,8 @@ export default function GeographyFillMap() {
     setWrongTargetId('')
     setScore(0)
     setFillCompletedCount(0)
+    setTaskProgress(null)
+    setTaskSaveError('')
     setPhase('playing')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -1163,10 +1243,34 @@ export default function GeographyFillMap() {
     setWrongTargetId('')
   }
 
+  const finishRound = async () => {
+    const finalScore = round.length > 0 ? Math.round((score / round.length) * 100) : 0
+    setPhase('result')
+    setTaskProgress(null)
+    setTaskSaveError('')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+
+    if (taskLoadError || (!focusTaskId && !taskContext.student)) return
+    setSavingTask(true)
+    try {
+      const progress = await recordGeographyAttempt({
+        focusTaskId,
+        allowRecovery: Boolean(taskContext.student),
+        score: finalScore,
+        correctCount: score,
+        questionCount: round.length,
+      })
+      setTaskProgress(progress)
+    } catch (error) {
+      setTaskSaveError(error.message || '無法儲存地理每日任務。')
+    } finally {
+      setSavingTask(false)
+    }
+  }
+
   const goNext = () => {
     if (questionIndex >= round.length - 1) {
-      setPhase('result')
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      finishRound()
       return
     }
     setQuestionIndex((value) => value + 1)
@@ -1243,6 +1347,26 @@ export default function GeographyFillMap() {
         </section>
 
         <OrientationTip />
+
+        {taskContext.task && (
+          <aside className="geography-task-banner" role="status">
+            <Target aria-hidden="true" />
+            <div>
+              <strong>今日任務：{taskContext.task.activityName}</strong>
+              <span>任選已開放的章節與主題完成一回合，答對率達 {taskContext.task.targetScore}％ 即完成。</span>
+            </div>
+          </aside>
+        )}
+        {!taskContext.task && taskContext.student && (
+          <aside className="geography-task-banner is-recovery" role="status">
+            <Target aria-hidden="true" />
+            <div>
+              <strong>地理任務可自動補登</strong>
+              <span>若目前有尚未完成的地理任務，本回合達到門檻後會補登最早一項。</span>
+            </div>
+          </aside>
+        )}
+        {taskLoadError && <p className="geography-task-error" role="alert">{taskLoadError}仍可自由練習，但本回合不會自動計入任務。</p>}
 
         {phase === 'setup' && (
           <>
@@ -1364,10 +1488,7 @@ export default function GeographyFillMap() {
                   items={fillItems}
                   onProgress={setFillCompletedCount}
                   onScore={(increment) => setScore((value) => value + increment)}
-                  onFinish={() => {
-                    setPhase('result')
-                    window.scrollTo({ top: 0, behavior: 'smooth' })
-                  }}
+                  onFinish={finishRound}
                 />
               ) : currentItem.mapKind === 'diagram' ? (
                 <GeographyConceptDiagram
@@ -1432,7 +1553,22 @@ export default function GeographyFillMap() {
             <h2>{topic.name}</h2>
             <div className="geography-result-score"><strong>{score}</strong><span>／{round.length} 題</span></div>
             <p>目前建議難度：<b>{geographyDifficultyLabel(score, round.length)}</b></p>
-            <small>地理科第一版先提供自由練習，這次結果不會計入每日任務。</small>
+            {savingTask && <p className="geography-task-sync">正在記錄本回合任務進度……</p>}
+            {!savingTask && taskProgress?.passed && (
+              <p className="geography-task-sync is-success">
+                {taskProgress.recoveredFocusTask ? '已自動補登最早一項地理任務。' : '今日地理任務已完成並記錄。'}
+              </p>
+            )}
+            {!savingTask && taskProgress && !taskProgress.passed && (
+              <p className="geography-task-sync is-pending">本回合答對率尚未達 {taskProgress.targetScore || taskContext.task?.targetScore || 80}％，可再練一回合。</p>
+            )}
+            {!savingTask && !taskProgress && !taskSaveError && taskContext.student && (
+              <small>目前沒有可補登的地理任務，本回合保留為自由練習。</small>
+            )}
+            {!savingTask && !taskProgress && !taskSaveError && !taskContext.student && (
+              <small>本回合為自由練習，不會計入學生每日任務。</small>
+            )}
+            {taskSaveError && <p className="geography-task-error" role="alert">{taskSaveError}</p>}
             <div className="geography-result-actions">
               <button className="geography-start-button" type="button" onClick={startRound}><RotateCcw aria-hidden="true" />再練一回合</button>
               <button type="button" onClick={() => setPhase('setup')}><BookOpen aria-hidden="true" />選擇其他主題</button>
@@ -1442,7 +1578,7 @@ export default function GeographyFillMap() {
 
         <footer className="geography-source-note">
           <span>內容依翰林版國中地理架構與教師提供的填圖資料整理；河川、湖泊及海域已改用地理向量輪廓。</span>
-          <a href={area.attributionUrl} target="_blank" rel="noreferrer">{area.name}行政區向量圖來源與授權：SVG Maps／CC BY 4.0</a>
+          <a href={attributionUrl} target="_blank" rel="noreferrer">{topic.map ? topic.name : area.name}向量圖來源與授權：SVG Maps／CC BY 4.0</a>
           <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">河川、湖泊與水庫資料：OpenStreetMap contributors／ODbL 1.0</a>
           {areaId === 'china' && <a href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/" target="_blank" rel="noreferrer">海域資料：Natural Earth 1：10m Physical Vectors／Public Domain</a>}
           {areaId === 'world' && <a href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/" target="_blank" rel="noreferrer">歐洲河川與海域輪廓：Natural Earth 1：10m Physical Vectors／Public Domain</a>}
