@@ -33,6 +33,12 @@ import {
   worldGeographyTopics,
 } from '../data/worldGeography.js'
 import {
+  filterSoutheastAsiaItemsByDifficulty,
+  southeastAsiaChapters,
+  southeastAsiaMap,
+  southeastAsiaTopics,
+} from '../data/southeastAsiaGeography.js'
+import {
   buildGeographyChoices,
   buildGeographyRound,
   evaluateGeographyFillPlacement,
@@ -51,6 +57,7 @@ const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
 const areas = [
   { id: 'taiwan', name: '臺灣地理', caption: '七年級', status: '已開放' },
   { id: 'china', name: '中國地理', caption: '八年級', status: '八上全冊已開放' },
+  { id: 'regional', name: '亞洲與非洲', caption: '八年級下學期', status: '第 1 章開放測試' },
   { id: 'world', name: '世界地理', caption: '九年級', status: '第 1～2 章已開放' },
 ]
 
@@ -74,6 +81,16 @@ const geographyAreas = {
     defaultTopicId: 'relief-steps',
     attributionUrl: 'https://github.com/VictorCazanave/svg-maps/tree/master/packages/china',
     mapLabel: '中國行政區與地理填圖地圖',
+  },
+  regional: {
+    name: '亞洲與非洲',
+    map: southeastAsiaMap,
+    chapters: southeastAsiaChapters,
+    topics: southeastAsiaTopics,
+    defaultChapterId: 'grade8-lower-l01',
+    defaultTopicId: 'southeast-asia-countries',
+    attributionUrl: 'https://github.com/VictorCazanave/svg-maps/tree/master/packages/world',
+    mapLabel: '東南亞國家精確國界填圖地圖',
   },
   world: {
     name: '世界地理',
@@ -124,6 +141,9 @@ const topicIcons = {
   'japan-economy-transition': BookOpen,
   'korean-peninsula-locations': MapPinned,
   'korea-economy-comparison': BookOpen,
+  'southeast-asia-countries': MapPinned,
+  'southeast-asia-capitals': MapPinned,
+  'southeast-asia-rivers': Waves,
   'tw-map-skills': Compass,
   'tw-location': MapPinned,
   'tw-administrative': MapPinned,
@@ -631,7 +651,7 @@ function GeographyPointLegend({ items }) {
       {hasCountryLocation && (
         <span>
           <i className="is-country-location" aria-hidden="true" />
-          菱形代表面積較小的國家位置（馬爾他）。
+          菱形代表面積較小、在目前比例下不易直接點選的國家位置。
         </span>
       )}
       {hasCity && (
@@ -1295,6 +1315,8 @@ export default function GeographyFillMap() {
   const difficulty = difficulties.find((candidate) => candidate.id === difficultyId) || difficulties[1]
   const topicItems = areaId === 'taiwan'
     ? filterTaiwanItemsByDifficulty(topic.items, difficultyId)
+    : areaId === 'regional'
+      ? filterSoutheastAsiaItemsByDifficulty(topic.items, difficultyId)
     : areaId === 'world'
       ? filterWorldItemsByDifficulty(topic.items, difficultyId)
       : topic.items
@@ -1450,7 +1472,7 @@ export default function GeographyFillMap() {
           <div>
             <p>GEOGRAPHY MAP LAB</p>
             <h1>把地理位置，真正放進腦中的地圖</h1>
-            <span>臺灣、中國與世界地理已分階段開放，依課本章節選擇目前學到的內容再開始練習。</span>
+            <span>臺灣、中國、亞洲非洲與世界地理已分階段開放，依課本章節選擇目前學到的內容再開始練習。</span>
           </div>
           <div className="geography-hero-art"><MapPinned aria-hidden="true" /></div>
         </section>
@@ -1690,6 +1712,7 @@ export default function GeographyFillMap() {
           <a href={attributionUrl} target="_blank" rel="noreferrer">{topic.map ? topic.name : area.name}向量圖來源與授權：SVG Maps／CC BY 4.0</a>
           <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">河川、湖泊與水庫資料：OpenStreetMap contributors／ODbL 1.0</a>
           {areaId === 'china' && <a href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/" target="_blank" rel="noreferrer">海域資料：Natural Earth 1：10m Physical Vectors／Public Domain</a>}
+          {areaId === 'regional' && <a href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/" target="_blank" rel="noreferrer">東南亞河川：Natural Earth 1：10m Physical Vectors／Public Domain</a>}
           {areaId === 'world' && <a href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/" target="_blank" rel="noreferrer">歐洲河川與海域輪廓：Natural Earth 1：10m Physical Vectors／Public Domain</a>}
         </footer>
       </main>

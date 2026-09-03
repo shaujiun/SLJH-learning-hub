@@ -336,6 +336,11 @@ button.geography-start-button {
   margin: 0 auto;
   max-height: 74vh;
 }
+.geography-region-map.is-regional {
+  width: min(100%, 820px);
+  margin: 0 auto;
+  max-height: 74vh;
+}
 
 .geography-fill-board { display: grid; gap: 0.8rem; }
 
@@ -909,6 +914,12 @@ button.geography-start-button {
 .geography-region-map.is-koreanpeninsula .geography-feature-line-hit {
   vector-effect: non-scaling-stroke;
 }
+.geography-region-map.is-southeastasia .geography-province,
+.geography-region-map.is-southeastasia .geography-map-point-halo,
+.geography-region-map.is-southeastasia .geography-feature-line-visible,
+.geography-region-map.is-southeastasia .geography-feature-line-hit {
+  vector-effect: non-scaling-stroke;
+}
 
 .geography-point-legend {
   position: absolute;
@@ -1142,6 +1153,7 @@ button.geography-start-button {
   .geography-course-connection span { font-size: 0.78rem; }
   .geography-region-map.is-taiwan { width: min(100%, 520px); max-height: none; }
   .geography-region-map.is-world { width: min(100%, 620px); max-height: none; }
+  .geography-region-map.is-regional { width: min(100%, 680px); max-height: none; }
   .geography-point-legend {
     position: static;
     max-width: none;
