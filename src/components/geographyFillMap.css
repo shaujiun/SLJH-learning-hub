@@ -336,6 +336,11 @@ button.geography-start-button {
   margin: 0 auto;
   max-height: 74vh;
 }
+.geography-region-map.is-regional {
+  width: min(100%, 820px);
+  margin: 0 auto;
+  max-height: 74vh;
+}
 
 .geography-fill-board { display: grid; gap: 0.8rem; }
 
@@ -434,7 +439,25 @@ button.geography-start-button {
 .geography-diagram-card:focus-visible { outline: none; border-color: #c28b22; background: #fff4ca; }
 .geography-diagram-card.is-wrong { border-color: #c4473b; background: #ffe3dd; }
 .geography-diagram-card.is-target { border-color: #08756a; background: #dff7ec; box-shadow: 0 0 0 4px rgba(20, 126, 113, 0.15); }
-.geography-diagram-card > span { margin-top: 0.5rem; color: #075e56; font-weight: 950; }
+.geography-diagram-cue {
+  display: grid;
+  gap: 0.18rem;
+  width: 100%;
+  margin-top: 0.45rem;
+  padding: 0.48rem 0.58rem;
+  border: 1px solid #c9ddd7;
+  border-radius: 11px;
+  color: #36555e;
+  background: rgba(255, 255, 255, 0.78);
+  font-size: 0.78rem;
+  font-weight: 750;
+  line-height: 1.45;
+  text-align: left;
+}
+.geography-diagram-cue strong { color: #8a5c12; font-size: 0.72rem; }
+.geography-diagram-result { margin-top: 0.5rem; font-weight: 950; }
+.geography-diagram-result.is-correct { color: #075e56; }
+.geography-diagram-result.is-wrong { color: #a73830; }
 
 .geography-scale-number { font-family: system-ui, sans-serif; font-size: clamp(1.65rem, 4vw, 2.4rem); }
 .geography-scale-text { max-width: 12em; text-align: center; line-height: 1.5; }
@@ -863,6 +886,23 @@ button.geography-start-button {
   stroke: #9a6812;
   stroke-dasharray: 4 3;
 }
+.geography-point-feedback rect {
+  fill: #08756a;
+  stroke: #fffdf6;
+  stroke-width: 0.12;
+  vector-effect: non-scaling-stroke;
+}
+.geography-point-feedback text {
+  fill: #fff;
+  font-family: system-ui, sans-serif;
+  font-size: 0.58px;
+  font-weight: 950;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+.geography-point-feedback.is-wrong rect { fill: #b83f35; }
+.geography-point-feedback.is-revealed rect { fill: #96620f; }
+.geography-region-map.is-koreanpeninsula .geography-point-feedback text { font-size: 0.48px; }
 
 .geography-region-map.is-japanindustry .geography-province,
 .geography-region-map.is-koreanpeninsula .geography-province,
@@ -872,6 +912,12 @@ button.geography-start-button {
 .geography-region-map.is-koreanpeninsula .geography-feature-line-visible,
 .geography-region-map.is-japanindustry .geography-feature-line-hit,
 .geography-region-map.is-koreanpeninsula .geography-feature-line-hit {
+  vector-effect: non-scaling-stroke;
+}
+.geography-region-map.is-southeastasia .geography-province,
+.geography-region-map.is-southeastasia .geography-map-point-halo,
+.geography-region-map.is-southeastasia .geography-feature-line-visible,
+.geography-region-map.is-southeastasia .geography-feature-line-hit {
   vector-effect: non-scaling-stroke;
 }
 
@@ -1101,11 +1147,13 @@ button.geography-start-button {
   .geography-diagram-stage { grid-template-columns: 1fr 1fr; gap: 0.45rem; padding: 0.45rem; border-radius: 15px; }
   .geography-diagram-stage.is-rcep { grid-template-columns: 1fr 1fr; }
   .geography-diagram-card { min-height: 124px; padding: 0.45rem; border-radius: 13px; }
+  .geography-diagram-cue { padding: 0.38rem 0.42rem; font-size: 0.7rem; }
   .geography-course-connection { gap: 0.5rem; padding: 0.65rem; }
   .geography-course-connection > svg { width: 23px; height: 23px; }
   .geography-course-connection span { font-size: 0.78rem; }
   .geography-region-map.is-taiwan { width: min(100%, 520px); max-height: none; }
   .geography-region-map.is-world { width: min(100%, 620px); max-height: none; }
+  .geography-region-map.is-regional { width: min(100%, 680px); max-height: none; }
   .geography-point-legend {
     position: static;
     max-width: none;

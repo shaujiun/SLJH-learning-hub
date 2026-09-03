@@ -33,6 +33,12 @@ import {
   worldGeographyTopics,
 } from '../data/worldGeography.js'
 import {
+  filterSoutheastAsiaItemsByDifficulty,
+  southeastAsiaChapters,
+  southeastAsiaMap,
+  southeastAsiaTopics,
+} from '../data/southeastAsiaGeography.js'
+import {
   buildGeographyChoices,
   buildGeographyRound,
   evaluateGeographyFillPlacement,
@@ -51,6 +57,7 @@ const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
 const areas = [
   { id: 'taiwan', name: '臺灣地理', caption: '七年級', status: '已開放' },
   { id: 'china', name: '中國地理', caption: '八年級', status: '八上全冊已開放' },
+  { id: 'regional', name: '亞洲與非洲', caption: '八年級下學期', status: '第 1 章開放測試' },
   { id: 'world', name: '世界地理', caption: '九年級', status: '第 1～2 章已開放' },
 ]
 
@@ -74,6 +81,16 @@ const geographyAreas = {
     defaultTopicId: 'relief-steps',
     attributionUrl: 'https://github.com/VictorCazanave/svg-maps/tree/master/packages/china',
     mapLabel: '中國行政區與地理填圖地圖',
+  },
+  regional: {
+    name: '亞洲與非洲',
+    map: southeastAsiaMap,
+    chapters: southeastAsiaChapters,
+    topics: southeastAsiaTopics,
+    defaultChapterId: 'grade8-lower-l01',
+    defaultTopicId: 'southeast-asia-countries',
+    attributionUrl: 'https://github.com/VictorCazanave/svg-maps/tree/master/packages/world',
+    mapLabel: '東南亞國家精確國界填圖地圖',
   },
   world: {
     name: '世界地理',
@@ -124,6 +141,9 @@ const topicIcons = {
   'japan-economy-transition': BookOpen,
   'korean-peninsula-locations': MapPinned,
   'korea-economy-comparison': BookOpen,
+  'southeast-asia-countries': MapPinned,
+  'southeast-asia-capitals': MapPinned,
+  'southeast-asia-rivers': Waves,
   'tw-map-skills': Compass,
   'tw-location': MapPinned,
   'tw-administrative': MapPinned,
@@ -384,7 +404,18 @@ export function GeographyConceptDiagram({ currentItem, topicItems, effectiveMode
             onClick={() => onAnswer(item.id)}
           >
             <DiagramGraphic kind={item.diagramKind} />
-            {(revealed || solved) && isTarget && <span>{item.name}</span>}
+            {item.visualCue && (
+              <small className="geography-diagram-cue">
+                <strong>圖示線索</strong>
+                {item.visualCue}
+              </small>
+            )}
+            {isWrong && <span className="geography-diagram-result is-wrong">再想想</span>}
+            {(revealed || solved) && isTarget && (
+              <span className="geography-diagram-result is-correct">
+                {revealed ? `答案：${item.name}` : `答對：${item.name}`}
+              </span>
+            )}
           </button>
         )
       })}
@@ -579,6 +610,29 @@ function GeographyPointMarker({ item }) {
   )
 }
 
+function GeographyPointFeedbackLabel({ item, status }) {
+  if (!status || !['industrial-region', 'city'].includes(item.pointType)) return null
+
+  const isIndustrialRegion = item.pointType === 'industrial-region'
+  const label = status === 'wrong'
+    ? '再想想'
+    : status === 'revealed'
+      ? `答案：${item.name}`
+      : '答對'
+  const width = status === 'revealed'
+    ? (isIndustrialRegion ? 7.8 : 5.8)
+    : (isIndustrialRegion ? 4.8 : 3.8)
+  const height = isIndustrialRegion ? 1.45 : 1.15
+  const y = isIndustrialRegion ? -2.15 : -1.7
+
+  return (
+    <g className={`geography-point-feedback is-${status}`} aria-hidden="true" pointerEvents="none">
+      <rect x={-width / 2} y={y - height} width={width} height={height} rx={height * 0.32} />
+      <text x="0" y={y - height * 0.33}>{label}</text>
+    </g>
+  )
+}
+
 function GeographyPointLegend({ items }) {
   const hasCapital = items.some((item) => item.pointType === 'capital')
   const hasCountryLocation = items.some((item) => item.pointType === 'country-location')
@@ -597,7 +651,7 @@ function GeographyPointLegend({ items }) {
       {hasCountryLocation && (
         <span>
           <i className="is-country-location" aria-hidden="true" />
-          菱形代表面積較小的國家位置（馬爾他）。
+          菱形代表面積較小、在目前比例下不易直接點選的國家位置。
         </span>
       )}
       {hasCity && (
@@ -621,6 +675,7 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
   const [completed, setCompleted] = useState({})
   const [mistakes, setMistakes] = useState({})
   const [wrongTargetId, setWrongTargetId] = useState('')
+  const [feedbackTargetId, setFeedbackTargetId] = useState('')
   const [feedback, setFeedback] = useState(null)
   const isDiagram = items.every((item) => item.mapKind === 'diagram')
   const isBeltRoad = items.some((item) => item.diagramKind?.startsWith('belt-road-'))
@@ -639,6 +694,7 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
       setCompleted(nextCompleted)
       setSelectedItemId('')
       setWrongTargetId('')
+      setFeedbackTargetId(item.id)
       setFeedback(evaluation.feedback)
       onScore(1)
       onProgress(Object.keys(nextCompleted).length)
@@ -648,12 +704,14 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
     const nextFeedback = evaluation.feedback
     setMistakes({ ...mistakes, [item.id]: evaluation.mistakeCount })
     setWrongTargetId(targetId)
+    setFeedbackTargetId(targetId)
     setFeedback(nextFeedback)
     if (nextFeedback.revealAnswer) {
       const nextCompleted = { ...completed, [item.id]: { revealed: true } }
       setCompleted(nextCompleted)
       setSelectedItemId('')
       setWrongTargetId('')
+      setFeedbackTargetId(item.id)
       onProgress(Object.keys(nextCompleted).length)
     }
   }
@@ -706,6 +764,7 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
         onSelect={(itemId) => {
           setSelectedItemId(itemId)
           setWrongTargetId('')
+          setFeedbackTargetId('')
           setFeedback(null)
         }}
       />
@@ -724,7 +783,18 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
                 {...dropTargetProps(targetId)}
               >
                 <DiagramGraphic kind={item.diagramKind} />
-                {isDone && <span>{item.name}</span>}
+                {item.visualCue && (
+                  <small className="geography-diagram-cue">
+                    <strong>圖示線索</strong>
+                    {item.visualCue}
+                  </small>
+                )}
+                {wrongTargetId === targetId && <span className="geography-diagram-result is-wrong">再想想</span>}
+                {isDone && (
+                  <span className="geography-diagram-result is-correct">
+                    {completed[item.id]?.revealed ? `答案：${item.name}` : `答對：${item.name}`}
+                  </span>
+                )}
               </button>
             )
           })}
@@ -852,6 +922,12 @@ export function GeographyFillBoard({ mapDefinition, mapLabel, areaId, items, onP
                     {...dropTargetProps(item.id)}
                   >
                     <GeographyPointMarker item={item} />
+                    <GeographyPointFeedbackLabel
+                      item={item}
+                      status={feedbackTargetId === item.id
+                        ? (completed[item.id]?.revealed ? 'revealed' : isDone ? 'correct' : wrongTargetId === item.id ? 'wrong' : '')
+                        : ''}
+                    />
                   </g>
                 )
               })}
@@ -1131,6 +1207,10 @@ export function GeographyMap({ mapDefinition, mapLabel, areaId, currentItem, top
                 }}
               >
                 <GeographyPointMarker item={item} />
+                <GeographyPointFeedbackLabel
+                  item={item}
+                  status={isWrong ? 'wrong' : isTarget && revealed ? 'revealed' : isTarget && solved ? 'correct' : ''}
+                />
               </g>
             )
           })}
@@ -1235,6 +1315,8 @@ export default function GeographyFillMap() {
   const difficulty = difficulties.find((candidate) => candidate.id === difficultyId) || difficulties[1]
   const topicItems = areaId === 'taiwan'
     ? filterTaiwanItemsByDifficulty(topic.items, difficultyId)
+    : areaId === 'regional'
+      ? filterSoutheastAsiaItemsByDifficulty(topic.items, difficultyId)
     : areaId === 'world'
       ? filterWorldItemsByDifficulty(topic.items, difficultyId)
       : topic.items
@@ -1390,7 +1472,7 @@ export default function GeographyFillMap() {
           <div>
             <p>GEOGRAPHY MAP LAB</p>
             <h1>把地理位置，真正放進腦中的地圖</h1>
-            <span>臺灣、中國與世界地理已分階段開放，依課本章節選擇目前學到的內容再開始練習。</span>
+            <span>臺灣、中國、亞洲非洲與世界地理已分階段開放，依課本章節選擇目前學到的內容再開始練習。</span>
           </div>
           <div className="geography-hero-art"><MapPinned aria-hidden="true" /></div>
         </section>
@@ -1630,6 +1712,7 @@ export default function GeographyFillMap() {
           <a href={attributionUrl} target="_blank" rel="noreferrer">{topic.map ? topic.name : area.name}向量圖來源與授權：SVG Maps／CC BY 4.0</a>
           <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">河川、湖泊與水庫資料：OpenStreetMap contributors／ODbL 1.0</a>
           {areaId === 'china' && <a href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/" target="_blank" rel="noreferrer">海域資料：Natural Earth 1：10m Physical Vectors／Public Domain</a>}
+          {areaId === 'regional' && <a href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/" target="_blank" rel="noreferrer">東南亞河川：Natural Earth 1：10m Physical Vectors／Public Domain</a>}
           {areaId === 'world' && <a href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/" target="_blank" rel="noreferrer">歐洲河川與海域輪廓：Natural Earth 1：10m Physical Vectors／Public Domain</a>}
         </footer>
       </main>

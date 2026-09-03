@@ -151,10 +151,13 @@ describe('中國地理填圖資料', () => {
       '京濱工業區', '東海工業區', '名古屋工業區', '阪神工業區', '瀨戶內海工業區', '北九州工業區',
     ])
     expect(japanIndustrialRegionItems.every((item) => item.mapKind === 'point' && item.pointType === 'industrial-region')).toBe(true)
+    expect(japanIndustrialRegionItems.every((item) => item.hitRadius <= 0.82)).toBe(true)
     expect(japanEconomyItems).toHaveLength(5)
     expect(koreanPeninsulaLocationItems.map((item) => item.name)).toEqual(['平壤', '首爾', '釜山', '北緯 38° 線'])
+    expect(koreanPeninsulaLocationItems.filter((item) => item.pointType === 'city').every((item) => item.hitRadius <= 0.58)).toBe(true)
     expect(koreaEconomyItems).toHaveLength(6)
     expect([...japanEconomyItems, ...koreaEconomyItems].every((item) => item.mapKind === 'diagram' && item.diagramKind)).toBe(true)
+    expect([...japanEconomyItems, ...koreaEconomyItems].every((item) => item.visualCue)).toBe(true)
 
     const l06Topics = chinaGeographyTopics.filter((topic) => topic.semester === '翰林八上第 6 章')
     expect(l06Topics.map((topic) => topic.id)).toEqual([

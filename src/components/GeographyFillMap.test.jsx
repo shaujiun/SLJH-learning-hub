@@ -40,6 +40,12 @@ import {
   southWestEuropeCountryItems,
   southWestEuropeItems,
 } from '../data/worldGeography.js'
+import {
+  southeastAsiaCapitalItems,
+  southeastAsiaCountryItems,
+  southeastAsiaMap,
+  southeastAsiaRiverItems,
+} from '../data/southeastAsiaGeography.js'
 import GeographyFillMap, { ChinaMap, EuropeMap, GeographyConceptDiagram, GeographyCourseConnection, GeographyFillBoard, GeographyMap } from './GeographyFillMap.jsx'
 
 const originalWindow = globalThis.window
@@ -105,17 +111,35 @@ describe('GeographyFillMap', () => {
         effectiveMode="locate"
         revealed={false}
         solved={false}
-        wrongTargetId=""
+        wrongTargetId={koreanPeninsulaLocationItems[1].id}
         onAnswer={() => {}}
       />,
     )
 
     expect(industryHtml).toContain('viewBox="837 350 34 15"')
     expect(industryHtml).toContain('is-japanindustry')
+    const solvedIndustryHtml = renderToString(
+      <GeographyMap
+        mapDefinition={japanIndustryMap}
+        mapLabel="日本工業區"
+        areaId="china"
+        currentItem={japanIndustrialRegionItems[0]}
+        topicItems={japanIndustrialRegionItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+    expect(solvedIndustryHtml).toContain('geography-point-feedback is-correct')
+    expect(solvedIndustryHtml).toContain('答對')
     expect(industryHtml.match(/geography-map-point-industrial-marker/g)).toHaveLength(6)
     expect(industryHtml).toContain('虛線橢圓代表課本工業區的概略範圍')
     expect(koreaHtml).toContain('viewBox="822 338 21 25"')
     expect(koreaHtml).toContain('is-koreanpeninsula')
+    expect(koreaHtml).toContain('geography-point-feedback is-wrong')
+    expect(koreaHtml).toContain('再想想')
     expect(koreaHtml).toContain('圓點代表都市所在位置')
     expect(koreaHtml).toContain('is-political-boundary')
   })
@@ -145,8 +169,10 @@ describe('GeographyFillMap', () => {
     )
 
     expect(japanHtml).toContain('is-japan-import-export')
+    expect(japanHtml).toContain(japanEconomyItems[0].visualCue)
     expect(japanHtml).not.toContain('進口原料、出口工業產品')
     expect(koreaHtml).toContain('is-korea-north-heavy')
+    expect(koreaHtml).toContain(koreaEconomyItems[0].visualCue)
     expect(koreaHtml).not.toContain('北韓重工業與國防工業')
   })
 
@@ -162,6 +188,9 @@ describe('GeographyFillMap', () => {
     expect(html).toContain('臺灣地理')
     expect(html).toContain('中國地理')
     expect(html).toContain('八上全冊已開放')
+    expect(html).toContain('亞洲與非洲')
+    expect(html).toContain('八年級下學期')
+    expect(html).toContain('第 1 章開放測試')
     expect(html).toContain('世界地理')
     expect(html).toContain('九年級')
     expect(html).toContain('第 1～2 章已開放')
@@ -394,8 +423,60 @@ describe('GeographyFillMap', () => {
 
     expect(html.match(/geography-map-point /g)).toHaveLength(1)
     expect(html).toContain('geography-map-point-country-marker')
-    expect(html).toContain('菱形代表面積較小的國家位置（馬爾他）。')
+    expect(html).toContain('菱形代表面積較小、在目前比例下不易直接點選的國家位置。')
     expect(html).not.toContain('圓點只代表首都所在位置')
+  })
+
+  it('八下東南亞沿用同一套世界向量底圖，國家、首都與河川不會換圖錯位', () => {
+    const countryHtml = renderToString(
+      <GeographyMap
+        mapDefinition={southeastAsiaMap}
+        mapLabel="東南亞國家"
+        areaId="regional"
+        currentItem={southeastAsiaCountryItems[0]}
+        topicItems={southeastAsiaCountryItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+    const capitalHtml = renderToString(
+      <GeographyMap
+        mapDefinition={southeastAsiaMap}
+        mapLabel="東南亞首都"
+        areaId="regional"
+        currentItem={southeastAsiaCapitalItems[0]}
+        topicItems={southeastAsiaCapitalItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+    const riverHtml = renderToString(
+      <GeographyMap
+        mapDefinition={southeastAsiaMap}
+        mapLabel="東南亞河川"
+        areaId="regional"
+        currentItem={southeastAsiaRiverItems[0]}
+        topicItems={southeastAsiaRiverItems}
+        effectiveMode="locate"
+        revealed={false}
+        solved={false}
+        wrongTargetId=""
+        onAnswer={() => {}}
+      />,
+    )
+
+    expect(countryHtml).toContain('viewBox="720 365 175 145"')
+    expect(countryHtml).toContain('is-southeastasia')
+    expect(countryHtml.match(/data-map-id=/g)).toHaveLength(11)
+    expect(capitalHtml).toContain('圓點只代表首都所在位置')
+    expect(capitalHtml.match(/geography-map-point /g)).toHaveLength(11)
+    expect(riverHtml.match(/geography-feature-line-visible/g)).toHaveLength(4)
   })
 
   it('人口政策、一帶一路與 RCEP 使用不洩漏名稱的概念圖卡', () => {
