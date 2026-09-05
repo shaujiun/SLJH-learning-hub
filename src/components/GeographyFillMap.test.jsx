@@ -210,6 +210,34 @@ describe('GeographyFillMap', () => {
     expect(html).toContain('返回聯絡簿')
   })
 
+  it('第一次段考前從每日任務進入時，只顯示中國八上第 1、2 章', () => {
+    globalThis.window = {
+      location: new URL('http://127.0.0.1:4173/?geography=maps&focusTask=66fcaa73-1244-4e15-a577-c30ce3d5d3bb&focusArea=china&focusChapters=grade8-upper-l01%2Cgrade8-upper-l02&focusScopeLabel=%E5%85%AB%E4%B8%8A%E7%AC%AC+1%EF%BD%9E2+%E7%AB%A0'),
+      scrollTo: () => {},
+    }
+
+    const html = renderToString(<GeographyFillMap />)
+
+    expect(html).toContain('八上第 1 章　中國的地形')
+    expect(html).toContain('八上第 2 章　中國的氣候')
+    expect(html).not.toContain('八上第 3 章　中國的人口')
+    expect(html).not.toContain('八上第 4 章　中國的經濟發展與全球關連')
+  })
+
+  it('七年級複習任務只顯示七上章節，不會混入九年級內容', () => {
+    globalThis.window = {
+      location: new URL('http://127.0.0.1:4173/?geography=maps&focusTask=66fcaa73-1244-4e15-a577-c30ce3d5d300&focusArea=taiwan&focusChapters=grade7-upper-l01%2Cgrade7-upper-l02%2Cgrade7-upper-l03%2Cgrade7-upper-l04%2Cgrade7-upper-l05%2Cgrade7-upper-l06&focusScopeLabel=%E4%B8%83%E4%B8%8A%E5%9C%B0%E7%90%86%E8%A4%87%E7%BF%92'),
+      scrollTo: () => {},
+    }
+
+    const html = renderToString(<GeographyFillMap />)
+
+    expect(html).toContain('七上第 1 章　認識位置與地圖')
+    expect(html).toContain('七上第 6 章　水文')
+    expect(html).not.toContain('八上第 1 章　中國的地形')
+    expect(html).not.toContain('九上第 1 章')
+  })
+
   it('以三組可選雙箭頭呈現階梯範圍，作答前不顯示階梯名稱', () => {
     const html = renderToString(
       <ChinaMap

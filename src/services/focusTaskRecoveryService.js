@@ -7,14 +7,14 @@ function localDateString(date = new Date()) {
   return `${year}-${month}-${day}`
 }
 
-export async function findPendingFocusTaskId({
+export async function findPendingFocusTasks({
   subjectCode,
   activityCode,
   referenceDate = new Date(),
 }, client = requireSupabase()) {
   const normalizedSubject = String(subjectCode || '').trim().toLowerCase()
   const normalizedActivity = String(activityCode || '').trim().toLowerCase()
-  if (!normalizedSubject || !normalizedActivity) return ''
+  if (!normalizedSubject || !normalizedActivity) return []
 
   const { data, error } = await client
     .from('student_focus_tasks')
@@ -23,6 +23,27 @@ export async function findPendingFocusTaskId({
     .eq('subject_code_snapshot', normalizedSubject)
     .eq('activity_code_snapshot', normalizedActivity)
     .lte('assigned_date', localDateString(referenceDate))
+    .order('assigned_date', { ascending: true })
+
+  if (error) throw new Error(`無法確認待完成任務：${error.message}`)
+  return (data || []).map((task) => ({
+    id: String(task.id || ''),
+    assignedDate: task.assigned_date,
+  }))
+}
+
+export async function findPendingFocusTaskId(options, client = requireSupabase()) {
+  const normalizedSubject = String(options?.subjectCode || '').trim().toLowerCase()
+  const normalizedActivity = String(options?.activityCode || '').trim().toLowerCase()
+  if (!normalizedSubject || !normalizedActivity) return ''
+
+  const { data, error } = await client
+    .from('student_focus_tasks')
+    .select('id,assigned_date')
+    .eq('status', 'pending')
+    .eq('subject_code_snapshot', normalizedSubject)
+    .eq('activity_code_snapshot', normalizedActivity)
+    .lte('assigned_date', localDateString(options?.referenceDate))
     .order('assigned_date', { ascending: true })
     .limit(1)
 

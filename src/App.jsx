@@ -203,6 +203,9 @@ function FocusTask({ task, position, total, freelySelectable = false }) {
           <p className="task-subject">{task.subjectName}</p>
           <h2>{task.activityName}</h2>
           <div className="task-rules">
+            {task.curriculumScopeLabel && (
+              <span><BookOpenCheck aria-hidden="true" />範圍 {task.curriculumScopeLabel}</span>
+            )}
             {isSchulte ? (
               <span><Target aria-hidden="true" />{isMemorization ? '連續完成 5 句' : '完成 1 回合'}</span>
             ) : <>

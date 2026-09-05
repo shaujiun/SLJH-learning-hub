@@ -5,6 +5,7 @@ import {
   isLearningSystemVisible,
   normalizeLearningAudience,
 } from '../lib/learningAudiences.js'
+import { appendFocusTaskCurriculumScope } from '../lib/focusTaskCurriculum.js'
 
 function relation(value) {
   return Array.isArray(value) ? value[0] : value
@@ -34,7 +35,7 @@ function mapSystem(row) {
 }
 
 function mapTask(row) {
-  return {
+  const task = {
     id: row.id,
     assignedDate: row.assigned_date,
     subjectCode: row.subject_code,
@@ -50,6 +51,8 @@ function mapTask(row) {
     completedAt: row.completed_at,
     isWeekendCarryover: row.is_weekend_carryover,
   }
+  task.curriculumScopeLabel = getFocusTaskCurriculumScope(task)?.label || ''
+  return task
 }
 
 export function mapMemorizationTask(batch, assignedDate, currentUrl = window.location.href) {
@@ -233,5 +236,5 @@ export function buildTaskLaunchUrl(task) {
   url.searchParams.set('focusQuestions', String(task.questionCount))
   url.searchParams.set('focusTarget', String(task.targetScore))
   url.searchParams.set('focusSource', 'daily-task')
-  return url.toString()
+  return appendFocusTaskCurriculumScope(url, task).toString()
 }

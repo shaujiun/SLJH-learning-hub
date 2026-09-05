@@ -47,6 +47,7 @@ import {
   geographyFeedback,
   geographyMixedFillStart,
 } from '../lib/geographyGame.js'
+import { getFocusTaskCurriculumScope } from '../lib/focusTaskCurriculum.js'
 import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
 import { loadGeographyContext, recordGeographyAttempt } from '../services/geographyTaskService.js'
 import './geographyFillMap.css'
@@ -1287,9 +1288,32 @@ export default function GeographyFillMap() {
     subjectCode: 'geography',
     activityCode: 'geography_round',
   })
-  const [areaId, setAreaId] = useState('taiwan')
-  const [chapterId, setChapterId] = useState('grade7-upper-l01')
-  const [topicId, setTopicId] = useState('tw-map-skills')
+  const requestedTaskScope = useMemo(() => {
+    if (!focusTaskId) return null
+    const requestedAreaId = query.get('focusArea')
+    const chapterPattern = requestedAreaId === 'china'
+      ? /^grade8-upper-l0[1-4]$/
+      : requestedAreaId === 'taiwan'
+        ? /^grade7-upper-l0[1-6]$/
+        : null
+    if (!chapterPattern) return null
+    const chapterIds = String(query.get('focusChapters') || '')
+      .split(',')
+      .filter((chapter) => chapterPattern.test(chapter))
+    if (!chapterIds.length) return null
+    return {
+      areaId: requestedAreaId,
+      chapterIds,
+      label: query.get('focusScopeLabel') || '指定章節',
+    }
+  }, [focusTaskId, query])
+  const requestedArea = requestedTaskScope ? geographyAreas[requestedTaskScope.areaId] : null
+  const requestedChapter = requestedArea?.chapters.find(
+    (candidate) => candidate.id === requestedTaskScope.chapterIds[0],
+  )
+  const [areaId, setAreaId] = useState(requestedTaskScope?.areaId || 'taiwan')
+  const [chapterId, setChapterId] = useState(requestedTaskScope?.chapterIds?.[0] || 'grade7-upper-l01')
+  const [topicId, setTopicId] = useState(requestedChapter?.topicIds?.[0] || 'tw-map-skills')
   const [modeId, setModeId] = useState('locate')
   const [difficultyId, setDifficultyId] = useState('basic')
   const [phase, setPhase] = useState('setup')
@@ -1307,6 +1331,21 @@ export default function GeographyFillMap() {
   const [taskProgress, setTaskProgress] = useState(null)
   const [taskSaveError, setTaskSaveError] = useState('')
   const [savingTask, setSavingTask] = useState(false)
+
+  const verifiedTaskScope = useMemo(
+    () => taskContext.task
+      ? getFocusTaskCurriculumScope({
+          id: taskContext.task.id,
+          subjectCode: 'geography',
+          assignedDate: taskContext.task.assignedDate,
+        })
+      : null,
+    [taskContext.task?.assignedDate],
+  )
+  const dailyTaskScope = verifiedTaskScope || requestedTaskScope
+  const visibleAreas = dailyTaskScope
+    ? areas.filter((candidate) => candidate.id === dailyTaskScope.areaId)
+    : areas
 
   const area = geographyAreas[areaId] || geographyAreas.taiwan
   const chapter = area.chapters.find((candidate) => candidate.id === chapterId) || area.chapters[0]
@@ -1350,6 +1389,19 @@ export default function GeographyFillMap() {
     return () => { active = false }
   }, [focusTaskId])
 
+  useEffect(() => {
+    if (!dailyTaskScope) return
+    const nextArea = geographyAreas[dailyTaskScope.areaId]
+    const nextChapterId = dailyTaskScope.chapterIds.includes(chapterId)
+      ? chapterId
+      : dailyTaskScope.chapterIds[0]
+    const nextChapter = nextArea?.chapters.find((candidate) => candidate.id === nextChapterId)
+    if (!nextArea || !nextChapter) return
+    if (areaId !== dailyTaskScope.areaId) setAreaId(dailyTaskScope.areaId)
+    if (chapterId !== nextChapterId) setChapterId(nextChapterId)
+    if (!nextChapter.topicIds.includes(topicId)) setTopicId(nextChapter.topicIds[0])
+  }, [areaId, chapterId, dailyTaskScope, topicId])
+
   const startRound = () => {
     setRound(buildGeographyRound(topicItems, difficulty.count))
     setQuestionIndex(0)
@@ -1387,6 +1439,8 @@ export default function GeographyFillMap() {
       const progress = await recordGeographyAttempt({
         focusTaskId,
         allowRecovery: Boolean(taskContext.student),
+        areaId,
+        chapterId: chapter.id,
         score: finalScore,
         correctCount: score,
         questionCount: round.length,
@@ -1444,6 +1498,7 @@ export default function GeographyFillMap() {
         : '請在地圖上找出正確位置。'
 
   const chooseChapter = (nextChapterId) => {
+    if (dailyTaskScope && !dailyTaskScope.chapterIds.includes(nextChapterId)) return
     const nextChapter = area.chapters.find((candidate) => candidate.id === nextChapterId)
     if (!nextChapter) return
     setChapterId(nextChapter.id)
@@ -1451,6 +1506,7 @@ export default function GeographyFillMap() {
   }
 
   const chooseArea = (nextAreaId) => {
+    if (dailyTaskScope && nextAreaId !== dailyTaskScope.areaId) return
     const nextArea = geographyAreas[nextAreaId]
     if (!nextArea) return
     setAreaId(nextAreaId)
@@ -1484,7 +1540,7 @@ export default function GeographyFillMap() {
             <Target aria-hidden="true" />
             <div>
               <strong>今日任務：{taskContext.task.activityName}</strong>
-              <span>任選已開放的章節與主題完成一回合，答對率達 {taskContext.task.targetScore}％ 即完成。</span>
+              <span>本次範圍限定「{dailyTaskScope?.label || '指定章節'}」，任選其中一個主題完成一回合，答對率達 {taskContext.task.targetScore}％ 即完成。</span>
             </div>
           </aside>
         )}
@@ -1493,7 +1549,7 @@ export default function GeographyFillMap() {
             <Target aria-hidden="true" />
             <div>
               <strong>地理任務可自動補登</strong>
-              <span>若目前有尚未完成的地理任務，本回合達到門檻後會補登最早一項。</span>
+              <span>若目前有尚未完成的地理任務，在目前課程範圍內完成並達到門檻後，會補登最早一項。</span>
             </div>
           </aside>
         )}
@@ -1507,7 +1563,7 @@ export default function GeographyFillMap() {
                 <small>依翰林版課本年級編排</small>
               </div>
               <div className="geography-area-grid">
-                {areas.map((area) => (
+                {visibleAreas.map((area) => (
                   <button
                     className={area.id === areaId ? 'is-active' : ''}
                     disabled={!geographyAreas[area.id]}
@@ -1528,7 +1584,9 @@ export default function GeographyFillMap() {
                 <small>只顯示該章節已開放的填圖內容</small>
               </div>
               <div className="geography-chapter-grid">
-                {area.chapters.map((candidate, index) => (
+                {area.chapters
+                  .filter((candidate) => !dailyTaskScope || dailyTaskScope.chapterIds.includes(candidate.id))
+                  .map((candidate, index) => (
                   <button
                     className={candidate.id === chapterId ? 'is-active' : ''}
                     key={candidate.id}
@@ -1538,7 +1596,7 @@ export default function GeographyFillMap() {
                     <span className="geography-chapter-number">{index + 1}</span>
                     <span><b>{candidate.name}</b><small>{candidate.description}</small></span>
                   </button>
-                ))}
+                  ))}
               </div>
             </section>
 

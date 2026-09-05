@@ -20,6 +20,7 @@ describe('geographyTaskService', () => {
       data: {
         id: 'task-1',
         student_id: 'student-1',
+        assigned_date: '2026-09-05',
         subject_code_snapshot: 'geography',
         activity_code_snapshot: 'geography_round',
         activity_name_snapshot: '地理填圖任選一回合',
@@ -37,7 +38,7 @@ describe('geographyTaskService', () => {
 
     await expect(loadGeographyContext('task-1', client)).resolves.toMatchObject({
       student: { id: 'student-1' },
-      task: { id: 'task-1', questionCount: 10, targetScore: 80 },
+      task: { id: 'task-1', assignedDate: '2026-09-05', questionCount: 10, targetScore: 80 },
     })
   })
 
@@ -82,5 +83,40 @@ describe('geographyTaskService', () => {
       questionCount: 10,
     }, client)).resolves.toBeNull()
     expect(client.rpc).not.toHaveBeenCalled()
+  })
+
+  it('自由練習只補登與年級及章節範圍相符的地理任務', async () => {
+    const pendingResult = {
+      data: [
+        { id: '66fcaa73-1244-4e15-a577-c30ce3d5d301', assigned_date: '2026-09-04' },
+        { id: '66fcaa73-1244-4e15-a577-c30ce3d5d300', assigned_date: '2026-09-05' },
+      ],
+      error: null,
+    }
+    const query = {
+      select: vi.fn(() => query),
+      eq: vi.fn(() => query),
+      lte: vi.fn(() => query),
+      order: vi.fn(() => query),
+      then: (resolve, reject) => Promise.resolve(pendingResult).then(resolve, reject),
+    }
+    const client = {
+      from: vi.fn(() => query),
+      rpc: vi.fn(async () => ({ data: { passed: true }, error: null })),
+    }
+
+    const result = await recordGeographyAttempt({
+      allowRecovery: true,
+      areaId: 'taiwan',
+      chapterId: 'grade7-upper-l03',
+      score: 90,
+      correctCount: 9,
+      questionCount: 10,
+    }, client)
+
+    expect(client.rpc).toHaveBeenCalledWith('record_focus_task_attempt', expect.objectContaining({
+      p_focus_task_id: '66fcaa73-1244-4e15-a577-c30ce3d5d300',
+    }))
+    expect(result.recoveredFocusTask).toBe(true)
   })
 })
