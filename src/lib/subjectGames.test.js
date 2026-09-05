@@ -38,6 +38,11 @@ describe('各科遊戲選擇入口', () => {
       launchUrl: '?geography=maps',
       availability: '七上、八上全冊、九上第 1～2 章已開放',
     }))
+    expect(subjectGamesFor({ code: 'geography', name: '地理', launchUrl: '' }, '')).toContainEqual(expect.objectContaining({
+      code: 'geography-detective',
+      launchUrl: '?geography=detective',
+      availability: '翰林八上第 1～2 章',
+    }))
   })
 
   it('歷史科先提供八年級歷史時光地圖', () => {
