@@ -33,6 +33,13 @@ const subjectGameTemplates = {
       availability: '七上、八上全冊、九上第 1～2 章已開放',
       launchUrl: '?geography=maps',
     },
+    {
+      code: 'geography-detective',
+      name: '地理偵探社',
+      description: '閱讀地形、氣候、河川與農業線索，推理地區並理解判斷依據。',
+      availability: '翰林八上第 1～2 章',
+      launchUrl: '?geography=detective',
+    },
   ],
 }
 
