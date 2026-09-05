@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildDashboardTaskLists, mapMemorizationTask } from './learningService.js'
+import { buildDashboardTaskLists, buildTaskLaunchUrl, mapMemorizationTask } from './learningService.js'
 
 const batch = {
   setId: '7a7dfad4-2c64-4b72-b808-4e170cb41793',
@@ -53,5 +53,37 @@ describe('mapMemorizationTask', () => {
     ])
     expect(result.tasks).not.toContain(memorizationTask)
     expect(result.weeklyTasks[0]).toBe(memorizationTask)
+  })
+})
+
+describe('buildTaskLaunchUrl', () => {
+  it('第一次段考前替地理每日任務帶入八上第 1、2 章範圍', () => {
+    const result = new URL(buildTaskLaunchUrl({
+      id: '66fcaa73-1244-4e15-a577-c30ce3d5d3bb',
+      assignedDate: '2026-09-05',
+      subjectCode: 'geography',
+      activityCode: 'geography_round',
+      questionCount: 10,
+      targetScore: 80,
+      launchUrl: 'https://shaujiun.github.io/SLJH-learning-hub/?geography=maps',
+    }))
+
+    expect(result.searchParams.get('focusArea')).toBe('china')
+    expect(result.searchParams.get('focusChapters')).toBe('grade8-upper-l01,grade8-upper-l02')
+  })
+
+  it('第一次段考前替英語每日任務帶入 B3 第 1、2 課範圍', () => {
+    const result = new URL(buildTaskLaunchUrl({
+      id: '66fcaa73-1244-4e15-a577-c30ce3d5d3bb',
+      assignedDate: '2026-09-05',
+      subjectCode: 'english',
+      activityCode: 'sentence',
+      questionCount: 20,
+      targetScore: 80,
+      launchUrl: 'https://shaujiun.github.io/englishvocabking/',
+    }))
+
+    expect(result.searchParams.get('focusBook')).toBe('B3')
+    expect(result.searchParams.get('focusLessons')).toBe('L1,L2')
   })
 })

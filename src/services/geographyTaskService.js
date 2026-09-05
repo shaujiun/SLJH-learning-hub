@@ -1,12 +1,14 @@
 import { requireSupabase } from '../lib/supabase.js'
 import { clearRememberedFocusTask } from '../lib/focusTaskLaunch.js'
-import { findPendingFocusTaskId } from './focusTaskRecoveryService.js'
+import { geographyTaskAllowsSelection } from '../lib/focusTaskCurriculum.js'
+import { findPendingFocusTasks } from './focusTaskRecoveryService.js'
 
 function mapTask(row) {
   if (!row) return null
   return {
     id: row.id,
     activityName: row.activity_name_snapshot,
+    assignedDate: row.assigned_date,
     questionCount: Number(row.question_count || 10),
     targetScore: Number(row.target_score || 80),
     status: row.status,
@@ -35,7 +37,7 @@ export async function loadGeographyContext(focusTaskId = '', client = requireSup
 
   const { data: taskRow, error: taskError } = await client
     .from('student_focus_tasks')
-    .select('id,student_id,subject_code_snapshot,activity_code_snapshot,activity_name_snapshot,question_count,target_score,status,best_score')
+    .select('id,student_id,assigned_date,subject_code_snapshot,activity_code_snapshot,activity_name_snapshot,question_count,target_score,status,best_score')
     .eq('id', focusTaskId)
     .maybeSingle()
   if (taskError) throw new Error(`無法讀取地理每日任務：${taskError.message}`)
@@ -52,17 +54,22 @@ export async function loadGeographyContext(focusTaskId = '', client = requireSup
 export async function recordGeographyAttempt({
   focusTaskId = '',
   allowRecovery = false,
+  areaId = '',
+  chapterId = '',
   score,
   correctCount,
   questionCount,
 }, client = requireSupabase()) {
   const normalizedScore = Math.max(0, Math.min(100, Math.round(Number(score) || 0)))
-  const recoveredTaskId = !focusTaskId && allowRecovery
-    ? await findPendingFocusTaskId({
+  const pendingTasks = !focusTaskId && allowRecovery
+    ? await findPendingFocusTasks({
         subjectCode: 'geography',
         activityCode: 'geography_round',
       }, client)
-    : ''
+    : []
+  const recoveredTaskId = pendingTasks.find((task) => (
+    geographyTaskAllowsSelection(task, areaId, chapterId)
+  ))?.id || ''
   const effectiveFocusTaskId = focusTaskId || recoveredTaskId
 
   if (!effectiveFocusTaskId) return null

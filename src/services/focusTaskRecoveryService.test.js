@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { findPendingFocusTaskId } from './focusTaskRecoveryService.js'
+import { findPendingFocusTaskId, findPendingFocusTasks } from './focusTaskRecoveryService.js'
 
 function createClient(result) {
   const query = {
@@ -8,6 +8,7 @@ function createClient(result) {
     lte: vi.fn(() => query),
     order: vi.fn(() => query),
     limit: vi.fn(async () => result),
+    then: (resolve, reject) => Promise.resolve(result).then(resolve, reject),
   }
   return {
     from: vi.fn(() => query),
@@ -35,6 +36,24 @@ describe('findPendingFocusTaskId', () => {
     expect(client.query.eq).toHaveBeenCalledWith('activity_code_snapshot', 'periodic_intro_mixed')
     expect(client.query.lte).toHaveBeenCalledWith('assigned_date', '2026-08-23')
     expect(client.query.order).toHaveBeenCalledWith('assigned_date', { ascending: true })
+  })
+
+  it('可取得所有待完成任務，供遊戲依課程範圍挑選可補登項目', async () => {
+    const client = createClient({
+      data: [
+        { id: 'task-1', assigned_date: '2026-09-01' },
+        { id: 'task-2', assigned_date: '2026-09-03' },
+      ],
+      error: null,
+    })
+
+    await expect(findPendingFocusTasks({
+      subjectCode: 'geography',
+      activityCode: 'geography_round',
+    }, client)).resolves.toEqual([
+      { id: 'task-1', assignedDate: '2026-09-01' },
+      { id: 'task-2', assignedDate: '2026-09-03' },
+    ])
   })
 
   it('沒有相符任務時回傳空字串', async () => {
