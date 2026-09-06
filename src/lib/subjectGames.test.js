@@ -22,6 +22,12 @@ describe('各科遊戲選擇入口', () => {
       availability: '八上 CH6 後都適用',
       launchUrl: '?game=periodic-table',
     }))
+    expect(subjectGamesFor({ code: 'science', name: '自然' }, '')).toContainEqual(expect.objectContaining({
+      code: 'chemical-formula',
+      name: '化學事前哨站',
+      availability: '八上第 6 章起適用',
+      launchUrl: '?game=chemical-formula',
+    }))
   })
 
   it('英文選擇頁使用目前的英文單字系統網址', () => {

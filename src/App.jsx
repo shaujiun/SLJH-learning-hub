@@ -51,6 +51,7 @@ const SchultePhraseGame = lazy(() => import('./components/SchultePhraseGame.jsx'
 const SchulteMemorizationGame = lazy(() => import('./components/SchulteMemorizationGame.jsx'))
 const GeographyFillMap = lazy(() => import('./components/GeographyFillMap.jsx'))
 const GeographyDetective = lazy(() => import('./components/GeographyDetective.jsx'))
+const ChemicalFormulaOutpost = lazy(() => import('./components/ChemicalFormulaOutpost.jsx'))
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
@@ -769,6 +770,9 @@ export default function App() {
   const searchParams = new URLSearchParams(window.location.search)
   const requestedGame = searchParams.get('game')
   if (requestedGame === 'periodic-table') return <PeriodicTableGame />
+  if (requestedGame === 'chemical-formula') {
+    return <Suspense fallback={<LoadingScreen />}><ChemicalFormulaOutpost /></Suspense>
+  }
   if (requestedGame === 'schulte-static') {
     return <Suspense fallback={<LoadingScreen />}><SchulteStaticGame /></Suspense>
   }

@@ -15,6 +15,13 @@ const subjectGameTemplates = {
       availability: '八上 CH6 後都適用',
       launchUrl: '?game=periodic-table',
     },
+    {
+      code: 'chemical-formula',
+      name: '化學事前哨站',
+      description: '從粒子、電子得失與根離子開始，逐步判斷電荷並組成正確化學式。',
+      availability: '八上第 6 章起適用',
+      launchUrl: '?game=chemical-formula',
+    },
   ],
   history: [
     {
