@@ -6,6 +6,7 @@ import {
   typicalIonElements,
 } from '../data/chemicalFormula.js'
 import {
+  advancedIonClue,
   basicChargeChoices,
   basicTransferChoices,
   buildAdvancedChemistryRound,
@@ -65,6 +66,21 @@ describe('化學事前哨站遊戲邏輯', () => {
     expect(correctFormulaTokens(compound)).toEqual(['Al', '₂', '(', 'SO₄', ')', '₃'])
     const labels = buildFormulaTiles(compound, chemistryIons, () => 0.4).map((tile) => tile.label)
     expect(labels).toEqual(expect.arrayContaining(['Al', '₂', '(', 'SO₄', ')', '₃', '2', '3']))
+  })
+
+  it('進階第 2 步只顯示離子符號，第 3 步才顯示電荷', () => {
+    const compound = ionicCompounds.find((item) => item.id === 'sodium-nitrate')
+    expect(advancedIonClue(compound, 'ions')).toBeNull()
+    expect(advancedIonClue(compound, 'charges')).toEqual({
+      caption: '已找出的離子符號',
+      cation: 'Na',
+      anion: 'NO₃',
+    })
+    expect(advancedIonClue(compound, 'counts')).toEqual({
+      caption: '離子符號與電荷',
+      cation: 'Na⁺',
+      anion: 'NO₃⁻',
+    })
   })
 
   it('第一次答錯只提醒，第二次提示，第三次顯示解析', () => {

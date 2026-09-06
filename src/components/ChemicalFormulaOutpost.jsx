@@ -25,6 +25,7 @@ import {
   typicalIonElements,
 } from '../data/chemicalFormula.js'
 import {
+  advancedIonClue,
   basicChargeChoices,
   basicTransferChoices,
   buildAdvancedChemistryRound,
@@ -363,6 +364,21 @@ function FeedbackPanel({ feedback, mistakeCount, resolved }) {
   )
 }
 
+function AdvancedIonClue({ compound, stepId }) {
+  const clue = advancedIonClue(compound, stepId)
+  if (!clue) return null
+  return (
+    <aside className="chemical-ion-clue" aria-label={clue.caption}>
+      <span>{clue.caption}</span>
+      <div>
+        <section><small>陽離子</small><strong>{clue.cation}</strong></section>
+        <b aria-hidden="true">＋</b>
+        <section><small>陰離子</small><strong>{clue.anion}</strong></section>
+      </div>
+    </aside>
+  )
+}
+
 function PracticePanel({
   mode,
   currentCase,
@@ -414,11 +430,14 @@ function PracticePanel({
           </div>
         )}
         {mode === 'advanced' && (
-          <div className="chemical-compound-banner">
-            <span>待破解的化合物</span>
-            <strong>{currentCase.compound.name}</strong>
-            {resolved && currentStep.id === 'formula' && <b>{displayCompoundFormula(currentCase.compound.formula)}</b>}
-          </div>
+          <>
+            <div className="chemical-compound-banner">
+              <span>待破解的化合物</span>
+              <strong>{currentCase.compound.name}</strong>
+              {resolved && currentStep.id === 'formula' && <b>{displayCompoundFormula(currentCase.compound.formula)}</b>}
+            </div>
+            <AdvancedIonClue compound={currentCase.compound} stepId={currentStep.id} />
+          </>
         )}
 
         <div className="chemical-question-copy">

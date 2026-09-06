@@ -46,6 +46,24 @@ export function displayCompoundFormula(formula) {
   return String(formula).replace(/\d/g, (digit) => toSubscript(digit))
 }
 
+export function advancedIonClue(compound, stepId) {
+  if (stepId === 'charges') {
+    return {
+      caption: '已找出的離子符號',
+      cation: displayCompoundFormula(compound.cation.formula),
+      anion: displayCompoundFormula(compound.anion.formula),
+    }
+  }
+  if (stepId === 'counts') {
+    return {
+      caption: '離子符號與電荷',
+      cation: displayIonFormula(compound.cation),
+      anion: displayIonFormula(compound.anion),
+    }
+  }
+  return null
+}
+
 export function transferAnswer(element) {
   return `${element.transfer}-${element.transferCount}`
 }
