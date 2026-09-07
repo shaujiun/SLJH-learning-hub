@@ -2,17 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, CalendarCheck2, Check, Clock3, Grid3X3, Home, MessageSquareQuote, RotateCcw, Target, X } from 'lucide-react'
 import { applyMemorizationSequenceStep, applyPhraseSchulteTap, createPhraseSchulteLayout, formatSchulteDuration, phraseCharacters, phraseProgress } from '../lib/schulte.js'
 import { loadCurrentSchulteMemorizationBatch, recordSchulteMemorizationCompletion } from '../services/schulteService.js'
+import { learningHubUrl } from '../lib/guestPractice.js'
 import './schulteGame.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
-
-function learningHubUrl(query = '') {
-  const url = new URL(window.location.href)
-  url.search = query
-  url.hash = ''
-  return url.toString()
-}
 
 function formatDate(value) {
   if (!value) return ''

@@ -164,22 +164,28 @@ function mapEvent(row, chapterById) {
   }
 }
 
-export async function loadHistoryAtlas(client = requireSupabase()) {
+export async function loadHistoryAtlas(client = requireSupabase(), { guestMode = false } = {}) {
+  const chapterQuery = client.from('history_chapters').select(chapterSelect).order('display_order')
+  const questionQuery = client.from('history_questions').select(questionSelect).order('display_order')
   const [chapterResult, permissionResult, positionResult, questionResult] = await Promise.all([
-    client.from('history_chapters').select(chapterSelect).order('display_order'),
-    client.rpc('can_manage_history_content'),
-    client.from('history_reader_positions').select('chapter_id,event_id,volume_no,focus_mode').maybeSingle(),
-    client.from('history_questions').select(questionSelect).order('display_order'),
+    guestMode ? chapterQuery.eq('is_active', true) : chapterQuery,
+    guestMode ? Promise.resolve({ data: false, error: null }) : client.rpc('can_manage_history_content'),
+    guestMode
+      ? Promise.resolve({ data: null, error: null })
+      : client.from('history_reader_positions').select('chapter_id,event_id,volume_no,focus_mode').maybeSingle(),
+    guestMode ? questionQuery.eq('status', 'published') : questionQuery,
   ])
 
   if (chapterResult.error) throw new Error(`無法讀取歷史章節：${chapterResult.error.message}`)
   const chapters = (chapterResult.data || []).map(mapChapter)
   const chapterById = new Map(chapters.map((chapter) => [chapter.id, chapter]))
-  const eventResult = await client
+  let eventQuery = client
     .from('history_events')
     .select(eventSelect)
     .order('start_year')
     .order('display_order')
+  if (guestMode) eventQuery = eventQuery.eq('status', 'published')
+  const eventResult = await eventQuery
   if (eventResult.error) throw new Error(`無法讀取歷史事件：${eventResult.error.message}`)
   if (questionResult.error) throw new Error(`無法讀取歷史題庫：${questionResult.error.message}`)
 

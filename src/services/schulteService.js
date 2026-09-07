@@ -37,10 +37,10 @@ export function saveLocalSchulteRecord(record, storage = window.localStorage, mo
   return nextRecords
 }
 
-export async function loadSchulteRecords(mode = 'static') {
+export async function loadSchulteRecords(mode = 'static', { localOnly = false } = {}) {
   const normalizedMode = ['dynamic', 'shape', 'sentence'].includes(mode) ? mode : 'static'
   const localRecords = loadLocalSchulteRecords(window.localStorage, normalizedMode)
-  if (!isSupabaseConfigured) return localRecords
+  if (localOnly || !isSupabaseConfigured) return localRecords
 
   const client = requireSupabase()
   const { data: sessionData } = await client.auth.getSession()
@@ -82,6 +82,7 @@ export async function recordSchulteCompletion({
   size,
   durationMs,
   errorCount,
+  localOnly = false,
 }) {
   const result = calculateSchulteResult({ size, durationMs, errorCount })
   const localRecord = {
@@ -91,7 +92,7 @@ export async function recordSchulteCompletion({
   }
   const localRecords = saveLocalSchulteRecord(localRecord)
 
-  if (!isSupabaseConfigured) {
+  if (localOnly || !isSupabaseConfigured) {
     return { record: localRecord, records: localRecords, storedRemotely: false }
   }
 
@@ -141,6 +142,7 @@ export async function recordDynamicSchulteCompletion({
   itemCount,
   durationMs,
   errorCount,
+  localOnly = false,
 }) {
   const result = calculateDynamicSchulteResult({ itemCount, durationMs, errorCount })
   const localRecord = {
@@ -150,7 +152,7 @@ export async function recordDynamicSchulteCompletion({
   }
   const localRecords = saveLocalSchulteRecord(localRecord, window.localStorage, 'dynamic')
 
-  if (!isSupabaseConfigured) {
+  if (localOnly || !isSupabaseConfigured) {
     return { record: localRecord, records: localRecords, storedRemotely: false }
   }
 
@@ -199,6 +201,7 @@ export async function recordShapeSchulteCompletion({
   focusTaskId = '',
   durationMs,
   errorCount,
+  localOnly = false,
 }) {
   const result = calculateShapeSchulteResult({ durationMs, errorCount })
   const localRecord = {
@@ -208,7 +211,7 @@ export async function recordShapeSchulteCompletion({
   }
   const localRecords = saveLocalSchulteRecord(localRecord, window.localStorage, 'shape')
 
-  if (!isSupabaseConfigured) {
+  if (localOnly || !isSupabaseConfigured) {
     return { record: localRecord, records: localRecords, storedRemotely: false }
   }
 
@@ -451,6 +454,7 @@ export async function recordPhraseSchulteCompletion({
   content,
   durationMs,
   errorCount,
+  localOnly = false,
 }) {
   const result = calculatePhraseSchulteResult({ content, durationMs, errorCount })
   const localRecord = {
@@ -459,7 +463,7 @@ export async function recordPhraseSchulteCompletion({
     completedAt: new Date().toISOString(),
   }
   const localRecords = saveLocalSchulteRecord(localRecord, window.localStorage, 'sentence')
-  if (!isSupabaseConfigured) {
+  if (localOnly || !isSupabaseConfigured) {
     return { record: localRecord, records: localRecords, storedRemotely: false }
   }
 

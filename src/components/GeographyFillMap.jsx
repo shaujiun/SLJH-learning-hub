@@ -49,6 +49,7 @@ import {
 } from '../lib/geographyGame.js'
 import { getFocusTaskCurriculumScope } from '../lib/focusTaskCurriculum.js'
 import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
+import { isGuestMode, learningHubUrl } from '../lib/guestPractice.js'
 import { loadGeographyContext, recordGeographyAttempt } from '../services/geographyTaskService.js'
 import './geographyFillMap.css'
 
@@ -167,13 +168,6 @@ const topicIcons = {
   'world-south-west-europe-capitals': MapPinned,
   'world-russia-landforms': Mountain,
   'world-russia-mountains-waters': Waves,
-}
-
-function learningHubUrl() {
-  const url = new URL(window.location.href)
-  url.search = ''
-  url.hash = ''
-  return url.toString()
 }
 
 function GeographyNavigation() {
@@ -1284,7 +1278,8 @@ export function EuropeMap(props) {
 
 export default function GeographyFillMap() {
   const query = useMemo(() => new URLSearchParams(window.location.search), [])
-  const focusTaskId = resolveFocusTaskId(query, {
+  const guestMode = isGuestMode()
+  const focusTaskId = guestMode ? '' : resolveFocusTaskId(query, {
     subjectCode: 'geography',
     activityCode: 'geography_round',
   })
@@ -1373,6 +1368,11 @@ export default function GeographyFillMap() {
   )
 
   useEffect(() => {
+    if (guestMode) {
+      setTaskContext({ authenticated: false, student: null, task: null })
+      setTaskLoadError('')
+      return undefined
+    }
     let active = true
     const initializeTaskContext = async () => {
       try {
@@ -1387,7 +1387,7 @@ export default function GeographyFillMap() {
     }
     initializeTaskContext()
     return () => { active = false }
-  }, [focusTaskId])
+  }, [focusTaskId, guestMode])
 
   useEffect(() => {
     if (!dailyTaskScope) return
