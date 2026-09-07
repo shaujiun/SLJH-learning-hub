@@ -26,17 +26,11 @@ import {
   recordPhraseSchulteCompletion,
 } from '../services/schulteService.js'
 import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
+import { isGuestMode, learningHubUrl } from '../lib/guestPractice.js'
 import './schulteGame.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
-
-function learningHubUrl(query = '') {
-  const url = new URL(window.location.href)
-  url.search = query
-  url.hash = ''
-  return url.toString()
-}
 
 export function phrasePromptHeading(phrase) {
   return phrase?.category === 'poem'
@@ -56,7 +50,8 @@ function SchulteNavigation() {
 
 export default function SchultePhraseGame() {
   const query = useMemo(() => new URLSearchParams(window.location.search), [])
-  const focusTaskId = resolveFocusTaskId(query, { activityPrefix: 'schulte_phrase_' })
+  const guestMode = isGuestMode()
+  const focusTaskId = guestMode ? '' : resolveFocusTaskId(query, { activityPrefix: 'schulte_phrase_' })
   const [phase, setPhase] = useState('setup')
   const [phrases, setPhrases] = useState([])
   const [phrase, setPhrase] = useState(null)
@@ -75,7 +70,7 @@ export default function SchultePhraseGame() {
   const bestRecord = bestPhraseSchulteRecord(records)
 
   useEffect(() => {
-    Promise.all([loadSchultePhrases(), loadSchulteRecords('sentence')])
+    Promise.all([loadSchultePhrases(), loadSchulteRecords('sentence', { localOnly: guestMode })])
       .then(([loadedPhrases, loadedRecords]) => {
         setPhrases(loadedPhrases)
         setRecords(loadedRecords)
@@ -136,6 +131,7 @@ export default function SchultePhraseGame() {
         content: phrase.content,
         durationMs,
         errorCount: nextErrorCount,
+        localOnly: guestMode,
       })
       setRecords(saved.records)
       setResult({

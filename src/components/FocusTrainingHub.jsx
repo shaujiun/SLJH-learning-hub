@@ -1,4 +1,5 @@
 import { ArrowLeft, Brain, CalendarCheck2, ChevronRight, Grid3X3, MessageSquareQuote, Orbit, Shapes } from 'lucide-react'
+import { guestLaunchUrl, isGuestMode, learningHubUrl } from '../lib/guestPractice.js'
 import SchulteMemorizationManager from './SchulteMemorizationManager.jsx'
 import SchultePhraseManager from './SchultePhraseManager.jsx'
 import './schulteGame.css'
@@ -6,14 +7,10 @@ import './schulteGame.css'
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
 
-function learningHubUrl() {
-  const url = new URL(window.location.href)
-  url.search = ''
-  url.hash = ''
-  return url.toString()
-}
-
 export default function FocusTrainingHub() {
+  const guestMode = isGuestMode()
+  const practiceUrl = (href) => guestMode ? guestLaunchUrl(href) : href
+
   return (
     <div className="focus-training-shell">
       <header className="focus-training-header">
@@ -40,38 +37,38 @@ export default function FocusTrainingHub() {
         <section className="focus-mode-section" aria-labelledby="focus-mode-title">
           <div className="focus-section-heading">
             <div><small>CHOOSE A MODE</small><h2 id="focus-mode-title">選擇訓練方式</h2></div>
-            <span>四種模式</span>
+            <span>{guestMode ? '四種模式' : '五種模式'}</span>
           </div>
           <div className="focus-mode-grid">
             <article className="focus-mode-card is-ready">
               <div className="focus-mode-icon"><Grid3X3 aria-hidden="true" /></div>
               <div><span>目前開放</span><h3>靜態舒爾特</h3><p>在固定矩陣中，依序找出由小到大的數字。</p></div>
-              <a href="./?game=schulte-static">開始練習<ChevronRight aria-hidden="true" /></a>
+              <a href={practiceUrl('./?game=schulte-static')}>開始練習<ChevronRight aria-hidden="true" /></a>
             </article>
             <article className="focus-mode-card is-ready">
               <div className="focus-mode-icon"><Orbit aria-hidden="true" /></div>
               <div><span>測試開放</span><h3>動態舒爾特</h3><p>三個同心圓環低速旋轉，練習動態視覺搜尋。</p></div>
-              <a href="./?game=schulte-dynamic">開始練習<ChevronRight aria-hidden="true" /></a>
+              <a href={practiceUrl('./?game=schulte-dynamic')}>開始練習<ChevronRight aria-hidden="true" /></a>
             </article>
             <article className="focus-mode-card is-ready">
               <div className="focus-mode-icon"><Shapes aria-hidden="true" /></div>
               <div><span>測試開放</span><h3>圖形舒爾特</h3><p>辨識提示圖形，在固定矩陣中找出全部相同圖案。</p></div>
-              <a href="./?game=schulte-shape">開始練習<ChevronRight aria-hidden="true" /></a>
+              <a href={practiceUrl('./?game=schulte-shape')}>開始練習<ChevronRight aria-hidden="true" /></a>
             </article>
             <article className="focus-mode-card is-ready">
               <div className="focus-mode-icon"><MessageSquareQuote aria-hidden="true" /></div>
               <div><span>目前開放</span><h3>詩句與名言重組</h3><p>在 5×5 正確字與干擾字矩陣中，依語音或句義提示重組句子。</p></div>
-              <a href="./?game=schulte-phrase">開始練習<ChevronRight aria-hidden="true" /></a>
+              <a href={practiceUrl('./?game=schulte-phrase')}>開始練習<ChevronRight aria-hidden="true" /></a>
             </article>
-            <article className="focus-mode-card is-ready friday-memorization-card">
+            {!guestMode && <article className="focus-mode-card is-ready friday-memorization-card">
               <div className="focus-mode-icon"><CalendarCheck2 aria-hidden="true" /></div>
               <div><span>週五任務</span><h3>名言佳句背誦</h3><p>只看釋義，連續完成指定 5 句；任一句答錯就從第 1 句重新開始。</p></div>
               <a href="./?game=schulte-memorization">開始背誦<ChevronRight aria-hidden="true" /></a>
-            </article>
+            </article>}
           </div>
         </section>
-        <SchulteMemorizationManager />
-        <SchultePhraseManager />
+        {!guestMode && <SchulteMemorizationManager />}
+        {!guestMode && <SchultePhraseManager />}
       </main>
     </div>
   )

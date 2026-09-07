@@ -41,6 +41,7 @@ import {
   transferAnswer,
   transferLabel,
 } from '../lib/chemicalFormula.js'
+import { learningHubUrl } from '../lib/guestPractice.js'
 import './chemicalFormulaOutpost.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
@@ -73,14 +74,6 @@ const modeOptions = [
     icon: Braces,
   },
 ]
-
-function learningHubUrl() {
-  if (typeof window === 'undefined') return './'
-  const url = new URL(window.location.href)
-  url.search = ''
-  url.hash = ''
-  return url.toString()
-}
 
 function readBestScores() {
   if (typeof window === 'undefined' || !window.localStorage) return {}

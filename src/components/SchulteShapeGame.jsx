@@ -28,6 +28,7 @@ import {
   recordShapeSchulteCompletion,
 } from '../services/schulteService.js'
 import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
+import { isGuestMode, learningHubUrl } from '../lib/guestPractice.js'
 import './schulteGame.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
@@ -39,13 +40,6 @@ const shapeIcons = {
   square: Square,
   star: Star,
   heart: Heart,
-}
-
-function learningHubUrl(query = '') {
-  const url = new URL(window.location.href)
-  url.search = query
-  url.hash = ''
-  return url.toString()
 }
 
 function SchulteNavigation() {
@@ -60,7 +54,8 @@ function SchulteNavigation() {
 
 export default function SchulteShapeGame() {
   const query = useMemo(() => new URLSearchParams(window.location.search), [])
-  const focusTaskId = resolveFocusTaskId(query, { activityPrefix: 'schulte_shape_' })
+  const guestMode = isGuestMode()
+  const focusTaskId = guestMode ? '' : resolveFocusTaskId(query, { activityPrefix: 'schulte_shape_' })
   const [phase, setPhase] = useState('setup')
   const [layout, setLayout] = useState(null)
   const [selectedTileIds, setSelectedTileIds] = useState([])
@@ -74,7 +69,7 @@ export default function SchulteShapeGame() {
   const bestRecord = bestShapeSchulteRecord(records)
 
   useEffect(() => {
-    loadSchulteRecords('shape').then(setRecords).catch(() => setRecords([]))
+    loadSchulteRecords('shape', { localOnly: guestMode }).then(setRecords).catch(() => setRecords([]))
   }, [])
 
   const startGame = () => {
@@ -100,6 +95,7 @@ export default function SchulteShapeGame() {
         focusTaskId,
         durationMs,
         errorCount: nextErrorCount,
+        localOnly: guestMode,
       })
       setRecords(saved.records)
       setResult({

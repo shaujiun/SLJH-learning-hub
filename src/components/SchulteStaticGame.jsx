@@ -21,17 +21,11 @@ import {
 } from '../lib/schulte.js'
 import { loadSchulteRecords, recordSchulteCompletion } from '../services/schulteService.js'
 import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
+import { isGuestMode, learningHubUrl } from '../lib/guestPractice.js'
 import './schulteGame.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
-
-function learningHubUrl(query = '') {
-  const url = new URL(window.location.href)
-  url.search = query
-  url.hash = ''
-  return url.toString()
-}
 
 function SchulteNavigation() {
   return (
@@ -45,7 +39,8 @@ function SchulteNavigation() {
 
 export default function SchulteStaticGame() {
   const query = useMemo(() => new URLSearchParams(window.location.search), [])
-  const focusTaskId = resolveFocusTaskId(query, { activityPrefix: 'schulte_static_' })
+  const guestMode = isGuestMode()
+  const focusTaskId = guestMode ? '' : resolveFocusTaskId(query, { activityPrefix: 'schulte_static_' })
   const [size, setSize] = useState(normalizeSchulteSize(query.get('size')))
   const [phase, setPhase] = useState('setup')
   const [numbers, setNumbers] = useState([])
@@ -63,7 +58,7 @@ export default function SchulteStaticGame() {
   const selectableSizes = focusTaskId ? [selectedInfo] : Object.values(schulteSizes)
 
   useEffect(() => {
-    loadSchulteRecords().then(setRecords).catch(() => setRecords([]))
+    loadSchulteRecords('static', { localOnly: guestMode }).then(setRecords).catch(() => setRecords([]))
   }, [])
 
   const startGame = (nextSize = size) => {
@@ -93,6 +88,7 @@ export default function SchulteStaticGame() {
         size,
         durationMs,
         errorCount: nextErrorCount,
+        localOnly: guestMode,
       })
       setRecords(saved.records)
       setResult({

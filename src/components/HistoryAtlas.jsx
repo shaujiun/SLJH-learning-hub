@@ -47,6 +47,7 @@ import {
   historyRegions,
   historyStatusLabel,
 } from '../lib/historyAtlas.js'
+import { guestLaunchUrl, isGuestMode, learningHubUrl } from '../lib/guestPractice.js'
 import {
   loadHistoryAtlas,
   saveHistoryReaderPosition,
@@ -510,8 +511,10 @@ export function Timeline({
 }
 
 export default function HistoryAtlas() {
+  const guestMode = isGuestMode()
   const previewMode = import.meta.env.DEV
     && new URLSearchParams(window.location.search).get('preview') === '1'
+  const readOnlyMode = previewMode || guestMode
   const [state, setState] = useState({ loading: true, data: null, error: '' })
   const [volumeNo, setVolumeNo] = useState(3)
   const [chapterId, setChapterId] = useState('')
@@ -544,7 +547,7 @@ export default function HistoryAtlas() {
         if (!response.ok) throw new Error('無法載入本機歷史預覽資料。')
         data = await response.json()
       } else {
-        data = await loadHistoryAtlas()
+        data = await loadHistoryAtlas(undefined, { guestMode })
       }
       setState({ loading: false, data, error: '' })
       if (data.position?.volume_no) setVolumeNo(data.position.volume_no)
@@ -590,14 +593,14 @@ export default function HistoryAtlas() {
   }, [events, currentEvent])
 
   const remember = (event = currentEvent, nextFocus = focusMode) => {
-    if (previewMode) return
+    if (readOnlyMode) return
     saveHistoryReaderPosition({ chapterId, eventId: event?.id, volumeNo, focusMode: nextFocus })
   }
 
   const selectEvent = (event, openDetail = false) => {
     setCurrentEvent(event)
     if (openDetail) setDetailEvent(event)
-    if (!previewMode) saveHistoryReaderPosition({ chapterId, eventId: event.id, volumeNo, focusMode })
+    if (!readOnlyMode) saveHistoryReaderPosition({ chapterId, eventId: event.id, volumeNo, focusMode })
   }
 
   const selectEventFromTool = (event) => {
@@ -619,14 +622,14 @@ export default function HistoryAtlas() {
   }
 
   if (state.loading) return <main className="center-screen history-loading"><div className="loading-orb"><RefreshCw aria-hidden="true" /></div><h1>正在展開歷史時光地圖</h1><p>正在讀取章節、事件與上次閱讀位置。</p></main>
-  if (state.error) return <main className="center-screen"><div className="error-orb"><CircleAlert aria-hidden="true" /></div><h1>歷史時光地圖暫時無法載入</h1><p>{state.error}</p><div className="button-row"><button className="primary-button" type="button" onClick={load}><RefreshCw aria-hidden="true" />重新讀取</button><a className="secondary-button" href="./"><ArrowLeft aria-hidden="true" />返回學習任務</a></div></main>
+  if (state.error) return <main className="center-screen"><div className="error-orb"><CircleAlert aria-hidden="true" /></div><h1>歷史時光地圖暫時無法載入</h1><p>{state.error}</p><div className="button-row"><button className="primary-button" type="button" onClick={load}><RefreshCw aria-hidden="true" />重新讀取</button><a className="secondary-button" href={learningHubUrl()}><ArrowLeft aria-hidden="true" />返回學習任務</a></div></main>
 
   const canManage = Boolean(state.data?.canManage)
   return (
     <div className={`history-atlas-shell ${darkMode ? 'is-dark' : ''}`}>
       <header className="history-site-header">
-        <a className="history-brand" href="?subject=history"><span><MapIcon aria-hidden="true" /></span><div><p>HISTORY ATLAS</p><strong>歷史時光地圖</strong></div></a>
-        <nav><a href="./"><ArrowLeft aria-hidden="true" />返回任務頁</a><a href={contactBookUrl}><BookOpen aria-hidden="true" />返回聯絡簿</a>{canManage && <button type="button" onClick={() => setShowManager((value) => !value)}><Settings aria-hidden="true" />{showManager ? '返回地圖' : '內容管理'}</button>}</nav>
+        <a className="history-brand" href={guestMode ? guestLaunchUrl('?subject=history') : '?subject=history'}><span><MapIcon aria-hidden="true" /></span><div><p>HISTORY ATLAS</p><strong>歷史時光地圖</strong></div></a>
+        <nav><a href={learningHubUrl()}><ArrowLeft aria-hidden="true" />返回任務頁</a><a href={contactBookUrl}><BookOpen aria-hidden="true" />返回聯絡簿</a>{canManage && <button type="button" onClick={() => setShowManager((value) => !value)}><Settings aria-hidden="true" />{showManager ? '返回地圖' : '內容管理'}</button>}</nav>
       </header>
 
       <main className="history-page-content">
@@ -638,6 +641,11 @@ export default function HistoryAtlas() {
         {previewMode && (
           <p className="history-preview-banner">
             本機預覽模式：目前使用 24 筆示範事件，不連接、不修改 Supabase，也不會發布網站。
+          </p>
+        )}
+        {guestMode && (
+          <p className="history-preview-banner">
+            訪客自由練習：不記名，也不會保存閱讀位置或寫入學生進度。
           </p>
         )}
 

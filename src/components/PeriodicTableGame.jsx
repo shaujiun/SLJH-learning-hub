@@ -32,19 +32,13 @@ import {
   recordPeriodicTableAttempt,
 } from '../services/periodicTableService.js'
 import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
+import { guestLaunchUrl, isGuestMode, learningHubUrl } from '../lib/guestPractice.js'
 import PeriodicBattle from './PeriodicBattle.jsx'
 import PeriodicTableGrid from './PeriodicTableGrid.jsx'
 import './periodicTableGame.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
-
-function learningHubUrl() {
-  const url = new URL(window.location.href)
-  url.search = ''
-  url.hash = ''
-  return url.toString()
-}
 
 function LoadingGame() {
   return (
@@ -67,7 +61,8 @@ function GameNavigation() {
 
 export default function PeriodicTableGame() {
   const query = useMemo(() => new URLSearchParams(window.location.search), [])
-  const focusTaskId = resolveFocusTaskId(query, {
+  const guestMode = isGuestMode()
+  const focusTaskId = guestMode ? '' : resolveFocusTaskId(query, {
     subjectCode: 'science',
     activityPrefix: 'periodic_',
   })
@@ -91,7 +86,16 @@ export default function PeriodicTableGame() {
     setPhase('loading')
     setLoadError('')
     try {
-      const nextContext = await loadPeriodicTableContext(focusTaskId)
+      const nextContext = guestMode
+        ? {
+            authenticated: false,
+            role: 'guest',
+            profile: { displayName: '訪客', username: '' },
+            student: null,
+            level: { code: 'intro', introGroup: null },
+            task: null,
+          }
+        : await loadPeriodicTableContext(focusTaskId)
       setContext(nextContext)
       const selection = resolvePeriodicGameSelection({
         task: nextContext.task,
@@ -225,13 +229,16 @@ export default function PeriodicTableGame() {
     )
   }
 
-  if (!context?.authenticated) {
+  if (!context?.authenticated && !guestMode) {
     return (
       <main className="periodic-center-screen">
         <Atom aria-hidden="true" />
         <h1>請先登入線上聯絡簿</h1>
         <p>登入後即可保留個人自然科等級與每日任務進度。</p>
-        <a className="periodic-primary-button" href={contactBookUrl}>前往聯絡簿登入</a>
+        <div className="periodic-result-actions">
+          <a className="periodic-primary-button" href={guestLaunchUrl('?game=periodic-table')}>改用訪客自由練習</a>
+          <a className="periodic-secondary-button" href={contactBookUrl}>前往聯絡簿登入</a>
+        </div>
       </main>
     )
   }
@@ -248,7 +255,7 @@ export default function PeriodicTableGame() {
         </a>
         <div className="periodic-identity">
           <strong>{context.profile.displayName}</strong>
-          <span>{context.student ? `${context.student.className}・${context.student.seatNumber} 號` : '教師／管理者自由練習'}</span>
+          <span>{context.student ? `${context.student.className}・${context.student.seatNumber} 號` : guestMode ? '訪客自由練習・不保存雲端進度' : '教師／管理者自由練習'}</span>
         </div>
       </header>
 
@@ -327,7 +334,7 @@ export default function PeriodicTableGame() {
               </div>
             </section>
 
-            {!focusTaskId && (
+            {!focusTaskId && context.authenticated && (
               <section className="battle-entry-card">
                 <div><Swords aria-hidden="true" /><span><strong>即時元素對戰</strong><small>建立 2 人或 4 人房間，和同學進行限時搶答。</small></span></div>
                 <button className="periodic-primary-button" type="button" onClick={() => setPhase('battle')}><Swords aria-hidden="true" />進入對戰模式</button>

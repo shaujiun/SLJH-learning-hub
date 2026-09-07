@@ -8,6 +8,7 @@ import {
   CircleAlert,
   Eye,
   EyeOff,
+  GraduationCap,
   Headphones,
   LogOut,
   Mic2,
@@ -41,6 +42,7 @@ import { rememberFocusTaskLaunch } from './lib/focusTaskLaunch.js'
 import { resolveSelectedFocusTask } from './lib/focusTaskSelection.js'
 import { describePendingTask, summarizeWeeklyProgress } from './lib/weeklyProgress.js'
 import { getEyeCareReminder } from './lib/eyeCareReminder.js'
+import { guestLaunchUrl, guestLearningSystems } from './lib/guestPractice.js'
 
 const HistoryAtlas = lazy(() => import('./components/HistoryAtlas.jsx'))
 const FocusTrainingHub = lazy(() => import('./components/FocusTrainingHub.jsx'))
@@ -81,12 +83,19 @@ function LoginRequired() {
     <main className="center-screen">
       <div className="mascot-orb"><BookOpenCheck aria-hidden="true" /></div>
       <p className="eyebrow">LEARNING PASSPORT</p>
-      <h1>請先登入線上聯絡簿</h1>
-      <p>登入一次後，就能直接前往各科入口與英文單字系統，不必再次輸入密碼。</p>
-      <a className="primary-button" href={contactBookUrl}>
-        <ArrowLeft aria-hidden="true" />
-        前往聯絡簿登入
-      </a>
+      <h1>選擇這次的練習方式</h1>
+      <p>聯絡簿學生登入後可保存任務與個人進度；其他班學生可直接使用訪客模式，不需要註冊帳號。</p>
+      <div className="button-row">
+        <a className="primary-button" href="?guest=1">
+          <Play aria-hidden="true" />
+          訪客自由練習
+        </a>
+        <a className="secondary-button" href={contactBookUrl}>
+          <ArrowLeft aria-hidden="true" />
+          聯絡簿學生登入
+        </a>
+      </div>
+      <small className="guest-login-note">訪客成績不會寫入每日任務，也不會出現在教師進度報表。</small>
     </main>
   )
 }
@@ -101,6 +110,7 @@ function ErrorScreen({ message, onRetry }) {
         <button className="primary-button" type="button" onClick={onRetry}>
           <RefreshCw aria-hidden="true" />重新讀取
         </button>
+        <a className="secondary-button" href="?guest=1"><Play aria-hidden="true" />訪客自由練習</a>
         <a className="secondary-button" href={contactBookUrl}>返回聯絡簿</a>
       </div>
     </main>
@@ -235,7 +245,7 @@ function FocusTask({ task, position, total, freelySelectable = false }) {
   )
 }
 
-function FocusTrainingEntrance() {
+function FocusTrainingEntrance({ guestMode = false }) {
   return (
     <section className="focus-training-entrance" aria-labelledby="focus-training-title">
       <div className="focus-training-entrance-icon"><Brain aria-hidden="true" /></div>
@@ -244,14 +254,15 @@ function FocusTrainingEntrance() {
         <h2 id="focus-training-title">專注力訓練</h2>
         <p>不分科目與分組，用舒爾特學習法練習視覺搜尋、注意力與穩定度。</p>
       </div>
-      <a href="./?focus=training"><Play aria-hidden="true" />選擇訓練</a>
+      <a href={guestMode ? guestLaunchUrl('./?focus=training') : './?focus=training'}><Play aria-hidden="true" />選擇訓練</a>
     </section>
   )
 }
 
-function SystemCard({ system }) {
+function SystemCard({ system, guestMode = false }) {
   const isEnglish = system.code === 'english'
-  const launchUrl = learningSystemLaunchUrl(system, englishVocabUrl)
+  const defaultLaunchUrl = learningSystemLaunchUrl(system, englishVocabUrl)
+  const launchUrl = guestMode ? guestLaunchUrl(defaultLaunchUrl) : defaultLaunchUrl
   const isReady = Boolean(launchUrl)
   return (
     <article className={`system-card ${isReady ? 'system-ready' : ''}`}>
@@ -259,11 +270,13 @@ function SystemCard({ system }) {
       <div className="system-copy">
         <div className="system-title-row">
           <h3>{system.name}</h3>
-          <span>{isReady ? '已開放' : '準備中'}・{system.audienceLabel}</span>
+          <span>{guestMode && isReady ? system.audienceLabel : `${isReady ? '已開放' : '準備中'}・${system.audienceLabel}`}</span>
         </div>
         <p>{system.description}</p>
         <small>
-          {system.activities.length > 0
+          {guestMode
+            ? '免登入使用，不會建立每日任務'
+            : system.activities.length > 0
             ? `每週隨機安排 ${system.weeklyMinimum}～${system.weeklyMaximum} 次`
             : '目前提供自由練習，尚未安排專注任務'}
         </small>
@@ -283,7 +296,7 @@ function SubjectGameIcon({ system }) {
   return <span aria-hidden="true">{system?.name?.slice(0, 1) || '學'}</span>
 }
 
-function SubjectGameMenu({ system }) {
+function SubjectGameMenu({ system, guestMode = false }) {
   const games = subjectGamesFor(system, englishVocabUrl)
   const isHistory = system?.code === 'history'
   if (!system) {
@@ -292,7 +305,7 @@ function SubjectGameMenu({ system }) {
         <CircleAlert aria-hidden="true" />
         <h1>找不到這個科目的學習系統</h1>
         <p>這個科目可能尚未開放，或不符合目前學生的分組設定。</p>
-        <a className="primary-button" href="./"><ArrowLeft aria-hidden="true" />返回各科選擇</a>
+        <a className="primary-button" href={guestMode ? '?guest=1' : './'}><ArrowLeft aria-hidden="true" />返回各科選擇</a>
       </section>
     )
   }
@@ -314,7 +327,7 @@ function SubjectGameMenu({ system }) {
             <p className="eyebrow">SELECT {isHistory ? 'A TOOL' : 'A GAME'}</p>
             <h2 id="subject-games-title">選擇{isHistory ? '學習' : '遊戲'}項目</h2>
           </div>
-          <a className="back-link" href="./"><ArrowLeft aria-hidden="true" />返回各科選擇</a>
+          <a className="back-link" href={guestMode ? '?guest=1' : './'}><ArrowLeft aria-hidden="true" />返回各科選擇</a>
         </div>
 
         <div className="subject-game-grid">
@@ -328,7 +341,7 @@ function SubjectGameMenu({ system }) {
                 </div>
                 <p>{game.description}</p>
               </div>
-              <a href={game.launchUrl} aria-label={`進入${game.name}`}>
+              <a href={guestMode ? guestLaunchUrl(game.launchUrl) : game.launchUrl} aria-label={`進入${game.name}`}>
                 <Play aria-hidden="true" />進入{isHistory ? '學習' : '遊戲'}
               </a>
             </article>
@@ -338,6 +351,74 @@ function SubjectGameMenu({ system }) {
         <p className="subject-coming-soon">其他{system.name}{isHistory ? '學習內容與遊戲' : '遊戲'}將陸續加入。</p>
       </section>
     </>
+  )
+}
+
+function GuestPracticeHub({ requestedSubject = '' }) {
+  const selectedSystem = requestedSubject
+    ? guestLearningSystems.find((system) => system.code === requestedSubject)
+    : null
+
+  return (
+    <div className="app-shell guest-app-shell">
+      <header className="site-header">
+        <a className="brand" href="?guest=1">
+          <span><BookOpenCheck aria-hidden="true" /></span>
+          <div>
+            <p>SLJH LEARNING HUB</p>
+            <strong>訪客自由練習</strong>
+          </div>
+        </a>
+        <div className="header-actions">
+          <div className="identity">
+            <strong>訪客模式</strong>
+            <span>不保存雲端進度</span>
+          </div>
+          <a className="icon-button guest-login-button" href={contactBookUrl}>
+            <GraduationCap aria-hidden="true" />
+            <span>學生登入</span>
+          </a>
+        </div>
+      </header>
+
+      <main className="page-content">
+        {requestedSubject ? (
+          <SubjectGameMenu system={selectedSystem} guestMode />
+        ) : <>
+          <section className="welcome-panel guest-welcome">
+            <div>
+              <p className="eyebrow">GUEST PRACTICE</p>
+              <h1>不用註冊，選一項開始練習</h1>
+              <p>訪客不會加入班級，也不會產生每日任務。部分遊戲會把本機最佳紀錄留在這一台裝置。</p>
+            </div>
+            <div className="welcome-figure"><GraduationCap aria-hidden="true" /></div>
+          </section>
+
+          <aside className="guest-mode-notice" aria-label="訪客模式說明">
+            <strong>訪客模式</strong>
+            <span>不記名</span>
+            <span>不寫入學生資料</span>
+            <span>不列入教師報表</span>
+          </aside>
+
+          <FocusTrainingEntrance guestMode />
+
+          <section className="systems-section" aria-labelledby="guest-systems-title">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">SUBJECTS</p>
+                <h2 id="guest-systems-title">選擇科目自由練習</h2>
+              </div>
+              <a className="back-link" href={contactBookUrl}><ArrowLeft aria-hidden="true" />聯絡簿學生登入</a>
+            </div>
+            <div className="system-grid">
+              {guestLearningSystems.map((system) => <SystemCard key={system.id} system={system} guestMode />)}
+            </div>
+            <p className="guest-system-note">英文單字系統目前仍依原有登入方式使用，未列入訪客練習。</p>
+          </section>
+        </>}
+      </main>
+    </div>
   )
 }
 
@@ -769,6 +850,7 @@ function LearningHub({ requestedSubject = '' }) {
 export default function App() {
   const searchParams = new URLSearchParams(window.location.search)
   const requestedGame = searchParams.get('game')
+  const guestMode = searchParams.get('guest') === '1'
   if (requestedGame === 'periodic-table') return <PeriodicTableGame />
   if (requestedGame === 'chemical-formula') {
     return <Suspense fallback={<LoadingScreen />}><ChemicalFormulaOutpost /></Suspense>
@@ -786,6 +868,7 @@ export default function App() {
     return <Suspense fallback={<LoadingScreen />}><SchultePhraseGame /></Suspense>
   }
   if (requestedGame === 'schulte-memorization') {
+    if (guestMode) return <GuestPracticeHub />
     return <Suspense fallback={<LoadingScreen />}><SchulteMemorizationGame /></Suspense>
   }
   if (searchParams.get('focus') === 'training') {
@@ -799,6 +882,9 @@ export default function App() {
   }
   if (searchParams.get('geography') === 'detective') {
     return <Suspense fallback={<LoadingScreen />}><GeographyDetective /></Suspense>
+  }
+  if (guestMode) {
+    return <GuestPracticeHub requestedSubject={searchParams.get('subject') || ''} />
   }
   return <LearningHub requestedSubject={searchParams.get('subject') || ''} />
 }

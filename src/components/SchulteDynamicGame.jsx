@@ -28,6 +28,7 @@ import {
   recordDynamicSchulteCompletion,
 } from '../services/schulteService.js'
 import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
+import { isGuestMode, learningHubUrl } from '../lib/guestPractice.js'
 import './schulteGame.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
@@ -36,13 +37,6 @@ const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
 const speedProfiles = {
   gentle: [120, 144, 168],
   steady: [90, 108, 126],
-}
-
-function learningHubUrl(query = '') {
-  const url = new URL(window.location.href)
-  url.search = query
-  url.hash = ''
-  return url.toString()
 }
 
 function SchulteNavigation() {
@@ -66,7 +60,8 @@ function ringPosition(index, total, ringIndex) {
 
 export default function SchulteDynamicGame() {
   const query = useMemo(() => new URLSearchParams(window.location.search), [])
-  const focusTaskId = resolveFocusTaskId(query, { activityPrefix: 'schulte_dynamic_' })
+  const guestMode = isGuestMode()
+  const focusTaskId = guestMode ? '' : resolveFocusTaskId(query, { activityPrefix: 'schulte_dynamic_' })
   const [itemCount, setItemCount] = useState(normalizeDynamicSchulteCount(query.get('count')))
   const [phase, setPhase] = useState('setup')
   const [layout, setLayout] = useState(null)
@@ -85,7 +80,7 @@ export default function SchulteDynamicGame() {
   const selectableLevels = focusTaskId ? [selectedInfo] : Object.values(dynamicSchulteLevels)
 
   useEffect(() => {
-    loadSchulteRecords('dynamic').then(setRecords).catch(() => setRecords([]))
+    loadSchulteRecords('dynamic', { localOnly: guestMode }).then(setRecords).catch(() => setRecords([]))
   }, [])
 
   const startGame = (nextItemCount = itemCount) => {
@@ -117,6 +112,7 @@ export default function SchulteDynamicGame() {
         itemCount,
         durationMs,
         errorCount: nextErrorCount,
+        localOnly: guestMode,
       })
       setRecords(saved.records)
       setResult({

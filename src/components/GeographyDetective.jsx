@@ -24,19 +24,12 @@ import {
   evaluateGeographyDetectiveAnswer,
   geographyDetectiveScore,
 } from '../lib/geographyDetective.js'
+import { learningHubUrl } from '../lib/guestPractice.js'
 import './geographyDetective.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
 const bestScoreStorageKey = 'sljh.geographyDetective.bestScores.v1'
-
-function learningHubUrl() {
-  if (typeof window === 'undefined') return './'
-  const url = new URL(window.location.href)
-  url.search = ''
-  url.hash = ''
-  return url.toString()
-}
 
 function readBestScores() {
   if (typeof window === 'undefined' || !window.localStorage) return {}
