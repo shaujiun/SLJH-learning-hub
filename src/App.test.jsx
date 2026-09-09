@@ -36,7 +36,18 @@ describe('guest practice routes', () => {
 
     expect(html).toContain('?game=periodic-table&amp;guest=1')
     expect(html).toContain('?game=chemical-formula&amp;guest=1')
+    expect(html).toContain('?game=measurement-lab&amp;guest=1')
     expect(html).toContain('href="?guest=1"')
+  })
+
+  it('opens the measurement lab inside the learning hub tab', () => {
+    useUrl('https://example.test/hub/?game=measurement-lab&guest=1')
+    const html = renderToStaticMarkup(<App />)
+
+    expect(html).toContain('量測實驗室')
+    expect(html).toContain('games/measurement-lab/index.html')
+    expect(html).toContain('href="?subject=science&amp;guest=1"')
+    expect(html).not.toContain('target="_blank"')
   })
 
   it('shows only general focus practice to guests', () => {

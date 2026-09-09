@@ -18,6 +18,12 @@ describe('各科遊戲選擇入口', () => {
 
   it('元素週期表保留課程適用標示與現有遊戲網址', () => {
     expect(subjectGamesFor({ code: 'science', name: '自然' }, '')).toContainEqual(expect.objectContaining({
+      code: 'measurement-lab',
+      name: '量測實驗室',
+      availability: '八上長度與體積測量',
+      launchUrl: '?game=measurement-lab',
+    }))
+    expect(subjectGamesFor({ code: 'science', name: '自然' }, '')).toContainEqual(expect.objectContaining({
       code: 'periodic-table',
       availability: '八上 CH6 後都適用',
       launchUrl: '?game=periodic-table',

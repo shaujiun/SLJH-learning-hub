@@ -9,6 +9,13 @@ const subjectGameTemplates = {
   ],
   science: [
     {
+      code: 'measurement-lab',
+      name: '量測實驗室',
+      description: '走訪六個工作站，練習直尺、量筒與排水法的操作、讀值、單位及方法判斷。',
+      availability: '八上長度與體積測量',
+      launchUrl: '?game=measurement-lab',
+    },
+    {
       code: 'periodic-table',
       name: '元素週期表測驗',
       description: '練習元素中文名稱、元素符號與週期表位置，並可進入多人對戰。',
