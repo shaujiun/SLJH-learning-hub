@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { buildDashboardTaskLists, buildTaskLaunchUrl, mapMemorizationTask } from './learningService.js'
+import {
+  buildDashboardTaskLists,
+  buildTaskLaunchUrl,
+  mapLearningTask,
+  mapMemorizationTask,
+} from './learningService.js'
 
 const batch = {
   setId: '7a7dfad4-2c64-4b72-b808-4e170cb41793',
@@ -53,6 +58,30 @@ describe('mapMemorizationTask', () => {
     ])
     expect(result.tasks).not.toContain(memorizationTask)
     expect(result.weeklyTasks[0]).toBe(memorizationTask)
+  })
+})
+
+describe('mapLearningTask', () => {
+  it('maps a student geography task with its curriculum scope label', () => {
+    expect(mapLearningTask({
+      id: '66fcaa73-1244-4e15-a577-c30ce3d5d3bb',
+      assigned_date: '2026-09-05',
+      subject_code: 'geography',
+      subject_name: '地理',
+      activity_code: 'geography_round',
+      activity_name: '地理填圖任選一回合',
+      launch_url: 'https://shaujiun.github.io/SLJH-learning-hub/?geography=maps',
+      group_code: 'B',
+      question_count: 10,
+      target_score: 80,
+      status: 'pending',
+      best_score: null,
+      completed_at: null,
+      is_weekend_carryover: false,
+    })).toMatchObject({
+      subjectCode: 'geography',
+      curriculumScopeLabel: '八上第 1～2 章',
+    })
   })
 })
 
