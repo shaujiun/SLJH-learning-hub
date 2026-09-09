@@ -5,7 +5,10 @@ import {
   isLearningSystemVisible,
   normalizeLearningAudience,
 } from '../lib/learningAudiences.js'
-import { appendFocusTaskCurriculumScope } from '../lib/focusTaskCurriculum.js'
+import {
+  appendFocusTaskCurriculumScope,
+  getFocusTaskCurriculumScope,
+} from '../lib/focusTaskCurriculum.js'
 
 function relation(value) {
   return Array.isArray(value) ? value[0] : value
@@ -34,7 +37,7 @@ function mapSystem(row) {
   }
 }
 
-function mapTask(row) {
+export function mapLearningTask(row) {
   const task = {
     id: row.id,
     assignedDate: row.assigned_date,
@@ -183,7 +186,7 @@ export async function loadLearningDashboard(referenceDate = new Date()) {
   const visibleSystemCodes = new Set(visibleSystems.map((system) => system.code))
   const visibleTaskRows = (taskRows || []).filter((row) => visibleSystemCodes.has(row.subject_code))
   const visibleWeeklyRows = (weeklyRows || []).filter((row) => visibleSystemCodes.has(row.subject_code_snapshot))
-  const mappedTasks = visibleTaskRows.map(mapTask)
+  const mappedTasks = visibleTaskRows.map(mapLearningTask)
   const memorizationBatch = memorizationResult.data
   const memorizationTask = memorizationBatch && visibleSystemCodes.has('focus_training')
     ? mapMemorizationTask(memorizationBatch, date)
