@@ -22,6 +22,7 @@ import {
   X,
 } from 'lucide-react'
 import PeriodicTableGame from './components/PeriodicTableGame.jsx'
+import MeasurementLabGame from './components/MeasurementLabGame.jsx'
 import ScienceLevelManager from './components/ScienceLevelManager.jsx'
 import LearningSystemOrderButtons from './components/LearningSystemOrderButtons.jsx'
 import { isSupabaseConfigured } from './lib/supabase.js'
@@ -851,6 +852,7 @@ export default function App() {
   const searchParams = new URLSearchParams(window.location.search)
   const requestedGame = searchParams.get('game')
   const guestMode = searchParams.get('guest') === '1'
+  if (requestedGame === 'measurement-lab') return <MeasurementLabGame />
   if (requestedGame === 'periodic-table') return <PeriodicTableGame />
   if (requestedGame === 'chemical-formula') {
     return <Suspense fallback={<LoadingScreen />}><ChemicalFormulaOutpost /></Suspense>
