@@ -30,6 +30,16 @@ describe('guest practice routes', () => {
     expect(html).not.toContain('待完成的專注任務')
   })
 
+  it('提供兩個不串接帳號與紀錄的外部益智遊戲', () => {
+    useUrl('https://example.test/hub/?guest=1')
+    const html = renderToStaticMarkup(<App />)
+
+    expect(html).toContain('由本校楊志宏老師、郭安澤老師協同製作，不適用本系統紀錄與帳號登入')
+    expect(html).toContain('href="https://andrewkotw.github.io/card-puzzle/#4CLUE"')
+    expect(html).toContain('href="https://andrewkotw.github.io/120_card_math/"')
+    expect(html).toContain('target="_blank" rel="noreferrer"')
+  })
+
   it('keeps guest mode on every science practice link', () => {
     useUrl('https://example.test/hub/?subject=science&guest=1')
     const html = renderToStaticMarkup(<App />)

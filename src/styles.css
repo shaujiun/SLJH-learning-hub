@@ -17,6 +17,121 @@
   --shadow: 0 8px 0 rgba(47, 58, 80, 0.18);
 }
 
+/* 外部益智遊戲僅提供連結，不串接本系統帳號與紀錄 */
+.external-puzzle-section {
+  margin: 1.2rem 0;
+  padding: 1rem 1.15rem;
+  border: 2px solid var(--border);
+  border-radius: 24px;
+  background: linear-gradient(135deg, #fff3d9, #f6ecff);
+  box-shadow: var(--shadow);
+}
+
+.external-puzzle-heading {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+}
+
+.external-puzzle-icon {
+  display: grid;
+  width: 70px;
+  height: 70px;
+  place-items: center;
+  border-radius: 22px;
+  color: #fff;
+  background: linear-gradient(145deg, #9564b8, #664184);
+}
+
+.external-puzzle-icon svg {
+  width: 38px;
+  height: 38px;
+}
+
+.external-puzzle-heading h2,
+.external-puzzle-heading p {
+  margin: 0;
+}
+
+.external-puzzle-heading h2 {
+  margin: 0.1rem 0 0.25rem;
+}
+
+.external-puzzle-heading > div:last-child > p:last-child {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.external-puzzle-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.external-puzzle-links a {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 54px;
+  padding: 0.65rem 0.85rem;
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  color: #3f2d55;
+  background: #fff;
+  box-shadow: 0 3px 0 rgba(63, 45, 85, 0.18);
+  text-decoration: none;
+}
+
+.external-puzzle-links a:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 0 rgba(63, 45, 85, 0.16);
+}
+
+.external-puzzle-links a > span {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 10px;
+  color: #fff;
+  background: #79519a;
+  font-weight: 900;
+}
+
+.external-puzzle-links a svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 700px) {
+  .external-puzzle-section {
+    padding: 0.85rem;
+  }
+
+  .external-puzzle-heading {
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 0.7rem;
+  }
+
+  .external-puzzle-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+  }
+
+  .external-puzzle-icon svg {
+    width: 31px;
+    height: 31px;
+  }
+
+  .external-puzzle-links {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* 歷史時光地圖 */
 .history-atlas-shell {
   --history-ink: #3f3026;
