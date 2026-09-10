@@ -8,6 +8,7 @@ import {
   CircleAlert,
   Eye,
   EyeOff,
+  ExternalLink,
   GraduationCap,
   Headphones,
   LogOut,
@@ -15,6 +16,7 @@ import {
   Pencil,
   Play,
   Plus,
+  Puzzle,
   RefreshCw,
   Save,
   Sparkles,
@@ -260,6 +262,35 @@ function FocusTrainingEntrance({ guestMode = false }) {
   )
 }
 
+function ExternalPuzzleGames() {
+  const games = [
+    { name: '神機妙算', url: 'https://andrewkotw.github.io/card-puzzle/#4CLUE' },
+    { name: '數字神算', url: 'https://andrewkotw.github.io/120_card_math/' },
+  ]
+
+  return (
+    <section className="external-puzzle-section" aria-labelledby="external-puzzle-title">
+      <div className="external-puzzle-heading">
+        <div className="external-puzzle-icon"><Puzzle aria-hidden="true" /></div>
+        <div>
+          <p className="eyebrow">PUZZLE GAMES</p>
+          <h2 id="external-puzzle-title">益智遊戲</h2>
+          <p>由本校楊志宏老師、郭安澤老師協同製作，不適用本系統紀錄與帳號登入</p>
+        </div>
+      </div>
+      <div className="external-puzzle-links">
+        {games.map((game, index) => (
+          <a key={game.name} href={game.url} target="_blank" rel="noreferrer">
+            <span>{index + 1}</span>
+            <strong>{game.name}</strong>
+            <ExternalLink aria-hidden="true" />
+          </a>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 function SystemCard({ system, guestMode = false }) {
   const isEnglish = system.code === 'english'
   const defaultLaunchUrl = learningSystemLaunchUrl(system, englishVocabUrl)
@@ -403,6 +434,8 @@ function GuestPracticeHub({ requestedSubject = '' }) {
           </aside>
 
           <FocusTrainingEntrance guestMode />
+
+          <ExternalPuzzleGames />
 
           <section className="systems-section" aria-labelledby="guest-systems-title">
             <div className="section-heading">
@@ -829,6 +862,8 @@ function LearningHub({ requestedSubject = '' }) {
         {role === 'admin' && <ScienceLevelManager />}
 
         <FocusTrainingEntrance />
+
+        <ExternalPuzzleGames />
 
         <section className="systems-section" aria-labelledby="systems-title">
           <div className="section-heading">
