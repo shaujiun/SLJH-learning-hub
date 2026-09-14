@@ -103,6 +103,12 @@ export function relativeSeatPosition(playerSeat, viewerSeat) {
   return ['bottom', 'right', 'top', 'left'][(playerSeat - viewerSeat + 4) % 4]
 }
 
+export function practiceTargetForPlayer(animals, functionCode, actorPlayerId, targetPlayerId) {
+  return functionCardTargets(animals, functionCode, actorPlayerId)
+    .filter((animal) => animal.ownerPlayerId === targetPlayerId)
+    .sort((left, right) => right.score - left.score || left.position - right.position)[0] || null
+}
+
 export function practicePublicView(game, viewerId) {
   const viewerSeat = game.players.find((player) => player.id === viewerId)?.seatNumber || 1
   return {

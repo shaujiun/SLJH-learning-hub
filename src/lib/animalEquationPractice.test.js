@@ -3,6 +3,7 @@ import { animalEquationRadicals } from '../data/animalEquationCards.js'
 import {
   createAnimalEquationPractice,
   practicePublicView,
+  practiceTargetForPlayer,
   passPracticeTurn,
   relativeSeatPosition,
   resolvePracticeReview,
@@ -17,6 +18,17 @@ const radical = (code) => ({
 })
 
 describe('根式馬戲團自由試玩', () => {
+  it('點對手座位時，功能牌優先指定其最高分動物', () => {
+    const animals = [
+      { id: 'a', position: 1, revealed: true, ownerPlayerId: 'ai-fox', score: 5 },
+      { id: 'b', position: 2, revealed: true, ownerPlayerId: 'ai-fox', score: 20 },
+      { id: 'c', position: 3, revealed: true, ownerPlayerId: 'ai-sloth', score: 15 },
+    ]
+    expect(practiceTargetForPlayer(animals, 'accuse', 'you', 'ai-fox')?.id).toBe('b')
+    expect(practiceTargetForPlayer(animals, 'tempt', 'you', 'ai-sloth')?.id).toBe('c')
+    expect(practiceTargetForPlayer(animals, 'tempt', 'you', 'you')).toBeNull()
+  })
+
   it('每局重洗 100 張牌與 16 張動物，四人各抽 6 張', () => {
     const first = createAnimalEquationPractice(() => 0)
     const second = createAnimalEquationPractice(() => 0.999)
