@@ -10,7 +10,8 @@ describe('AnimalEquationDemo', () => {
     expect(room.hand.some((card) => card.id === 'nsqrt6')).toBe(true)
     const html = renderToStaticMarkup(<DemoVariableInputs hand={room.hand} selectedIds={['nsqrt6']}
       nValues={{ nsqrt6: '3' }} onChange={() => {}} />)
-    expect(html).toContain('替 n√6 設定正整數 n')
+    expect(html).toContain('替 <math')
+    expect(html).toContain('<mi>n</mi><msqrt><mn>6</mn></msqrt>')
     expect(html).toContain('value="3"')
   })
 
@@ -18,7 +19,7 @@ describe('AnimalEquationDemo', () => {
     const html = renderToStaticMarkup(<AnimalEquationDemo />)
     expect(html).toContain('免登入教學試玩')
     expect(html).toContain('送出 2 張根式牌')
-    expect(html).toMatch(/√(?:8|12|24)/)
+    expect(html).toMatch(/<msqrt><mn>(?:8|12|24)<\/mn><\/msqrt>/)
     expect(html).toContain('馴化')
     expect(html).toContain('data-code="tame"')
     expect(html.indexOf('找出兩張同類方根')).toBeLessThan(html.indexOf('試玩桌面'))
