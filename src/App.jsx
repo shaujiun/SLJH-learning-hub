@@ -57,7 +57,7 @@ const SchulteMemorizationGame = lazy(() => import('./components/SchulteMemorizat
 const GeographyFillMap = lazy(() => import('./components/GeographyFillMap.jsx'))
 const GeographyDetective = lazy(() => import('./components/GeographyDetective.jsx'))
 const ChemicalFormulaOutpost = lazy(() => import('./components/ChemicalFormulaOutpost.jsx'))
-const AnimalEquationDemo = lazy(() => import('./components/AnimalEquationDemo.jsx'))
+const AnimalEquationExperience = lazy(() => import('./components/AnimalEquationExperience.jsx'))
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
@@ -889,7 +889,7 @@ export default function App() {
   const requestedGame = searchParams.get('game')
   const guestMode = searchParams.get('guest') === '1'
   if (requestedGame === 'animal-equation') {
-    return <Suspense fallback={<LoadingScreen />}><AnimalEquationDemo /></Suspense>
+    return <Suspense fallback={<LoadingScreen />}><AnimalEquationExperience /></Suspense>
   }
   if (requestedGame === 'measurement-lab') return <MeasurementLabGame />
   if (requestedGame === 'periodic-table') return <PeriodicTableGame />

@@ -1,0 +1,23 @@
+.animal-experience-shell { min-height: 100vh; background: radial-gradient(circle at 10% 8%, #ffe1b9, transparent 25rem), radial-gradient(circle at 90% 15%, #c5eee6, transparent 25rem), #fff8ed; color: #263b58; font-family: "Iansui", "BiauKai", sans-serif; }
+.animal-experience-shell * { box-sizing: border-box; }
+.animal-experience-shell header, .animal-experience-shell main { width: min(100% - 2rem, 920px); margin-inline: auto; }
+.animal-experience-shell header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 0; }
+.animal-experience-shell header a { display: inline-flex; align-items: center; gap: 0.35rem; color: #205d5b; font-weight: 900; text-decoration: none; }
+.animal-experience-shell header svg { width: 20px; }
+.animal-experience-shell header strong { font-size: 1.1rem; }
+.animal-experience-shell main { margin-top: min(8vh, 4rem); border: 2px solid #263b58; border-radius: 24px; padding: clamp(1.1rem, 4vw, 2.2rem); background: #fff; box-shadow: 0 8px 0 #263b58; }
+.animal-experience-eyebrow { margin: 0; color: #9a5834; font-weight: 900; }
+.animal-experience-shell h1 { margin: 0.2rem 0 0.5rem; font-size: clamp(1.7rem, 4vw, 2.5rem); }
+.animal-experience-shell main > p:not(.animal-experience-eyebrow) { margin: 0; color: #576775; line-height: 1.6; }
+.animal-experience-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1.3rem 0 1rem; }
+.animal-experience-options button { display: grid; justify-items: start; align-content: start; gap: 0.5rem; min-height: 225px; border: 2px solid #263b58; border-radius: 18px; padding: 1.15rem; background: #e6f7f2; box-shadow: 0 5px 0 #263b58; color: #263b58; text-align: left; cursor: pointer; }
+.animal-experience-options button:nth-child(2) { background: #ffe8c0; }
+.animal-experience-options button:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #263b58; }
+.animal-experience-options button:focus-visible, .animal-experience-shell a:focus-visible { outline: 4px solid #e67846; outline-offset: 3px; }
+.animal-experience-options svg { width: 27px; height: 27px; color: #237d74; }
+.animal-experience-options button:nth-child(2) svg { color: #ad6635; }
+.animal-experience-options strong { font-size: 1.25rem; }
+.animal-experience-options span { color: #586675; line-height: 1.5; }
+.animal-experience-options b { align-self: end; margin-top: 0.4rem; color: #205d5b; }
+.animal-experience-shell main > small { color: #795b4a; line-height: 1.5; }
+@media (max-width: 620px) { .animal-experience-shell header, .animal-experience-shell main { width: min(100% - 1rem, 920px); } .animal-experience-shell main { margin-top: 0.8rem; } .animal-experience-options { grid-template-columns: 1fr; } .animal-experience-options button { min-height: 160px; } }
