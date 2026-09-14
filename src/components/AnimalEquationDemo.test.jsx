@@ -20,6 +20,7 @@ describe('AnimalEquationDemo', () => {
     expect(html).toContain('送出 2 張根式牌')
     expect(html).toMatch(/√(?:8|12|24)/)
     expect(html).toContain('馴化')
+    expect(html).toContain('data-code="tame"')
     expect(html.indexOf('找出兩張同類方根')).toBeLessThan(html.indexOf('試玩桌面'))
     expect(html).toContain('試玩紀錄不會寫入帳號或每日任務')
   })

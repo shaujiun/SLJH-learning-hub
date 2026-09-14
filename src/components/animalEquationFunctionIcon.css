@@ -1,0 +1,7 @@
+.animal-function-symbol { --symbol-color: #61477b; --symbol-wash: #f4eaff; width: clamp(2.3rem, 4vw, 3.2rem); aspect-ratio: 1; display: inline-grid; place-items: center; border: 2px solid currentColor; border-radius: 50%; background: var(--symbol-wash); color: var(--symbol-color); box-shadow: 0 2px 0 #31294240; }
+.animal-function-symbol svg { width: 62%; height: 62%; }
+.animal-function-symbol[data-code="tame"] { --symbol-color: #8e5629; --symbol-wash: #ffe5ac; }
+.animal-function-symbol[data-code="accuse"] { --symbol-color: #9e3f48; --symbol-wash: #ffe1df; }
+.animal-function-symbol[data-code="clarify"] { --symbol-color: #285f8f; --symbol-wash: #dbecff; }
+.animal-function-symbol[data-code="tempt"] { --symbol-color: #735197; --symbol-wash: #eadbf9; }
+.animal-function-symbol[data-code="gender_error"] { --symbol-color: #4b6470; --symbol-wash: #e0edf1; }

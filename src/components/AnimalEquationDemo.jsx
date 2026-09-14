@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ArrowLeft, BookOpen, Bot, RotateCcw, Swords, Trophy } from 'lucide-react'
+import AnimalEquationFunctionIcon from './AnimalEquationFunctionIcon.jsx'
 import { createAnimalEquationDemo, submitDemoPair, tameDemoAnimal } from '../lib/animalEquationDemo.js'
 import './animalEquationDemo.css'
 
@@ -66,7 +67,9 @@ export default function AnimalEquationDemo({ onBack, onStartGame }) {
                   <strong>{card.label}</strong><small>{selectedIds.includes(card.id) ? '已選取' : '點選出牌'}</small>
                 </button>
               ))}
-              <span className="animal-demo-function-card" aria-label="下一步可使用的馴化牌">馴化<small>下一步</small></span>
+              <span className="animal-demo-function-card" aria-label="下一步可使用的馴化牌">
+                <AnimalEquationFunctionIcon code="tame" /><strong>馴化</strong><small>下一步</small>
+              </span>
             </div>
             <DemoVariableInputs hand={room.hand} selectedIds={selectedIds} nValues={nValues}
               onChange={(id, value) => setNValues((current) => ({ ...current, [id]: value }))} />
@@ -77,7 +80,7 @@ export default function AnimalEquationDemo({ onBack, onStartGame }) {
           </>}
 
           {room.phase === 'tame' && <>
-            <p className="animal-demo-instruction">你手上有一張「馴化」。先挑一張蓋住的動物，再打出功能牌。</p>
+            <p className="animal-demo-instruction"><AnimalEquationFunctionIcon code="tame" />你手上有一張「馴化」。先挑一張蓋住的動物，再打出功能牌。</p>
             <div className="animal-demo-targets" aria-label="中央未翻開的動物牌">
               {room.animals.map((animal) => <button key={animal.id} type="button"
                 className={selectedAnimalId === animal.id ? 'is-selected' : ''}

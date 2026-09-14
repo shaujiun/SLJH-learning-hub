@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, Bot, RotateCcw, Swords } from 'lucide-react'
+import AnimalEquationFunctionIcon from './AnimalEquationFunctionIcon.jsx'
 import { functionCardTargets } from '../lib/animalEquationFunctions.js'
 import {
   createAnimalEquationPractice,
@@ -146,14 +147,15 @@ export default function AnimalEquationPractice({ onBack }) {
           </div>
           <div className="animal-practice-public-play" aria-live="polite">
             <div><Swords aria-hidden="true" /><strong>本回合公開出牌</strong></div>
-            <p>{latestPlay ? `${publicName(view, latestPlay.playerId)}：${latestPlay.text}` : '尚未有人出牌'}</p>
+            <p>{latestPlay?.functionCode && <AnimalEquationFunctionIcon code={latestPlay.functionCode} className="is-public" />}
+              <span>{latestPlay ? `${publicName(view, latestPlay.playerId)}：${latestPlay.text}` : '尚未有人出牌'}</span></p>
             {latestPlay && <small>{latestPlay.result}{latestPlay.defenseLabel ? ` · ${latestPlay.defenseLabel}` : ''}</small>}
           </div>
           <details className="animal-practice-history">
             <summary>查看所有玩家的出牌紀錄（{view.publicPlays.length} 筆）</summary>
             <ol>{view.publicPlays.map((play) => <li key={play.id}>
               <strong>第 {play.turnNumber} 回合 · {publicName(view, play.playerId)}</strong>
-              <span>{play.text} · {play.result}</span>
+              <span>{play.functionCode && <AnimalEquationFunctionIcon code={play.functionCode} className="is-history" />}{play.text} · {play.result}</span>
             </li>)}</ol>
           </details>
         </section>
@@ -176,6 +178,7 @@ export default function AnimalEquationPractice({ onBack }) {
                   : card.type === 'function' ? selectFunction(card.id) : toggleCard(card.id)}>
                 <img className="animal-practice-hand-art" src={tentArtSrc} alt="" aria-hidden="true" />
                 <span className="animal-practice-hand-corner" aria-hidden="true">{card.type === 'function' ? '✦' : '√'}</span>
+                {card.type === 'function' && <AnimalEquationFunctionIcon code={card.code} />}
                 <strong>{card.label}</strong>
                 <small>{view.newDrawnCardIds.includes(card.id) ? '新補牌' : card.type === 'function' ? '功能牌' : '根式牌'}</small>
                 <span className="animal-practice-hand-corner is-bottom" aria-hidden="true">{card.type === 'function' ? '✦' : '√'}</span>
