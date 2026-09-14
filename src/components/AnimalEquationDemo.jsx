@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { ArrowLeft, BookOpen, Bot, RotateCcw, Swords, Trophy } from 'lucide-react'
 import AnimalEquationFunctionIcon from './AnimalEquationFunctionIcon.jsx'
+import AnimalEquationRadicalText from './AnimalEquationRadicalText.jsx'
 import { createAnimalEquationDemo, submitDemoPair, tameDemoAnimal } from '../lib/animalEquationDemo.js'
 import './animalEquationDemo.css'
 
 export function DemoVariableInputs({ hand, selectedIds, nValues, onChange }) {
   return hand.filter((card) => selectedIds.includes(card.id) && card.variableCode === 'n').map((card) => (
     <label className="animal-demo-variable" key={card.id}>
-      <span>替 {card.label} 設定正整數 n</span>
+      <span>替 <AnimalEquationRadicalText text={card.label} /> 設定正整數 n</span>
       <input inputMode="numeric" pattern="[1-9][0-9]*" value={nValues[card.id] || ''}
         onChange={(event) => onChange(card.id, event.target.value.replace(/\D/g, ''))} placeholder="例如 2" />
     </label>
@@ -57,14 +58,14 @@ export default function AnimalEquationDemo({ onBack, onStartGame }) {
             </div>
             <span>八上第 2 章起適用</span>
           </div>
-          <p className="animal-demo-feedback" role="status" aria-live="polite">{room.message}</p>
+          <p className="animal-demo-feedback" role="status" aria-live="polite"><AnimalEquationRadicalText text={room.message} /></p>
 
           {room.phase === 'pair' && <>
             <div className="animal-demo-hand" aria-label="你的根式手牌">
               {room.hand.filter((card) => card.type === 'radical').map((card) => (
                 <button key={card.id} type="button" className={selectedIds.includes(card.id) ? 'is-selected' : ''}
                   aria-pressed={selectedIds.includes(card.id)} onClick={() => selectCard(card.id)}>
-                  <strong>{card.label}</strong><small>{selectedIds.includes(card.id) ? '已選取' : '點選出牌'}</small>
+                  <strong><AnimalEquationRadicalText text={card.label} /></strong><small>{selectedIds.includes(card.id) ? '已選取' : '點選出牌'}</small>
                 </button>
               ))}
               <span className="animal-demo-function-card" aria-label="下一步可使用的馴化牌">
@@ -117,8 +118,8 @@ export default function AnimalEquationDemo({ onBack, onStartGame }) {
               </div>)}
             </div>
             <aside className="animal-demo-table-center">
-              <span>本輪出牌</span><strong>{room.lastPlay || '尚未出牌'}</strong>
-              <span>你的手牌</span><p>{room.hand.map((card) => card.label).join('　')}</p>
+              <span>本輪出牌</span><strong><AnimalEquationRadicalText text={room.lastPlay || '尚未出牌'} /></strong>
+              <span>你的手牌</span><p><AnimalEquationRadicalText text={room.hand.map((card) => card.label).join('　')} /></p>
             </aside>
           </div>
         </section>

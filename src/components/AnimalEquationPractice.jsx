@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, Bot, RotateCcw, Swords } from 'lucide-react'
 import AnimalEquationFunctionIcon from './AnimalEquationFunctionIcon.jsx'
+import AnimalEquationRadicalText from './AnimalEquationRadicalText.jsx'
 import { functionCardTargets } from '../lib/animalEquationFunctions.js'
 import {
   createAnimalEquationPractice,
@@ -122,7 +123,7 @@ export default function AnimalEquationPractice({ onBack }) {
     <main className="animal-practice-main">
       <div className="animal-practice-status" role="status" aria-live="polite">
         <strong>{game.status === 'finished' ? `${publicName(view, game.winnerPlayerId)}獲勝` : `第 ${view.turnNumber} 回合 · ${publicName(view, game.currentPlayerId) || '結算中'}`}</strong>
-        <span>{view.message}</span>
+        <span><AnimalEquationRadicalText text={view.message} /></span>
       </div>
       <p className="animal-practice-mode-note">這是本機試玩：AI 會輪流出牌，手牌與動物每局重新洗牌；目前支援單張、兩張同類方根及功能牌，不含多張牌排等式、真人連線或雲端紀錄。</p>
 
@@ -148,14 +149,15 @@ export default function AnimalEquationPractice({ onBack }) {
           <div className="animal-practice-public-play" aria-live="polite">
             <div><Swords aria-hidden="true" /><strong>本回合公開出牌</strong></div>
             <p>{latestPlay?.functionCode && <AnimalEquationFunctionIcon code={latestPlay.functionCode} className="is-public" />}
-              <span>{latestPlay ? `${publicName(view, latestPlay.playerId)}：${latestPlay.text}` : '尚未有人出牌'}</span></p>
+              <span><AnimalEquationRadicalText text={latestPlay ? `${publicName(view, latestPlay.playerId)}：${latestPlay.text}` : '尚未有人出牌'} /></span></p>
             {latestPlay && <small>{latestPlay.result}{latestPlay.defenseLabel ? ` · ${latestPlay.defenseLabel}` : ''}</small>}
           </div>
           <details className="animal-practice-history">
             <summary>查看所有玩家的出牌紀錄（{view.publicPlays.length} 筆）</summary>
             <ol>{view.publicPlays.map((play) => <li key={play.id}>
               <strong>第 {play.turnNumber} 回合 · {publicName(view, play.playerId)}</strong>
-              <span>{play.functionCode && <AnimalEquationFunctionIcon code={play.functionCode} className="is-history" />}{play.text} · {play.result}</span>
+              <span>{play.functionCode && <AnimalEquationFunctionIcon code={play.functionCode} className="is-history" />}
+                <AnimalEquationRadicalText text={`${play.text} · ${play.result}`} /></span>
             </li>)}</ol>
           </details>
         </section>
@@ -179,7 +181,7 @@ export default function AnimalEquationPractice({ onBack }) {
                 <img className="animal-practice-hand-art" src={tentArtSrc} alt="" aria-hidden="true" />
                 <span className="animal-practice-hand-corner" aria-hidden="true">{card.type === 'function' ? '✦' : '√'}</span>
                 {card.type === 'function' && <AnimalEquationFunctionIcon code={card.code} />}
-                <strong>{card.label}</strong>
+                <strong>{card.type === 'radical' ? <AnimalEquationRadicalText text={card.label} /> : card.label}</strong>
                 <small>{view.newDrawnCardIds.includes(card.id) ? '新補牌' : card.type === 'function' ? '功能牌' : '根式牌'}</small>
                 <span className="animal-practice-hand-corner is-bottom" aria-hidden="true">{card.type === 'function' ? '✦' : '√'}</span>
               </button>
@@ -193,7 +195,7 @@ export default function AnimalEquationPractice({ onBack }) {
                 : selectedCards.length ? `已選 ${selectedCards.length} 張根式牌；確認 n 值後送出。`
                   : '點自己的牌選取：根式牌選 1～2 張；功能牌選取後，直接點桌面目標。'}</p>
             {view.hand.filter((card) => selectedCards.includes(card.id) && card.variableCode === 'n').map((card) =>
-              <label className="animal-practice-variable" key={card.id}>{card.label} 的 n 值
+              <label className="animal-practice-variable" key={card.id}><span><AnimalEquationRadicalText text={card.label} /> 的 n 值</span>
                 <input inputMode="numeric" value={variableValues[card.id] || ''} placeholder="正整數"
                   onChange={(event) => setVariableValues((current) => ({ ...current, [card.id]: event.target.value.replace(/\D/g, '') }))} />
               </label>)}
