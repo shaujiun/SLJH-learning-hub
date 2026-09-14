@@ -15,6 +15,8 @@ import {
 import './animalEquationPractice.css'
 
 const publicName = (view, playerId) => view.players.find((player) => player.id === playerId)?.displayName || '玩家'
+const tentArtSrc = `${import.meta.env.BASE_URL}animal-equation-tent.png`
+const animalArtSrc = `${import.meta.env.BASE_URL}animal-equation-animals.png`
 
 const animalArtOrder = ['deer', 'octopus', 'sloth', 'beluga', 'ostrich', 'poodle', 'tabby', 'dolphin',
   'beaver', 'wallaby', 'pig', 'goldfish', 'chihuahua', 'fox', 'maltese', 'corgi']
@@ -29,7 +31,7 @@ function OpponentSeat({ player, active, targetAnimal, onTarget }) {
     aria-label={`${player.displayName}，${player.handCount} 張未公開手牌${targetAnimal ? `；選取後對其 ${targetAnimal.name} 使用功能牌` : ''}`}>
     <div className="animal-practice-seat-heading"><Bot aria-label="AI" /><strong>{player.seatLabel} · {player.displayName}</strong><span>{player.animalScore} 分 · {player.animalCount} 張動物</span></div>
     <div className="animal-practice-card-backs" aria-hidden="true">
-      {Array.from({ length: player.handCount }, (_, index) => <span key={index} />)}
+      {Array.from({ length: player.handCount }, (_, index) => <span key={index}><img src={tentArtSrc} alt="" /></span>)}
     </div>
     <small>{targetAnimal ? `點此指定 ${targetAnimal.name}（${targetAnimal.score} 分）` : `${player.handCount} 張私人手牌 · 判讀星 ${player.judgementStars}`}</small>
   </button>
@@ -111,10 +113,7 @@ export default function AnimalEquationPractice({ onBack }) {
   }
 
   const latestPlay = view.publicPlays.at(-1)
-  return <div className="animal-practice-shell" style={{
-    '--tent-art': `url(${import.meta.env.BASE_URL}animal-equation-tent.png)`,
-    '--animal-art': `url(${import.meta.env.BASE_URL}animal-equation-animals.png)`,
-  }}>
+  return <div className="animal-practice-shell">
     <header className="animal-practice-header">
       <button type="button" onClick={onBack}><ArrowLeft aria-hidden="true" />選擇模式</button>
       <div><strong>根式馬戲團</strong><span>自由試玩 · 1 人對 3 位 AI</span></div>
@@ -141,8 +140,8 @@ export default function AnimalEquationPractice({ onBack }) {
               disabled={!myTurn || selectedFunction?.code !== 'tame' || !targets.some((target) => target.id === animal.id)}
               onClick={() => playFunctionAtAnimal(animal.id)}
               aria-label={animal.revealed ? `${animal.name}，${animal.score} 分，${publicName(view, animal.ownerPlayerId)}持有` : `第 ${animal.position} 張蓋住的動物${selectedFunction?.code === 'tame' ? '，點此使用馴化' : ''}`}>
-              {animal.revealed ? <><span className="animal-practice-animal-art" style={{ backgroundPosition: animalArtPosition(animal.code) }} aria-hidden="true" /><strong>{animal.name}</strong><small>{animal.score} 分 · {publicName(view, animal.ownerPlayerId)}</small></>
-                : <><span className="animal-practice-animal-back" aria-hidden="true" /><strong>第 {animal.position} 張</strong><small>尚未翻開</small></>}
+              {animal.revealed ? <><span className="animal-practice-animal-art" style={{ backgroundImage: `url(${animalArtSrc})`, backgroundPosition: animalArtPosition(animal.code) }} aria-hidden="true" /><strong>{animal.name}</strong><small>{animal.score} 分 · {publicName(view, animal.ownerPlayerId)}</small></>
+                : <><img className="animal-practice-animal-back" src={tentArtSrc} alt="" /><strong>第 {animal.position} 張</strong><small>尚未翻開</small></>}
             </button>)}
           </div>
           <div className="animal-practice-public-play" aria-live="polite">
@@ -175,6 +174,7 @@ export default function AnimalEquationPractice({ onBack }) {
                 aria-label={`${card.label}，${card.type === 'function' ? '功能牌' : '根式牌'}${canDefend ? '，點此防禦' : selected ? '，已選取' : ''}`}
                 onClick={() => canDefend ? setGame((current) => respondPracticeFunction(current, card.id))
                   : card.type === 'function' ? selectFunction(card.id) : toggleCard(card.id)}>
+                <img className="animal-practice-hand-art" src={tentArtSrc} alt="" aria-hidden="true" />
                 <span className="animal-practice-hand-corner" aria-hidden="true">{card.type === 'function' ? '✦' : '√'}</span>
                 <strong>{card.label}</strong>
                 <small>{view.newDrawnCardIds.includes(card.id) ? '新補牌' : card.type === 'function' ? '功能牌' : '根式牌'}</small>

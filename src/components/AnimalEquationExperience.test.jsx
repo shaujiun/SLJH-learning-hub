@@ -24,7 +24,7 @@ describe('根式馬戲團入口與桌面', () => {
     expect(html).toContain('只有你看得到的手牌；直接點牌選取')
     expect(html).toContain('點自己的牌選取')
     expect(html).toContain('animal-equation-tent.png')
-    expect(html).toContain('animal-equation-animals.png')
+    expect(html).toMatch(/<img[^>]+src="[^"]*animal-equation-tent\.png"/)
     expect(html).toMatch(/<button[^>]+aria-label="[^"]+根式牌/)
     expect(html).not.toContain('animal-practice-choices')
   })

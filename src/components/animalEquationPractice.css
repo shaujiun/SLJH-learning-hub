@@ -30,7 +30,8 @@
 .animal-practice-seat-heading strong { font-size: 1rem; }
 .animal-practice-seat-heading span { color: #6b6b78; font-size: 0.87rem; font-weight: 800; }
 .animal-practice-card-backs { display: flex; flex-wrap: wrap; gap: 0.22rem; }
-.animal-practice-card-backs span { display: block; width: 32px; height: 46px; border: 2px solid #d3a766; border-radius: 5px; background: #162d39 var(--tent-art) center / cover no-repeat; box-shadow: 1px 2px 2px #263b5840; }
+.animal-practice-card-backs span { display: block; width: 40px; height: 58px; overflow: hidden; border: 2px solid #d3a766; border-radius: 5px; background: #162d39; box-shadow: 1px 2px 2px #263b5840; }
+.animal-practice-card-backs img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .animal-practice-seat small { color: #63717d; font-size: 0.82rem; }
 .animal-practice-center { grid-area: center; min-width: 0; display: grid; align-content: start; gap: 0.65rem; padding: 0.75rem; background: #e8f5f2; }
 .animal-practice-board-heading { display: flex; justify-content: space-between; font-weight: 900; }
@@ -41,8 +42,8 @@
 .animal-practice-animals > button.is-revealed { background: #e9ad73; color: #392c2a; border-color: #9f4d37; }
 .animal-practice-animals > button.is-targetable { border-color: #e7a64e; box-shadow: 0 0 0 4px #ffe4a5, inset 0 0 0 2px #f6d39a; cursor: pointer; }
 .animal-practice-animals > button.is-targetable:hover { transform: translateY(-2px); }
-.animal-practice-animal-back { display: block; width: 42px; height: 58px; border: 1px solid #d3a766; border-radius: 4px; background: #162d39 var(--tent-art) center / cover no-repeat; }
-.animal-practice-animal-art { display: block; width: min(100%, 74px); aspect-ratio: 1; border: 2px solid #fff1d7; border-radius: 50%; background-image: var(--animal-art); background-size: 400% 400%; background-repeat: no-repeat; box-shadow: 0 1px 3px #3d252570; }
+.animal-practice-animal-back { display: block; width: 50px; height: 70px; border: 1px solid #d3a766; border-radius: 4px; object-fit: cover; }
+.animal-practice-animal-art { display: block; width: min(100%, 74px); aspect-ratio: 1; border: 2px solid #fff1d7; border-radius: 50%; background-size: 400% 400%; background-repeat: no-repeat; box-shadow: 0 1px 3px #3d252570; }
 .animal-practice-animals strong { font-size: 0.82rem; }
 .animal-practice-animals small { font-size: 0.72rem; }
 .animal-practice-public-play { display: grid; gap: 0.2rem; border: 2px dashed #7da39c; border-radius: 11px; padding: 0.6rem; background: #fff; }
@@ -64,7 +65,7 @@
 .animal-practice-hand { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.55rem; }
 .animal-practice-hand > button { position: relative; flex: 0 1 clamp(98px, 12vw, 142px); aspect-ratio: 5 / 7; display: grid; place-content: center; justify-items: center; gap: 0.3rem; border: 3px solid #245b58; border-radius: 12px; padding: 1.4rem 0.35rem; background: linear-gradient(145deg, #d0f5e6, #f8fffa 48%, #a9e0d4); color: #163e43; text-align: center; font: inherit; box-shadow: inset 0 0 0 4px #fff9e8, inset 0 0 0 6px #38988e, 0 3px 0 #193b46, 2px 5px 8px #213c4450; cursor: pointer; transition: transform 120ms, box-shadow 120ms; }
 .animal-practice-hand > button.is-function { border-color: #5b4377; background: linear-gradient(145deg, #e5d7f5, #fffaff 48%, #c7a7dc); color: #45335f; box-shadow: inset 0 0 0 4px #fff9e8, inset 0 0 0 6px #9c79b8, 0 3px 0 #493653, 2px 5px 8px #213c4450; }
-.animal-practice-hand > button::before { content: ''; position: absolute; inset: 17% 14%; border-radius: 5px; background: var(--tent-art) center / cover no-repeat; opacity: 0.1; pointer-events: none; }
+.animal-practice-hand-art { position: absolute; inset: 12% 14%; width: 72%; height: 76%; border-radius: 5px; object-fit: cover; opacity: 0.2; pointer-events: none; }
 .animal-practice-hand > button > strong, .animal-practice-hand > button > small { position: relative; }
 .animal-practice-hand > button:disabled { opacity: 1; cursor: default; }
 .animal-practice-hand > button:not(:disabled):hover { transform: translateY(-5px); }
@@ -93,6 +94,6 @@
   .animal-practice-header span { font-size: 0.84rem; }
   .animal-practice-layout { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "top top" "left right" "center center" "bottom bottom"; }
   .animal-practice-seat { min-width: 0; }
-  .animal-practice-card-backs span { width: 23px; height: 34px; font-size: 0.9rem; }
+  .animal-practice-card-backs span { width: 29px; height: 43px; }
   .animal-practice-hand > button { flex-basis: min(29vw, 118px); }
 }
