@@ -3,6 +3,16 @@ import { ArrowLeft, BookOpen, Bot, RotateCcw, Swords, Trophy } from 'lucide-reac
 import { createAnimalEquationDemo, submitDemoPair, tameDemoAnimal } from '../lib/animalEquationDemo.js'
 import './animalEquationDemo.css'
 
+export function DemoVariableInputs({ hand, selectedIds, nValues, onChange }) {
+  return hand.filter((card) => selectedIds.includes(card.id) && card.variableCode === 'n').map((card) => (
+    <label className="animal-demo-variable" key={card.id}>
+      <span>替 {card.label} 設定正整數 n</span>
+      <input inputMode="numeric" pattern="[1-9][0-9]*" value={nValues[card.id] || ''}
+        onChange={(event) => onChange(card.id, event.target.value.replace(/\D/g, ''))} placeholder="例如 2" />
+    </label>
+  ))
+}
+
 export default function AnimalEquationDemo({ onBack, onStartGame }) {
   const [room, setRoom] = useState(createAnimalEquationDemo)
   const [selectedIds, setSelectedIds] = useState([])
@@ -58,11 +68,8 @@ export default function AnimalEquationDemo({ onBack, onStartGame }) {
               ))}
               <span className="animal-demo-function-card" aria-label="下一步可使用的馴化牌">馴化<small>下一步</small></span>
             </div>
-            {selectedIds.includes('nsqrt2') && <label className="animal-demo-variable">
-              <span>替 n√2 設定正整數 n</span>
-              <input inputMode="numeric" pattern="[1-9][0-9]*" value={nValues.nsqrt2 || ''}
-                onChange={(event) => setNValues({ nsqrt2: event.target.value.replace(/\D/g, '') })} placeholder="例如 2" />
-            </label>}
+            <DemoVariableInputs hand={room.hand} selectedIds={selectedIds} nValues={nValues}
+              onChange={(id, value) => setNValues((current) => ({ ...current, [id]: value }))} />
             <button className="animal-demo-action" type="button" disabled={selectedIds.length !== 2} onClick={playPair}>
               送出 2 張根式牌
             </button>
