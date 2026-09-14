@@ -1,4 +1,13 @@
 const subjectGameTemplates = {
+  math: [
+    {
+      code: 'animal-equation',
+      name: '根式馬戲團（教學試玩）',
+      description: '免登入操作同類方根出牌、AI 抓錯與馴化動物；目前不含完整四人對局。',
+      availability: '八上第 2 章起適用',
+      launchUrl: '?game=animal-equation',
+    },
+  ],
   english: [
     {
       code: 'english-vocabulary',

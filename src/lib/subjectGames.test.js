@@ -2,6 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { learningSystemLaunchUrl, subjectGamesFor } from './subjectGames.js'
 
 describe('各科遊戲選擇入口', () => {
+  it('數學科提供免登入的根式馬戲團教學試玩', () => {
+    expect(subjectGamesFor({ code: 'math', name: '數學科' }, '')).toContainEqual(expect.objectContaining({
+      code: 'animal-equation',
+      launchUrl: '?game=animal-equation',
+      availability: '八上第 2 章起適用',
+    }))
+  })
   it.each([
     ['english', '?subject=english'],
     ['science', '?subject=science'],

@@ -1,5 +1,13 @@
 export const guestLearningSystems = [
   {
+    id: 'guest-math',
+    code: 'math',
+    name: '數學科',
+    description: '試玩根式馬戲團的同類方根出牌與動物牌。',
+    audienceLabel: '訪客開放',
+    activities: [],
+  },
+  {
     id: 'guest-science',
     code: 'science',
     name: '自然科',
