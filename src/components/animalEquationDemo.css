@@ -1,0 +1,93 @@
+.animal-demo-shell {
+  min-height: 100vh;
+  color: #263b58;
+  background: radial-gradient(circle at 8% 8%, #ffe2bc, transparent 26rem),
+    radial-gradient(circle at 92% 16%, #c9f2e8, transparent 28rem), #fff8ed;
+  font-family: "Iansui", "BiauKai", sans-serif;
+}
+.animal-demo-shell * { box-sizing: border-box; }
+.animal-demo-shell button, .animal-demo-shell input { font: inherit; }
+.animal-demo-shell button:focus-visible, .animal-demo-shell a:focus-visible,
+.animal-demo-shell input:focus-visible, .animal-demo-shell summary:focus-visible { outline: 4px solid #e67846; outline-offset: 3px; }
+.animal-demo-header, .animal-demo-main { width: min(100% - 2rem, 1240px); margin-inline: auto; }
+.animal-demo-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1rem 0; }
+.animal-demo-header a { display: inline-flex; align-items: center; gap: 0.4rem; color: #205d5b; font-weight: 900; text-decoration: none; }
+.animal-demo-header svg { width: 20px; }
+.animal-demo-header > strong { font-size: 1.1rem; }
+.animal-demo-header > strong span { margin-left: 0.35rem; border-radius: 999px; padding: 0.25rem 0.55rem; background: #d8f5ec; color: #24615b; font-size: 0.85rem; white-space: nowrap; }
+.animal-demo-main { display: grid; gap: 1.2rem; padding-bottom: 3rem; }
+.animal-demo-turn, .animal-demo-table, .animal-demo-rules { border: 2px solid #263b58; border-radius: 24px; background: #fff; box-shadow: 0 7px 0 #263b58; }
+.animal-demo-turn { display: grid; justify-items: start; gap: 1rem; padding: clamp(1rem, 2.7vw, 1.8rem); }
+.animal-demo-heading { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.animal-demo-heading p { margin: 0; color: #9a5336; font: 900 0.85rem/1.2 system-ui; letter-spacing: 0.08em; }
+.animal-demo-heading h1 { margin: 0.25rem 0 0; font-size: clamp(1.5rem, 3.7vw, 2.45rem); line-height: 1.2; }
+.animal-demo-heading > span { border-radius: 999px; padding: 0.4rem 0.7rem; background: #fff0d1; color: #795332; font-weight: 900; white-space: nowrap; }
+.animal-demo-feedback { width: 100%; margin: 0; border-left: 5px solid #27a99c; border-radius: 10px; padding: 0.75rem 0.9rem; background: #e7f9f3; color: #245b55; font-weight: 900; line-height: 1.5; }
+.animal-demo-hand { width: 100%; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.65rem; }
+.animal-demo-hand button, .animal-demo-function-card { min-height: 116px; display: grid; place-content: center; gap: 0.35rem; border: 3px solid #263b58; border-radius: 14px; background: linear-gradient(155deg, #a3e5db, #55beb2); box-shadow: 0 5px 0 #263b58; color: #154d49; text-align: center; }
+.animal-demo-hand button { cursor: pointer; }
+.animal-demo-hand button.is-selected { background: #ffd47b; transform: translateY(-4px); box-shadow: 0 9px 0 #263b58; }
+.animal-demo-hand strong, .animal-demo-function-card { font-size: 1.25rem; font-weight: 900; }
+.animal-demo-hand small { font-size: 0.8rem; font-weight: 800; }
+.animal-demo-function-card { background: #d5c5ef; color: #4d3871; }
+.animal-demo-variable { display: grid; gap: 0.35rem; color: #415673; font-weight: 900; }
+.animal-demo-variable input { width: min(100%, 220px); min-height: 46px; border: 2px solid #748e9a; border-radius: 10px; padding: 0.6rem; background: #fff; color: #263b58; }
+.animal-demo-action { min-height: 50px; display: inline-flex; justify-content: center; align-items: center; gap: 0.45rem; border: 2px solid #263b58; border-radius: 12px; padding: 0.6rem 1.1rem; background: #ffd078; box-shadow: 0 4px 0 #263b58; color: #4e3b26; font-weight: 900; cursor: pointer; }
+.animal-demo-action:disabled { opacity: 0.55; cursor: not-allowed; }
+.animal-demo-action svg { width: 20px; }
+.animal-demo-hint { display: flex; align-items: flex-start; gap: 0.45rem; margin: 0; color: #6b6674; font-size: 0.94rem; line-height: 1.45; }
+.animal-demo-hint svg { flex: 0 0 19px; width: 19px; }
+.animal-demo-instruction { margin: 0; font-weight: 900; }
+.animal-demo-targets { width: 100%; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 0.5rem; }
+.animal-demo-targets button { min-height: 88px; display: grid; place-content: center; gap: 0.15rem; border: 2px solid #263b58; border-radius: 12px; background: #237f7b; color: #fff; cursor: pointer; text-align: center; }
+.animal-demo-targets button.is-selected { background: #ffd078; color: #263b58; box-shadow: 0 4px 0 #263b58; }
+.animal-demo-targets span { color: #ffda80; font: 900 1.7rem/1 system-ui; }
+.animal-demo-targets button.is-selected span { color: #705120; }
+.animal-demo-targets small { font-size: 0.73rem; }
+.animal-demo-complete { display: grid; justify-items: start; gap: 0.6rem; }
+.animal-demo-complete > svg { width: 44px; height: 44px; color: #b97727; }
+.animal-demo-complete p { margin: 0; font-weight: 900; }
+.animal-demo-table { overflow: hidden; background: #e9f6f2; }
+.animal-demo-scoreboard { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.55rem; padding: 0.8rem; }
+.animal-demo-scoreboard > div { display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: 0 0.5rem; min-width: 0; border: 2px solid #adc6c4; border-radius: 12px; padding: 0.6rem; background: #fff; }
+.animal-demo-scoreboard > div.is-me { border-color: #219b8e; background: #fff9e8; }
+.animal-demo-scoreboard span { grid-row: span 2; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #263b58; color: #fff; font-weight: 900; }
+.animal-demo-scoreboard svg { width: 19px; }
+.animal-demo-scoreboard strong, .animal-demo-scoreboard small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.animal-demo-scoreboard small { grid-column: 2 / 4; color: #627381; font-size: 0.76rem; }
+.animal-demo-scoreboard b { grid-column: 3; grid-row: 1; }
+.animal-demo-table-body { display: grid; grid-template-columns: minmax(0, 3fr) minmax(210px, 1fr); gap: 0.8rem; padding: 0 0.8rem 0.8rem; }
+.animal-demo-animal-grid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 0.45rem; }
+.animal-demo-animal-grid > div { min-height: 95px; display: grid; place-content: center; gap: 0.15rem; border: 2px solid #fff; outline: 1px solid #263b58; border-radius: 11px; background: #247f7b; color: #fff; text-align: center; }
+.animal-demo-animal-grid > div.is-revealed { background: #8da6d5; }
+.animal-demo-animal-grid span { color: #ffdc87; font: 900 1.6rem/1 system-ui; }
+.animal-demo-animal-grid small { font-size: 0.72rem; }
+.animal-demo-table-center { display: grid; align-content: center; gap: 0.35rem; border: 2px dashed #739e99; border-radius: 15px; padding: 0.8rem; background: #fff; }
+.animal-demo-table-center span { color: #276a66; font-weight: 900; }
+.animal-demo-table-center strong { min-height: 1.5rem; font-size: 1.15rem; }
+.animal-demo-table-center p { margin: 0; line-height: 1.5; }
+.animal-demo-rules { padding: 0.9rem 1.1rem; }
+.animal-demo-rules summary { display: flex; align-items: center; gap: 0.45rem; font-weight: 900; cursor: pointer; }
+.animal-demo-rules svg { width: 20px; }
+.animal-demo-rules p { line-height: 1.7; }
+@media (max-width: 900px) {
+  .animal-demo-targets, .animal-demo-animal-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .animal-demo-table-body { grid-template-columns: 1fr; }
+  .animal-demo-scoreboard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .animal-demo-header, .animal-demo-main { width: min(100% - 1rem, 1240px); }
+  .animal-demo-header { align-items: flex-start; }
+  .animal-demo-header > strong span { display: block; margin: 0.25rem 0 0; }
+  .animal-demo-heading { align-items: flex-start; flex-direction: column; gap: 0.5rem; }
+  .animal-demo-hand { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .animal-demo-hand button, .animal-demo-function-card { min-height: 96px; }
+  .animal-demo-scoreboard { gap: 0.35rem; }
+  .animal-demo-scoreboard > div { grid-template-columns: 1fr auto; }
+  .animal-demo-scoreboard span { display: none; }
+  .animal-demo-scoreboard small { grid-column: 1 / 3; }
+  .animal-demo-scoreboard b { grid-column: 2; }
+  .animal-demo-targets, .animal-demo-animal-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .animal-demo-targets button, .animal-demo-animal-grid > div { min-height: 76px; }
+  .animal-demo-targets small, .animal-demo-animal-grid small { display: none; }
+}
