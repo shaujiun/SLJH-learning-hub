@@ -5,6 +5,7 @@ import {
   createAnimalEquationPractice,
   passPracticeTurn,
   practicePublicView,
+  practiceTargetForPlayer,
   resolvePracticeReview,
   respondPracticeFunction,
   submitPracticeFunction,
@@ -15,31 +16,37 @@ import './animalEquationPractice.css'
 
 const publicName = (view, playerId) => view.players.find((player) => player.id === playerId)?.displayName || '玩家'
 
-function OpponentSeat({ player, active }) {
-  return <section className={`animal-practice-seat is-${player.position} ${active ? 'is-active' : ''}`}
-    aria-label={`${player.displayName}，${player.handCount} 張未公開手牌`}>
+const animalArtOrder = ['deer', 'octopus', 'sloth', 'beluga', 'ostrich', 'poodle', 'tabby', 'dolphin',
+  'beaver', 'wallaby', 'pig', 'goldfish', 'chihuahua', 'fox', 'maltese', 'corgi']
+const animalArtPosition = (code) => {
+  const index = animalArtOrder.indexOf(code)
+  return `${index % 4 * 100 / 3}% ${Math.floor(index / 4) * 100 / 3}%`
+}
+
+function OpponentSeat({ player, active, targetAnimal, onTarget }) {
+  return <button type="button" className={`animal-practice-seat is-${player.position} ${active ? 'is-active' : ''} ${targetAnimal ? 'is-targetable' : ''}`}
+    disabled={!targetAnimal} onClick={onTarget}
+    aria-label={`${player.displayName}，${player.handCount} 張未公開手牌${targetAnimal ? `；選取後對其 ${targetAnimal.name} 使用功能牌` : ''}`}>
     <div className="animal-practice-seat-heading"><Bot aria-label="AI" /><strong>{player.seatLabel} · {player.displayName}</strong><span>{player.animalScore} 分 · {player.animalCount} 張動物</span></div>
     <div className="animal-practice-card-backs" aria-hidden="true">
-      {Array.from({ length: player.handCount }, (_, index) => <span key={index}>∑</span>)}
+      {Array.from({ length: player.handCount }, (_, index) => <span key={index} />)}
     </div>
-    <small>{player.handCount} 張私人手牌 · 判讀星 {player.judgementStars}</small>
-  </section>
+    <small>{targetAnimal ? `點此指定 ${targetAnimal.name}（${targetAnimal.score} 分）` : `${player.handCount} 張私人手牌 · 判讀星 ${player.judgementStars}`}</small>
+  </button>
 }
 
 export default function AnimalEquationPractice({ onBack }) {
   const [game, setGame] = useState(createAnimalEquationPractice)
-  const [playKind, setPlayKind] = useState('radical')
   const [selectedCards, setSelectedCards] = useState([])
   const [variableValues, setVariableValues] = useState({})
   const [functionCardId, setFunctionCardId] = useState('')
-  const [targetAnimalId, setTargetAnimalId] = useState('')
   const [secondsLeft, setSecondsLeft] = useState(8)
   const view = useMemo(() => practicePublicView(game, 'you'), [game])
   const me = view.players.find((player) => player.id === 'you')
   const myTurn = game.status === 'playing' && game.currentPlayerId === 'you'
   const playableFunctions = view.hand.filter((card) => ['tame', 'accuse', 'tempt'].includes(card.code))
   const selectedFunction = playableFunctions.find((card) => card.id === functionCardId)
-  const targets = functionCardTargets(game.animals, selectedFunction?.code, 'you')
+  const targets = functionCardTargets(view.animals, selectedFunction?.code, 'you')
   const defenseCode = game.pendingFunction?.functionCode === 'accuse' ? 'clarify' : 'gender_error'
   const defenseCards = view.hand.filter((card) => card.code === defenseCode)
 
@@ -74,10 +81,10 @@ export default function AnimalEquationPractice({ onBack }) {
     setSelectedCards([])
     setVariableValues({})
     setFunctionCardId('')
-    setTargetAnimalId('')
   }, [game.turnNumber])
 
   function toggleCard(cardId) {
+    setFunctionCardId('')
     setSelectedCards((current) => current.includes(cardId)
       ? current.filter((id) => id !== cardId)
       : current.length < 2 ? [...current, cardId] : [current[1], cardId])
@@ -87,12 +94,27 @@ export default function AnimalEquationPractice({ onBack }) {
     setGame((current) => submitPracticeRadical(current, selectedCards, variableValues))
   }
 
-  function playFunction() {
-    setGame((current) => submitPracticeFunction(current, functionCardId, targetAnimalId))
+  function selectFunction(cardId) {
+    setSelectedCards([])
+    setFunctionCardId((current) => current === cardId ? '' : cardId)
+  }
+
+  function playFunctionAtAnimal(animalId) {
+    if (!myTurn || selectedFunction?.code !== 'tame' || !targets.some((animal) => animal.id === animalId)) return
+    setGame((current) => submitPracticeFunction(current, functionCardId, animalId))
+  }
+
+  function playFunctionAtPlayer(playerId) {
+    if (!myTurn || !['accuse', 'tempt'].includes(selectedFunction?.code)) return
+    const target = practiceTargetForPlayer(view.animals, selectedFunction.code, 'you', playerId)
+    if (target) setGame((current) => submitPracticeFunction(current, functionCardId, target.id))
   }
 
   const latestPlay = view.publicPlays.at(-1)
-  return <div className="animal-practice-shell">
+  return <div className="animal-practice-shell" style={{
+    '--tent-art': `url(${import.meta.env.BASE_URL}animal-equation-tent.png)`,
+    '--animal-art': `url(${import.meta.env.BASE_URL}animal-equation-animals.png)`,
+  }}>
     <header className="animal-practice-header">
       <button type="button" onClick={onBack}><ArrowLeft aria-hidden="true" />選擇模式</button>
       <div><strong>根式馬戲團</strong><span>自由試玩 · 1 人對 3 位 AI</span></div>
@@ -106,15 +128,22 @@ export default function AnimalEquationPractice({ onBack }) {
 
       <div className="animal-practice-layout">
         {view.players.filter((player) => player.id !== 'you').map((player) => <OpponentSeat key={player.id}
-          player={player} active={view.currentPlayerId === player.id} />)}
+          player={player} active={view.currentPlayerId === player.id}
+          targetAnimal={myTurn && ['accuse', 'tempt'].includes(selectedFunction?.code)
+            ? practiceTargetForPlayer(view.animals, selectedFunction.code, 'you', player.id) : null}
+          onTarget={() => playFunctionAtPlayer(player.id)} />)}
 
         <section className="animal-practice-center" aria-label="公開桌面">
           <div className="animal-practice-board-heading"><strong>中央動物</strong><span>牌庫 {view.deckCount} 張</span></div>
           <div className="animal-practice-animals">
-            {view.animals.map((animal) => <div key={animal.id} className={animal.revealed ? 'is-revealed' : ''}>
-              {animal.revealed ? <><span aria-hidden="true">{animal.icon}</span><strong>{animal.name}</strong><small>{animal.score} 分 · {publicName(view, animal.ownerPlayerId)}</small></>
-                : <><span>∑</span><strong>第 {animal.position} 張</strong><small>尚未翻開</small></>}
-            </div>)}
+            {view.animals.map((animal) => <button type="button" key={animal.id}
+              className={`${animal.revealed ? 'is-revealed' : ''} ${myTurn && selectedFunction?.code === 'tame' && targets.some((target) => target.id === animal.id) ? 'is-targetable' : ''}`}
+              disabled={!myTurn || selectedFunction?.code !== 'tame' || !targets.some((target) => target.id === animal.id)}
+              onClick={() => playFunctionAtAnimal(animal.id)}
+              aria-label={animal.revealed ? `${animal.name}，${animal.score} 分，${publicName(view, animal.ownerPlayerId)}持有` : `第 ${animal.position} 張蓋住的動物${selectedFunction?.code === 'tame' ? '，點此使用馴化' : ''}`}>
+              {animal.revealed ? <><span className="animal-practice-animal-art" style={{ backgroundPosition: animalArtPosition(animal.code) }} aria-hidden="true" /><strong>{animal.name}</strong><small>{animal.score} 分 · {publicName(view, animal.ownerPlayerId)}</small></>
+                : <><span className="animal-practice-animal-back" aria-hidden="true" /><strong>第 {animal.position} 張</strong><small>尚未翻開</small></>}
+            </button>)}
           </div>
           <div className="animal-practice-public-play" aria-live="polite">
             <div><Swords aria-hidden="true" /><strong>本回合公開出牌</strong></div>
@@ -135,47 +164,38 @@ export default function AnimalEquationPractice({ onBack }) {
             <div><span>你的座位 · 下方</span><strong>{me.seatLabel} · 你</strong><small>{me.animalCount} 張動物 · {me.animalScore} 分 · 判讀星 {me.judgementStars}</small></div>
             <b>手牌 {view.hand.length}／6</b>
           </div>
-          <div className="animal-practice-hand" aria-label="只有你看得到的手牌">
-            {view.hand.map((card) => <div key={card.id} className={[card.type === 'function' ? 'is-function' : '', view.newDrawnCardIds.includes(card.id) ? 'is-new' : ''].filter(Boolean).join(' ')}>
-              <strong>{card.label}</strong><small>{view.newDrawnCardIds.includes(card.id) ? '新補牌' : card.type === 'function' ? '功能牌' : '根式牌'}</small>
-            </div>)}
+          <div className="animal-practice-hand" aria-label="只有你看得到的手牌；直接點牌選取">
+            {view.hand.map((card) => {
+              const selected = card.type === 'function' ? functionCardId === card.id : selectedCards.includes(card.id)
+              const canDefend = game.status === 'reaction' && card.code === defenseCode
+              const canSelect = myTurn && (card.type === 'radical' || playableFunctions.some((item) => item.id === card.id))
+              return <button type="button" key={card.id}
+                className={[card.type === 'function' ? 'is-function' : '', view.newDrawnCardIds.includes(card.id) ? 'is-new' : '', selected ? 'is-selected' : ''].filter(Boolean).join(' ')}
+                disabled={!canSelect && !canDefend} aria-pressed={selected}
+                aria-label={`${card.label}，${card.type === 'function' ? '功能牌' : '根式牌'}${canDefend ? '，點此防禦' : selected ? '，已選取' : ''}`}
+                onClick={() => canDefend ? setGame((current) => respondPracticeFunction(current, card.id))
+                  : card.type === 'function' ? selectFunction(card.id) : toggleCard(card.id)}>
+                <span className="animal-practice-hand-corner" aria-hidden="true">{card.type === 'function' ? '✦' : '√'}</span>
+                <strong>{card.label}</strong>
+                <small>{view.newDrawnCardIds.includes(card.id) ? '新補牌' : card.type === 'function' ? '功能牌' : '根式牌'}</small>
+                <span className="animal-practice-hand-corner is-bottom" aria-hidden="true">{card.type === 'function' ? '✦' : '√'}</span>
+              </button>
+            })}
           </div>
-          <small className="animal-practice-private-note">別人只看到你有幾張牌；即使你在手牌區查看牌面，也不會公開。只有送出後，牌面才會出現在中央與紀錄。</small>
+          <small className="animal-practice-private-note">直接點手牌選取。別人只看到牌背；只有出牌後，牌面才會公開。</small>
 
           {myTurn && <div className="animal-practice-controls">
-            <div className="animal-practice-tabs" role="group" aria-label="本回合動作">
-              <button type="button" className={playKind === 'radical' ? 'is-selected' : ''} onClick={() => setPlayKind('radical')}>出根式牌</button>
-              <button type="button" className={playKind === 'function' ? 'is-selected' : ''} onClick={() => setPlayKind('function')}>使用功能牌</button>
-            </div>
-            {playKind === 'radical' ? <>
-              <p>可出 1 張任意根式，或 2 張化簡後同類的根式。故意出錯可能被 AI 抓到。</p>
-              <div className="animal-practice-choices">
-                {view.hand.filter((card) => card.type === 'radical').map((card) => <button key={card.id} type="button"
-                  aria-pressed={selectedCards.includes(card.id)} className={selectedCards.includes(card.id) ? 'is-selected' : ''}
-                  onClick={() => toggleCard(card.id)}>{card.label}</button>)}
-              </div>
-              {view.hand.filter((card) => selectedCards.includes(card.id) && card.variableCode === 'n').map((card) =>
-                <label className="animal-practice-variable" key={card.id}>{card.label} 的 n 值
-                  <input inputMode="numeric" value={variableValues[card.id] || ''} placeholder="正整數"
-                    onChange={(event) => setVariableValues((current) => ({ ...current, [card.id]: event.target.value.replace(/\D/g, '') }))} />
-                </label>)}
-              <button className="animal-practice-primary" type="button" disabled={!selectedCards.length} onClick={playRadical}>送出所選根式牌</button>
-            </> : <>
-              <p>「馴化」可翻開中央動物；「指控」與「誘惑」可指定對手已取得的動物。防禦牌留待被指定時使用。</p>
-              <div className="animal-practice-choices">
-                {playableFunctions.map((card) => <button key={card.id} type="button" aria-pressed={functionCardId === card.id}
-                  className={functionCardId === card.id ? 'is-selected' : ''} onClick={() => { setFunctionCardId(card.id); setTargetAnimalId('') }}>{card.label}</button>)}
-                {!playableFunctions.length && <span>目前沒有可主動使用的功能牌。</span>}
-              </div>
-              {selectedFunction && <div className="animal-practice-targets" aria-label="可指定的動物">
-                {targets.map((animal) => <button key={animal.id} type="button" aria-pressed={targetAnimalId === animal.id}
-                  className={targetAnimalId === animal.id ? 'is-selected' : ''} onClick={() => setTargetAnimalId(animal.id)}>
-                  {animal.revealed ? animal.name : `第 ${animal.position} 張蓋住的動物`}
-                </button>)}
-                {!targets.length && <span>目前沒有這張牌可以指定的動物。</span>}
-              </div>}
-              <button className="animal-practice-primary" type="button" disabled={!functionCardId || !targetAnimalId} onClick={playFunction}>打出功能牌</button>
-            </>}
+            <p>{selectedFunction?.code === 'tame' ? '已選「馴化」：直接點中央發亮的蓋住動物牌。'
+              : ['accuse', 'tempt'].includes(selectedFunction?.code) ? `已選「${selectedFunction.label}」：直接點發亮的對手座位。若有多張動物，優先指定分數最高的一張。`
+                : selectedCards.length ? `已選 ${selectedCards.length} 張根式牌；確認 n 值後送出。`
+                  : '點自己的牌選取：根式牌選 1～2 張；功能牌選取後，直接點桌面目標。'}</p>
+            {view.hand.filter((card) => selectedCards.includes(card.id) && card.variableCode === 'n').map((card) =>
+              <label className="animal-practice-variable" key={card.id}>{card.label} 的 n 值
+                <input inputMode="numeric" value={variableValues[card.id] || ''} placeholder="正整數"
+                  onChange={(event) => setVariableValues((current) => ({ ...current, [card.id]: event.target.value.replace(/\D/g, '') }))} />
+              </label>)}
+            {selectedCards.length > 0 && <button className="animal-practice-primary" type="button" onClick={playRadical}>送出 {selectedCards.length} 張根式牌</button>}
+            {selectedFunction && !targets.length && <small>目前沒有這張功能牌可以指定的目標。</small>}
             <button className="animal-practice-pass" type="button" onClick={() => setGame((current) => passPracticeTurn(current))}>略過本回合</button>
           </div>}
 
@@ -187,8 +207,7 @@ export default function AnimalEquationPractice({ onBack }) {
           </div>}
           {game.status === 'reaction' && game.pendingFunction?.targetPlayerId === 'you' && <div className="animal-practice-review">
             <strong>防禦倒數：{secondsLeft} 秒</strong>
-            {defenseCards.map((card) => <button className="animal-practice-primary" type="button" key={card.id}
-              onClick={() => setGame((current) => respondPracticeFunction(current, card.id))}>使用「{card.label}」</button>)}
+            <span>{defenseCards.length ? '直接點上方手牌中的防禦牌。' : '你沒有可用的防禦牌。'}</span>
             <button className="animal-practice-pass" type="button" onClick={() => setGame((current) => respondPracticeFunction(current))}>不防禦</button>
           </div>}
           {game.status === 'finished' && <button className="animal-practice-primary" type="button" onClick={() => setGame(createAnimalEquationPractice())}>
