@@ -49,12 +49,15 @@
 .animal-practice-public-play { display: grid; gap: 0.2rem; border: 2px dashed #7da39c; border-radius: 11px; padding: 0.6rem; background: #fff; }
 .animal-practice-public-play > div { display: flex; align-items: center; gap: 0.35rem; color: #256c65; }
 .animal-practice-public-play svg { width: 18px; }
-.animal-practice-public-play p { margin: 0; font-size: 1.04rem; font-weight: 900; }
+.animal-practice-public-play p { display: flex; align-items: center; gap: 0.45rem; margin: 0; font-size: 1.04rem; font-weight: 900; }
+.animal-practice-public-play .animal-function-symbol.is-public { width: 2.2rem; flex: 0 0 auto; }
 .animal-practice-public-play small { color: #765545; }
 .animal-practice-history summary { font-weight: 900; cursor: pointer; }
 .animal-practice-history ol { max-height: 220px; overflow: auto; display: grid; gap: 0.35rem; margin: 0.5rem 0 0; padding-left: 1.6rem; }
 .animal-practice-history li { padding: 0.25rem 0.3rem; background: #fff; }
 .animal-practice-history li strong { margin-right: 0.6rem; }
+.animal-practice-history li span { display: inline-flex; align-items: center; gap: 0.3rem; }
+.animal-practice-history .animal-function-symbol.is-history { width: 1.5rem; flex: 0 0 auto; border-width: 1px; }
 .animal-practice-self { grid-area: bottom; display: grid; gap: 0.7rem; padding: 0.85rem; background: #fff9ec; }
 .animal-practice-self-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 .animal-practice-self-heading > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.25rem 0.6rem; }
@@ -67,6 +70,7 @@
 .animal-practice-hand > button.is-function { border-color: #5b4377; background: linear-gradient(145deg, #e5d7f5, #fffaff 48%, #c7a7dc); color: #45335f; box-shadow: inset 0 0 0 4px #fff9e8, inset 0 0 0 6px #9c79b8, 0 3px 0 #493653, 2px 5px 8px #213c4450; }
 .animal-practice-hand-art { position: absolute; inset: 12% 14%; width: 72%; height: 76%; border-radius: 5px; object-fit: cover; opacity: 0.2; pointer-events: none; }
 .animal-practice-hand > button > strong, .animal-practice-hand > button > small { position: relative; }
+.animal-practice-hand > button > .animal-function-symbol { position: relative; }
 .animal-practice-hand > button:disabled { opacity: 1; cursor: default; }
 .animal-practice-hand > button:not(:disabled):hover { transform: translateY(-5px); }
 .animal-practice-hand > button.is-selected { transform: translateY(-9px); box-shadow: inset 0 0 0 4px #fff9e8, inset 0 0 0 6px #d59436, 0 0 0 4px #ffdc8e, 0 8px 12px #213c4460; }

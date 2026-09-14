@@ -98,6 +98,7 @@ describe('根式馬戲團自由試玩', () => {
     expect(next.animals[0]).toMatchObject({ revealed: true, ownerPlayerId: 'you' })
     expect(next.players[0].animalCount).toBe(1)
     expect(next.publicPlays[0].cardLabels).toEqual(['馴化'])
+    expect(next.publicPlays[0].functionCode).toBe('tame')
     expect(next.publicPlays[0].text).toContain(next.animals[0].name)
     expect(next.hands.you).toHaveLength(6)
     expect(next.message).toContain('牌面僅本人可見')

@@ -220,6 +220,7 @@ function resolvePracticeFunction(game, defenseCardId = null, random = Math.rando
   const resultLabel = defenseCard ? `${defenseCard.label}擋下${actorCard.label}` : `${actorCard.label}成功`
   next.publicPlays.find((entry) => entry.id === action.id).result = resultLabel
   next.publicPlays.find((entry) => entry.id === action.id).defenseLabel = defenseCard?.label || null
+  next.publicPlays.find((entry) => entry.id === action.id).defenseCode = defenseCard?.code || null
   next.message = `${resultLabel}。${next.players.find((player) => player.id === action.actorPlayerId).displayName}補進 ${actorDrawn.length} 張牌（牌面僅本人可見）。`
   return advanceTurn(next)
 }
@@ -239,6 +240,7 @@ export function submitPracticeFunction(game, cardId, targetAnimalId, random = Ma
   const targetAnimal = next.animals.find((animal) => animal.id === targetAnimalId)
   const playId = addPublicPlay(next, {
     playerId: actor.id, cardLabels: [card.label], kind: 'function',
+    functionCode: card.code,
     text: `${card.label} → ${card.code === 'tame' ? `第 ${targetAnimal.position} 張動物` : targetAnimal.name}`,
     result: card.code === 'tame' ? '成立' : '等待防禦',
   })
