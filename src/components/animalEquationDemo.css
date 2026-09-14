@@ -11,7 +11,7 @@
 .animal-demo-shell input:focus-visible, .animal-demo-shell summary:focus-visible { outline: 4px solid #e67846; outline-offset: 3px; }
 .animal-demo-header, .animal-demo-main { width: min(100% - 2rem, 1240px); margin-inline: auto; }
 .animal-demo-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1rem 0; }
-.animal-demo-header a { display: inline-flex; align-items: center; gap: 0.4rem; color: #205d5b; font-weight: 900; text-decoration: none; }
+.animal-demo-header a, .animal-demo-header button { display: inline-flex; align-items: center; gap: 0.4rem; border: 0; padding: 0; background: transparent; color: #205d5b; font-weight: 900; text-decoration: none; cursor: pointer; }
 .animal-demo-header svg { width: 20px; }
 .animal-demo-header > strong { font-size: 1.1rem; }
 .animal-demo-header > strong span { margin-left: 0.35rem; border-radius: 999px; padding: 0.25rem 0.55rem; background: #d8f5ec; color: #24615b; font-size: 0.85rem; white-space: nowrap; }

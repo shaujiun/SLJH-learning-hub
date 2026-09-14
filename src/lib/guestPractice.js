@@ -3,7 +3,7 @@ export const guestLearningSystems = [
     id: 'guest-math',
     code: 'math',
     name: '數學科',
-    description: '試玩根式馬戲團的同類方根出牌與動物牌。',
+    description: '與 3 位 AI 試玩根式馬戲團，可自由選擇是否先看教學。',
     audienceLabel: '訪客開放',
     activities: [],
   },

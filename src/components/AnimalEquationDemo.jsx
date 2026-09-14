@@ -3,7 +3,7 @@ import { ArrowLeft, BookOpen, Bot, RotateCcw, Swords, Trophy } from 'lucide-reac
 import { createAnimalEquationDemo, submitDemoPair, tameDemoAnimal } from '../lib/animalEquationDemo.js'
 import './animalEquationDemo.css'
 
-export default function AnimalEquationDemo() {
+export default function AnimalEquationDemo({ onBack, onStartGame }) {
   const [room, setRoom] = useState(createAnimalEquationDemo)
   const [selectedIds, setSelectedIds] = useState([])
   const [nValues, setNValues] = useState({})
@@ -32,7 +32,8 @@ export default function AnimalEquationDemo() {
   return (
     <div className="animal-demo-shell">
       <header className="animal-demo-header">
-        <a href="?guest=1&subject=math"><ArrowLeft aria-hidden="true" />返回數學練習</a>
+        {onBack ? <button type="button" onClick={onBack}><ArrowLeft aria-hidden="true" />選擇模式</button>
+          : <a href="?guest=1&subject=math"><ArrowLeft aria-hidden="true" />返回數學練習</a>}
         <strong>根式馬戲團 <span>免登入教學試玩</span></strong>
       </header>
 
@@ -85,6 +86,7 @@ export default function AnimalEquationDemo() {
             <Trophy aria-hidden="true" />
             <p>目前收集 {me.animalCount} 張動物、{me.animalScore} 分。這是 2 步教學試玩，不是完整四人對局。</p>
             <button className="animal-demo-action" type="button" onClick={restart}><RotateCcw aria-hidden="true" />重新試玩</button>
+            {onStartGame && <button className="animal-demo-action" type="button" onClick={onStartGame}>進入自由試玩，與 3 位 AI 對局</button>}
           </div>}
         </section>
 

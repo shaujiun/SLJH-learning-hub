@@ -1,8 +1,12 @@
 import { animalEquationAnimals, animalEquationRadicals } from '../data/animalEquationCards.js'
 import { resolveFunctionCardState } from './animalEquationFunctions.js'
+import { shufflePracticeCards } from './animalEquationPractice.js'
 
-const starterCodes = ['sqrt8', 'sqrt18', 'sqrt3', 'nsqrt2', 'sqrt4']
-const refillCodes = ['sqrt12', 'sqrt6']
+const starterHands = [
+  ['sqrt8', 'sqrt18', 'sqrt3', 'nsqrt2', 'sqrt4'],
+  ['sqrt12', 'sqrt27', 'sqrt2', 'nsqrt3', 'sqrt9'],
+  ['sqrt24', 'sqrt54', 'sqrt3', 'nsqrt6', 'sqrt25'],
+]
 const familyNames = { integer: '整數', sqrt2: '√2', sqrt3: '√3', sqrt6: '√6' }
 
 const radicalCard = (code) => {
@@ -10,11 +14,18 @@ const radicalCard = (code) => {
   return { ...definition, id: code, type: 'radical' }
 }
 
-export function createAnimalEquationDemo() {
+export function createAnimalEquationDemo(random = Math.random) {
+  const starterCodes = starterHands[Math.floor(random() * starterHands.length)]
+  const refillCodes = shufflePracticeCards(
+    animalEquationRadicals.filter((card) => !starterCodes.includes(card.code)), random,
+  ).slice(0, 2).map((card) => card.code)
   return {
     phase: 'pair',
     turnNumber: 1,
-    hand: [...starterCodes.map(radicalCard), { id: 'tame', code: 'tame', type: 'function', label: '馴化' }],
+    hand: shufflePracticeCards([
+      ...starterCodes.map(radicalCard), { id: 'tame', code: 'tame', type: 'function', label: '馴化' },
+    ], random),
+    refillCodes,
     players: [
       { id: 'you', displayName: '你', seatNumber: 1, animalCount: 0, animalScore: 0, judgementStars: 0 },
       ...['AI 小狐', 'AI 海豚', 'AI 樹懶'].map((name, index) => ({
@@ -22,8 +33,8 @@ export function createAnimalEquationDemo() {
         animalCount: 0, animalScore: 0, judgementStars: 0, isAi: true,
       })),
     ],
-    animals: animalEquationAnimals.map((animal, index) => ({
-      ...animal, id: animal.code, position: index + 1, revealed: false, ownerPlayerId: null,
+    animals: shufflePracticeCards(animalEquationAnimals, random).map((animal, index) => ({
+      ...animal, id: `tutorial-animal-${index + 1}`, position: index + 1, revealed: false, ownerPlayerId: null,
     })),
     message: '選擇 2 張根式牌，試著找出化簡後同類的牌。',
     lastPlay: '',
@@ -59,7 +70,7 @@ export function submitDemoPair(room, selectedIds, variableValues = {}) {
     ...room,
     phase: 'tame',
     turnNumber: 2,
-    hand: [...room.hand.filter((card) => !selectedIds.includes(card.id)), ...refillCodes.map(radicalCard)],
+    hand: [...room.hand.filter((card) => !selectedIds.includes(card.id)), ...room.refillCodes.map(radicalCard)],
     lastPlay: play,
     message: `出牌成立：兩張牌化簡後都屬於${familyNames[selected[0].family]}類。試玩略過其他玩家回合，接著使用「馴化」。`,
   }
