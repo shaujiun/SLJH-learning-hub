@@ -132,6 +132,7 @@ export function practicePublicView(game, viewerId) {
     pendingPlay: game.pendingPlay,
     pendingFunction: game.pendingFunction,
     deckCount: game.deck.length,
+    discardCount: game.discard.length,
   }
 }
 
@@ -142,14 +143,9 @@ export function submitPracticeRadical(game, cardIds, variableValues = {}) {
     || new Set(cardIds).size !== selected.length) {
     return { ...game, message: '請從自己的手牌選擇 1 張根式，或 2 張不同的根式牌。' }
   }
-  for (const card of selected.filter((item) => item.variableCode === 'n')) {
-    if (!/^[1-9][0-9]*$/.test(String(variableValues[card.id] || ''))) {
-      return { ...game, message: `${card.label} 必須先設定正整數 n。` }
-    }
-  }
   const next = copyGame(game)
   const actor = next.players.find((player) => player.id === game.currentPlayerId)
-  const labels = selected.map((card) => card.variableCode === 'n'
+  const labels = selected.map((card) => card.variableCode === 'n' && variableValues[card.id]
     ? card.label.replace('n', String(variableValues[card.id])) : card.label)
   const valid = selected.length === 1 || selected[0].family === selected[1].family
   const playId = addPublicPlay(next, {
@@ -171,7 +167,7 @@ export function resolvePracticeReview(game, challengerPlayerId = null, random = 
   const challenger = next.players.find((player) => player.id === challengerPlayerId)
   if (challenger) challenger.judgementStars += play.isValid ? -1 : 3
   let drawn = []
-  if (play.isValid) {
+  if (play.isValid || !challenger) {
     const used = next.hands[actor.id].filter((card) => play.cardIds.includes(card.id))
     next.hands[actor.id] = next.hands[actor.id].filter((card) => !play.cardIds.includes(card.id))
     next.discard.push(...used)
@@ -182,7 +178,7 @@ export function resolvePracticeReview(game, challengerPlayerId = null, random = 
     ? play.isValid ? `${challenger.displayName} 抓錯失敗` : `${challenger.displayName} 抓錯成功`
     : play.isValid ? '出牌成立' : '出牌不成立'
   next.publicPlays.find((entry) => entry.id === play.id).result = result
-  next.message = `${actor.displayName} 的牌：${result}。${play.isValid
+  next.message = `${actor.displayName} 的牌：${result}。${play.isValid || !challenger
     ? `${actor.id === 'you' ? '你' : actor.displayName}補進 ${drawn.length} 張牌，手牌回到 ${next.hands[actor.id].length} 張；補牌牌面只給本人看。`
     : '錯誤出牌不棄牌，也不補牌。'}`
   return advanceTurn(next)

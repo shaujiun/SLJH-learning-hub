@@ -2,8 +2,8 @@ const subjectGameTemplates = {
   math: [
     {
       code: 'animal-equation',
-      name: '根式馬戲團（AI 試玩）',
-      description: '可先選教學，也可直接與 3 位 AI 試玩；隨機洗牌、公開出牌與補牌提示。',
+      name: '根式馬戲團',
+      description: '黎少奇老師設計。可選教學試玩、AI 練習或 4 人真人對戰；以根式出牌與動物牌計分。',
       availability: '八上第 2 章起適用',
       launchUrl: '?game=animal-equation',
     },

@@ -76,6 +76,22 @@ describe('根式馬戲團自由試玩', () => {
     expect(invalid.hands.you).toHaveLength(6)
     expect(invalid.newDrawnCardIds.you).toEqual([])
     expect(invalid.message).toContain('不補牌')
+
+    const unchallenged = resolvePracticeReview(
+      submitPracticeRadical(game, ['sqrt8-test', 'sqrt3-test']), null, () => 0.5,
+    )
+    expect(unchallenged.publicPlays[0].result).toBe('出牌不成立')
+    expect(unchallenged.discard).toHaveLength(2)
+    expect(unchallenged.hands.you).toHaveLength(6)
+    expect(unchallenged.newDrawnCardIds.you).toHaveLength(2)
+  })
+
+  it('基礎玩法的 n 根式不強迫輸入係數', () => {
+    const game = createAnimalEquationPractice(() => 0.5)
+    game.hands.you[0] = radical('nsqrt6')
+    const next = submitPracticeRadical(game, [game.hands.you[0].id])
+    expect(next.publicPlays[0].cardLabels).toEqual(['n√6'])
+    expect(next.message).not.toContain('必須先設定')
   })
 
   it('AI 能自行出牌，且只把打出的牌列入公開紀錄', () => {

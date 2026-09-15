@@ -9,7 +9,8 @@ describe('根式馬戲團入口與桌面', () => {
     const html = renderToStaticMarkup(<AnimalEquationExperience />)
     expect(html).toContain('教學試玩')
     expect(html).toContain('直接自由試玩')
-    expect(html).toContain('真人連線及雲端紀錄仍待正式版本')
+    expect(html).toContain('4 人真人對戰')
+    expect(html).toContain('真人對戰需使用學習系統帳號登入')
   })
 
   it('自己的手牌在下方，三位 AI 只顯示牌背與手牌張數', () => {
