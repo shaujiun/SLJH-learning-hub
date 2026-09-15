@@ -24,19 +24,25 @@
 .animal-practice-seat.is-top { grid-area: top; }
 .animal-practice-seat.is-left { grid-area: left; }
 .animal-practice-seat.is-right { grid-area: right; }
-.animal-practice-seat.is-active, .animal-practice-self.is-active { border-color: #d37831; box-shadow: 0 4px 0 #d37831; }
+.animal-practice-seat.is-active, .animal-practice-self.is-active { border-color: #d37831; background: #ffdf9c; box-shadow: 0 4px 0 #d37831; }
 .animal-practice-seat-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.45rem; }
 .animal-practice-seat-heading svg { width: 21px; color: #319c91; }
 .animal-practice-seat-heading strong { font-size: 1rem; }
 .animal-practice-seat-heading span { color: #6b6b78; font-size: 0.87rem; font-weight: 800; }
-.animal-practice-card-backs { display: flex; flex-wrap: wrap; gap: 0.22rem; }
-.animal-practice-card-backs span { display: block; width: 40px; height: 58px; overflow: hidden; border: 2px solid #d3a766; border-radius: 5px; background: #162d39; box-shadow: 1px 2px 2px #263b5840; }
-.animal-practice-card-backs img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.animal-practice-public-cards, .animal-practice-score-animals { display: grid; gap: 0.25rem; min-width: 0; border-top: 1px solid #d5dedf; padding-top: 0.3rem; }
+.animal-practice-public-cards > strong, .animal-practice-score-animals > strong { color: #436773; font-size: 0.88rem; }
+.animal-practice-public-cards > div, .animal-practice-score-animals > div { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.animal-practice-public-cards > div > span { min-width: 49px; min-height: 68px; display: grid; place-content: center; justify-items: center; gap: 0.15rem; border: 2px solid #2c7776; border-radius: 7px; padding: 0.2rem; background: #e2f6ed; box-shadow: inset 0 0 0 2px #fff, 1px 2px 0 #234d57; font-size: 0.8rem; font-weight: 900; text-align: center; }
+.animal-practice-public-cards > div > span.is-function { border-color: #735489; background: #eadcf6; }
+.animal-practice-public-cards .animal-function-symbol { width: 1.4rem; }
+.animal-practice-score-animals > div > span { display: inline-flex; align-items: center; gap: 0.15rem; border-radius: 6px; padding: 0.2rem 0.35rem; background: #fff0d1; font-size: 0.78rem; font-weight: 800; }
+.animal-practice-score-animals i { width: 1.45rem; aspect-ratio: 1; border-radius: 50%; background-size: 400% 400%; background-repeat: no-repeat; }
+.animal-practice-self-zones { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
 .animal-practice-seat small { color: #63717d; font-size: 0.82rem; }
 .animal-practice-center { grid-area: center; min-width: 0; display: grid; align-content: start; gap: 0.65rem; padding: 0.75rem; background: #e8f5f2; }
 .animal-practice-board-heading { display: flex; justify-content: space-between; font-weight: 900; }
 .animal-practice-board-heading span { color: #5b6b72; }
-.animal-practice-animals { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 0.35rem; }
+.animal-practice-animals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.35rem; }
 .animal-practice-animals > button { min-width: 0; min-height: 112px; display: grid; justify-items: center; align-content: center; gap: 0.15rem; border: 2px solid #b8905e; border-radius: 8px; padding: 0.25rem; background: #9d4e3d; color: #fff8e5; text-align: center; font: inherit; box-shadow: inset 0 0 0 2px #f6d39a, 1px 2px 2px #263b5830; cursor: default; }
 .animal-practice-animals > button:disabled { opacity: 1; }
 .animal-practice-animals > button.is-revealed { background: #e9ad73; color: #392c2a; border-color: #9f4d37; }
@@ -58,7 +64,7 @@
 .animal-practice-history li strong { margin-right: 0.6rem; }
 .animal-practice-history li span { display: inline-flex; align-items: center; gap: 0.3rem; }
 .animal-practice-history .animal-function-symbol.is-history { width: 1.5rem; flex: 0 0 auto; border-width: 1px; }
-.animal-practice-self { grid-area: bottom; display: grid; gap: 0.7rem; padding: 0.85rem; background: #fff9ec; }
+.animal-practice-self { grid-area: bottom; display: grid; gap: 0.7rem; padding: 0.85rem; background: #fff; }
 .animal-practice-self-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 .animal-practice-self-heading > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.25rem 0.6rem; }
 .animal-practice-self-heading span { color: #9a5e37; font-weight: 900; }
@@ -98,6 +104,6 @@
   .animal-practice-header span { font-size: 0.84rem; }
   .animal-practice-layout { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "top top" "left right" "center center" "bottom bottom"; }
   .animal-practice-seat { min-width: 0; }
-  .animal-practice-card-backs span { width: 29px; height: 43px; }
   .animal-practice-hand > button { flex-basis: min(29vw, 118px); }
+  .animal-practice-self-zones { grid-template-columns: 1fr; }
 }

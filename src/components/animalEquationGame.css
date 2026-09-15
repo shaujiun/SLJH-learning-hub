@@ -1,0 +1,311 @@
+.animal-equation-shell {
+  min-height: 100vh;
+  color: #25344d;
+  background:
+    radial-gradient(circle at 10% 8%, rgba(255, 199, 144, 0.38), transparent 25rem),
+    radial-gradient(circle at 90% 14%, rgba(131, 213, 204, 0.36), transparent 26rem),
+    #fff8ed;
+  font-family: "Iansui", "BiauKai", "DFKai-SB", serif;
+}
+
+.animal-equation-shell * { box-sizing: border-box; }
+.animal-equation-header { width: min(100% - 2rem, 1440px); margin: 0 auto; padding: 1rem 0; display: flex; align-items: center; justify-content: space-between; }
+.animal-equation-header a { display: flex; align-items: center; gap: 0.65rem; color: #1f5f5b; text-decoration: none; font-size: 1.3rem; }
+.animal-equation-header a > span { display: grid; place-items: center; width: 45px; height: 45px; border: 3px solid #1f5f5b; border-radius: 15px; background: #8fdfd3; color: #173d3b; font: 900 1.65rem/1 system-ui; box-shadow: 0 5px 0 #c4784f; }
+.animal-equation-header h1 { margin: 0; font-size: 1.3rem; line-height: 1.3; }
+.animal-equation-header em { padding: 0.45rem 0.8rem; border-radius: 999px; background: #fff; color: #8d593d; font-style: normal; font-weight: 900; box-shadow: 0 4px 15px rgba(85, 51, 33, 0.08); }
+.animal-equation-main { width: min(100% - 2rem, 1440px); margin: 0 auto; padding-bottom: 7rem; }
+.animal-equation-hero { min-height: 230px; display: grid; grid-template-columns: 1fr 230px; align-items: center; padding: clamp(1.4rem, 4vw, 3.2rem); border: 3px solid #263b58; border-radius: 34px; background: linear-gradient(135deg, #ffc796, #ffae7d); box-shadow: 0 11px 0 #263b58; overflow: hidden; }
+.animal-equation-hero p, .animal-equation-section-heading p { margin: 0; color: #7a3f32; font: 900 0.84rem/1.2 system-ui; letter-spacing: 0.13em; }
+.animal-equation-hero h1 { margin: 0.35rem 0 0.6rem; color: #243652; font-size: clamp(2rem, 5vw, 4rem); line-height: 1.1; }
+.animal-equation-hero > div > span { color: #5d493f; font-size: 1.05rem; font-weight: 900; }
+.animal-equation-hero-art { position: relative; display: grid; place-items: center; width: 190px; height: 190px; margin-left: auto; border: 4px solid #263b58; border-radius: 50%; background: #fff4d3; box-shadow: 0 10px 0 rgba(38, 59, 88, 0.22); }
+.animal-equation-hero-art > span { font-size: 6rem; filter: drop-shadow(0 8px 0 rgba(150, 81, 57, 0.16)); }
+.animal-equation-hero-art > i { position: absolute; right: 12px; top: 10px; display: grid; place-items: center; width: 54px; height: 54px; border-radius: 18px; background: #86d9cf; color: #194d49; font: 900 2rem/1 system-ui; transform: rotate(8deg); }
+
+.animal-equation-room-panel, .animal-equation-rules-section, .animal-equation-preview-section { margin-top: 1.4rem; padding: clamp(1rem, 2.5vw, 1.8rem); border: 2px solid #ecd7c1; border-radius: 26px; background: rgba(255, 255, 255, 0.93); box-shadow: 0 12px 32px rgba(88, 58, 40, 0.08); }
+.animal-equation-section-heading { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1rem; }
+.animal-equation-section-heading h2 { display: flex; align-items: center; gap: 0.55rem; margin: 0.2rem 0 0; color: #283a55; font-size: clamp(1.35rem, 3vw, 2rem); }
+.animal-equation-section-heading h2 svg { width: 28px; }
+.animal-equation-section-heading > span { display: flex; align-items: center; gap: 0.35rem; color: #6e716f; font-weight: 900; }
+.animal-equation-section-heading > span svg { width: 20px; }
+.animal-equation-room-form { display: grid; grid-template-columns: minmax(220px, 0.8fr) minmax(360px, 1.35fr) auto; gap: 0.8rem; align-items: end; }
+.animal-equation-room-form label { position: relative; display: grid; gap: 0.35rem; min-width: 0; }
+.animal-equation-room-form label > span { color: #526172; font-weight: 900; }
+.animal-equation-room-form label > small { position: absolute; right: 0.7rem; bottom: 0.75rem; color: #8c97a5; font: 800 0.72rem/1 system-ui; }
+.animal-equation-room-form input { width: 100%; min-height: 50px; border: 2px solid #cfd8de; border-radius: 14px; padding: 0.7rem 3rem 0.7rem 0.85rem; background: #fbfdff; color: #26364e; font: inherit; font-weight: 900; }
+.animal-equation-room-form > .animal-equation-secondary { grid-column: span 2; }
+.animal-equation-player-count { min-width: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.4rem; margin: 0; border: 0; padding: 0; }
+.animal-equation-player-count legend { grid-column: 1 / -1; margin-bottom: 0.35rem; padding: 0; color: #526172; font-weight: 900; }
+.animal-equation-player-count button { min-height: 50px; border: 2px solid #aebbc4; border-radius: 13px; padding: 0.45rem; background: #fff; color: #526172; font: 900 0.88rem/1.25 inherit; cursor: pointer; }
+.animal-equation-player-count button.is-active { border-color: #263b58; background: #ffd07c; color: #563d20; box-shadow: 0 4px 0 #263b58; }
+.animal-equation-primary, .animal-equation-secondary { min-height: 50px; display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; border: 2px solid #263b58; border-radius: 14px; padding: 0.7rem 1rem; font: 900 1rem/1.2 inherit; cursor: pointer; }
+.animal-equation-primary { background: #54c7b8; color: #173d3b; box-shadow: 0 5px 0 #263b58; }
+.animal-equation-secondary { background: #ffd07c; color: #614724; box-shadow: 0 5px 0 #263b58; }
+.animal-equation-primary:disabled, .animal-equation-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+.animal-equation-building-note { margin: 1rem 0 0; color: #8f613e; font-weight: 900; }
+.animal-equation-live-status { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1rem; margin-top: 0.5rem; border: 2px solid #b4d7d1; border-radius: 14px; padding: 0.65rem 0.9rem; background: #eafbf7; color: #245b58; font-weight: 900; }
+.animal-equation-room-error { margin: 1rem 0 0; padding: 0.8rem 1rem; border: 2px solid #c84d49; border-radius: 14px; background: #fff0ef; color: #8e302d; font-weight: 900; }
+.animal-equation-task-notice { margin: 1rem 0 0; padding: 0.8rem 1rem; border: 2px solid #379b79; border-radius: 14px; background: #e9fff4; color: #236949; font-weight: 900; }
+.animal-equation-live-room { display: grid; gap: 1rem; }
+.animal-equation-room-code { display: flex; align-items: center; justify-content: center; gap: 0.9rem; padding: 0.8rem; border: 2px dashed #48a99e; border-radius: 18px; background: #effcf8; }
+.animal-equation-room-code > span, .animal-equation-room-code > button { display: inline-flex; align-items: center; gap: 0.35rem; }
+.animal-equation-room-code > span { color: #4a6d6a; font-weight: 900; }
+.animal-equation-room-code > strong { color: #263b58; font: 900 2rem/1 system-ui; letter-spacing: 0.14em; }
+.animal-equation-room-code > button { border: 0; border-radius: 10px; padding: 0.45rem 0.65rem; background: #d5f3ec; color: #225e58; font-weight: 900; cursor: pointer; }
+.animal-equation-room-code svg { width: 18px; }
+.animal-equation-lobby-seats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.65rem; }
+.animal-equation-lobby-seats article { display: grid; grid-template-columns: 38px minmax(0, 1fr); align-items: center; gap: 0.15rem 0.55rem; min-width: 0; padding: 0.75rem; border: 2px solid #d9dfe2; border-radius: 15px; background: #fbfdff; }
+.animal-equation-lobby-seats article.is-me { border-color: #37a295; background: #e9fff9; }
+.animal-equation-lobby-seats article > span { grid-row: 1 / span 2; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #263b58; color: #fff; font-weight: 900; }
+.animal-equation-lobby-seats strong, .animal-equation-lobby-seats small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.animal-equation-lobby-seats small { color: #73808d; }
+.animal-equation-start { justify-self: center; min-width: 220px; }
+.animal-equation-turn-panel { margin-top: 1.4rem; display: grid; gap: 1rem; padding: clamp(1rem, 2.5vw, 1.8rem); border: 3px solid #263b58; border-radius: 26px; background: #fff8e9; box-shadow: 0 9px 0 #263b58; }
+.animal-equation-turn-panel.is-review { background: linear-gradient(145deg, #fff0c9, #ffd5b5); }
+.animal-equation-turn-panel.is-waiting { place-items: center; min-height: 170px; text-align: center; }
+.animal-equation-turn-panel.is-waiting > svg { width: 42px; height: 42px; color: #2e8c83; }
+.animal-equation-turn-panel.is-ai-thinking > svg { animation: animal-ai-thinking 1.3s ease-in-out infinite; }
+.animal-equation-turn-panel.is-waiting h2, .animal-equation-turn-panel.is-waiting p { margin: 0; }
+.animal-equation-turn-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.animal-equation-turn-heading p, .animal-equation-turn-heading h2 { margin: 0; }
+.animal-equation-turn-heading p { color: #a15b42; font: 900 0.78rem/1 system-ui; letter-spacing: 0.14em; }
+.animal-equation-turn-heading h2 { margin-top: 0.25rem; color: #263b58; }
+.animal-equation-turn-heading > strong { display: inline-flex; align-items: center; gap: 0.4rem; flex: 0 0 auto; border-radius: 999px; padding: 0.5rem 0.75rem; background: #263b58; color: #fff; }
+.animal-equation-turn-heading svg { width: 19px; }
+.animal-equation-select-hand { display: grid; grid-template-columns: repeat(6, minmax(70px, 1fr)); gap: 0.6rem; }
+.animal-equation-select-hand button { aspect-ratio: 5 / 7; min-width: 0; border: 3px solid #263b58; border-radius: 14px; background: linear-gradient(150deg, #91dfd4, #5cbeb4); color: #173e3b; font: 900 1.18rem/1 system-ui; box-shadow: 0 5px 0 #263b58; cursor: pointer; }
+.animal-equation-select-hand button.is-selected { background: linear-gradient(150deg, #ffd478, #f0a95d); transform: translateY(-5px); box-shadow: 0 9px 0 #263b58; }
+.animal-equation-play-kind { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+.animal-equation-play-kind button { min-height: 48px; border: 2px solid #87969f; border-radius: 14px; background: #fff; color: #526172; font: 900 1rem/1.2 inherit; cursor: pointer; }
+.animal-equation-play-kind button.is-active { border-color: #263b58; background: #ffd07c; color: #563d20; box-shadow: 0 4px 0 #263b58; }
+.animal-equation-play-kind button:disabled { opacity: 0.45; cursor: not-allowed; }
+.animal-equation-function-note { margin: 0; border-radius: 12px; padding: 0.65rem 0.8rem; background: #f0edf8; color: #665b82; font-weight: 900; }
+.animal-equation-function-builder { display: grid; gap: 0.85rem; }
+.animal-equation-function-hand { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.65rem; }
+.animal-equation-function-hand button { min-height: 105px; display: grid; place-items: center; align-content: center; gap: 0.3rem; border: 3px solid #263b58; border-radius: 16px; background: linear-gradient(150deg, #c9b8eb, #9b84cf); color: #302451; box-shadow: 0 5px 0 #263b58; cursor: pointer; }
+.animal-equation-function-hand button.is-selected { background: linear-gradient(150deg, #ffd478, #f0a95d); transform: translateY(-4px); box-shadow: 0 9px 0 #263b58; }
+.animal-equation-function-hand span { font-size: 1.8rem; }
+.animal-equation-function-hand strong { font-size: 1.05rem; }
+.animal-equation-function-description { margin: 0; display: flex; gap: 0.6rem; border-left: 5px solid #7557a8; border-radius: 10px; padding: 0.7rem 0.8rem; background: #f7f1ff; color: #665b82; font-weight: 900; }
+.animal-equation-function-description strong { flex: 0 0 auto; color: #49336f; }
+.animal-equation-function-targets { display: grid; gap: 0.65rem; }
+.animal-equation-function-targets h3, .animal-equation-function-targets > p { margin: 0; }
+.animal-equation-function-targets > div { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.55rem; }
+.animal-equation-function-targets button { min-height: 100px; display: grid; place-items: center; align-content: center; gap: 0.15rem; border: 2px solid #7e8d99; border-radius: 14px; padding: 0.55rem; background: #fff; color: #35465d; cursor: pointer; }
+.animal-equation-function-targets button.is-selected { border: 3px solid #263b58; background: #e5fff8; box-shadow: 0 4px 0 #263b58; }
+.animal-equation-function-targets button > span { font-size: 1.7rem; }
+.animal-equation-function-targets button > small { color: #7a8790; }
+.animal-equation-variable-inputs { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+.animal-equation-variable-inputs label { display: grid; gap: 0.3rem; min-width: 145px; }
+.animal-equation-variable-inputs span { color: #586879; font-weight: 900; }
+.animal-equation-variable-inputs input { min-height: 44px; width: 100%; border: 2px solid #9cb0b7; border-radius: 11px; padding: 0.55rem 0.7rem; font: 900 1rem/1 system-ui; }
+.animal-equation-mode-toggle { display: flex; gap: 0.6rem; }
+.animal-equation-mode-toggle button { border: 2px solid #8da0a8; border-radius: 999px; padding: 0.55rem 0.8rem; background: #fff; color: #526172; font-weight: 900; cursor: pointer; }
+.animal-equation-mode-toggle button.is-active { border-color: #263b58; background: #ffd07c; color: #563d20; }
+.animal-equation-composer { display: grid; gap: 0.75rem; padding: 0.8rem; border: 2px solid #d7c8b2; border-radius: 18px; background: #fff; }
+.animal-equation-token-line { min-height: 70px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.35rem; border: 2px dashed #9cadb3; border-radius: 13px; padding: 0.6rem; }
+.animal-equation-token-line span { display: inline-flex; align-items: center; justify-content: center; min-width: 42px; min-height: 42px; border-radius: 10px; padding: 0.35rem 0.5rem; background: #e7f8f4; color: #224d49; font-weight: 900; }
+.animal-equation-token-line small { color: #7a8790; }
+.animal-equation-token-tools { display: grid; gap: 0.55rem; }
+.animal-equation-token-tools > div { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.45rem; }
+.animal-equation-token-tools button { min-width: 47px; min-height: 42px; border: 2px solid #263b58; border-radius: 10px; padding: 0.4rem 0.6rem; background: #eefaf7; color: #263b58; font-weight: 900; cursor: pointer; }
+.animal-equation-token-tools button:disabled { opacity: 0.35; cursor: not-allowed; }
+.animal-equation-token-tools .animal-equation-edit-tools button { display: inline-flex; align-items: center; gap: 0.35rem; background: #fff0e8; color: #7d4739; }
+.animal-equation-edit-tools svg { width: 18px; }
+.animal-equation-submit-play { justify-self: center; min-width: 250px; }
+.animal-equation-public-equation { overflow-wrap: anywhere; border: 3px solid #263b58; border-radius: 18px; padding: clamp(1rem, 4vw, 1.6rem); background: #fff; color: #263b58; text-align: center; font: 900 clamp(1.35rem, 4vw, 2.2rem)/1.5 system-ui; }
+.animal-equation-turn-panel.is-review > p { margin: 0; color: #6e4c3f; text-align: center; font-weight: 900; }
+.animal-equation-turn-panel.is-reaction { background: linear-gradient(145deg, #f3ecff, #dccff4); }
+.animal-equation-turn-panel.is-reaction > p { margin: 0; text-align: center; color: #584575; font-weight: 900; }
+.animal-equation-function-target { justify-self: center; min-width: min(100%, 260px); display: grid; place-items: center; gap: 0.2rem; border: 3px solid #263b58; border-radius: 18px; padding: 1rem; background: #fff; color: #35465d; box-shadow: 0 5px 0 #263b58; }
+.animal-equation-function-target > span { color: #8a4f38; font-weight: 900; }
+.animal-equation-function-target > strong { font-size: 1.35rem; }
+.animal-equation-function-target > small { color: #747f8c; }
+.animal-equation-defense-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
+.animal-equation-no-defense { display: block; color: #7a657f; text-align: center; font-weight: 900; }
+.animal-equation-challenge { justify-self: center; display: inline-flex; align-items: center; gap: 0.45rem; min-height: 52px; border: 3px solid #7e2d29; border-radius: 15px; padding: 0.7rem 1.2rem; background: #ef6c60; color: #fff; font: 900 1.05rem/1 inherit; box-shadow: 0 5px 0 #7e2d29; cursor: pointer; }
+.animal-equation-challenge:disabled { opacity: 0.45; cursor: not-allowed; }
+.animal-equation-last-result { margin: 1.3rem 0 0; display: flex; align-items: center; justify-content: center; gap: 0.5rem; border-radius: 15px; padding: 0.75rem 1rem; background: #e8f8ec; color: #286140; font-weight: 900; }
+.animal-equation-last-result.result-caught { background: #fff1c7; color: #785b1f; }
+.animal-equation-last-result.result-false_challenge, .animal-equation-last-result.result-invalid { background: #fff0ef; color: #8e302d; }
+.animal-equation-last-result svg { width: 20px; flex: 0 0 auto; }
+.animal-equation-winner { margin-top: 1.4rem; display: flex; align-items: center; justify-content: center; gap: 1rem; border: 3px solid #263b58; border-radius: 24px; padding: 1.2rem; background: linear-gradient(135deg, #ffe58f, #ffc26e); color: #263b58; box-shadow: 0 8px 0 #263b58; }
+.animal-equation-winner > svg { width: 58px; height: 58px; color: #a76422; }
+.animal-equation-winner p, .animal-equation-winner h2 { margin: 0; }
+.animal-equation-winner p { color: #8b5a2b; font: 900 0.78rem/1 system-ui; letter-spacing: 0.13em; }
+.animal-equation-winner h2 { margin: 0.25rem 0; font-size: clamp(1.6rem, 4vw, 2.4rem); }
+.animal-equation-winner > div { flex: 1 1 auto; }
+.animal-equation-winner > button { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; min-height: 48px; border: 2px solid #263b58; border-radius: 14px; padding: 0.65rem 1rem; background: #fff9e6; color: #263b58; font: 900 1rem/1.2 inherit; box-shadow: 0 4px 0 #263b58; cursor: pointer; }
+.animal-equation-winner > button:hover { transform: translateY(-1px); box-shadow: 0 5px 0 #263b58; }
+.animal-equation-winner > button svg { width: 20px; }
+
+.animal-rule-card-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.animal-rule-card-grid > button { min-height: 220px; display: flex; flex-direction: column; align-items: flex-start; border: 3px solid #263b58; border-radius: 24px; padding: 1.2rem; text-align: left; color: #3e302b; background: linear-gradient(160deg, #ffc397, #f4a77f); box-shadow: 0 8px 0 #263b58; cursor: pointer; transition: transform 160ms ease, box-shadow 160ms ease; }
+.animal-rule-card-grid > button:hover { transform: translateY(-4px); box-shadow: 0 12px 0 #263b58; }
+.animal-rule-card-grid button > span { font: 900 0.75rem/1 system-ui; letter-spacing: 0.12em; color: #874739; }
+.animal-rule-card-grid strong { margin: 0.65rem 0; color: #1f2f47; font-size: 1.75rem; }
+.animal-rule-card-grid small { color: #5f463b; font-size: 0.95rem; font-weight: 900; line-height: 1.55; }
+.animal-rule-card-grid em { display: inline-flex; align-items: center; gap: 0.35rem; margin-top: auto; padding-top: 1rem; color: #6d3d32; font-style: normal; font-weight: 900; }
+.animal-rule-card-grid em svg { width: 18px; }
+
+.animal-equation-table-preview { overflow: hidden; border: 3px solid #263b58; border-radius: 26px; background: #f8bd94; box-shadow: inset 0 0 0 6px rgba(255,255,255,0.34); }
+.animal-equation-score-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.55rem; padding: 0.8rem; border-bottom: 2px solid rgba(38,59,88,0.28); background: rgba(255,255,255,0.3); }
+.animal-equation-score-row article { display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: 0.45rem; min-width: 0; padding: 0.55rem; border: 2px solid rgba(38,59,88,0.3); border-radius: 14px; background: #fff8ed; }
+.animal-equation-score-row article.is-me { border-color: #16887d; background: #e5fff8; }
+.animal-equation-score-row article > span { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #263b58; color: #fff; font: 900 1rem/1 system-ui; }
+.animal-equation-score-row article > span svg, .animal-equation-lobby-seats article > span svg { width: 19px; height: 19px; }
+.animal-equation-score-row article div { display: grid; min-width: 0; }
+.animal-equation-score-row article strong, .animal-equation-score-row article small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.animal-equation-score-row article small { color: #7c8490; }
+.animal-equation-score-row article > b { color: #74462e; }
+.animal-equation-board { display: grid; grid-template-columns: minmax(230px, 0.9fr) minmax(250px, 1.15fr) minmax(230px, 0.9fr); gap: 0.8rem; padding: 0.8rem; }
+.animal-card-wing { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; }
+.animal-equation-animal-card { position: relative; min-height: 118px; display: grid; place-items: center; overflow: hidden; border: 3px solid #fff; outline: 2px solid #263b58; border-radius: 14px; padding: 0.55rem; background: linear-gradient(160deg, #95b4e3, #7796cf); color: #fff; box-shadow: 0 5px 0 rgba(38,59,88,0.35); }
+.animal-equation-animal-card > b { position: absolute; top: 0.3rem; left: 0.45rem; font: 900 1.2rem/1 system-ui; text-shadow: 0 2px #536d9b; }
+.animal-equation-animal-card > span:not(.animal-card-back-mark) { font-size: 2.65rem; }
+.animal-equation-animal-card > strong { font-size: 0.93rem; }
+.animal-equation-animal-card > small { max-width: 100%; overflow: hidden; border-radius: 999px; padding: 0.15rem 0.4rem; background: rgba(255,255,255,0.2); text-overflow: ellipsis; white-space: nowrap; }
+.animal-equation-animal-card.is-hidden { background: linear-gradient(145deg, #2c9c98, #166a70); }
+.animal-card-back-mark { font: 900 2.8rem/1 system-ui; color: #ffd576; }
+.animal-equation-center { display: grid; align-content: center; gap: 0.75rem; }
+.animal-play-zone, .animal-review-zone { min-height: 100px; display: grid; place-items: center; align-content: center; gap: 0.25rem; border: 3px dashed rgba(38,59,88,0.5); border-radius: 18px; background: rgba(255,255,255,0.74); text-align: center; }
+.animal-play-zone > span { color: #16887d; font-weight: 900; }
+.animal-play-zone > strong, .animal-review-zone > span { color: #596373; }
+.animal-decks { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.animal-decks > div { min-height: 88px; display: grid; place-items: center; align-content: center; border: 2px solid #263b58; border-radius: 16px; background: #fff5de; }
+.animal-decks span { color: #73523d; font-weight: 900; }
+.animal-decks i { color: #1b716d; font: 900 2rem/1 system-ui; }
+.animal-review-zone svg { color: #d25e4d; }
+.animal-review-zone strong { color: #713f34; }
+.animal-private-hand { display: grid; grid-template-columns: 180px 1fr; align-items: center; gap: 0.8rem; padding: 0.9rem; border-top: 3px solid #263b58; background: #fff7e6; }
+.animal-private-hand > div:first-child { display: flex; align-items: center; gap: 0.55rem; }
+.animal-private-hand > div:first-child > span { display: grid; }
+.animal-private-hand small { color: #77818b; }
+.animal-hand-cards { display: grid; grid-template-columns: repeat(6, minmax(70px, 1fr)); gap: 0.5rem; }
+.animal-hand-cards span { width: 100%; aspect-ratio: 5 / 7; min-height: 90px; display: grid; place-items: center; border: 3px solid #263b58; border-radius: 13px; background: linear-gradient(150deg, #91dfd4, #5cbeb4); color: #173e3b; font: 900 1.25rem/1 system-ui; box-shadow: 0 5px 0 #263b58; }
+.animal-hand-cards span.is-function { background: linear-gradient(150deg, #c9b8eb, #9b84cf); color: #302451; }
+.animal-hand-cards p { grid-column: 1 / -1; margin: 0; color: #596373; font-weight: 900; }
+
+.animal-rule-dialog-backdrop { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(28, 39, 58, 0.7); backdrop-filter: blur(5px); }
+.animal-rule-dialog { position: relative; width: min(100%, 690px); max-height: min(88vh, 850px); overflow: auto; border: 4px solid #263b58; border-radius: 28px; padding: clamp(1.2rem, 4vw, 2.4rem); background: #ffc195; color: #3d302c; box-shadow: 0 14px 0 #263b58; }
+.animal-rule-dialog > p { margin: 0; color: #8c4939; font: 900 0.78rem/1 system-ui; letter-spacing: 0.14em; }
+.animal-rule-dialog h2 { margin: 0.3rem 0; color: #1f2f47; font-size: clamp(2rem, 7vw, 3.4rem); }
+.animal-rule-dialog > span { color: #6b4b40; font-weight: 900; }
+.animal-rule-dialog ol { display: grid; gap: 0.7rem; margin: 1.2rem 0; padding-left: 1.7rem; }
+.animal-rule-dialog li { padding-left: 0.25rem; font-size: 1.05rem; font-weight: 900; line-height: 1.55; }
+.animal-rule-close { position: absolute; right: 1rem; top: 1rem; display: grid; place-items: center; width: 42px; height: 42px; border: 2px solid #263b58; border-radius: 50%; background: #fff8e9; color: #263b58; cursor: pointer; }
+
+@keyframes animal-ai-thinking {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-6px) rotate(4deg); }
+}
+
+@media (max-width: 980px) {
+  .animal-equation-room-form { grid-template-columns: 1fr 1fr; }
+  .animal-equation-room-form > .animal-equation-secondary { grid-column: auto; }
+  .animal-equation-player-count { grid-column: 1 / -1; }
+  .animal-equation-lobby-seats { grid-template-columns: 1fr 1fr; }
+  .animal-equation-select-hand { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .animal-equation-function-targets > div { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .animal-equation-board { grid-template-columns: 1fr; }
+  .animal-card-wing { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .animal-equation-center { grid-template-columns: 1fr 0.8fr 1fr; }
+  .animal-decks { align-self: stretch; }
+  .animal-private-hand { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .animal-equation-header, .animal-equation-main { width: min(100% - 1rem, 1440px); }
+  .animal-equation-header { align-items: flex-start; }
+  .animal-equation-hero { grid-template-columns: 1fr 86px; min-height: 180px; padding: 1rem; border-radius: 22px; box-shadow: 0 7px 0 #263b58; }
+  .animal-equation-hero-art { width: 78px; height: 78px; border-width: 3px; }
+  .animal-equation-hero-art > span { font-size: 3rem; }
+  .animal-equation-hero-art > i { right: -5px; top: -8px; width: 34px; height: 34px; border-radius: 11px; font-size: 1.2rem; }
+  .animal-equation-section-heading { align-items: flex-start; flex-direction: column; }
+  .animal-equation-room-form, .animal-rule-card-grid { grid-template-columns: 1fr; }
+  .animal-equation-player-count { grid-template-columns: 1fr 1fr; }
+  .animal-equation-room-code { flex-wrap: wrap; }
+  .animal-equation-turn-heading { align-items: flex-start; }
+  .animal-equation-variable-inputs { display: grid; grid-template-columns: 1fr 1fr; }
+  .animal-equation-mode-toggle { display: grid; grid-template-columns: 1fr 1fr; }
+  .animal-equation-function-hand, .animal-equation-function-targets > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .animal-rule-card-grid > button { min-height: 170px; }
+  .animal-equation-score-row { grid-template-columns: 1fr 1fr; }
+  .animal-card-wing { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .animal-equation-center { grid-template-columns: 1fr; }
+  .animal-hand-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .animal-equation-animal-card { min-height: 104px; }
+}
+.animal-table { display: grid; grid-template-columns: minmax(170px, 1fr) minmax(350px, 2fr) minmax(170px, 1fr); grid-template-areas: '. top .' 'left center right' '. bottom .' 'hand hand hand'; gap: .55rem; width: min(100%, 1180px); margin-inline: auto; color: #263b58; }
+.animal-table * { box-sizing: border-box; }
+.animal-table-seat { min-width: 0; border: 2px solid #28435a; border-radius: 16px; background: #fff; box-shadow: 0 3px 0 #28435a; }
+.animal-table-seat.is-active { background: #ffdf9c; border-color: #b46b28; box-shadow: 0 3px 0 #b46b28; }
+.animal-table-seat.is-top { grid-area: top; }
+.animal-table-seat.is-left { grid-area: left; }
+.animal-table-seat.is-right { grid-area: right; }
+.animal-table-seat.is-bottom { grid-area: bottom; }
+.animal-table-seat-body { display: grid; width: 100%; height: 100%; align-content: start; gap: .3rem; padding: .48rem; border: 0; background: transparent; color: inherit; text-align: left; font: inherit; }
+.animal-table-seat-body.is-targetable { cursor: pointer; }
+.animal-table-seat-body.is-targetable:hover { box-shadow: inset 0 0 0 3px #f3a952; }
+.animal-table-seat-body > header { display: flex; align-items: center; flex-wrap: wrap; gap: .25rem .4rem; min-width: 0; }
+.animal-table-seat-body > header b { display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 50%; background: #28435a; color: #fff; }
+.animal-table-seat-body > header strong { font-size: 1rem; }
+.animal-table-seat-body > header span { margin-left: auto; font-size: .8rem; color: #61727f; }
+.animal-table-seat-body > header em { font-style: normal; font-weight: 900; color: #9c522b; }
+.animal-table-zones { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .3rem; min-width: 0; }
+.animal-table-seat.is-left .animal-table-zones, .animal-table-seat.is-right .animal-table-zones { grid-template-columns: minmax(0,1fr); }
+.animal-table-play-zone, .animal-table-score-zone { min-width: 0; min-height: 78px; border: 1px dashed #9eaab0; border-radius: 8px; padding: .25rem; background: #ffffffca; }
+.animal-table-play-zone > small, .animal-table-score-zone > small { display: block; font-size: .82rem; font-weight: 900; white-space: nowrap; }
+.animal-table-play-zone > div, .animal-table-score-zone > div { display: flex; flex-wrap: wrap; gap: .2rem; align-items: flex-start; padding-top: .2rem; }
+.animal-table-play-zone > div > span, .animal-table-score-zone > div > span { color: #6b7a84; font-size: .8rem; }
+.animal-table-seat-body > footer { font-size: .82rem; font-weight: 800; color: #5b7180; }
+.animal-table-center { grid-area: center; display: grid; align-content: start; gap: .35rem; min-width: 0; border: 3px solid #256b65; border-radius: 22px; padding: .65rem; background: #e7f4ef; box-shadow: inset 0 0 0 4px #fffbeb, 0 3px 0 #28435a; }
+.animal-table-center-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem; font-size: .93rem; }
+.animal-table-center-head span { font-weight: 800; color: #506d6b; }
+.animal-table-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .28rem; align-content: start; }
+.animal-table-center p { margin: .1rem 0 0; font-size: .8rem; }
+.animal-table-animal { display: grid; justify-items: center; align-content: center; gap: .1rem; min-width: 0; min-height: 78px; border: 2px solid #af7040; border-radius: 8px; padding: .15rem; background: #ddaa74; color: #3d2a27; text-align: center; font: inherit; }
+.animal-table-animal.is-hidden { background: #9a5546; color: #fff5d9; }
+.animal-table-animal.is-hidden img { width: min(100%,50px); height: 60px; border: 1px solid #dfb36d; border-radius: 4px; object-fit: cover; }
+.animal-table-animal.is-targetable { cursor: pointer; outline: 3px solid #ffdc8e; outline-offset: 1px; }
+.animal-table-animal-art { display: block; width: min(100%,46px); aspect-ratio: 1; border: 2px solid #fff4d8; border-radius: 50%; background-size: 400% 400%; background-repeat: no-repeat; }
+.animal-table-animal strong { font-size: .78rem; }
+.animal-table-animal small { font-size: .75rem; }
+.animal-table-score-zone .animal-table-animal { width: 52px; min-height: 68px; }
+.animal-table-score-zone .animal-table-animal-art { width: 30px; }
+.animal-table-score-zone .animal-table-animal strong { font-size: .67rem; }
+.animal-table-game-card { position: relative; isolation: isolate; display: grid; place-content: center; justify-items: center; gap: .13rem; width: 82px; aspect-ratio: 5/7; overflow: hidden; border: 2px solid #246c66; border-radius: 9px; background: linear-gradient(150deg,#dcf7ea,#fff 48%,#b6e5d5); color: #183c3e; text-align: center; font: inherit; box-shadow: inset 0 0 0 3px #fff8e8, 0 2px 0 #28435a; }
+.animal-table-game-card.is-function { border-color: #65487d; background: linear-gradient(150deg,#e7d8f6,#fff 48%,#cdb4e8); color: #45335f; }
+.animal-table-game-card > img { position: absolute; inset: 13%; width: 74%; height: 74%; object-fit: cover; opacity: .18; z-index: -1; }
+.animal-table-game-card strong { font-size: 1.03rem; white-space: nowrap; }
+.animal-table-game-card small { font-size: .7rem; font-weight: 800; }
+.animal-table-game-card.is-compact { width: 43px; min-height: 60px; border-radius: 5px; }
+.animal-table-game-card.is-compact strong { font-size: .78rem; }
+.animal-table-game-card.is-compact small { display: none; }
+.animal-table-game-card.is-compact .animal-function-symbol { width: 1.45rem; }
+button.animal-table-game-card { cursor: pointer; }
+button.animal-table-game-card.is-selected { transform: translateY(-7px); outline: 3px solid #e8a842; outline-offset: 2px; }
+.animal-table-game-card.is-new { outline: 3px solid #c7622b; outline-offset: 2px; }
+.animal-table-private-hand { grid-area: hand; display: grid; gap: .35rem; border: 2px solid #28435a; border-radius: 14px; padding: .5rem; background: #fff8ec; }
+.animal-table-private-hand > strong { display: flex; align-items: center; gap: .3rem; font-size: 1rem; }
+.animal-table-private-hand > strong svg { width: 19px; }
+.animal-table-private-hand > div { display: flex; flex-wrap: wrap; justify-content: center; gap: .45rem; }
+.animal-table-private-hand > small { font-size: .82rem; color: #5e6d78; }
+.animal-equation-next-game { display: grid; gap: .65rem; margin-top: .7rem; }
+.animal-equation-next-game fieldset { display: flex; flex-wrap: wrap; gap: .5rem; border: 0; padding: 0; }
+.animal-equation-next-game legend { font-weight: 900; margin-bottom: .4rem; }
+.animal-equation-next-game fieldset button { border: 2px solid #526b7f; border-radius: 8px; padding: .45rem .65rem; background: #fff; color: #28435a; font-weight: 900; cursor: pointer; }
+.animal-equation-next-game fieldset button.is-active { background: #ffdf9c; border-color: #a9662d; }
+.animal-equation-next-game label { display: flex; align-items: center; gap: .5rem; font-weight: 900; }
+.animal-equation-next-game select { min-height: 42px; border: 2px solid #526b7f; border-radius: 8px; padding: .3rem; background: #fff; font: inherit; }
+.animal-equation-next-game p { margin: 0; }
+.animal-equation-room-roster-note { margin: .6rem 0 0; color: #526777; line-height: 1.5; }
+.animal-equation-leave { margin-top: .7rem; }
+@media (max-width: 900px) { .animal-table { grid-template-columns: repeat(2,minmax(0,1fr)); grid-template-areas: 'top top' 'left right' 'center center' 'bottom bottom' 'hand hand'; } .animal-table-seat.is-left .animal-table-zones, .animal-table-seat.is-right .animal-table-zones { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 560px) { .animal-table { gap: .35rem; } .animal-table-seat-body { padding: .3rem; } .animal-table-zones { grid-template-columns: minmax(0,1fr); } .animal-table-seat.is-left .animal-table-zones, .animal-table-seat.is-right .animal-table-zones { grid-template-columns: minmax(0,1fr); } .animal-table-play-zone, .animal-table-score-zone { min-height: 55px; } .animal-table-center { padding: .35rem; } .animal-table-grid { gap: .15rem; } .animal-table-animal { min-height: 68px; } .animal-table-animal.is-hidden img { height: 49px; } .animal-table-private-hand > div { gap: .22rem; } .animal-table-game-card { width: min(29vw,82px); } }
+.animal-equation-help-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: .55rem; margin-top: 1rem; }
+.animal-equation-help-buttons button { display: inline-flex; align-items: center; gap: .3rem; min-height: 44px; border: 2px solid #536b7c; border-radius: 9px; padding: .45rem .75rem; background: #fff; color: #28435a; font: inherit; font-weight: 900; cursor: pointer; }
+.animal-equation-help-buttons svg { width: 18px; }
+.animal-table-dice summary { cursor: pointer; font-size: .84rem; font-weight: 900; }
+.animal-table-dice ul { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .1rem .4rem; margin: .3rem 0 0; padding: 0; list-style: none; font-size: .78rem; }
