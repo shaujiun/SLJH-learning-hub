@@ -27,19 +27,23 @@ describe('各科遊戲選擇入口', () => {
     }, 'https://example.com/english')).toBe(expected)
   })
 
-  it('元素週期表保留課程適用標示與現有遊戲網址', () => {
-    expect(subjectGamesFor({ code: 'science', name: '自然' }, '')).toContainEqual(expect.objectContaining({
+  it('量測實驗室僅保留在管理者測試清單，其他自然科活動照常開放', () => {
+    const publicGames = subjectGamesFor({ code: 'science', name: '自然' }, '')
+    expect(publicGames.map((game) => game.code)).not.toContain('measurement-lab')
+    expect(subjectGamesFor({ code: 'science', name: '自然' }, '', { adminPreview: true })).toContainEqual(expect.objectContaining({
       code: 'measurement-lab',
       name: '量測實驗室',
-      availability: '八上長度與體積測量',
+      availability: '封存中・僅管理者測試',
       launchUrl: '?game=measurement-lab',
     }))
-    expect(subjectGamesFor({ code: 'science', name: '自然' }, '')).toContainEqual(expect.objectContaining({
+    expect(subjectSectionsFor({ code: 'science', name: '自然' }, '', { adminPreview: true })[2].games.map((game) => game.code))
+      .toEqual(['measurement-lab', 'chemical-formula'])
+    expect(publicGames).toContainEqual(expect.objectContaining({
       code: 'periodic-table',
       availability: '八上 CH6 後都適用',
       launchUrl: '?game=periodic-table',
     }))
-    expect(subjectGamesFor({ code: 'science', name: '自然' }, '')).toContainEqual(expect.objectContaining({
+    expect(publicGames).toContainEqual(expect.objectContaining({
       code: 'chemical-formula',
       name: '化學事前哨站',
       availability: '八上第 6 章起適用',
@@ -67,7 +71,7 @@ describe('各科遊戲選擇入口', () => {
     const examples = [
       ['math', { board: ['animal-equation'] }],
       ['english', { basic: ['english-vocabulary'], guided: ['english-grammar'] }],
-      ['science', { basic: ['periodic-table'], guided: ['measurement-lab', 'chemical-formula'] }],
+      ['science', { basic: ['periodic-table'], guided: ['chemical-formula'] }],
       ['history', { map: ['history-atlas'] }],
       ['geography', { guided: ['geography-fill-map', 'geography-detective'] }],
     ]

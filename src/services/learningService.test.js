@@ -2,9 +2,21 @@ import { describe, expect, it } from 'vitest'
 import {
   buildDashboardTaskLists,
   buildTaskLaunchUrl,
+  isApprovedActiveAdmin,
   mapLearningTask,
   mapMemorizationTask,
 } from './learningService.js'
+
+describe('量測實驗室管理者測試權限', () => {
+  it('僅允許已核准且啟用的管理者', () => {
+    expect(isApprovedActiveAdmin({ user_type: 'admin', approval_status: 'approved', is_active: true })).toBe(true)
+    expect(isApprovedActiveAdmin({ user_type: 'admin', approval_status: 'pending', is_active: true })).toBe(false)
+    expect(isApprovedActiveAdmin({ user_type: 'admin', approval_status: 'approved', is_active: false })).toBe(false)
+    expect(isApprovedActiveAdmin({ user_type: 'teacher', approval_status: 'approved', is_active: true })).toBe(false)
+    expect(isApprovedActiveAdmin({ user_type: 'student', approval_status: 'approved', is_active: true })).toBe(false)
+    expect(isApprovedActiveAdmin(null)).toBe(false)
+  })
+})
 
 const batch = {
   setId: '7a7dfad4-2c64-4b72-b808-4e170cb41793',

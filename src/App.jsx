@@ -31,6 +31,7 @@ import LearningSystemOrderButtons from './components/LearningSystemOrderButtons.
 import { isSupabaseConfigured } from './lib/supabase.js'
 import {
   buildTaskLaunchUrl,
+  canPreviewMeasurementLab,
   loadLearningDashboard,
   signOutEverywhere,
 } from './services/learningService.js'
@@ -120,6 +121,41 @@ function ErrorScreen({ message, onRetry }) {
       </div>
     </main>
   )
+}
+
+function MeasurementLabArchivedNotice() {
+  return (
+    <main className="center-screen">
+      <div className="error-orb"><CircleAlert aria-hidden="true" /></div>
+      <h1>量測實驗室已封存</h1>
+      <p>目前僅供已核准的管理者測試，學生與訪客暫不開放。</p>
+      <a className="secondary-button" href="./"><ArrowLeft aria-hidden="true" />返回學習系統</a>
+    </main>
+  )
+}
+
+function MeasurementLabAdminPreview() {
+  const [state, setState] = useState({ loading: true, allowed: false })
+
+  useEffect(() => {
+    let mounted = true
+    if (!isSupabaseConfigured) {
+      setState({ loading: false, allowed: false })
+      return undefined
+    }
+    canPreviewMeasurementLab()
+      .then((allowed) => {
+        if (mounted) setState({ loading: false, allowed })
+      })
+      .catch((error) => {
+        console.error(error)
+        if (mounted) setState({ loading: false, allowed: false })
+      })
+    return () => { mounted = false }
+  }, [])
+
+  if (state.loading) return <LoadingScreen />
+  return state.allowed ? <MeasurementLabGame /> : <MeasurementLabArchivedNotice />
 }
 
 function WeeklyProgress({ tasks }) {
@@ -385,8 +421,8 @@ function SubjectLearningSection({ section, system, guestMode, returnUrl, showBac
   )
 }
 
-function SubjectGameMenu({ system, guestMode = false }) {
-  const sections = subjectSectionsFor(system, englishVocabUrl)
+function SubjectGameMenu({ system, guestMode = false, adminPreview = false }) {
+  const sections = subjectSectionsFor(system, englishVocabUrl, { adminPreview: !guestMode && adminPreview })
   const returnUrl = guestMode ? '?guest=1' : './'
   if (!system) {
     return (
@@ -763,7 +799,7 @@ function LearningHub({ requestedSubject = '' }) {
   if (state.error) return <ErrorScreen message={state.error} onRetry={load} />
   if (!state.data?.authenticated) return <LoginRequired />
 
-  const { profile, student, systems, weeklyTasks, role, groupBySubject = {} } = state.data
+  const { profile, student, systems, weeklyTasks, role, adminPreview = false, groupBySubject = {} } = state.data
   const academicSystems = systems.filter((system) => system.code !== 'focus_training')
   const visibleTotal = pendingTasks.length + completedTasks.length
   const selectedSystem = requestedSubject
@@ -815,7 +851,7 @@ function LearningHub({ requestedSubject = '' }) {
 
       <main className="page-content">
         {requestedSubject ? (
-          <SubjectGameMenu system={selectedSystem} />
+          <SubjectGameMenu system={selectedSystem} adminPreview={adminPreview} />
         ) : <>{role === 'student' ? (
           <>
             <section className="welcome-panel">
@@ -928,7 +964,9 @@ export default function App() {
   if (requestedGame === 'animal-equation') {
     return <Suspense fallback={<LoadingScreen />}><AnimalEquationExperience /></Suspense>
   }
-  if (requestedGame === 'measurement-lab') return <MeasurementLabGame />
+  if (requestedGame === 'measurement-lab') {
+    return guestMode ? <MeasurementLabArchivedNotice /> : <MeasurementLabAdminPreview />
+  }
   if (requestedGame === 'periodic-table') return <PeriodicTableGame />
   if (requestedGame === 'chemical-formula') {
     return <Suspense fallback={<LoadingScreen />}><ChemicalFormulaOutpost /></Suspense>

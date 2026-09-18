@@ -46,7 +46,8 @@ describe('guest practice routes', () => {
 
     expect(html).toContain('?game=periodic-table&amp;guest=1')
     expect(html).toContain('?game=chemical-formula&amp;guest=1')
-    expect(html).toContain('?game=measurement-lab&amp;guest=1')
+    expect(html).not.toContain('量測實驗室')
+    expect(html).not.toContain('?game=measurement-lab')
     expect(html).toContain('href="?guest=1"')
   })
 
@@ -63,7 +64,7 @@ describe('guest practice routes', () => {
     expect(guided).toBeLessThan(board)
     expect(html.slice(basic, guided)).toContain('元素週期表測驗')
     expect(html.slice(basic, guided)).not.toContain('化學事前哨站')
-    expect(html.slice(guided, board)).toContain('量測實驗室')
+    expect(html.slice(guided, board)).not.toContain('量測實驗室')
     expect(html.slice(guided, board)).toContain('化學事前哨站')
     expect(html.slice(map, basic)).toContain('冊別與章節地圖尚在規劃中')
   })
@@ -79,14 +80,21 @@ describe('guest practice routes', () => {
     expect(mathHtml.slice(mathHtml.indexOf('data-learning-section="board"'))).toContain('根式馬戲團')
   })
 
-  it('opens the measurement lab inside the learning hub tab', () => {
+  it('blocks the archived measurement lab when a guest opens its old direct link', () => {
     useUrl('https://example.test/hub/?game=measurement-lab&guest=1')
     const html = renderToStaticMarkup(<App />)
 
-    expect(html).toContain('量測實驗室')
-    expect(html).toContain('games/measurement-lab/index.html')
-    expect(html).toContain('href="?subject=science&amp;guest=1"')
-    expect(html).not.toContain('target="_blank"')
+    expect(html).toContain('量測實驗室已封存')
+    expect(html).not.toContain('games/measurement-lab/index.html')
+    expect(html).not.toContain('<iframe')
+  })
+
+  it('does not load the game before checking an authenticated direct link', () => {
+    useUrl('https://example.test/hub/?game=measurement-lab')
+    const html = renderToStaticMarkup(<App />)
+
+    expect(html).not.toContain('games/measurement-lab/index.html')
+    expect(html).not.toContain('<iframe')
   })
 
   it('shows only general focus practice to guests', () => {
