@@ -39,7 +39,8 @@ const subjectGameTemplates = {
       section: 'guided',
       name: '量測實驗室',
       description: '走訪六個工作站，練習直尺、量筒與排水法的操作、讀值、單位及方法判斷。',
-      availability: '八上長度與體積測量',
+      availability: '封存中・僅管理者測試',
+      adminPreview: true,
       launchUrl: '?game=measurement-lab',
     },
     {
@@ -104,13 +105,14 @@ function englishGrammarLaunchUrl(fallbackUrl) {
   }
 }
 
-export function subjectGamesFor(system, englishVocabUrl) {
+export function subjectGamesFor(system, englishVocabUrl, { adminPreview = false } = {}) {
   if (!system?.code) return []
   const fallbackUrl = configuredLaunchUrl(system, englishVocabUrl)
   const templates = subjectGameTemplates[system.code]
 
   if (templates) {
     return templates
+      .filter((game) => !game.adminPreview || adminPreview)
       .map((game) => ({
         ...game,
         launchUrl: game.entry === 'grammar'
@@ -131,8 +133,8 @@ export function subjectGamesFor(system, englishVocabUrl) {
   }]
 }
 
-export function subjectSectionsFor(system, englishVocabUrl) {
-  const games = subjectGamesFor(system, englishVocabUrl)
+export function subjectSectionsFor(system, englishVocabUrl, options) {
+  const games = subjectGamesFor(system, englishVocabUrl, options)
   return subjectLearningSections.map((section) => ({
     ...section,
     games: games.filter((game) => game.section === section.code),

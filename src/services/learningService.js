@@ -10,6 +10,28 @@ import {
   getFocusTaskCurriculumScope,
 } from '../lib/focusTaskCurriculum.js'
 
+export function isApprovedActiveAdmin(profile) {
+  return profile?.user_type === 'admin'
+    && profile?.approval_status === 'approved'
+    && profile?.is_active === true
+}
+
+export async function canPreviewMeasurementLab() {
+  const client = requireSupabase()
+  const { data: sessionData, error: sessionError } = await client.auth.getSession()
+  if (sessionError) throw sessionError
+  const userId = sessionData.session?.user?.id
+  if (!userId) return false
+
+  const { data: profile, error } = await client
+    .from('contact_book_profiles')
+    .select('user_type,approval_status,is_active')
+    .eq('id', userId)
+    .maybeSingle()
+  if (error) throw error
+  return isApprovedActiveAdmin(profile)
+}
+
 function relation(value) {
   return Array.isArray(value) ? value[0] : value
 }
@@ -136,6 +158,7 @@ export async function loadLearningDashboard(referenceDate = new Date()) {
     return {
       authenticated: true,
       role: profile?.user_type || 'staff',
+      adminPreview: isApprovedActiveAdmin(profile),
       profile: {
         displayName: profile?.display_name || profile?.username || '老師',
         username: profile?.username || '',
