@@ -50,6 +50,35 @@ describe('guest practice routes', () => {
     expect(html).toContain('href="?guest=1"')
   })
 
+  it('各科頁面依地圖、基礎、引導、桌遊順序分區，活動不重複', () => {
+    useUrl('https://example.test/hub/?subject=science&guest=1')
+    const html = renderToStaticMarkup(<App />)
+    const map = html.indexOf('data-learning-section="map"')
+    const basic = html.indexOf('data-learning-section="basic"')
+    const guided = html.indexOf('data-learning-section="guided"')
+    const board = html.indexOf('data-learning-section="board"')
+    expect(map).toBeGreaterThan(-1)
+    expect(map).toBeLessThan(basic)
+    expect(basic).toBeLessThan(guided)
+    expect(guided).toBeLessThan(board)
+    expect(html.slice(basic, guided)).toContain('元素週期表測驗')
+    expect(html.slice(basic, guided)).not.toContain('化學事前哨站')
+    expect(html.slice(guided, board)).toContain('量測實驗室')
+    expect(html.slice(guided, board)).toContain('化學事前哨站')
+    expect(html.slice(map, basic)).toContain('冊別與章節地圖尚在規劃中')
+  })
+
+  it('歷史地圖與數學桌遊各自放在對應區塊', () => {
+    useUrl('https://example.test/hub/?subject=history&guest=1')
+    const historyHtml = renderToStaticMarkup(<App />)
+    expect(historyHtml.slice(historyHtml.indexOf('data-learning-section="map"'), historyHtml.indexOf('data-learning-section="basic"')))
+      .toContain('歷史時光地圖')
+
+    useUrl('https://example.test/hub/?subject=math&guest=1')
+    const mathHtml = renderToStaticMarkup(<App />)
+    expect(mathHtml.slice(mathHtml.indexOf('data-learning-section="board"'))).toContain('根式馬戲團')
+  })
+
   it('opens the measurement lab inside the learning hub tab', () => {
     useUrl('https://example.test/hub/?game=measurement-lab&guest=1')
     const html = renderToStaticMarkup(<App />)

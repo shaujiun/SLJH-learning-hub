@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { learningSystemLaunchUrl, subjectGamesFor } from './subjectGames.js'
+import {
+  learningSystemLaunchUrl,
+  subjectGamesFor,
+  subjectSectionsFor,
+} from './subjectGames.js'
 
 describe('各科遊戲選擇入口', () => {
   it('數學科提供免登入的根式馬戲團教學試玩', () => {
@@ -44,11 +48,41 @@ describe('各科遊戲選擇入口', () => {
   })
 
   it('英文選擇頁使用目前的英文單字系統網址', () => {
-    expect(subjectGamesFor({ code: 'english', name: '英語', launchUrl: '' }, 'https://example.com/english'))
+    const games = subjectGamesFor({ code: 'english', name: '英語', launchUrl: '' }, 'https://example.com/english?school=806')
+    expect(games)
       .toContainEqual(expect.objectContaining({
         code: 'english-vocabulary',
-        launchUrl: 'https://example.com/english',
+        section: 'basic',
+        launchUrl: 'https://example.com/english?school=806',
       }))
+    expect(games)
+      .toContainEqual(expect.objectContaining({
+        code: 'english-grammar',
+        section: 'guided',
+        launchUrl: 'https://example.com/english?school=806&entry=grammar',
+      }))
+  })
+
+  it('科目頁固定四區，現有活動各只放入一區', () => {
+    const examples = [
+      ['math', { board: ['animal-equation'] }],
+      ['english', { basic: ['english-vocabulary'], guided: ['english-grammar'] }],
+      ['science', { basic: ['periodic-table'], guided: ['measurement-lab', 'chemical-formula'] }],
+      ['history', { map: ['history-atlas'] }],
+      ['geography', { guided: ['geography-fill-map', 'geography-detective'] }],
+    ]
+    examples.forEach(([code, expected]) => {
+      const sections = subjectSectionsFor({ code, name: code }, 'https://example.com/english')
+      expect(sections.map((section) => section.code)).toEqual(['map', 'basic', 'guided', 'board'])
+      expect(Object.fromEntries(sections.filter((section) => section.games.length).map((section) => [
+        section.code, section.games.map((game) => game.code),
+      ]))).toEqual(expected)
+    })
+  })
+
+  it('未設定直接入口的科目仍保留原有學習系統連結', () => {
+    expect(subjectSectionsFor({ code: 'custom', name: '自訂科目', launchUrl: 'https://example.com/custom' }, '')[1].games)
+      .toEqual([expect.objectContaining({ code: 'custom-main', section: 'basic' })])
   })
 
   it('地理科顯示目前已開放的年級與章節', () => {
