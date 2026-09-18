@@ -3581,9 +3581,76 @@ p {
   box-shadow: var(--shadow);
 }
 
+.subject-learning-sections {
+  display: grid;
+  gap: 1rem;
+}
+
+.subject-learning-section.is-map {
+  background: linear-gradient(135deg, #eaf7f0, #f2f7ff);
+}
+
+.subject-learning-section-heading {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.subject-learning-section-heading > div {
+  min-width: 0;
+}
+
+.subject-learning-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.subject-learning-section-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #365f72;
+  background: #deebf4;
+  border-radius: 12px;
+}
+
+.subject-learning-section.is-map .subject-learning-section-icon {
+  color: #286559;
+  background: #d7efe5;
+}
+
+.subject-learning-section.is-board .subject-learning-section-icon {
+  color: #58428c;
+  background: #eee7ff;
+}
+
+.subject-learning-section-icon svg {
+  width: 23px;
+  height: 23px;
+}
+
+.subject-learning-section-heading h2 {
+  margin: 0;
+}
+
+.subject-learning-section-heading p {
+  margin: 0.4rem 0 0;
+  color: #536273;
+  line-height: 1.5;
+}
+
+.subject-learning-empty {
+  margin: 0;
+  padding: 0.55rem 0 0;
+  color: #596874;
+  border-top: 1px solid #dce3e4;
+}
+
 .subject-game-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 390px), 1fr));
   gap: 0.9rem;
 }
 

@@ -12,6 +12,7 @@ import {
   GraduationCap,
   Headphones,
   LogOut,
+  Map,
   Mic2,
   Pencil,
   Play,
@@ -40,7 +41,7 @@ import {
   setLearningSystemActive,
 } from './services/learningAdminService.js'
 import { learningAudienceOptions } from './lib/learningAudiences.js'
-import { learningSystemLaunchUrl, subjectGamesFor } from './lib/subjectGames.js'
+import { learningSystemLaunchUrl, subjectSectionsFor } from './lib/subjectGames.js'
 import { rememberFocusTaskLaunch } from './lib/focusTaskLaunch.js'
 import { resolveSelectedFocusTask } from './lib/focusTaskSelection.js'
 import { describePendingTask, summarizeWeeklyProgress } from './lib/weeklyProgress.js'
@@ -329,16 +330,71 @@ function SubjectGameIcon({ system }) {
   return <span aria-hidden="true">{system?.name?.slice(0, 1) || '學'}</span>
 }
 
+const subjectSectionIcons = {
+  map: Map,
+  basic: Pencil,
+  guided: Sparkles,
+  board: Puzzle,
+}
+
+function SubjectLearningSection({ section, system, guestMode, returnUrl, showBackLink = false }) {
+  const SectionIcon = subjectSectionIcons[section.code]
+  const actionLabel = section.code === 'map'
+    ? '查看地圖'
+    : section.code === 'board' ? '進入桌遊' : '開始學習'
+
+  return (
+    <section
+      className={`subject-games-section subject-learning-section is-${section.code}`}
+      data-learning-section={section.code}
+      aria-labelledby={`subject-${section.code}-title`}
+    >
+      <div className="section-heading subject-learning-section-heading">
+        <div>
+          <div className="subject-learning-title-row">
+            <span className="subject-learning-section-icon"><SectionIcon aria-hidden="true" /></span>
+            <h2 id={`subject-${section.code}-title`}>{section.title}</h2>
+          </div>
+          <p>{section.description}</p>
+        </div>
+        {showBackLink && <a className="back-link" href={returnUrl}><ArrowLeft aria-hidden="true" />返回各科選擇</a>}
+      </div>
+
+      {section.games.length > 0 ? <div className="subject-game-grid">
+        {section.games.map((game) => (
+          <article className="subject-game-card" key={game.code}>
+            <div className="subject-game-icon"><SubjectGameIcon system={system} /></div>
+            <div className="subject-game-copy">
+              <div className="subject-game-title-row">
+                <h3>{game.name}</h3>
+                {game.availability && <span>{game.availability}</span>}
+              </div>
+              <p>{game.description}</p>
+            </div>
+            <a href={guestMode ? guestLaunchUrl(game.launchUrl) : game.launchUrl} aria-label={`進入${game.name}`}>
+              <Play aria-hidden="true" />{actionLabel}
+            </a>
+          </article>
+        ))}
+      </div> : <p className="subject-learning-empty">
+        {section.code === 'map'
+          ? '這科的冊別與章節地圖尚在規劃中，可先從下方練習開始。'
+          : '目前尚未開放這一類的學習活動。'}
+      </p>}
+    </section>
+  )
+}
+
 function SubjectGameMenu({ system, guestMode = false }) {
-  const games = subjectGamesFor(system, englishVocabUrl)
-  const isHistory = system?.code === 'history'
+  const sections = subjectSectionsFor(system, englishVocabUrl)
+  const returnUrl = guestMode ? '?guest=1' : './'
   if (!system) {
     return (
       <section className="subject-games-section subject-menu-empty">
         <CircleAlert aria-hidden="true" />
         <h1>找不到這個科目的學習系統</h1>
         <p>這個科目可能尚未開放，或不符合目前學生的分組設定。</p>
-        <a className="primary-button" href={guestMode ? '?guest=1' : './'}><ArrowLeft aria-hidden="true" />返回各科選擇</a>
+        <a className="primary-button" href={returnUrl}><ArrowLeft aria-hidden="true" />返回各科選擇</a>
       </section>
     )
   }
@@ -347,42 +403,23 @@ function SubjectGameMenu({ system, guestMode = false }) {
     <>
       <section className="subject-menu-hero">
         <div>
-          <p className="eyebrow">{system.code.toUpperCase()} {isHistory ? 'LEARNING' : 'GAMES'}</p>
-          <h1>{system.name}{isHistory ? '學習選擇' : '遊戲選擇'}</h1>
-          <p>{isHistory ? '選擇這次要閱讀的歷史學習工具，之後新增的遊戲也會放在這裡。' : `選擇這次要練習的遊戲。之後新增的${system.name}遊戲也會集中顯示在這裡。`}</p>
+          <p className="eyebrow">{system.code.toUpperCase()} LEARNING</p>
+          <h1>{system.name}學習選擇</h1>
+          <p>依冊別與章節探索內容，或從下方選擇適合的練習方式。</p>
         </div>
         <div className={`subject-menu-hero-icon is-${system.code}`}><SubjectGameIcon system={system} /></div>
       </section>
 
-      <section className="subject-games-section" aria-labelledby="subject-games-title">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">SELECT {isHistory ? 'A TOOL' : 'A GAME'}</p>
-            <h2 id="subject-games-title">選擇{isHistory ? '學習' : '遊戲'}項目</h2>
-          </div>
-          <a className="back-link" href={guestMode ? '?guest=1' : './'}><ArrowLeft aria-hidden="true" />返回各科選擇</a>
-        </div>
-
-        <div className="subject-game-grid">
-          {games.map((game) => (
-            <article className="subject-game-card" key={game.code}>
-              <div className="subject-game-icon"><SubjectGameIcon system={system} /></div>
-              <div className="subject-game-copy">
-                <div className="subject-game-title-row">
-                  <h3>{game.name}</h3>
-                  {game.availability && <span>{game.availability}</span>}
-                </div>
-                <p>{game.description}</p>
-              </div>
-              <a href={guestMode ? guestLaunchUrl(game.launchUrl) : game.launchUrl} aria-label={`進入${game.name}`}>
-                <Play aria-hidden="true" />進入{isHistory ? '學習' : '遊戲'}
-              </a>
-            </article>
-          ))}
-        </div>
-
-        <p className="subject-coming-soon">其他{system.name}{isHistory ? '學習內容與遊戲' : '遊戲'}將陸續加入。</p>
-      </section>
+      <div className="subject-learning-sections">
+        {sections.map((section, index) => <SubjectLearningSection
+          key={section.code}
+          section={section}
+          system={system}
+          guestMode={guestMode}
+          returnUrl={returnUrl}
+          showBackLink={index === 0}
+        />)}
+      </div>
     </>
   )
 }
