@@ -60,6 +60,7 @@ const GeographyFillMap = lazy(() => import('./components/GeographyFillMap.jsx'))
 const GeographyDetective = lazy(() => import('./components/GeographyDetective.jsx'))
 const ChemicalFormulaOutpost = lazy(() => import('./components/ChemicalFormulaOutpost.jsx'))
 const AnimalEquationExperience = lazy(() => import('./components/AnimalEquationExperience.jsx'))
+const WordGridPuzzle = lazy(() => import('./components/WordGridPuzzle.jsx'))
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
@@ -300,10 +301,16 @@ function FocusTrainingEntrance({ guestMode = false }) {
   )
 }
 
-function ExternalPuzzleGames() {
+function PuzzleGames({ guestMode = false }) {
   const games = [
-    { name: '神機妙算', url: 'https://andrewkotw.github.io/card-puzzle/#4CLUE' },
-    { name: '數字神算', url: 'https://andrewkotw.github.io/120_card_math/' },
+    {
+      name: '填字圖',
+      detail: '來源：聯合報好讀周報・設計者：遲驖川老師',
+      url: guestMode ? '?puzzle=word-grid&guest=1' : '?puzzle=word-grid',
+      external: false,
+    },
+    { name: '神機妙算', detail: '本校楊志宏老師、郭安澤老師協同製作', url: 'https://andrewkotw.github.io/card-puzzle/#4CLUE', external: true },
+    { name: '數字神算', detail: '本校楊志宏老師、郭安澤老師協同製作', url: 'https://andrewkotw.github.io/120_card_math/', external: true },
   ]
 
   return (
@@ -313,15 +320,15 @@ function ExternalPuzzleGames() {
         <div>
           <p className="eyebrow">PUZZLE GAMES</p>
           <h2 id="external-puzzle-title">益智遊戲</h2>
-          <p>由本校楊志宏老師、郭安澤老師協同製作，不適用本系統紀錄與帳號登入</p>
+          <p>自由選擇文字或數字挑戰，不列入每日任務與教師報表</p>
         </div>
       </div>
       <div className="external-puzzle-links">
         {games.map((game, index) => (
-          <a key={game.name} href={game.url} target="_blank" rel="noreferrer">
-            <span>{index + 1}</span>
-            <strong>{game.name}</strong>
-            <ExternalLink aria-hidden="true" />
+          <a key={game.name} href={game.url} {...(game.external ? { target: '_blank', rel: 'noreferrer' } : {})}>
+            <span className="external-puzzle-number">{index + 1}</span>
+            <span className="external-puzzle-copy"><strong>{game.name}</strong><small>{game.detail}</small></span>
+            {game.external ? <ExternalLink aria-hidden="true" /> : <Play aria-hidden="true" />}
           </a>
         ))}
       </div>
@@ -509,7 +516,7 @@ function GuestPracticeHub({ requestedSubject = '' }) {
 
           <FocusTrainingEntrance guestMode />
 
-          <ExternalPuzzleGames />
+          <PuzzleGames guestMode />
 
           <section className="systems-section" aria-labelledby="guest-systems-title">
             <div className="section-heading">
@@ -937,7 +944,7 @@ function LearningHub({ requestedSubject = '' }) {
 
         <FocusTrainingEntrance />
 
-        <ExternalPuzzleGames />
+        <PuzzleGames />
 
         <section className="systems-section" aria-labelledby="systems-title">
           <div className="section-heading">
@@ -998,6 +1005,9 @@ export default function App() {
   }
   if (searchParams.get('geography') === 'detective') {
     return <Suspense fallback={<LoadingScreen />}><GeographyDetective /></Suspense>
+  }
+  if (searchParams.get('puzzle') === 'word-grid') {
+    return <Suspense fallback={<LoadingScreen />}><WordGridPuzzle guestMode={guestMode} /></Suspense>
   }
   if (guestMode) {
     return <GuestPracticeHub requestedSubject={searchParams.get('subject') || ''} />
