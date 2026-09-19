@@ -17,7 +17,7 @@
   --shadow: 0 8px 0 rgba(47, 58, 80, 0.18);
 }
 
-/* 外部益智遊戲僅提供連結，不串接本系統帳號與紀錄 */
+/* 獨立益智遊戲，不串接本系統任務與教師報表 */
 .external-puzzle-section {
   margin: 1.2rem 0;
   padding: 1rem 1.15rem;
@@ -90,7 +90,7 @@
   box-shadow: 0 5px 0 rgba(63, 45, 85, 0.16);
 }
 
-.external-puzzle-links a > span {
+.external-puzzle-number {
   display: grid;
   width: 30px;
   height: 30px;
@@ -99,6 +99,16 @@
   color: #fff;
   background: #79519a;
   font-weight: 900;
+}
+
+.external-puzzle-copy {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.external-puzzle-copy small {
+  color: var(--muted);
+  line-height: 1.35;
 }
 
 .external-puzzle-links a svg {
