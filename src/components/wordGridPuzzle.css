@@ -100,6 +100,19 @@
   border-radius: 14px;
 }
 .word-grid-issue-bar label { display: flex; align-items: center; gap: 0.55rem; font-weight: 700; }
+.word-grid-date-fields {
+  display: flex;
+  align-items: end;
+  gap: 0.55rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.word-grid-date-fields legend { margin-bottom: 0.3rem; font-weight: 800; }
+.word-grid-date-fields label { display: grid; gap: 0.25rem; min-width: 0; font-size: 0.86rem; }
+.word-grid-date-fields select { min-width: 4.6rem; }
+.word-grid-date-fields label:first-of-type select { min-width: 6rem; }
 .word-grid-issue-bar select,
 .word-grid-editor-fields input,
 .word-grid-editor-fields select,
@@ -226,6 +239,12 @@ button.word-grid-cell { cursor: pointer; }
 .word-grid-editor-heading p { margin: 0; }
 .word-grid-editor-fields { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; margin: 1rem 0; }
 .word-grid-editor-fields label { display: grid; gap: 0.3rem; font-weight: 700; }
+.word-grid-editor-fields > .word-grid-date-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.word-grid-editor-fields > .word-grid-date-fields legend { grid-column: 1 / -1; }
+.word-grid-editor-fields small { color: #687178; font-weight: 400; line-height: 1.5; }
 .word-grid-editor-fields .is-wide { grid-column: 1 / -1; }
 .word-grid-reference-upload { display: grid; gap: 0.3rem; margin-bottom: 1rem; }
 .word-grid-reference-upload label { display: flex; width: fit-content; align-items: center; gap: 0.45rem; padding: 0.65rem 0.8rem; color: #2e554a; background: #eef5ec; border-radius: 10px; font-weight: 700; cursor: pointer; }
@@ -275,5 +294,6 @@ button.word-grid-cell { cursor: pointer; }
   .word-grid-cell { font-size: clamp(0.85rem, 6vw, 1.5rem); }
   .word-grid-editor-fields { grid-template-columns: 1fr; }
   .word-grid-editor-fields .is-wide { grid-column: auto; }
+  .word-grid-date-fields.is-student-picker { flex-wrap: wrap; }
   .word-grid-actions { flex-wrap: wrap; }
 }

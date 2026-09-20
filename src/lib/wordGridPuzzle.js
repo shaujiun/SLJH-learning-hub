@@ -46,7 +46,15 @@ export function validateWordGridPuzzle(input) {
   if (solution) {
     const missingSolution = editableCellIndexes(grid).some((index) => !solution[index]?.value)
     if (missingSolution) errors.push('完整解答仍有空白格。')
+    if (!missingSolution) {
+      const solutionCharacters = editableCellIndexes(grid).map((index) => solution[index].value).sort()
+      const bankCharacters = [...characterBank].sort()
+      if (solutionCharacters.join('') !== bankCharacters.join('')) {
+        errors.push('可填文字與完整解答使用的文字不一致。')
+      }
+    }
   }
+  if (input?.status === 'published' && !solution) errors.push('答案確認並收錄完整解答後，才能發布題目。')
   return { grid, characterBank, solutionGrid: solution, errors }
 }
 
