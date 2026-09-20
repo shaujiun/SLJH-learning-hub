@@ -40,8 +40,7 @@ const defaultPuzzle = {
   grid: createEmptyWordGrid(),
   characterBank: [],
   solutionGrid: null,
-  previousAnswerLabel: '',
-  previousAnswerGrid: null,
+  answerExplanation: '',
   status: 'draft',
 }
 
@@ -176,21 +175,33 @@ function PuzzleGrid({ puzzle, assignments, onCellClick, answerGrid = null, edito
 
 function AnswerPanel({ puzzle }) {
   return (
-    <aside className="word-grid-answer-panel" aria-labelledby="previous-answer-title">
-      <div>
-        <p className="eyebrow">PREVIOUS ANSWER</p>
-        <h2 id="previous-answer-title">前一期答案</h2>
-        <p>{puzzle.previousAnswerLabel || '部分期數資料尚未收錄'}</p>
-      </div>
-      {puzzle.previousAnswerGrid ? (
-        <PuzzleGrid puzzle={{ ...puzzle, grid: puzzle.previousAnswerGrid, characterBank: [] }} answerGrid={puzzle.previousAnswerGrid} />
-      ) : (
-        <div className="word-grid-answer-missing">
-          <CircleAlert aria-hidden="true" />
-          <strong>這一期沒有可核對的前期答案</strong>
-          <span>之後可由管理者補登，不影響本期練習。</span>
-        </div>
-      )}
+    <aside className="word-grid-answer-panel" aria-labelledby="current-answer-title">
+      <details>
+        <summary>
+          <span>
+            <span className="eyebrow">CURRENT ANSWER</span>
+            <strong id="current-answer-title">本期解答與解答說明</strong>
+          </span>
+          <span className="word-grid-answer-summary-hint">作答完成後再展開</span>
+        </summary>
+        {puzzle.solutionGrid ? (
+          <div className="word-grid-answer-content">
+            <PuzzleGrid puzzle={{ ...puzzle, grid: puzzle.solutionGrid, characterBank: [] }} answerGrid={puzzle.solutionGrid} />
+            <section className="word-grid-answer-explanation" aria-label="解答說明">
+              <h3>解答說明</h3>
+              {puzzle.answerExplanation
+                ? <p>{puzzle.answerExplanation}</p>
+                : <p className="is-missing">本期解答說明尚待補登。</p>}
+            </section>
+          </div>
+        ) : (
+          <div className="word-grid-answer-missing">
+            <CircleAlert aria-hidden="true" />
+            <strong>本期完整解答尚未確認</strong>
+            <span>管理者校對照片後才會收錄並發布。</span>
+          </div>
+        )}
+      </details>
     </aside>
   )
 }
@@ -253,33 +264,43 @@ function PlayArea({ puzzle }) {
 
   return (
     <section className="word-grid-play" aria-labelledby="word-grid-play-title">
-      <div className="word-grid-bank-heading">
-        <div>
-          <p className="eyebrow">CHARACTER BANK</p>
-          <h2 id="word-grid-play-title">可填的文字</h2>
+      <div className="word-grid-solving-area">
+        <div className="word-grid-puzzle-column">
+          <div className="word-grid-puzzle-heading">
+            <p className="eyebrow">PUZZLE</p>
+            <h2 id="word-grid-play-title">本期題目</h2>
+          </div>
+          <p className="word-grid-hint">先選右側文字，再點選題目白格；點已有文字的格子可將文字放回字庫。</p>
+          <PuzzleGrid puzzle={puzzle} assignments={assignments} onCellClick={handleCellClick} />
+          <div className="word-grid-actions">
+            <button type="button" className="secondary-button" onClick={clearAll}><RotateCcw aria-hidden="true" />重新開始</button>
+            <button type="button" className="primary-button" onClick={checkAnswer}><Check aria-hidden="true" />完成檢查</button>
+          </div>
+          {message && <p className="word-grid-message" role="status">{message}</p>}
         </div>
-        <span>剩餘 {bankTiles.length - usedTileIds.size} 字</span>
+        <aside className="word-grid-bank-column">
+          <div className="word-grid-bank-heading">
+            <div>
+              <p className="eyebrow">CHARACTER BANK</p>
+              <h2>可填的文字</h2>
+            </div>
+            <span>剩餘 {bankTiles.length - usedTileIds.size} 字</span>
+          </div>
+          <div className="word-grid-bank" aria-label="可填文字字庫">
+            {bankTiles.map((tile) => (
+              <button
+                key={tile.id}
+                type="button"
+                className={selectedTile === tile.id ? 'is-selected' : ''}
+                disabled={usedTileIds.has(tile.id)}
+                onClick={() => setSelectedTile((current) => current === tile.id ? null : tile.id)}
+              >
+                {tile.character}
+              </button>
+            ))}
+          </div>
+        </aside>
       </div>
-      <div className="word-grid-bank" aria-label="可填文字字庫">
-        {bankTiles.map((tile) => (
-          <button
-            key={tile.id}
-            type="button"
-            className={selectedTile === tile.id ? 'is-selected' : ''}
-            disabled={usedTileIds.has(tile.id)}
-            onClick={() => setSelectedTile((current) => current === tile.id ? null : tile.id)}
-          >
-            {tile.character}
-          </button>
-        ))}
-      </div>
-      <p className="word-grid-hint">先點一張字卡，再點白格；點已填的格子可把文字放回字庫。</p>
-      <PuzzleGrid puzzle={puzzle} assignments={assignments} onCellClick={handleCellClick} />
-      <div className="word-grid-actions">
-        <button type="button" className="secondary-button" onClick={clearAll}><RotateCcw aria-hidden="true" />重新開始</button>
-        <button type="button" className="primary-button" onClick={checkAnswer}><Check aria-hidden="true" />完成檢查</button>
-      </div>
-      {message && <p className="word-grid-message" role="status">{message}</p>}
     </section>
   )
 }
@@ -348,12 +369,10 @@ function PuzzleEditor({ puzzle, onSaved, onCancel }) {
     if (referenceUrl) URL.revokeObjectURL(referenceUrl)
     setReferenceUrl(file ? URL.createObjectURL(file) : '')
   }
-  const setAnswerEnabled = (field, enabled) => setForm((current) => ({
+  const setAnswerEnabled = (enabled) => setForm((current) => ({
     ...current,
-    [field]: enabled
-      ? field === 'previousAnswerGrid' ? createEmptyWordGrid() : copyPuzzleShapeForAnswer(current.grid)
-      : null,
-    status: field === 'solutionGrid' && !enabled && current.status === 'published' ? 'draft' : current.status,
+    solutionGrid: enabled ? copyPuzzleShapeForAnswer(current.grid) : null,
+    status: !enabled && current.status === 'published' ? 'draft' : current.status,
   }))
   const save = async () => {
     const validated = validateWordGridPuzzle({ ...form, characterBank: parseCharacterBank(form.characterBank) })
@@ -371,7 +390,7 @@ function PuzzleEditor({ puzzle, onSaved, onCancel }) {
     }
   }
 
-  const activeGrid = answerTab === 'puzzle' ? form.grid : answerTab === 'solution' ? form.solutionGrid : form.previousAnswerGrid
+  const activeGrid = answerTab === 'puzzle' ? form.grid : form.solutionGrid
   return (
     <section className="word-grid-editor" aria-labelledby="word-grid-editor-title">
       <div className="word-grid-editor-heading">
@@ -380,11 +399,10 @@ function PuzzleEditor({ puzzle, onSaved, onCancel }) {
       </div>
       <div className="word-grid-editor-fields">
         <EditorDateSelects value={form.publishedOn} onChange={(publishedOn) => setForm({ ...form, publishedOn })} />
-        <label>狀態<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option value="draft">草稿</option><option value="published" disabled={!form.solutionGrid}>發布（須有完整解答）</option><option value="archived">封存</option></select><small>先儲存草稿；待下一期公布答案並完成「本期解答」後，再改為發布。</small></label>
+        <label>狀態<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option value="draft">草稿</option><option value="published" disabled={!form.solutionGrid}>發布（須有完整解答）</option><option value="archived">封存</option></select><small>先儲存草稿；依報紙右側的當期解答完成校對後，再改為發布。</small></label>
         <label>來源<input value={form.sourceName} onChange={(event) => setForm({ ...form, sourceName: event.target.value })} /></label>
         <label>設計者<input value={form.designerName} onChange={(event) => setForm({ ...form, designerName: event.target.value })} /></label>
         <label className="is-wide">可填文字<textarea rows="3" value={Array.isArray(form.characterBank) ? form.characterBank.join('') : form.characterBank} onChange={(event) => setForm({ ...form, characterBank: event.target.value })} /></label>
-        <label className="is-wide">前一期答案標示<input value={form.previousAnswerLabel} placeholder="例如：2026／08／24 答案" onChange={(event) => setForm({ ...form, previousAnswerLabel: event.target.value })} /></label>
       </div>
       <div className="word-grid-reference-upload">
         <label><ImagePlus aria-hidden="true" />載入照片作為本次編題參考<input type="file" accept="image/*" onChange={(event) => updateReference(event.target.files?.[0])} /></label>
@@ -396,7 +414,6 @@ function PuzzleEditor({ puzzle, onSaved, onCancel }) {
           <div className="word-grid-editor-tabs">
             <button type="button" className={answerTab === 'puzzle' ? 'is-active' : ''} onClick={() => setAnswerTab('puzzle')}>題目格</button>
             <button type="button" className={answerTab === 'solution' ? 'is-active' : ''} onClick={() => setAnswerTab('solution')}>本期解答</button>
-            <button type="button" className={answerTab === 'previous' ? 'is-active' : ''} onClick={() => setAnswerTab('previous')}>前一期答案</button>
           </div>
           {answerTab === 'puzzle' ? (
             <div className="word-grid-editor-tools" aria-label="格子工具">
@@ -410,24 +427,30 @@ function PuzzleEditor({ puzzle, onSaved, onCancel }) {
                 <input
                   type="checkbox"
                   checked={Boolean(activeGrid)}
-                  onChange={(event) => setAnswerEnabled(answerTab === 'solution' ? 'solutionGrid' : 'previousAnswerGrid', event.target.checked)}
+                  onChange={(event) => setAnswerEnabled(event.target.checked)}
                 />
-                收錄{answerTab === 'solution' ? '本期完整解答' : '前一期答案'}
+                收錄本期完整解答
               </label>
-              {answerTab === 'previous' && activeGrid && <div className="word-grid-editor-tools" aria-label="前一期答案格工具">
-                <button type="button" className={mode === 'block' ? 'is-active' : ''} onClick={() => setMode('block')}>黑格</button>
-                <button type="button" className={mode === 'empty' ? 'is-active' : ''} onClick={() => setMode('empty')}>白格</button>
-                <button type="button" className={mode === 'given' ? 'is-active' : ''} onClick={() => setMode('given')}>答案字</button>
-              </div>}
             </>
           )}
           {activeGrid ? (
             <GridEditor
               value={activeGrid}
               mode={answerTab === 'solution' ? 'answer' : mode}
-              onChange={(grid) => setForm({ ...form, [answerTab === 'puzzle' ? 'grid' : answerTab === 'solution' ? 'solutionGrid' : 'previousAnswerGrid']: grid })}
+              onChange={(grid) => setForm({ ...form, [answerTab === 'puzzle' ? 'grid' : 'solutionGrid']: grid })}
             />
           ) : <p className="word-grid-editor-empty">勾選後即可輸入答案；未收錄時，學生端會顯示尚無答案。</p>}
+          {answerTab === 'solution' && activeGrid && (
+            <label className="word-grid-explanation-editor">
+              解答說明
+              <textarea
+                rows="8"
+                value={form.answerExplanation || ''}
+                placeholder={'請依報紙逐條輸入說明，例如：\n1. 語詞／說明\n2. 語句／出處'}
+                onChange={(event) => setForm({ ...form, answerExplanation: event.target.value })}
+              />
+            </label>
+          )}
         </div>
       </div>
       <div className="word-grid-editor-actions">
@@ -482,7 +505,7 @@ export default function WordGridPuzzle({ guestMode = false }) {
           </div>
           <button type="button" onClick={() => setShowInstructions((value) => !value)} aria-expanded={showInstructions}>遊戲說明<ChevronDown aria-hidden="true" /></button>
         </section>
-        {showInstructions && <div className="word-grid-instructions"><p>將上方字卡各使用一次，填入白色空格。橫向由左至右、直向由上至下，都要能形成正確語詞或文句。黑格不可填，題目中的文字是提示。</p><p>可用年、月、日選擇想挑戰的期數；題目會在答案確認後才發布，系統並會保存在目前裝置的作答進度。</p></div>}
+        {showInstructions && <div className="word-grid-instructions"><p>將字庫中的文字各使用一次，填入白色空格。橫向由左至右、直向由上至下，都要能形成正確語詞或文句。黑格不可填，題目中的文字是提示。</p><p>可用年、月、日選擇想挑戰的期數；題目會在答案確認後才發布，系統並會保存在目前裝置的作答進度。完成後可展開下方的本期解答與解答說明。</p></div>}
         {editing ? <PuzzleEditor puzzle={editing} onSaved={async () => { await load(); setEditing(null) }} onCancel={() => setEditing(null)} /> : puzzle ? <>
           <div className="word-grid-issue-bar">
             <PuzzleDateSelects puzzles={state.puzzles.filter((item) => state.canManage || item.status === 'published')} selectedId={puzzle.id} onSelect={setSelectedId} />

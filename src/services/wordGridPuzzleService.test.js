@@ -12,12 +12,12 @@ describe('填字圖資料服務', () => {
       grid_rows: ['.字########', ...Array(9).fill('##########')],
       character_bank: ['人'],
       solution_rows: null,
-      previous_answer_rows: null,
+      answer_explanation: '本期解答說明',
       status: 'published',
     })
     expect(puzzle.grid).toHaveLength(100)
     expect(puzzle.grid[1]).toEqual({ type: 'given', value: '字' })
     expect(puzzle.solutionGrid).toBeNull()
-    expect(puzzle.previousAnswerGrid).toBeNull()
+    expect(puzzle.answerExplanation).toBe('本期解答說明')
   })
 })
