@@ -42,6 +42,19 @@ describe('填字圖資料與判定', () => {
       .toContain('白格共有 1 格')
   })
 
+  it('沒有完整解答時只能儲存草稿，不能發布', () => {
+    expect(validateWordGridPuzzle({ publishedOn: '2026-09-19', grid, characterBank: '人', status: 'draft' }).errors).toEqual([])
+    expect(validateWordGridPuzzle({ publishedOn: '2026-09-19', grid, characterBank: '人', status: 'published' }).errors)
+      .toContain('答案確認並收錄完整解答後，才能發布題目。')
+  })
+
+  it('完整解答使用的文字必須和字庫一致', () => {
+    const wrongSolution = grid.map((cell, index) => (index === 1 ? { type: 'given', value: '錯' } : cell))
+    expect(validateWordGridPuzzle({
+      publishedOn: '2026-09-19', grid, characterBank: '人', solutionGrid: wrongSolution, status: 'published',
+    }).errors).toContain('可填文字與完整解答使用的文字不一致。')
+  })
+
   it('沒有解答時只標記練習完成，不假裝判定正確', () => {
     expect(assessWordGridAnswer({ grid, characterBank: '人' }, { 1: 0 })).toEqual({
       status: 'practice-complete', complete: true, correct: null,

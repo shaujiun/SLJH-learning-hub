@@ -51,6 +51,77 @@ function formatIssueDate(value) {
   return `${year}／${month}／${day}`
 }
 
+function todayDateValue() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function issueDateParts(value) {
+  const [year = '', month = '', day = ''] = String(value || '').split('-')
+  return { year, month, day }
+}
+
+function daysInMonth(year, month) {
+  return new Date(Number(year), Number(month), 0).getDate()
+}
+
+function EditorDateSelects({ value, onChange }) {
+  const parts = issueDateParts(value || todayDateValue())
+  const currentYear = new Date().getFullYear()
+  const years = Array.from(new Set([
+    ...Array.from({ length: 8 }, (_, index) => String(currentYear - 2 + index)),
+    parts.year,
+  ])).filter(Boolean).sort((a, b) => Number(b) - Number(a))
+  const months = Array.from({ length: 12 }, (_, index) => String(index + 1).padStart(2, '0'))
+  const dayCount = daysInMonth(parts.year, parts.month)
+  const days = Array.from({ length: dayCount }, (_, index) => String(index + 1).padStart(2, '0'))
+  const update = (key, nextValue) => {
+    const next = { ...parts, [key]: nextValue }
+    const maxDay = daysInMonth(next.year, next.month)
+    next.day = String(Math.min(Number(next.day), maxDay)).padStart(2, '0')
+    onChange(`${next.year}-${next.month}-${next.day}`)
+  }
+  return (
+    <fieldset className="word-grid-date-fields">
+      <legend>期數日期</legend>
+      <label>年<select value={parts.year} onChange={(event) => update('year', event.target.value)}>{years.map((year) => <option key={year} value={year}>{year}</option>)}</select></label>
+      <label>月<select value={parts.month} onChange={(event) => update('month', event.target.value)}>{months.map((month) => <option key={month} value={month}>{Number(month)}</option>)}</select></label>
+      <label>日<select value={parts.day} onChange={(event) => update('day', event.target.value)}>{days.map((day) => <option key={day} value={day}>{Number(day)}</option>)}</select></label>
+    </fieldset>
+  )
+}
+
+function PuzzleDateSelects({ puzzles, selectedId, onSelect }) {
+  const selected = puzzles.find((puzzle) => puzzle.id === selectedId) || puzzles[0]
+  if (!selected) return null
+  const selectedDate = issueDateParts(selected.publishedOn)
+  const years = [...new Set(puzzles.map((puzzle) => issueDateParts(puzzle.publishedOn).year))].sort((a, b) => Number(b) - Number(a))
+  const months = [...new Set(puzzles
+    .filter((puzzle) => issueDateParts(puzzle.publishedOn).year === selectedDate.year)
+    .map((puzzle) => issueDateParts(puzzle.publishedOn).month))].sort((a, b) => Number(b) - Number(a))
+  const days = puzzles
+    .filter((puzzle) => {
+      const date = issueDateParts(puzzle.publishedOn)
+      return date.year === selectedDate.year && date.month === selectedDate.month
+    })
+    .sort((a, b) => b.publishedOn.localeCompare(a.publishedOn))
+  const chooseFirst = (matches) => {
+    const next = [...matches].sort((a, b) => b.publishedOn.localeCompare(a.publishedOn))[0]
+    if (next) onSelect(next.id)
+  }
+  return (
+    <fieldset className="word-grid-date-fields is-student-picker">
+      <legend>選擇期數</legend>
+      <label>年<select value={selectedDate.year} onChange={(event) => chooseFirst(puzzles.filter((puzzle) => issueDateParts(puzzle.publishedOn).year === event.target.value))}>{years.map((year) => <option key={year} value={year}>{year}</option>)}</select></label>
+      <label>月<select value={selectedDate.month} onChange={(event) => chooseFirst(puzzles.filter((puzzle) => { const date = issueDateParts(puzzle.publishedOn); return date.year === selectedDate.year && date.month === event.target.value }))}>{months.map((month) => <option key={month} value={month}>{Number(month)}</option>)}</select></label>
+      <label>日<select value={selected.id} onChange={(event) => onSelect(event.target.value)}>{days.map((puzzle) => <option key={puzzle.id} value={puzzle.id}>{Number(issueDateParts(puzzle.publishedOn).day)}{puzzle.status !== 'published' ? `（${puzzle.status === 'draft' ? '草稿' : '封存'}）` : ''}</option>)}</select></label>
+    </fieldset>
+  )
+}
+
 function progressKey(puzzleId) {
   return `sljh-word-grid-progress-v1:${puzzleId}`
 }
@@ -260,7 +331,12 @@ function GridEditor({ value, mode, onChange }) {
 }
 
 function PuzzleEditor({ puzzle, onSaved, onCancel }) {
-  const [form, setForm] = useState(() => ({ ...defaultPuzzle, ...puzzle, grid: normalizeWordGrid(puzzle?.grid || defaultPuzzle.grid) }))
+  const [form, setForm] = useState(() => ({
+    ...defaultPuzzle,
+    ...puzzle,
+    publishedOn: puzzle?.publishedOn || todayDateValue(),
+    grid: normalizeWordGrid(puzzle?.grid || defaultPuzzle.grid),
+  }))
   const [mode, setMode] = useState(wordGridCellTypes.block)
   const [answerTab, setAnswerTab] = useState('puzzle')
   const [referenceUrl, setReferenceUrl] = useState('')
@@ -277,6 +353,7 @@ function PuzzleEditor({ puzzle, onSaved, onCancel }) {
     [field]: enabled
       ? field === 'previousAnswerGrid' ? createEmptyWordGrid() : copyPuzzleShapeForAnswer(current.grid)
       : null,
+    status: field === 'solutionGrid' && !enabled && current.status === 'published' ? 'draft' : current.status,
   }))
   const save = async () => {
     const validated = validateWordGridPuzzle({ ...form, characterBank: parseCharacterBank(form.characterBank) })
@@ -302,8 +379,8 @@ function PuzzleEditor({ puzzle, onSaved, onCancel }) {
         <button type="button" className="icon-button" onClick={onCancel}><X aria-hidden="true" /><span>關閉</span></button>
       </div>
       <div className="word-grid-editor-fields">
-        <label>期數日期<input type="date" value={form.publishedOn} onChange={(event) => setForm({ ...form, publishedOn: event.target.value })} /></label>
-        <label>狀態<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option value="draft">草稿</option><option value="published">發布</option><option value="archived">封存</option></select></label>
+        <EditorDateSelects value={form.publishedOn} onChange={(publishedOn) => setForm({ ...form, publishedOn })} />
+        <label>狀態<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option value="draft">草稿</option><option value="published" disabled={!form.solutionGrid}>發布（須有完整解答）</option><option value="archived">封存</option></select><small>先儲存草稿；待下一期公布答案並完成「本期解答」後，再改為發布。</small></label>
         <label>來源<input value={form.sourceName} onChange={(event) => setForm({ ...form, sourceName: event.target.value })} /></label>
         <label>設計者<input value={form.designerName} onChange={(event) => setForm({ ...form, designerName: event.target.value })} /></label>
         <label className="is-wide">可填文字<textarea rows="3" value={Array.isArray(form.characterBank) ? form.characterBank.join('') : form.characterBank} onChange={(event) => setForm({ ...form, characterBank: event.target.value })} /></label>
@@ -405,11 +482,11 @@ export default function WordGridPuzzle({ guestMode = false }) {
           </div>
           <button type="button" onClick={() => setShowInstructions((value) => !value)} aria-expanded={showInstructions}>遊戲說明<ChevronDown aria-hidden="true" /></button>
         </section>
-        {showInstructions && <div className="word-grid-instructions"><p>將上方字卡各使用一次，填入白色空格。橫向由左至右、直向由上至下，都要能形成正確語詞或文句。黑格不可填，題目中的文字是提示。</p><p>系統會保存在目前裝置的進度；缺少完整解答的期數只供練習，不會顯示成答對。</p></div>}
+        {showInstructions && <div className="word-grid-instructions"><p>將上方字卡各使用一次，填入白色空格。橫向由左至右、直向由上至下，都要能形成正確語詞或文句。黑格不可填，題目中的文字是提示。</p><p>可用年、月、日選擇想挑戰的期數；題目會在答案確認後才發布，系統並會保存在目前裝置的作答進度。</p></div>}
         {editing ? <PuzzleEditor puzzle={editing} onSaved={async () => { await load(); setEditing(null) }} onCancel={() => setEditing(null)} /> : puzzle ? <>
           <div className="word-grid-issue-bar">
-            <label>選擇期數<select value={puzzle.id} onChange={(event) => setSelectedId(event.target.value)}>{state.puzzles.filter((item) => state.canManage || item.status === 'published').map((item) => <option value={item.id} key={item.id}>{formatIssueDate(item.publishedOn)}{item.status !== 'published' ? `・${item.status === 'draft' ? '草稿' : '封存'}` : ''}</option>)}</select></label>
-            <div><strong>{formatIssueDate(puzzle.publishedOn)}</strong><span>{puzzle.solutionGrid ? '可自動核對' : '練習模式・暫無本期解答'}</span></div>
+            <PuzzleDateSelects puzzles={state.puzzles.filter((item) => state.canManage || item.status === 'published')} selectedId={puzzle.id} onSelect={setSelectedId} />
+            <div><strong>{formatIssueDate(puzzle.publishedOn)}</strong><span>{puzzle.solutionGrid ? '答案已收錄・可自動核對' : '草稿預覽・答案尚未確認'}</span></div>
             {state.canManage && <div className="word-grid-admin-actions"><button type="button" onClick={() => setEditing(puzzle)}><Pencil aria-hidden="true" />編輯</button><button type="button" onClick={async () => { await archiveWordGridPuzzle(puzzle.id); await load() }}><Eraser aria-hidden="true" />封存</button></div>}
           </div>
           <div className="word-grid-layout">
