@@ -56,8 +56,8 @@ export const numberGridChallenges = Object.freeze([
     lineClues: [
       { id: 'row-upper', axis: 'row', cellIds: ['b', 'c', 'd'], total: 15, direction: 'left', anchorRow: 1.5, anchorColumn: 3.65 },
       { id: 'row-lower', axis: 'row', cellIds: ['e', 'f', 'g'], total: 20, direction: 'left', anchorRow: 2.5, anchorColumn: 3.65 },
-      { id: 'column-left', axis: 'column', cellIds: ['b', 'e', 'h'], total: 13, direction: 'up', anchorRow: 3.65, anchorColumn: 0.5 },
-      { id: 'column-right', axis: 'column', cellIds: ['d', 'g', 'i'], total: 19, direction: 'up', anchorRow: 3.65, anchorColumn: 2.5 },
+      { id: 'column-left', axis: 'column', cellIds: ['b', 'e', 'h'], total: 13, direction: 'up', anchorRow: 4.45, anchorColumn: 0.5 },
+      { id: 'column-right', axis: 'column', cellIds: ['d', 'g', 'i'], total: 19, direction: 'up', anchorRow: 4.45, anchorColumn: 2.5 },
     ],
     solution: [6, 2, 3, 10, 7, 5, 8, 4, 1],
     explanation: '本題未使用 9。兩條橫列是 2＋3＋10＝15、7＋5＋8＝20；左右直行是 2＋7＋4＝13、10＋8＋1＝19。四個圓圈依序為 6＋2＋3＝11、2＋3＋7＋5＝17、7＋5＋4＝16、5＋8＋1＝14。',
@@ -114,8 +114,8 @@ export const numberGridChallenges = Object.freeze([
     lineClues: [
       { id: 'row-upper', axis: 'row', cellIds: ['b', 'c', 'd'], total: 15, direction: 'left', anchorRow: 1.5, anchorColumn: 3.65 },
       { id: 'row-lower', axis: 'row', cellIds: ['e', 'f', 'g'], total: 17, direction: 'left', anchorRow: 2.5, anchorColumn: 3.65 },
-      { id: 'column-left', axis: 'column', cellIds: ['a', 'b', 'e', 'h'], total: 18, direction: 'up', anchorRow: 3.65, anchorColumn: 0.5 },
-      { id: 'column-right', axis: 'column', cellIds: ['d', 'g', 'i'], total: 22, direction: 'up', anchorRow: 3.65, anchorColumn: 2.5 },
+      { id: 'column-left', axis: 'column', cellIds: ['a', 'b', 'e', 'h'], total: 18, direction: 'up', anchorRow: 4.45, anchorColumn: 0.5 },
+      { id: 'column-right', axis: 'column', cellIds: ['d', 'g', 'i'], total: 22, direction: 'up', anchorRow: 4.45, anchorColumn: 2.5 },
     ],
     solution: [7, 1, 4, 10, 2, 6, 9, 8, 3],
     explanation: '本題未使用 5。兩條橫列是 1＋4＋10＝15、2＋6＋9＝17；左右直行是 7＋1＋2＋8＝18、10＋9＋3＝22。三個圓圈依序為 7＋1＋4＝12、4＋10＋6＋9＝29、2＋6＋8＝16。',

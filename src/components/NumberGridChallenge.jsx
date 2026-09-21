@@ -36,10 +36,20 @@ function clueClass(checked, correct) {
   return correct ? 'is-correct' : 'is-incorrect'
 }
 
+export function gridLineSegments(cells) {
+  const segments = new Map()
+  cells.forEach(({ row, column }) => {
+    segments.set(`h-${row}-${column}`, `M${column} ${row}H${column + 1}`)
+    segments.set(`h-${row + 1}-${column}`, `M${column} ${row + 1}H${column + 1}`)
+    segments.set(`v-${row}-${column}`, `M${column} ${row}V${row + 1}`)
+    segments.set(`v-${row}-${column + 1}`, `M${column + 1} ${row}V${row + 1}`)
+  })
+  return [...segments.values()]
+}
+
 export function ChallengeBoard({ challenge, entries, onCellClick, checkedResult, answer = false }) {
   const displayEntries = answer ? challenge.solution : entries
   const cellIndexByCoordinate = new Map(challenge.cells.map((cell, index) => [`${cell.row}-${cell.column}`, index]))
-  const hasCell = (row, column) => cellIndexByCoordinate.has(`${row}-${column}`)
   return (
     <div className={`number-grid-board-stage ${answer ? 'is-answer' : ''}`}>
       <div className="number-grid-square">
@@ -56,7 +66,7 @@ export function ChallengeBoard({ challenge, entries, onCellClick, checkedResult,
                 role="gridcell"
                 key={canvasIndex}
                 disabled={answer}
-                className={`${value ? 'is-filled' : ''} ${!hasCell(row, column + 1) ? 'has-right-edge' : ''} ${!hasCell(row + 1, column) ? 'has-bottom-edge' : ''}`}
+                className={value ? 'is-filled' : ''}
                 onClick={() => onCellClick?.(entryIndex)}
                 aria-label={`畫布第 ${row + 1} 列第 ${column + 1} 格${value ? `，${value}` : '，空白'}`}
               >
@@ -65,6 +75,9 @@ export function ChallengeBoard({ challenge, entries, onCellClick, checkedResult,
             )
           })}
         </div>
+        <svg className="number-grid-grid-lines" viewBox={`0 0 ${NUMBER_GRID_CANVAS_SIZE} ${NUMBER_GRID_CANVAS_SIZE}`} preserveAspectRatio="none" aria-hidden="true">
+          <path d={gridLineSegments(challenge.cells).join(' ')} vectorEffect="non-scaling-stroke" />
+        </svg>
         {challenge.circleClues.map((clue, index) => {
           const result = checkedResult?.circleResults[index]
           return (

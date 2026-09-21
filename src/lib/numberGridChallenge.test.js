@@ -119,6 +119,7 @@ describe('published newspaper issues', () => {
     expect(new Set(issue.cells.map((cell) => `${cell.row}-${cell.column}`)).size).toBe(9)
     expect(issue.cells.every((cell) => cell.row >= 0 && cell.row < 5 && cell.column >= 0 && cell.column < 5)).toBe(true)
     expect(issue.lineClues.every((clue) => clue.cellIds.every((id) => issue.cells.some((cell) => cell.id === id)))).toBe(true)
+    expect(issue.lineClues.every((clue) => !issue.cells.some((cell) => cell.row === Math.floor(clue.anchorRow) && cell.column === Math.floor(clue.anchorColumn)))).toBe(true)
     expect(assessNumberGridChallenge(issue, issue.solution).correct).toBe(true)
     expect(findSolutions(issue)).toEqual([issue.solution])
   })
