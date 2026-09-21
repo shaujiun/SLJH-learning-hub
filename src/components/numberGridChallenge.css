@@ -140,6 +140,7 @@
   pointer-events: none;
 }
 .number-grid-line-clue.is-up { flex-direction: column; }
+.number-grid-line-clue.is-down { flex-direction: column; }
 .number-grid-line-clue svg { width: 21px; height: 21px; }
 .number-grid-line-clue.is-correct,
 .number-grid-circle-clue.is-correct { color: #fff; background: #2f7658; }
