@@ -68,6 +68,24 @@ export function serializeAssignments(assignments = {}) {
     .filter(([cellIndex, bankIndex]) => Number.isInteger(Number(cellIndex)) && Number.isInteger(bankIndex)))
 }
 
+export function restoreWordGridProgress(value, grid, characterBank) {
+  const saved = value && typeof value === 'object' ? value : {}
+  const serializedAssignments = saved.assignments && typeof saved.assignments === 'object'
+    ? saved.assignments
+    : saved
+  return {
+    assignments: restoreAssignments(serializedAssignments, grid, characterBank),
+    perfectCompletedAt: typeof saved.perfectCompletedAt === 'string' ? saved.perfectCompletedAt : '',
+  }
+}
+
+export function serializeWordGridProgress(assignments = {}, perfectCompletedAt = '') {
+  return {
+    assignments: serializeAssignments(assignments),
+    perfectCompletedAt: typeof perfectCompletedAt === 'string' ? perfectCompletedAt : '',
+  }
+}
+
 export function restoreAssignments(value, grid, characterBank) {
   const tiles = createBankTiles(characterBank)
   const validCells = new Set(editableCellIndexes(grid))
