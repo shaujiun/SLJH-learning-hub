@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   assessNumberGridChallenge,
+  NUMBER_GRID_CANVAS_SIZE,
   numberGridChallenges,
   restoreNumberGridProgress,
   serializeNumberGridProgress,
@@ -9,35 +10,51 @@ import {
 const challenge = numberGridChallenges[0]
 
 describe('十拿九穩之變形挑戰', () => {
-  it('正確答案同時符合橫列、直行與圓圈加總', () => {
+  it('在 5 × 5 畫布中只定義報紙題目的 9 個可填格', () => {
+    expect(challenge.cells).toHaveLength(9)
+    expect(challenge.cells.every((cell) => cell.row >= 0 && cell.row < NUMBER_GRID_CANVAS_SIZE)).toBe(true)
+    expect(challenge.cells.every((cell) => cell.column >= 0 && cell.column < NUMBER_GRID_CANVAS_SIZE)).toBe(true)
+    expect(new Set(challenge.cells.map((cell) => `${cell.row}-${cell.column}`)).size).toBe(9)
+    expect(NUMBER_GRID_CANVAS_SIZE ** 2 - challenge.cells.length).toBe(16)
+  })
+
+  it('2026／08／10 解答符合照片中的圓圈及箭頭加總', () => {
     const result = assessNumberGridChallenge(challenge, challenge.solution)
     expect(result.correct).toBe(true)
-    expect(result.rowResults.map((item) => item.actual)).toEqual(challenge.rowSums)
-    expect(result.columnResults.map((item) => item.actual)).toEqual(challenge.columnSums)
-    expect(result.blockResults.map((item) => item.actual)).toEqual(challenge.blockSums.map((item) => item.total))
+    expect(result.circleResults.map((item) => item.actual)).toEqual([20, 16, 28, 17])
+    expect(result.lineResults.map((item) => item.actual)).toEqual([18, 15, 21])
+  })
+
+  it('可在 5 × 5 畫布橫向移動，提示仍依題目指定的格子核對', () => {
+    const shifted = {
+      ...challenge,
+      cells: challenge.cells.map((cell) => ({ ...cell, column: cell.column + 1 })),
+      circleClues: challenge.circleClues.map((clue) => ({ ...clue, column: clue.column + 1 })),
+    }
+    expect(assessNumberGridChallenge(shifted, challenge.solution).correct).toBe(true)
   })
 
   it('未填滿與重複數字都不能過關', () => {
     expect(assessNumberGridChallenge(challenge, challenge.solution.slice(0, 8)).correct).toBe(false)
-    expect(assessNumberGridChallenge(challenge, [4, 4, 1, 9, 2, 10, 3, 8, 6]).unique).toBe(false)
+    expect(assessNumberGridChallenge(challenge, [1, 1, 6, 9, 3, 5, 8, 2, 7]).unique).toBe(false)
   })
 
-  it('第一題只有一組排列能同時通過所有條件', () => {
+  it('照片中的條件只有一組排列能全部通過', () => {
     const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    const matchingRows = challenge.rowSums.map((target) => {
+    const triples = (target) => {
       const rows = []
       numbers.forEach((first) => numbers.forEach((second) => numbers.forEach((third) => {
         if (new Set([first, second, third]).size === 3 && first + second + third === target) rows.push([first, second, third])
       })))
       return rows
-    })
+    }
     const solutions = []
-    matchingRows[0].forEach((firstRow) => matchingRows[1].forEach((secondRow) => {
-      if (new Set([...firstRow, ...secondRow]).size !== 6) return
-      matchingRows[2].forEach((thirdRow) => {
-        const entries = [...firstRow, ...secondRow, ...thirdRow]
+    triples(18).forEach(([c, d, e]) => triples(15).forEach(([f, g, h]) => {
+      if (new Set([c, d, e, f, g, h]).size !== 6) return
+      numbers.forEach((a) => numbers.forEach((b) => numbers.forEach((i) => {
+        const entries = [a, b, c, d, e, f, g, h, i]
         if (new Set(entries).size === 9 && assessNumberGridChallenge(challenge, entries).correct) solutions.push(entries)
-      })
+      })))
     }))
     expect(solutions).toEqual([challenge.solution])
   })

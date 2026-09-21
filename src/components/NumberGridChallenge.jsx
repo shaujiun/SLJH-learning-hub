@@ -10,6 +10,7 @@ import {
 import {
   assessNumberGridChallenge,
   NUMBER_GRID_BANK,
+  NUMBER_GRID_CANVAS_SIZE,
   numberGridChallenges,
   restoreNumberGridProgress,
   serializeNumberGridProgress,
@@ -34,50 +35,60 @@ function clueClass(checked, correct) {
   return correct ? 'is-correct' : 'is-incorrect'
 }
 
-function ChallengeBoard({ challenge, entries, onCellClick, checkedResult, answer = false }) {
+export function ChallengeBoard({ challenge, entries, onCellClick, checkedResult, answer = false }) {
   const displayEntries = answer ? challenge.solution : entries
+  const cellIndexByCoordinate = new Map(challenge.cells.map((cell, index) => [`${cell.row}-${cell.column}`, index]))
+  const hasCell = (row, column) => cellIndexByCoordinate.has(`${row}-${column}`)
   return (
     <div className={`number-grid-board-stage ${answer ? 'is-answer' : ''}`}>
       <div className="number-grid-square">
         <div className="number-grid-board" role="grid" aria-label={answer ? '十拿九穩解答' : '十拿九穩題目'}>
-          {displayEntries.map((value, index) => (
-            <button
-              type="button"
-              role="gridcell"
-              key={index}
-              disabled={answer}
-              className={value ? 'is-filled' : ''}
-              onClick={() => onCellClick?.(index)}
-              aria-label={`第 ${Math.floor(index / 3) + 1} 列第 ${(index % 3) + 1} 格${value ? `，${value}` : '，空白'}`}
-            >
-              {value || ''}
-            </button>
-          ))}
+          {Array.from({ length: NUMBER_GRID_CANVAS_SIZE ** 2 }, (_, canvasIndex) => {
+            const row = Math.floor(canvasIndex / NUMBER_GRID_CANVAS_SIZE)
+            const column = canvasIndex % NUMBER_GRID_CANVAS_SIZE
+            const entryIndex = cellIndexByCoordinate.get(`${row}-${column}`)
+            if (entryIndex == null) return <span className="number-grid-hidden-cell" aria-hidden="true" key={canvasIndex} />
+            const value = displayEntries[entryIndex]
+            return (
+              <button
+                type="button"
+                role="gridcell"
+                key={canvasIndex}
+                disabled={answer}
+                className={`${value ? 'is-filled' : ''} ${!hasCell(row, column + 1) ? 'has-right-edge' : ''} ${!hasCell(row + 1, column) ? 'has-bottom-edge' : ''}`}
+                onClick={() => onCellClick?.(entryIndex)}
+                aria-label={`畫布第 ${row + 1} 列第 ${column + 1} 格${value ? `，${value}` : '，空白'}`}
+              >
+                {value || ''}
+              </button>
+            )
+          })}
         </div>
-        {challenge.blockSums.map((clue, index) => {
-          const result = checkedResult?.blockResults[index]
+        {challenge.circleClues.map((clue, index) => {
+          const result = checkedResult?.circleResults[index]
           return (
             <span
               className={`number-grid-circle-clue ${clueClass(Boolean(checkedResult), result?.actual === clue.total)}`}
-              style={{ '--clue-row': clue.row + 1, '--clue-column': clue.column + 1 }}
+              style={{ '--clue-y': `${clue.row / NUMBER_GRID_CANVAS_SIZE * 100}%`, '--clue-x': `${clue.column / NUMBER_GRID_CANVAS_SIZE * 100}%` }}
               key={`${clue.row}-${clue.column}`}
-              aria-label={`周圍四格合計 ${clue.total}`}
+              aria-label={`周圍相鄰方格合計 ${clue.total}`}
             >
               {clue.total}
             </span>
           )
         })}
-      </div>
-      <div className="number-grid-row-clues" aria-label="橫列合計">
-        {challenge.rowSums.map((target, index) => {
-          const result = checkedResult?.rowResults[index]
-          return <span className={clueClass(Boolean(checkedResult), result?.actual === target)} key={target}><ArrowLeft aria-hidden="true" />{target}</span>
-        })}
-      </div>
-      <div className="number-grid-column-clues" aria-label="直行合計">
-        {challenge.columnSums.map((target, index) => {
-          const result = checkedResult?.columnResults[index]
-          return <span className={clueClass(Boolean(checkedResult), result?.actual === target)} key={`${target}-${index}`}><ArrowUp aria-hidden="true" />{target}</span>
+        {challenge.lineClues.map((clue, index) => {
+          const result = checkedResult?.lineResults[index]
+          return (
+            <span
+              className={`number-grid-line-clue is-${clue.direction} ${clueClass(Boolean(checkedResult), result?.actual === clue.total)}`}
+              style={{ '--clue-y': `${clue.anchorRow / NUMBER_GRID_CANVAS_SIZE * 100}%`, '--clue-x': `${clue.anchorColumn / NUMBER_GRID_CANVAS_SIZE * 100}%` }}
+              key={clue.id}
+              aria-label={`${clue.axis === 'row' ? '橫列' : '直行'}合計 ${clue.total}`}
+            >
+              {clue.direction === 'left' ? <><ArrowLeft aria-hidden="true" />{clue.total}</> : <><ArrowUp aria-hidden="true" />{clue.total}</>}
+            </span>
+          )
         })}
       </div>
     </div>
@@ -171,7 +182,7 @@ export default function NumberGridChallenge({ guestMode = false }) {
         {showInstructions && (
           <section className="number-grid-instructions">
             <p>從 1～10 選出 9 個數字，分別填入 9 個方格，每個數字只能使用一次。</p>
-            <p><strong>圓圈數字</strong>是周圍相鄰 4 格的總和；<strong>箭頭數字</strong>是該橫列或直行 3 格的總和。先選數字，再點空格；點已填入的格子可取回數字。</p>
+            <p><strong>圓圈數字</strong>是周圍所有相鄰方格的總和；<strong>箭頭數字</strong>是該橫列或直行方格的總和。先選數字，再點空格；點已填入的格子可取回數字。</p>
           </section>
         )}
         <section className="number-grid-challenge-card">
