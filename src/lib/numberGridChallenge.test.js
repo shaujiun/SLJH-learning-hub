@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
   assessNumberGridChallenge,
+  buildNumberGridLineClue,
+  createNumberGridDraft,
   NUMBER_GRID_CANVAS_SIZE,
   numberGridChallenges,
   restoreNumberGridProgress,
   serializeNumberGridProgress,
+  validateNumberGridPuzzle,
 } from './numberGridChallenge.js'
 
 const challenge = numberGridChallenges[0]
@@ -122,5 +125,42 @@ describe('published newspaper issues', () => {
     expect(issue.lineClues.every((clue) => !issue.cells.some((cell) => cell.row === Math.floor(clue.anchorRow) && cell.column === Math.floor(clue.anchorColumn)))).toBe(true)
     expect(assessNumberGridChallenge(issue, issue.solution).correct).toBe(true)
     expect(findSolutions(issue)).toEqual([issue.solution])
+  })
+})
+
+describe('number-grid editor rules', () => {
+  it('allows an incomplete draft but blocks publishing until clues, solution, and explanation agree', () => {
+    const draft = createNumberGridDraft('2026-09-21')
+    expect(validateNumberGridPuzzle(draft).errors).toEqual([])
+    expect(validateNumberGridPuzzle({ ...draft, status: 'published' }).errors.length).toBeGreaterThan(0)
+    expect(validateNumberGridPuzzle({ ...challenge, issueOn: challenge.id, status: 'published' }).errors)
+      .toEqual([])
+  })
+
+  it('places an upward total outside the occupied bottom row', () => {
+    const clue = buildNumberGridLineClue(numberGridChallenges[3].cells, {
+      id: 'column-left', axis: 'column', lineIndex: 0, direction: 'up', total: 18,
+    })
+    expect(clue.cellIds).toEqual(['a', 'b', 'e', 'h'])
+    expect(clue.anchorRow).toBe(4.45)
+  })
+
+  it('rejects overlapping cells and a published wrong sum', () => {
+    const overlap = createNumberGridDraft('2026-09-21')
+    overlap.cells[1].column = overlap.cells[0].column
+    expect(validateNumberGridPuzzle(overlap).errors).toContain('9 個作答格須位於 5×5 畫布中，且位置與代號不得重複。')
+    const wrong = { ...challenge, issueOn: challenge.id, status: 'published', circleClues: [{ ...challenge.circleClues[0], total: 999 }] }
+    expect(validateNumberGridPuzzle(wrong).errors).toContain('答案與圓圈或箭頭提示的加總不一致。')
+  })
+
+  it('does not pretend an archived override can remove a built-in issue', () => {
+    expect(validateNumberGridPuzzle({ ...challenge, issueOn: challenge.id, status: 'archived' }).errors)
+      .toContain('內建四期題目不可封存；可儲存草稿，待校對後發布新版。')
+  })
+
+  it('blocks published arrows that cover an answer cell', () => {
+    const clue = { ...challenge.lineClues[0], anchorRow: 1.5, anchorColumn: 2.5 }
+    const issue = { ...challenge, issueOn: challenge.id, status: 'published', lineClues: [clue, ...challenge.lineClues.slice(1)] }
+    expect(validateNumberGridPuzzle(issue).errors).toContain('箭頭提示不可蓋住作答格，請調整提示位置。')
   })
 })

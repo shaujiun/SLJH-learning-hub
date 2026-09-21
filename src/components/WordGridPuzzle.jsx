@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
   Check,
@@ -24,6 +24,7 @@ import {
   wordGridCellTypes,
 } from '../lib/wordGridPuzzle.js'
 import { isSupabaseConfigured } from '../lib/supabase.js'
+import { importWordBankFromPhoto, importWordGridFromPhoto, normalizedPhotoRect } from '../lib/wordGridPhotoImport.js'
 import {
   archiveWordGridPuzzle,
   loadWordGridPuzzles,
@@ -366,6 +367,88 @@ function GridEditor({ value, mode, onChange }) {
   )
 }
 
+export function PhotoImportPanel({ imageUrl, onImportGrid, onImportBank }) {
+  const imageRef = useRef(null)
+  const [target, setTarget] = useState('grid')
+  const [firstCorner, setFirstCorner] = useState(null)
+  const [regions, setRegions] = useState({ grid: null, bank: null })
+  const [progress, setProgress] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    setFirstCorner(null)
+    setRegions({ grid: null, bank: null })
+    setProgress('')
+  }, [imageUrl])
+
+  const markCorner = (event) => {
+    const bounds = event.currentTarget.getBoundingClientRect()
+    const point = {
+      x: (event.clientX - bounds.left) / bounds.width,
+      y: (event.clientY - bounds.top) / bounds.height,
+    }
+    if (!firstCorner) {
+      setFirstCorner(point)
+      setProgress(`已選取${target === 'grid' ? '題目' : '字庫'}第一角；請點對角。`)
+      return
+    }
+    const rect = normalizedPhotoRect(firstCorner, point)
+    setFirstCorner(null)
+    if (!rect) {
+      setProgress('框選範圍太小，請重新選取。')
+      return
+    }
+    setRegions((current) => ({ ...current, [target]: rect }))
+    setProgress(`已框選${target === 'grid' ? '題目' : '字庫'}範圍；可開始辨識。`)
+  }
+
+  const recognize = async (kind) => {
+    if (!regions[kind] || !imageRef.current) return
+    setBusy(true)
+    setProgress('正在載入繁體中文辨識模型，第一次使用需要網路及較長時間……')
+    try {
+      if (kind === 'grid') {
+        const result = await importWordGridFromPhoto(imageRef.current, regions.grid, (done, total) => {
+          setProgress(`正在辨識提示字：${done}／${total} 格……`)
+        })
+        onImportGrid(result.grid)
+        setProgress(`已帶入 10×10 題目格；${result.uncertainCount} 格無法確認，以「？」標記。即使有辨識文字也可能錯誤，請逐格校對黑格、提示字與白格。`)
+      } else {
+        const characters = await importWordBankFromPhoto(imageRef.current, regions.bank, (done, total) => {
+          setProgress(`正在辨識字庫：${done}／${total} 字……`)
+        })
+        onImportBank(characters)
+        setProgress(`已帶入 ${characters.length} 個字，其中 ${characters.filter((character) => character === '？').length} 字未能辨識。即使未標「？」也可能讀錯，請逐字對照照片並確認字數等於白格數。`)
+      }
+    } catch (error) {
+      setProgress(`辨識失敗：${error.message}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="word-grid-photo-panel">
+      <div className="word-grid-photo-tools">
+        <button type="button" className={target === 'grid' ? 'is-active' : ''} onClick={() => { setTarget('grid'); setFirstCorner(null) }}>框選題目 10×10 格</button>
+        <button type="button" className={target === 'bank' ? 'is-active' : ''} onClick={() => { setTarget('bank'); setFirstCorner(null) }}>框選上方字庫</button>
+      </div>
+      <p>先選範圍，再依序點照片的左上角、右下角。字庫請完整框住 4×10 字格；辨識結果可修改，且不會直接發布。</p>
+      <div className="word-grid-photo-image" onClick={markCorner}>
+        <img ref={imageRef} src={imageUrl} alt="待辨識的報紙照片" />
+        {Object.entries(regions).map(([key, rect]) => rect && (
+          <span key={key} className={`word-grid-photo-region is-${key}`} style={{ left: `${rect.left * 100}%`, top: `${rect.top * 100}%`, width: `${rect.width * 100}%`, height: `${rect.height * 100}%` }}>{key === 'grid' ? '題目' : '字庫'}</span>
+        ))}
+      </div>
+      <div className="word-grid-photo-tools">
+        <button type="button" disabled={busy || !regions.grid} onClick={() => recognize('grid')}>讀取題目格與提示字</button>
+        <button type="button" disabled={busy || !regions.bank} onClick={() => recognize('bank')}>讀取字庫文字</button>
+      </div>
+      {progress && <p role="status">{progress}</p>}
+    </div>
+  )
+}
+
 function PuzzleEditor({ puzzle, onSaved, onCancel }) {
   const [form, setForm] = useState(() => ({
     ...defaultPuzzle,
@@ -417,14 +500,14 @@ function PuzzleEditor({ puzzle, onSaved, onCancel }) {
         <label>狀態<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option value="draft">草稿</option><option value="published" disabled={!form.solutionGrid}>發布（須有完整解答）</option><option value="archived">封存</option></select><small>先儲存草稿；依報紙右側的當期解答完成校對後，再改為發布。</small></label>
         <label>來源<input value={form.sourceName} onChange={(event) => setForm({ ...form, sourceName: event.target.value })} /></label>
         <label>設計者<input value={form.designerName} onChange={(event) => setForm({ ...form, designerName: event.target.value })} /></label>
-        <label className="is-wide">可填文字<textarea rows="3" value={Array.isArray(form.characterBank) ? form.characterBank.join('') : form.characterBank} onChange={(event) => setForm({ ...form, characterBank: event.target.value })} /></label>
+        <label className="is-wide">可填文字<textarea rows="3" value={Array.isArray(form.characterBank) ? form.characterBank.join('') : form.characterBank} onChange={(event) => setForm({ ...form, characterBank: event.target.value })} /><small>目前字庫 {parseCharacterBank(form.characterBank).length} 字；題目白格 {form.grid.filter((cell) => cell.type === wordGridCellTypes.empty).length} 格。兩者須相同才能儲存。</small></label>
       </div>
       <div className="word-grid-reference-upload">
-        <label><ImagePlus aria-hidden="true" />載入照片作為本次編題參考<input type="file" accept="image/*" onChange={(event) => updateReference(event.target.files?.[0])} /></label>
-        <small>照片只在目前瀏覽器顯示，不會自動上傳或發布；請依照片逐格校對。</small>
+        <label><ImagePlus aria-hidden="true" />上傳照片並辨識題目<input type="file" accept="image/*" onChange={(event) => updateReference(event.target.files?.[0])} /></label>
+        <small>照片只在目前瀏覽器處理，不儲存原圖；辨識結果會帶入下方編輯格，仍須人工校對及儲存草稿。</small>
       </div>
       <div className={`word-grid-editor-workspace ${referenceUrl ? 'has-reference' : ''}`}>
-        {referenceUrl && <img src={referenceUrl} alt="編題參考照片" />}
+        {referenceUrl && <PhotoImportPanel imageUrl={referenceUrl} onImportGrid={(grid) => setForm((current) => ({ ...current, grid, solutionGrid: null, status: 'draft' }))} onImportBank={(characterBank) => setForm((current) => ({ ...current, characterBank }))} />}
         <div>
           <div className="word-grid-editor-tabs">
             <button type="button" className={answerTab === 'puzzle' ? 'is-active' : ''} onClick={() => setAnswerTab('puzzle')}>題目格</button>

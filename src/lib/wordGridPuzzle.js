@@ -55,6 +55,10 @@ export function validateWordGridPuzzle(input) {
     }
   }
   if (input?.status === 'published' && !solution) errors.push('答案確認並收錄完整解答後，才能發布題目。')
+  if (input?.status === 'published' && (grid.some((cell) => cell.value === '？')
+    || characterBank.includes('？') || solution?.some((cell) => cell.value === '？'))) {
+    errors.push('照片辨識仍有「？」待校對，不能發布。')
+  }
   return { grid, characterBank, solutionGrid: solution, errors }
 }
 
