@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft,
   ArrowUp,
+  ArrowDown,
   Check,
   ChevronDown,
   LockKeyhole,
@@ -86,7 +87,7 @@ export function ChallengeBoard({ challenge, entries, onCellClick, checkedResult,
               key={clue.id}
               aria-label={`${clue.axis === 'row' ? '橫列' : '直行'}合計 ${clue.total}`}
             >
-              {clue.direction === 'left' ? <><ArrowLeft aria-hidden="true" />{clue.total}</> : <><ArrowUp aria-hidden="true" />{clue.total}</>}
+              {clue.direction === 'left' ? <><ArrowLeft aria-hidden="true" />{clue.total}</> : clue.direction === 'down' ? <>{clue.total}<ArrowDown aria-hidden="true" /></> : <><ArrowUp aria-hidden="true" />{clue.total}</>}
             </span>
           )
         })}
@@ -96,11 +97,12 @@ export function ChallengeBoard({ challenge, entries, onCellClick, checkedResult,
 }
 
 export default function NumberGridChallenge({ guestMode = false }) {
-  const [selectedId, setSelectedId] = useState(numberGridChallenges[0].id)
+  const [selectedId, setSelectedId] = useState(numberGridChallenges.at(-1).id)
   const challenge = useMemo(() => numberGridChallenges.find((item) => item.id === selectedId) || numberGridChallenges[0], [selectedId])
   const initialProgress = useMemo(() => loadProgress(challenge), [challenge])
   const [entries, setEntries] = useState(initialProgress.entries)
   const [perfectCompletedAt, setPerfectCompletedAt] = useState(initialProgress.perfectCompletedAt)
+  const [loadedChallengeId, setLoadedChallengeId] = useState(challenge.id)
   const [selectedNumber, setSelectedNumber] = useState(null)
   const [checkedResult, setCheckedResult] = useState(null)
   const [message, setMessage] = useState('')
@@ -110,15 +112,16 @@ export default function NumberGridChallenge({ guestMode = false }) {
     const saved = loadProgress(challenge)
     setEntries(saved.entries)
     setPerfectCompletedAt(saved.perfectCompletedAt)
+    setLoadedChallengeId(challenge.id)
     setSelectedNumber(null)
     setCheckedResult(null)
     setMessage('')
   }, [challenge])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined' || loadedChallengeId !== challenge.id) return
     window.localStorage.setItem(progressKey(challenge.id), JSON.stringify(serializeNumberGridProgress(entries, perfectCompletedAt)))
-  }, [challenge.id, entries, perfectCompletedAt])
+  }, [challenge.id, entries, loadedChallengeId, perfectCompletedAt])
 
   const usedNumbers = new Set(entries.filter(Boolean))
   const placeNumber = (cellIndex) => {
@@ -188,7 +191,7 @@ export default function NumberGridChallenge({ guestMode = false }) {
         <section className="number-grid-challenge-card">
           <div className="number-grid-challenge-heading">
             <div><p className="eyebrow">CHALLENGE</p><h2>{challenge.label}：{challenge.title}</h2></div>
-            <label>選擇題目<select value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>{numberGridChallenges.map((item) => <option value={item.id} key={item.id}>{item.label}</option>)}</select></label>
+            <label>選擇題目<select value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>{[...numberGridChallenges].reverse().map((item) => <option value={item.id} key={item.id}>{item.label}</option>)}</select></label>
           </div>
           <div className="number-grid-workspace">
             <div>

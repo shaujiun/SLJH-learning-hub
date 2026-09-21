@@ -9,6 +9,51 @@ import {
 
 const challenge = numberGridChallenges[0]
 
+function findSolutions(issue) {
+  const cellIndexes = new Map(issue.cells.map((cell, index) => [`${cell.row}-${cell.column}`, index]))
+  const clues = [
+    ...issue.lineClues.map((clue) => ({
+      total: clue.total,
+      indexes: clue.cellIds.map((id) => issue.cells.findIndex((cell) => cell.id === id)),
+    })),
+    ...issue.circleClues.map((clue) => ({
+      total: clue.total,
+      indexes: [
+        [clue.row - 1, clue.column - 1],
+        [clue.row - 1, clue.column],
+        [clue.row, clue.column - 1],
+        [clue.row, clue.column],
+      ].map(([row, column]) => cellIndexes.get(`${row}-${column}`)).filter((index) => index !== undefined),
+    })),
+  ]
+  const entries = Array(9).fill(null)
+  const solutions = []
+  const search = (position, used) => {
+    if (solutions.length > 1) return
+    if (position === entries.length) {
+      solutions.push([...entries])
+      return
+    }
+    for (let value = 1; value <= 10; value += 1) {
+      if (used.has(value)) continue
+      entries[position] = value
+      const possible = clues.every((clue) => {
+        const filled = clue.indexes.map((index) => entries[index])
+        const total = filled.reduce((sum, number) => sum + (number || 0), 0)
+        return total <= clue.total && (filled.includes(null) || total === clue.total)
+      })
+      if (possible) {
+        used.add(value)
+        search(position + 1, used)
+        used.delete(value)
+      }
+    }
+    entries[position] = null
+  }
+  search(0, new Set())
+  return solutions
+}
+
 describe('十拿九穩之變形挑戰', () => {
   it('在 5 × 5 畫布中只定義報紙題目的 9 個可填格', () => {
     expect(challenge.cells).toHaveLength(9)
@@ -65,5 +110,16 @@ describe('十拿九穩之變形挑戰', () => {
       entries: challenge.solution,
       perfectCompletedAt: '2026-09-21T08:00:00.000Z',
     })
+  })
+})
+
+describe('published newspaper issues', () => {
+  it.each(numberGridChallenges)('$id uses nine distinct visible cells and has one valid solution', (issue) => {
+    expect(issue.cells).toHaveLength(9)
+    expect(new Set(issue.cells.map((cell) => `${cell.row}-${cell.column}`)).size).toBe(9)
+    expect(issue.cells.every((cell) => cell.row >= 0 && cell.row < 5 && cell.column >= 0 && cell.column < 5)).toBe(true)
+    expect(issue.lineClues.every((clue) => clue.cellIds.every((id) => issue.cells.some((cell) => cell.id === id)))).toBe(true)
+    expect(assessNumberGridChallenge(issue, issue.solution).correct).toBe(true)
+    expect(findSolutions(issue)).toEqual([issue.solution])
   })
 })
