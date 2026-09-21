@@ -18,8 +18,8 @@ import {
   createEmptyWordGrid,
   normalizeWordGrid,
   parseCharacterBank,
-  restoreAssignments,
-  serializeAssignments,
+  restoreWordGridProgress,
+  serializeWordGridProgress,
   validateWordGridPuzzle,
   wordGridCellTypes,
 } from '../lib/wordGridPuzzle.js'
@@ -125,13 +125,13 @@ function progressKey(puzzleId) {
   return `sljh-word-grid-progress-v1:${puzzleId}`
 }
 
-function loadSavedAssignments(puzzle) {
-  if (!puzzle?.id || typeof window === 'undefined') return {}
+function loadSavedProgress(puzzle) {
+  if (!puzzle?.id || typeof window === 'undefined') return { assignments: {}, perfectCompletedAt: '' }
   try {
     const parsed = JSON.parse(window.localStorage.getItem(progressKey(puzzle.id)) || '{}')
-    return restoreAssignments(parsed, puzzle.grid, puzzle.characterBank)
+    return restoreWordGridProgress(parsed, puzzle.grid, puzzle.characterBank)
   } catch {
-    return {}
+    return { assignments: {}, perfectCompletedAt: '' }
   }
 }
 
@@ -173,7 +173,20 @@ function PuzzleGrid({ puzzle, assignments, onCellClick, answerGrid = null, edito
   )
 }
 
-function AnswerPanel({ puzzle }) {
+export function AnswerPanel({ puzzle, unlocked }) {
+  if (!unlocked) {
+    return (
+      <aside className="word-grid-answer-panel is-locked" aria-labelledby="current-answer-title">
+        <div className="word-grid-answer-lock">
+          <span>
+            <span className="eyebrow">CURRENT ANSWER</span>
+            <strong id="current-answer-title">本期解答與解答說明</strong>
+          </span>
+          <span className="word-grid-answer-summary-hint">完成一輪並全部答對後解鎖</span>
+        </div>
+      </aside>
+    )
+  }
   return (
     <aside className="word-grid-answer-panel" aria-labelledby="current-answer-title">
       <details>
@@ -182,7 +195,7 @@ function AnswerPanel({ puzzle }) {
             <span className="eyebrow">CURRENT ANSWER</span>
             <strong id="current-answer-title">本期解答與解答說明</strong>
           </span>
-          <span className="word-grid-answer-summary-hint">作答完成後再展開</span>
+          <span className="word-grid-answer-summary-hint">已解鎖，可展開查看</span>
         </summary>
         {puzzle.solutionGrid ? (
           <div className="word-grid-answer-content">
@@ -208,20 +221,16 @@ function AnswerPanel({ puzzle }) {
 
 function PlayArea({ puzzle }) {
   const bankTiles = useMemo(() => createBankTiles(puzzle.characterBank), [puzzle.characterBank])
-  const [assignments, setAssignments] = useState(() => loadSavedAssignments(puzzle))
+  const initialProgress = useMemo(() => loadSavedProgress(puzzle), [puzzle])
+  const [assignments, setAssignments] = useState(initialProgress.assignments)
+  const [perfectCompletedAt, setPerfectCompletedAt] = useState(initialProgress.perfectCompletedAt)
   const [selectedTile, setSelectedTile] = useState(null)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    setAssignments(loadSavedAssignments(puzzle))
-    setSelectedTile(null)
-    setMessage('')
-  }, [puzzle.id])
-
-  useEffect(() => {
     if (!puzzle.id || typeof window === 'undefined') return
-    window.localStorage.setItem(progressKey(puzzle.id), JSON.stringify(serializeAssignments(assignments)))
-  }, [assignments, puzzle.id])
+    window.localStorage.setItem(progressKey(puzzle.id), JSON.stringify(serializeWordGridProgress(assignments, perfectCompletedAt)))
+  }, [assignments, perfectCompletedAt, puzzle.id])
 
   const usedTileIds = new Set(Object.values(assignments))
   const handleCellClick = (cellIndex) => {
@@ -258,50 +267,56 @@ function PlayArea({ puzzle }) {
     const result = assessWordGridAnswer(puzzle, assignments)
     if (result.status === 'incomplete') setMessage('還有白格尚未填寫。')
     else if (result.status === 'practice-complete') setMessage('字卡已全部填入；本期暫無完整解答，因此不判分。')
-    else if (result.correct) setMessage('全部正確，完成本期填字圖。')
+    else if (result.correct) {
+      setPerfectCompletedAt((current) => current || new Date().toISOString())
+      setMessage('全部正確，已解鎖本期解答與解答說明。')
+    }
     else setMessage('還有文字位置不正確，可以再調整。')
   }
 
   return (
-    <section className="word-grid-play" aria-labelledby="word-grid-play-title">
-      <div className="word-grid-solving-area">
-        <div className="word-grid-puzzle-column">
-          <div className="word-grid-puzzle-heading">
-            <p className="eyebrow">PUZZLE</p>
-            <h2 id="word-grid-play-title">本期題目</h2>
-          </div>
-          <p className="word-grid-hint">先選右側文字，再點選題目白格；點已有文字的格子可將文字放回字庫。</p>
-          <PuzzleGrid puzzle={puzzle} assignments={assignments} onCellClick={handleCellClick} />
-          <div className="word-grid-actions">
-            <button type="button" className="secondary-button" onClick={clearAll}><RotateCcw aria-hidden="true" />重新開始</button>
-            <button type="button" className="primary-button" onClick={checkAnswer}><Check aria-hidden="true" />完成檢查</button>
-          </div>
-          {message && <p className="word-grid-message" role="status">{message}</p>}
-        </div>
-        <aside className="word-grid-bank-column">
-          <div className="word-grid-bank-heading">
-            <div>
-              <p className="eyebrow">CHARACTER BANK</p>
-              <h2>可填的文字</h2>
+    <>
+      <section className="word-grid-play" aria-labelledby="word-grid-play-title">
+        <div className="word-grid-solving-area">
+          <div className="word-grid-puzzle-column">
+            <div className="word-grid-puzzle-heading">
+              <p className="eyebrow">PUZZLE</p>
+              <h2 id="word-grid-play-title">本期題目</h2>
             </div>
-            <span>剩餘 {bankTiles.length - usedTileIds.size} 字</span>
+            <p className="word-grid-hint">先選右側文字，再點選題目白格；點已有文字的格子可將文字放回字庫。</p>
+            <PuzzleGrid puzzle={puzzle} assignments={assignments} onCellClick={handleCellClick} />
+            <div className="word-grid-actions">
+              <button type="button" className="secondary-button" onClick={clearAll}><RotateCcw aria-hidden="true" />重新開始</button>
+              <button type="button" className="primary-button" onClick={checkAnswer}><Check aria-hidden="true" />完成檢查</button>
+            </div>
+            {message && <p className="word-grid-message" role="status">{message}</p>}
           </div>
-          <div className="word-grid-bank" aria-label="可填文字字庫">
-            {bankTiles.map((tile) => (
-              <button
-                key={tile.id}
-                type="button"
-                className={selectedTile === tile.id ? 'is-selected' : ''}
-                disabled={usedTileIds.has(tile.id)}
-                onClick={() => setSelectedTile((current) => current === tile.id ? null : tile.id)}
-              >
-                {tile.character}
-              </button>
-            ))}
-          </div>
-        </aside>
-      </div>
-    </section>
+          <aside className="word-grid-bank-column">
+            <div className="word-grid-bank-heading">
+              <div>
+                <p className="eyebrow">CHARACTER BANK</p>
+                <h2>可填的文字</h2>
+              </div>
+              <span>剩餘 {bankTiles.length - usedTileIds.size} 字</span>
+            </div>
+            <div className="word-grid-bank" aria-label="可填文字字庫">
+              {bankTiles.map((tile) => (
+                <button
+                  key={tile.id}
+                  type="button"
+                  className={selectedTile === tile.id ? 'is-selected' : ''}
+                  disabled={usedTileIds.has(tile.id)}
+                  onClick={() => setSelectedTile((current) => current === tile.id ? null : tile.id)}
+                >
+                  {tile.character}
+                </button>
+              ))}
+            </div>
+          </aside>
+        </div>
+      </section>
+      <AnswerPanel puzzle={puzzle} unlocked={Boolean(perfectCompletedAt)} />
+    </>
   )
 }
 
@@ -505,7 +520,7 @@ export default function WordGridPuzzle({ guestMode = false }) {
           </div>
           <button type="button" onClick={() => setShowInstructions((value) => !value)} aria-expanded={showInstructions}>遊戲說明<ChevronDown aria-hidden="true" /></button>
         </section>
-        {showInstructions && <div className="word-grid-instructions"><p>將字庫中的文字各使用一次，填入白色空格。橫向由左至右、直向由上至下，都要能形成正確語詞或文句。黑格不可填，題目中的文字是提示。</p><p>可用年、月、日選擇想挑戰的期數；題目會在答案確認後才發布，系統並會保存在目前裝置的作答進度。完成後可展開下方的本期解答與解答說明。</p></div>}
+        {showInstructions && <div className="word-grid-instructions"><p>將字庫中的文字各使用一次，填入白色空格。橫向由左至右、直向由上至下，都要能形成正確語詞或文句。黑格不可填，題目中的文字是提示。</p><p>可用年、月、日選擇想挑戰的期數；題目會在答案確認後才發布，系統並會保存在目前裝置的作答進度。每一期至少完成一輪並全部答對後，才可展開該期解答與解答說明。</p></div>}
         {editing ? <PuzzleEditor puzzle={editing} onSaved={async () => { await load(); setEditing(null) }} onCancel={() => setEditing(null)} /> : puzzle ? <>
           <div className="word-grid-issue-bar">
             <PuzzleDateSelects puzzles={state.puzzles.filter((item) => state.canManage || item.status === 'published')} selectedId={puzzle.id} onSelect={setSelectedId} />
@@ -513,8 +528,7 @@ export default function WordGridPuzzle({ guestMode = false }) {
             {state.canManage && <div className="word-grid-admin-actions"><button type="button" onClick={() => setEditing(puzzle)}><Pencil aria-hidden="true" />編輯</button><button type="button" onClick={async () => { await archiveWordGridPuzzle(puzzle.id); await load() }}><Eraser aria-hidden="true" />封存</button></div>}
           </div>
           <div className="word-grid-layout">
-            <PlayArea puzzle={puzzle} />
-            <AnswerPanel puzzle={puzzle} />
+            <PlayArea key={puzzle.id} puzzle={puzzle} />
           </div>
         </> : <section className="word-grid-empty"><h2>目前尚無已發布題目</h2>{state.canManage && <button className="primary-button" type="button" onClick={() => setEditing(defaultPuzzle)}><Plus aria-hidden="true" />建立第一題</button>}</section>}
       </main>

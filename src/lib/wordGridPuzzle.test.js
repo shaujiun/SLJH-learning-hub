@@ -6,6 +6,8 @@ import {
   mapRowsToGrid,
   parseCharacterBank,
   restoreAssignments,
+  restoreWordGridProgress,
+  serializeWordGridProgress,
   validateWordGridPuzzle,
 } from './wordGridPuzzle.js'
 
@@ -68,5 +70,17 @@ describe('填字圖資料與判定', () => {
 
   it('還原本機進度時忽略重複字卡與非白格', () => {
     expect(restoreAssignments({ 0: 0, 1: 0, 2: 9 }, grid, '人')).toEqual({ 1: 0 })
+  })
+
+  it('保留全對解鎖紀錄，並相容舊版純作答進度', () => {
+    expect(restoreWordGridProgress({ 1: 0 }, grid, '人')).toEqual({
+      assignments: { 1: 0 },
+      perfectCompletedAt: '',
+    })
+    const saved = serializeWordGridProgress({ 1: 0 }, '2026-09-21T08:00:00.000Z')
+    expect(restoreWordGridProgress(saved, grid, '人')).toEqual({
+      assignments: { 1: 0 },
+      perfectCompletedAt: '2026-09-21T08:00:00.000Z',
+    })
   })
 })

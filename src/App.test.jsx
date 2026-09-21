@@ -30,13 +30,15 @@ describe('guest practice routes', () => {
     expect(html).not.toContain('待完成的專注任務')
   })
 
-  it('提供填字圖與兩個外部益智遊戲，並保留訪客模式', () => {
+  it('提供兩個站內與兩個外部益智遊戲，並保留訪客模式', () => {
     useUrl('https://example.test/hub/?guest=1')
     const html = renderToStaticMarkup(<App />)
 
     expect(html).toContain('不列入每日任務與教師報表')
     expect(html).toContain('href="?puzzle=word-grid&amp;guest=1"')
     expect(html).toContain('來源：聯合報好讀周報・設計者：遲驖川老師')
+    expect(html).toContain('href="?puzzle=number-grid&amp;guest=1"')
+    expect(html).toContain('來源：聯合報好讀周報・設計者：狄運來老師')
     expect(html).toContain('href="https://andrewkotw.github.io/card-puzzle/#4CLUE"')
     expect(html).toContain('href="https://andrewkotw.github.io/120_card_math/"')
     expect(html).toContain('target="_blank" rel="noreferrer"')

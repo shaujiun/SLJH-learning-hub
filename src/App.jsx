@@ -61,6 +61,7 @@ const GeographyDetective = lazy(() => import('./components/GeographyDetective.js
 const ChemicalFormulaOutpost = lazy(() => import('./components/ChemicalFormulaOutpost.jsx'))
 const AnimalEquationExperience = lazy(() => import('./components/AnimalEquationExperience.jsx'))
 const WordGridPuzzle = lazy(() => import('./components/WordGridPuzzle.jsx'))
+const NumberGridChallenge = lazy(() => import('./components/NumberGridChallenge.jsx'))
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
@@ -307,6 +308,12 @@ function PuzzleGames({ guestMode = false }) {
       name: '填字圖',
       detail: '來源：聯合報好讀周報・設計者：遲驖川老師',
       url: guestMode ? '?puzzle=word-grid&guest=1' : '?puzzle=word-grid',
+      external: false,
+    },
+    {
+      name: '十拿九穩之變形挑戰',
+      detail: '來源：聯合報好讀周報・設計者：狄運來老師',
+      url: guestMode ? '?puzzle=number-grid&guest=1' : '?puzzle=number-grid',
       external: false,
     },
     { name: '神機妙算', detail: '本校楊志宏老師、郭安澤老師協同製作', url: 'https://andrewkotw.github.io/card-puzzle/#4CLUE', external: true },
@@ -1008,6 +1015,9 @@ export default function App() {
   }
   if (searchParams.get('puzzle') === 'word-grid') {
     return <Suspense fallback={<LoadingScreen />}><WordGridPuzzle guestMode={guestMode} /></Suspense>
+  }
+  if (searchParams.get('puzzle') === 'number-grid') {
+    return <Suspense fallback={<LoadingScreen />}><NumberGridChallenge guestMode={guestMode} /></Suspense>
   }
   if (guestMode) {
     return <GuestPracticeHub requestedSubject={searchParams.get('subject') || ''} />

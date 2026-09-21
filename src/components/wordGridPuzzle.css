@@ -238,6 +238,18 @@ button.word-grid-cell { cursor: pointer; }
 .word-grid-message { margin: 0.7rem 0 0; padding: 0.7rem 0.9rem; text-align: center; background: #eef5ec; border-radius: 10px; }
 
 .word-grid-answer-panel { padding: 0; overflow: hidden; }
+.word-grid-answer-lock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  color: #687178;
+  background: #f1efe7;
+}
+.word-grid-answer-lock > span:first-child { display: grid; gap: 0.15rem; }
+.word-grid-answer-lock strong { font-size: 1.12rem; }
+.word-grid-answer-panel.is-locked { box-shadow: none; }
 .word-grid-answer-panel details > summary {
   display: flex;
   align-items: center;
