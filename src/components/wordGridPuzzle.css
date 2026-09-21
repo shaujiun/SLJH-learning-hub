@@ -322,7 +322,16 @@ button.word-grid-cell { cursor: pointer; }
 .word-grid-reference-upload small { color: #687178; }
 .word-grid-editor-workspace { display: grid; gap: 1rem; }
 .word-grid-editor-workspace.has-reference { grid-template-columns: minmax(260px, 0.8fr) minmax(420px, 1fr); }
-.word-grid-editor-workspace > img { width: 100%; max-height: 680px; object-fit: contain; background: #ebe9df; border-radius: 12px; }
+.word-grid-photo-panel { min-width: 0; padding: 0.65rem; background: #f4f3ea; border: 1px solid #d7d2c2; border-radius: 12px; }
+.word-grid-photo-panel p { margin: 0.5rem 0; color: #52635a; font-size: 0.82rem; line-height: 1.5; }
+.word-grid-photo-tools { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.word-grid-photo-tools button { padding: 0.42rem 0.55rem; color: #2e554a; background: #fff; border: 1px solid #9ebbae; border-radius: 8px; font: inherit; font-size: 0.8rem; cursor: pointer; }
+.word-grid-photo-tools button.is-active { color: #fff; background: #356a5a; }
+.word-grid-photo-tools button:disabled { opacity: 0.45; cursor: not-allowed; }
+.word-grid-photo-image { position: relative; width: 100%; cursor: crosshair; }
+.word-grid-photo-image img { display: block; width: 100%; height: auto; border-radius: 8px; }
+.word-grid-photo-region { position: absolute; display: grid; place-items: center; color: #fff; background: rgba(55, 116, 88, 0.18); border: 2px solid #247858; font-size: 0.8rem; font-weight: 800; pointer-events: none; }
+.word-grid-photo-region.is-bank { background: rgba(88, 95, 164, 0.18); border-color: #565fa4; }
 .word-grid-editor-tabs,
 .word-grid-editor-tools { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 0.65rem; }
 .word-grid-editor-tabs button.is-active,

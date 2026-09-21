@@ -122,6 +122,84 @@ export const numberGridChallenges = Object.freeze([
   },
 ])
 
+export function createNumberGridDraft(issueOn) {
+  return {
+    id: issueOn,
+    issueOn,
+    label: issueOn.replaceAll('-', '／'),
+    title: '十拿九穩之變形挑戰',
+    sourceName: '聯合報好讀周報',
+    designerName: '狄運來老師',
+    cells: Array.from({ length: 9 }, (_, index) => ({
+      id: String.fromCharCode(97 + index),
+      row: Math.floor(index / 3) + 1,
+      column: index % 3 + 1,
+    })),
+    circleClues: [],
+    lineClues: [],
+    solution: Array(9).fill(null),
+    explanation: '',
+    status: 'draft',
+  }
+}
+
+export function buildNumberGridLineClue(cells, { id, axis, lineIndex, direction, total }) {
+  const included = cells.filter((cell) => axis === 'row' ? cell.row === lineIndex : cell.column === lineIndex)
+  const positions = included.map((cell) => axis === 'row' ? cell.column : cell.row)
+  const last = positions.length ? Math.max(...positions) : lineIndex
+  const first = positions.length ? Math.min(...positions) : lineIndex
+  return {
+    id,
+    axis,
+    cellIds: included.map((cell) => cell.id),
+    total,
+    direction,
+    anchorRow: axis === 'row' ? lineIndex + 0.5 : direction === 'down' ? Math.max(0.35, first - 0.35) : Math.min(4.45, last + 1.45),
+    anchorColumn: axis === 'row' ? Math.min(4.45, last + 1.55) : lineIndex + 0.5,
+  }
+}
+
+export function validateNumberGridPuzzle(input) {
+  const errors = []
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input?.issueOn || '')) errors.push('請設定有效的期數日期。')
+  if (input?.status === 'archived' && numberGridChallenges.some((puzzle) => puzzle.id === input?.issueOn)) {
+    errors.push('內建四期題目不可封存；可儲存草稿，待校對後發布新版。')
+  }
+  const cells = Array.isArray(input?.cells) ? input.cells : []
+  if (cells.length !== 9) errors.push('題目必須有 9 個作答格。')
+  const coordinates = new Set(cells.map((cell) => `${cell.row}-${cell.column}`))
+  const ids = new Set(cells.map((cell) => cell.id))
+  if (coordinates.size !== cells.length || ids.size !== cells.length || cells.some((cell) =>
+    !Number.isInteger(cell.row) || !Number.isInteger(cell.column) || cell.row < 0 || cell.row >= 5 || cell.column < 0 || cell.column >= 5)) {
+    errors.push('9 個作答格須位於 5×5 畫布中，且位置與代號不得重複。')
+  }
+  const circles = Array.isArray(input?.circleClues) ? input.circleClues : []
+  const lines = Array.isArray(input?.lineClues) ? input.lineClues : []
+  if (circles.some((clue) => !Number.isInteger(clue.row) || !Number.isInteger(clue.column)
+    || clue.row < 0 || clue.row > 5 || clue.column < 0 || clue.column > 5
+    || !Number.isInteger(clue.total) || clue.total < 1)) errors.push('圓圈提示的位置或加總不正確。')
+  if (lines.some((clue) => !['row', 'column'].includes(clue.axis)
+    || !['left', 'up', 'down'].includes(clue.direction)
+    || !Number.isInteger(clue.total) || clue.total < 1
+    || !Number.isFinite(clue.anchorRow) || !Number.isFinite(clue.anchorColumn)
+    || clue.anchorRow < 0 || clue.anchorRow > 5 || clue.anchorColumn < 0 || clue.anchorColumn > 5
+    || !Array.isArray(clue.cellIds) || clue.cellIds.length < 2
+    || clue.cellIds.some((id) => !ids.has(id)))) errors.push('箭頭提示的位置、方格或加總不正確。')
+  if (lines.some((clue) => cells.some((cell) => cell.row === Math.floor(clue.anchorRow)
+    && cell.column === Math.floor(clue.anchorColumn)))) errors.push('箭頭提示不可蓋住作答格，請調整提示位置。')
+  const solution = normalizeNumberGridEntries(input?.solution)
+  const completeSolution = solution.every((value) => value !== null)
+  if (input?.status === 'published') {
+    if (!circles.length || !lines.length) errors.push('發布前須設定圓圈與箭頭提示。')
+    if (!completeSolution || new Set(solution).size !== 9) errors.push('發布前須確認 9 個不重複的答案數字。')
+    else if (!assessNumberGridChallenge({ cells, circleClues: circles, lineClues: lines }, solution).correct) {
+      errors.push('答案與圓圈或箭頭提示的加總不一致。')
+    }
+    if (!String(input?.explanation || '').trim()) errors.push('發布前須填寫解答說明。')
+  }
+  return { errors, solution }
+}
+
 export function normalizeNumberGridEntries(entries) {
   return Array.from({ length: NUMBER_GRID_CELL_COUNT }, (_, index) => {
     const value = Number(entries?.[index])

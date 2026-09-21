@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { mapRowsToGrid } from '../lib/wordGridPuzzle.js'
-import { AnswerPanel } from './WordGridPuzzle.jsx'
+import { AnswerPanel, PhotoImportPanel } from './WordGridPuzzle.jsx'
 
 const grid = mapRowsToGrid([
   '字.########',
@@ -31,5 +31,15 @@ describe('填字圖解答面板', () => {
     expect(html).toContain('已解鎖，可展開查看')
     expect(html).toContain('測試解答說明')
     expect(html).toContain('圖')
+  })
+})
+
+describe('填字圖照片編題', () => {
+  it('提供題目格和字庫的框選、辨識入口', () => {
+    const html = renderToStaticMarkup(<PhotoImportPanel imageUrl="blob:local-photo" />)
+    expect(html).toContain('框選題目 10×10 格')
+    expect(html).toContain('框選上方字庫')
+    expect(html).toContain('讀取題目格與提示字')
+    expect(html).toContain('讀取字庫文字')
   })
 })

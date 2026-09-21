@@ -57,6 +57,13 @@ describe('填字圖資料與判定', () => {
     }).errors).toContain('可填文字與完整解答使用的文字不一致。')
   })
 
+  it('照片辨識未確認的問號不能直接發布', () => {
+    const solutionGrid = grid.map((cell, index) => (index === 1 ? { type: 'given', value: '？' } : cell))
+    expect(validateWordGridPuzzle({
+      publishedOn: '2026-09-19', grid, characterBank: '？', solutionGrid, status: 'published',
+    }).errors).toContain('照片辨識仍有「？」待校對，不能發布。')
+  })
+
   it('沒有解答時只標記練習完成，不假裝判定正確', () => {
     expect(assessWordGridAnswer({ grid, characterBank: '人' }, { 1: 0 })).toEqual({
       status: 'practice-complete', complete: true, correct: null,
