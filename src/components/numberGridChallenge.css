@@ -88,16 +88,23 @@
   color: #352f2d;
   background: #fffdf8;
   border: 0;
-  border-top: 3px solid #332f31;
-  border-left: 3px solid #332f31;
+  border: 0;
   border-radius: 0;
   font: inherit;
   font-size: clamp(1.45rem, 5vw, 2.7rem);
   font-weight: 800;
   cursor: pointer;
 }
-.number-grid-board button.has-right-edge { border-right: 3px solid #332f31; }
-.number-grid-board button.has-bottom-edge { border-bottom: 3px solid #332f31; }
+.number-grid-grid-lines {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.number-grid-grid-lines path { fill: none; stroke: #332f31; stroke-width: 3; }
 .number-grid-hidden-cell { visibility: hidden; pointer-events: none; }
 .number-grid-board button:hover,
 .number-grid-board button.is-filled { background: #fff3cf; }
@@ -191,7 +198,9 @@
 
 @media (max-width: 780px) {
   .number-grid-workspace,
-  .number-grid-answer-content { grid-template-columns: 1fr; }
+  .number-grid-answer-content { grid-template-columns: minmax(0, 1fr); }
+  .number-grid-workspace > div,
+  .number-grid-bank-column { min-width: 0; }
   .number-grid-bank-column { width: min(100%, 560px); margin: 0 auto; }
 }
 
@@ -202,6 +211,9 @@
   .number-grid-header > a svg { width: 24px; }
   .number-grid-intro,
   .number-grid-challenge-heading { align-items: flex-start; flex-direction: column; }
+  .number-grid-intro > div,
+  .number-grid-challenge-heading > div { min-width: 0; }
+  .number-grid-actions { flex-wrap: wrap; }
   .number-grid-circle-clue { width: 36px; font-size: 0.82rem; }
   .number-grid-line-clue { min-width: 44px; padding: 0.18rem 0.25rem; font-size: 0.88rem; }
   .number-grid-line-clue svg { width: 17px; height: 17px; }
