@@ -74,14 +74,12 @@
 .number-grid-workspace { display: grid; grid-template-columns: minmax(400px, 600px) minmax(230px, 300px); justify-content: center; align-items: start; gap: clamp(1.25rem, 5vw, 3.5rem); margin-top: 1.25rem; }
 
 .number-grid-board-stage {
-  display: grid;
-  grid-template-columns: minmax(260px, 1fr) 70px;
-  grid-template-rows: minmax(260px, 1fr) 62px;
   width: min(100%, 560px);
+  aspect-ratio: 1;
   margin: 0 auto;
 }
-.number-grid-square { position: relative; grid-column: 1; grid-row: 1; aspect-ratio: 1; }
-.number-grid-board { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; height: 100%; border-top: 3px solid #332f31; border-left: 3px solid #332f31; }
+.number-grid-square { position: relative; width: 100%; height: 100%; }
+.number-grid-board { display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr); width: 100%; height: 100%; }
 .number-grid-board button {
   display: grid;
   place-items: center;
@@ -90,24 +88,27 @@
   color: #352f2d;
   background: #fffdf8;
   border: 0;
-  border-right: 3px solid #332f31;
-  border-bottom: 3px solid #332f31;
+  border-top: 3px solid #332f31;
+  border-left: 3px solid #332f31;
   border-radius: 0;
   font: inherit;
-  font-size: clamp(2rem, 7vw, 3.5rem);
+  font-size: clamp(1.45rem, 5vw, 2.7rem);
   font-weight: 800;
   cursor: pointer;
 }
+.number-grid-board button.has-right-edge { border-right: 3px solid #332f31; }
+.number-grid-board button.has-bottom-edge { border-bottom: 3px solid #332f31; }
+.number-grid-hidden-cell { visibility: hidden; pointer-events: none; }
 .number-grid-board button:hover,
 .number-grid-board button.is-filled { background: #fff3cf; }
 .number-grid-board button:disabled { color: #352f2d; opacity: 1; cursor: default; }
 .number-grid-circle-clue {
   position: absolute;
   z-index: 2;
-  top: calc(var(--clue-row) * 33.333%);
-  left: calc(var(--clue-column) * 33.333%);
+  top: var(--clue-y);
+  left: var(--clue-x);
   display: grid;
-  width: clamp(42px, 10vw, 58px);
+  width: clamp(38px, 7vw, 52px);
   aspect-ratio: 1;
   place-items: center;
   color: #fff;
@@ -119,18 +120,30 @@
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
-.number-grid-row-clues { display: grid; grid-column: 2; grid-row: 1; grid-template-rows: repeat(3, 1fr); }
-.number-grid-column-clues { display: grid; grid-column: 1; grid-row: 2; grid-template-columns: repeat(3, 1fr); }
-.number-grid-row-clues span,
-.number-grid-column-clues span { display: flex; align-items: center; justify-content: center; gap: 0.15rem; color: #714823; font-size: 1.15rem; font-weight: 900; }
-.number-grid-column-clues span { flex-direction: column; }
-.number-grid-row-clues svg,
-.number-grid-column-clues svg { width: 23px; }
-.number-grid-row-clues .is-correct,
-.number-grid-column-clues .is-correct,
+.number-grid-line-clue {
+  position: absolute;
+  z-index: 3;
+  top: var(--clue-y);
+  left: var(--clue-x);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  min-width: 52px;
+  padding: 0.22rem 0.35rem;
+  color: #fff;
+  background: #55483c;
+  border-radius: 4px;
+  font-size: 1.08rem;
+  font-weight: 900;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.number-grid-line-clue.is-up { flex-direction: column; }
+.number-grid-line-clue svg { width: 21px; height: 21px; }
+.number-grid-line-clue.is-correct,
 .number-grid-circle-clue.is-correct { color: #fff; background: #2f7658; }
-.number-grid-row-clues .is-incorrect,
-.number-grid-column-clues .is-incorrect,
+.number-grid-line-clue.is-incorrect,
 .number-grid-circle-clue.is-incorrect { color: #fff; background: #a33c35; }
 
 .number-grid-bank-column { padding: 1rem; background: #f8f0df; border: 1px solid #dfceb0; border-radius: 14px; }
@@ -188,9 +201,8 @@
   .number-grid-header > a svg { width: 24px; }
   .number-grid-intro,
   .number-grid-challenge-heading { align-items: flex-start; flex-direction: column; }
-  .number-grid-board-stage { grid-template-columns: minmax(220px, 1fr) 50px; grid-template-rows: minmax(220px, 1fr) 54px; }
-  .number-grid-circle-clue { width: 42px; font-size: 0.88rem; }
-  .number-grid-row-clues span,
-  .number-grid-column-clues span { font-size: 0.95rem; }
+  .number-grid-circle-clue { width: 36px; font-size: 0.82rem; }
+  .number-grid-line-clue { min-width: 44px; padding: 0.18rem 0.25rem; font-size: 0.88rem; }
+  .number-grid-line-clue svg { width: 17px; height: 17px; }
   .number-grid-answer-panel summary > span:last-child { display: none; }
 }
