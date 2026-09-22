@@ -62,6 +62,8 @@ const ChemicalFormulaOutpost = lazy(() => import('./components/ChemicalFormulaOu
 const AnimalEquationExperience = lazy(() => import('./components/AnimalEquationExperience.jsx'))
 const WordGridPuzzle = lazy(() => import('./components/WordGridPuzzle.jsx'))
 const NumberGridChallenge = lazy(() => import('./components/NumberGridChallenge.jsx'))
+const EnglishReadingWorkshop = lazy(() => import('./components/EnglishReadingWorkshop.jsx'))
+const EnglishReadingPractice = lazy(() => import('./components/EnglishReadingPractice.jsx'))
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
@@ -106,6 +108,15 @@ function LoginRequired() {
       <small className="guest-login-note">訪客成績不會寫入每日任務，也不會出現在教師進度報表。</small>
     </main>
   )
+}
+
+function ReadingLoginRequired() {
+  return <main className="center-screen">
+    <div className="mascot-orb"><BookOpenCheck aria-hidden="true" /></div>
+    <h1>英語閱讀需要學生登入</h1>
+    <p>訪客不能查看文章或練習題。請先從線上聯絡簿登入學生帳號。</p>
+    <a className="primary-button" href={contactBookUrl}>前往學生登入</a>
+  </main>
 }
 
 function ErrorScreen({ message, onRetry }) {
@@ -436,7 +447,7 @@ function SubjectLearningSection({ section, system, guestMode, returnUrl, showBac
 }
 
 function SubjectGameMenu({ system, guestMode = false, adminPreview = false }) {
-  const sections = subjectSectionsFor(system, englishVocabUrl, { adminPreview: !guestMode && adminPreview })
+  const sections = subjectSectionsFor(system, englishVocabUrl, { adminPreview: !guestMode && adminPreview, guestMode })
   const returnUrl = guestMode ? '?guest=1' : './'
   if (!system) {
     return (
@@ -1018,6 +1029,14 @@ export default function App() {
   }
   if (searchParams.get('puzzle') === 'number-grid') {
     return <Suspense fallback={<LoadingScreen />}><NumberGridChallenge guestMode={guestMode} /></Suspense>
+  }
+  if (searchParams.get('reading') === 'workshop') {
+    if (guestMode) return <ReadingLoginRequired />
+    return <Suspense fallback={<LoadingScreen />}><EnglishReadingWorkshop /></Suspense>
+  }
+  if (searchParams.get('reading') === 'practice') {
+    if (guestMode) return <ReadingLoginRequired />
+    return <Suspense fallback={<LoadingScreen />}><EnglishReadingPractice /></Suspense>
   }
   if (guestMode) {
     return <GuestPracticeHub requestedSubject={searchParams.get('subject') || ''} />
