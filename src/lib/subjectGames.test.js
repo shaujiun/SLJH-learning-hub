@@ -67,10 +67,26 @@ describe('各科遊戲選擇入口', () => {
       }))
   })
 
+  it('閱讀照片草稿只能由管理者從英語科進入', () => {
+    const system = { code: 'english', name: '英語' }
+    expect(subjectGamesFor(system, 'https://example.com/english').map((game) => game.code))
+      .not.toContain('english-reading-workshop')
+    expect(subjectGamesFor(system, 'https://example.com/english', { adminPreview: true }))
+      .toContainEqual(expect.objectContaining({ code: 'english-reading-workshop', launchUrl: '?reading=workshop' }))
+  })
+
+  it('學生閱讀練習只有登入版顯示，訪客版不顯示', () => {
+    const system = { code: 'english', name: '英語' }
+    expect(subjectGamesFor(system, 'https://example.com/english'))
+      .toContainEqual(expect.objectContaining({ code: 'english-reading', launchUrl: '?reading=practice' }))
+    expect(subjectGamesFor(system, 'https://example.com/english', { guestMode: true }).map((game) => game.code))
+      .not.toContain('english-reading')
+  })
+
   it('科目頁固定四區，現有活動各只放入一區', () => {
     const examples = [
       ['math', { board: ['animal-equation'] }],
-      ['english', { basic: ['english-vocabulary'], guided: ['english-grammar'] }],
+      ['english', { basic: ['english-vocabulary'], guided: ['english-grammar', 'english-reading'] }],
       ['science', { basic: ['periodic-table'], guided: ['chemical-formula'] }],
       ['history', { map: ['history-atlas'] }],
       ['geography', { guided: ['geography-fill-map', 'geography-detective'] }],

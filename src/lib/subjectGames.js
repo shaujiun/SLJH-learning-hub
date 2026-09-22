@@ -32,6 +32,24 @@ const subjectGameTemplates = {
       availability: '依已開放的冊別與課次練習',
       entry: 'grammar',
     },
+    {
+      code: 'english-reading',
+      section: 'guided',
+      name: '英語閱讀練習',
+      description: '閱讀英文文章與翻譯，練習找原文依據、文法與國中 2000 單。',
+      availability: '僅已登入的學生帳號可使用',
+      requiresLogin: true,
+      launchUrl: '?reading=practice',
+    },
+    {
+      code: 'english-reading-workshop',
+      section: 'guided',
+      name: '英語閱讀編題工作台',
+      description: '照片分區辨識、教師校對並預覽文章、翻譯、單字與題目；尚未發布學生版。',
+      availability: '僅管理者草稿預覽',
+      adminPreview: true,
+      launchUrl: '?reading=workshop',
+    },
   ],
   science: [
     {
@@ -105,14 +123,14 @@ function englishGrammarLaunchUrl(fallbackUrl) {
   }
 }
 
-export function subjectGamesFor(system, englishVocabUrl, { adminPreview = false } = {}) {
+export function subjectGamesFor(system, englishVocabUrl, { adminPreview = false, guestMode = false } = {}) {
   if (!system?.code) return []
   const fallbackUrl = configuredLaunchUrl(system, englishVocabUrl)
   const templates = subjectGameTemplates[system.code]
 
   if (templates) {
     return templates
-      .filter((game) => !game.adminPreview || adminPreview)
+      .filter((game) => (!game.adminPreview || adminPreview) && (!game.requiresLogin || !guestMode))
       .map((game) => ({
         ...game,
         launchUrl: game.entry === 'grammar'

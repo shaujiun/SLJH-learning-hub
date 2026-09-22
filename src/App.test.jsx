@@ -118,4 +118,28 @@ describe('guest practice routes', () => {
     expect(html).toContain('不用註冊，選一項開始練習')
     expect(html).not.toContain('週五名言佳句背誦')
   })
+
+  it('拒絕訪客直接進入英語閱讀編題頁', () => {
+    useUrl('https://example.test/hub/?reading=workshop&guest=1')
+    const html = renderToStaticMarkup(<App />)
+
+    expect(html).toContain('請先從線上聯絡簿登入')
+    expect(html).not.toContain('照片匯入與閱讀預覽')
+  })
+
+  it('拒絕訪客直接進入英語閱讀學生頁', () => {
+    useUrl('https://example.test/hub/?reading=practice&guest=1')
+    const html = renderToStaticMarkup(<App />)
+
+    expect(html).toContain('英語閱讀需要學生登入')
+    expect(html).not.toContain('正在確認學生身分與閱讀內容')
+  })
+
+  it('訪客英語科選單不顯示閱讀入口', () => {
+    useUrl('https://example.test/hub/?subject=english&guest=1')
+    const html = renderToStaticMarkup(<App />)
+
+    expect(html).not.toContain('?reading=practice')
+    expect(html).not.toContain('英語閱讀練習')
+  })
 })

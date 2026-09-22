@@ -16,7 +16,7 @@ export function isApprovedActiveAdmin(profile) {
     && profile?.is_active === true
 }
 
-export async function canPreviewMeasurementLab() {
+export async function canManageLearningContent() {
   const client = requireSupabase()
   const { data: sessionData, error: sessionError } = await client.auth.getSession()
   if (sessionError) throw sessionError
@@ -31,6 +31,8 @@ export async function canPreviewMeasurementLab() {
   if (error) throw error
   return isApprovedActiveAdmin(profile)
 }
+
+export const canPreviewMeasurementLab = canManageLearningContent
 
 function relation(value) {
   return Array.isArray(value) ? value[0] : value
