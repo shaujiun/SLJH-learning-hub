@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 const migration = readFileSync(new URL('../../supabase/migrations/20260922180000_add_english_reading_lessons.sql', import.meta.url), 'utf8')
 const questionMigration = readFileSync(new URL('../../supabase/migrations/20260922190000_add_english_reading_questions.sql', import.meta.url), 'utf8')
+const gpsDraftMigration = readFileSync(new URL('../../supabase/migrations/20260926120000_seed_english_reading_gps_draft.sql', import.meta.url), 'utf8')
 
 describe('英語閱讀資料庫存取界線', () => {
   it('不給訪客讀取資料表，且資料列權限保持開啟', () => {
@@ -28,5 +29,16 @@ describe('英語閱讀資料庫存取界線', () => {
     expect(questionMigration).toContain("item.group_scope <> current_group")
     expect(questionMigration).toContain('reading_questions_required_before_publish')
     expect(questionMigration).toContain('revoke all on function public.submit_english_reading_answer(uuid, text[], text) from public, anon')
+  })
+  it('GPS 閱讀稿含文章、六題與私有正解，並保持未發布', () => {
+    expect(gpsDraftMigration).toContain("'A Stormy Day for GPS'")
+    expect(gpsDraftMigration).toContain("'聯合報好讀周報'")
+    expect(gpsDraftMigration).toContain("'draft'")
+    expect(gpsDraftMigration).not.toMatch(/'published'\s*\)?\s*(?:;|where)/i)
+    expect(gpsDraftMigration.match(/20260921010[1-6]/g)).toHaveLength(12)
+    expect(gpsDraftMigration).toContain("array['stop', 'crying']")
+    expect(gpsDraftMigration).toContain("array['B']")
+    expect(gpsDraftMigration).toContain("array['A']")
+    expect(gpsDraftMigration).toContain("array['C']")
   })
 })
