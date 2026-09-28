@@ -86,3 +86,21 @@ export async function submitStudentReadingAnswer(questionId, answers, evidenceTe
   if (error) throw new Error(`無法送出答案：${error.message}`)
   return data
 }
+
+export function gradeAdminReadingAnswer(question, answers) {
+  const expected = Array.isArray(question?.answers) ? question.answers : []
+  const submitted = Array.isArray(answers) ? answers : []
+  const correct = expected.length > 0
+    && expected.length === submitted.length
+    && expected.every((answer, index) => {
+      const normalized = String(submitted[index] || '').trim().toLowerCase()
+      return normalized && String(answer || '').split('|')
+        .some((accepted) => accepted.trim().toLowerCase() === normalized)
+    })
+  return {
+    correct: Boolean(correct),
+    expected,
+    explanation: question?.explanation || '',
+    evidenceSentence: question?.evidenceSentence || '',
+  }
+}
