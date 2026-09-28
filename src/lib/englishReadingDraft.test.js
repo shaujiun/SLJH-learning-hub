@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  emptyReadingDraft, normalizeReadingDraft, normalizedReadingRect, parseReadingWords, readingParagraphs, readingSentences,
+  emptyReadingDraft, normalizeReadingDraft, normalizedReadingRect, parseReadingMindMap, parseReadingWords,
+  readingParagraphs, readingSentences, serializeReadingMindMap,
 } from './englishReadingDraft.js'
 
 describe('英文閱讀照片草稿', () => {
@@ -24,5 +25,12 @@ describe('英文閱讀照片草稿', () => {
     expect(normalizedReadingRect({ x: .8, y: .7 }, { x: .2, y: .1 }))
       .toEqual({ left: .2, top: .1, width: .6000000000000001, height: .6 })
     expect(normalizedReadingRect({ x: .2, y: .1 }, { x: .21, y: .12 })).toBeNull()
+  })
+  it('把舊版箭頭文字與新版結構資料都轉成可視心智圖', () => {
+    const legacy = parseReadingMindMap('solar storm → burst of energy → GPS error', 'GPS')
+    expect(legacy.center).toBe('GPS')
+    expect(legacy.branches[0]).toEqual({ title: 'solar storm', keywords: ['burst of energy', 'GPS error'] })
+    const saved = serializeReadingMindMap({ center: 'GPS', branches: [{ title: '影響', keywords: ['wrong lane', 'damage crops'] }] })
+    expect(parseReadingMindMap(saved)).toEqual(expect.objectContaining({ center: 'GPS' }))
   })
 })

@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, BookOpen, ImagePlus, Volume2 } from 'lucide-react'
+import { ArrowLeft, BookOpen, ImagePlus, ScanText, Sparkles, Volume2 } from 'lucide-react'
 import { canManageLearningContent } from '../services/learningService.js'
 import {
   emptyReadingDraft, normalizeReadingDraft, normalizedReadingRect, parseReadingWords,
   readingParagraphs, readingSections, readingSentences,
 } from '../lib/englishReadingDraft.js'
 import { recognizeReadingRegion } from '../lib/englishReadingPhotoImport.js'
+import { analyzeEnglishReadingPhotos, requestEnglishReadingAi } from '../services/englishReadingAiService.js'
 import { loadAdminReadingLessons, saveAdminReadingLesson } from '../services/englishReadingService.js'
 import EnglishReadingQuestionEditor from './EnglishReadingQuestionEditor.jsx'
+import { EnglishReadingMindMap, EnglishReadingMindMapEditor } from './EnglishReadingMindMap.jsx'
 import './englishReadingWorkshop.css'
 
 const storageKey = 'sljh-english-reading-teacher-draft-v1'
@@ -79,15 +81,12 @@ function ReadingPreview({ draft }) {
         {words.map(({ label, entries }) => <section key={label}><h3>{label}</h3>{entries.length ? <div className="reading-word-list">{entries.map(({ word, meaning }, index) => <div key={`${word}-${index}`}><button type="button" onClick={() => speak(word)} title={`播放 ${word} 發音`}><Volume2 aria-hidden="true" />{word}</button><span>{meaning}</span><button type="button" className="reading-slow" onClick={() => speak(word, true)} aria-label={`慢速播放 ${word}`}>慢速</button></div>)}</div> : <p>尚未校對單字。</p>}</section>)}
         {speechNotice && <p role="status" className="reading-speech-notice">{speechNotice}</p>}
         {draft.grammar && <section><h3>實用文法</h3><p className="reading-raw-text">{draft.grammar}</p></section>}
-        {draft.mindMap && <section><h3>單字心智圖文字草稿</h3><p className="reading-raw-text">{draft.mindMap}</p></section>}
+        {draft.mindMap && <EnglishReadingMindMap value={draft.mindMap} title={draft.title} />}
       </aside>
     </div>
     <div className="reading-exercises">
-      <section><h3>小試身手</h3><p className="reading-raw-text">{draft.cloze || '題目待校對。'}</p></section>
-      <section><h3>閱讀能力測驗</h3><p className="reading-raw-text">{draft.questions || '題目待校對。'}</p></section>
       <section><h3>{group} 組閱讀提示</h3><p>{(group === 'A' ? draft.groupAHint : draft.groupBHint) || '尚未設定提示。'}</p></section>
     </div>
-    <p className="reading-warning">此處預覽文章排版及找句子操作；實際作答題目請在編題區另外建立。</p>
   </section>
 }
 
@@ -95,6 +94,7 @@ export default function EnglishReadingWorkshop() {
   const [permission, setPermission] = useState('loading')
   const [draft, setDraft] = useState(storedDraft)
   const [photos, setPhotos] = useState({ article: '', exercise: '' })
+  const [photoFiles, setPhotoFiles] = useState({ article: null, exercise: null })
   const [photoType, setPhotoType] = useState('article')
   const [sectionCode, setSectionCode] = useState('english')
   const [firstPoint, setFirstPoint] = useState(null)
@@ -106,6 +106,7 @@ export default function EnglishReadingWorkshop() {
   const [availableFrom, setAvailableFrom] = useState('')
   const [availableUntil, setAvailableUntil] = useState('')
   const [usageNote, setUsageNote] = useState('')
+  const [suggestedQuestions, setSuggestedQuestions] = useState([])
   const imageRef = useRef(null)
   const photoUrls = useRef([])
 
@@ -132,10 +133,46 @@ export default function EnglishReadingWorkshop() {
     const next = URL.createObjectURL(file)
     photoUrls.current.push(next)
     setPhotos((previous) => ({ ...previous, [type]: next }))
+    setPhotoFiles((previous) => ({ ...previous, [type]: file }))
     setPhotoType(type)
     setSelectedRect(null)
     setFirstPoint(null)
-    setStatus('照片只在此瀏覽器供選區辨識，不會上傳或儲存原圖。')
+    setStatus('照片已就緒。可使用 AI 自動建立整份教材；原圖不會存入教材資料庫。')
+  }
+
+  async function analyzeAllPhotos() {
+    if (!photoFiles.article || !photoFiles.exercise) { setStatus('請先上傳同一期的兩張照片。'); return }
+    if (['title', 'english', 'translation', 'grammar', 'coreWords', 'extraWords', 'mindMap']
+      .some((key) => String(draft[key] || '').trim())
+      && !window.confirm('AI 辨識結果會帶入目前教材欄位；請確認已儲存需要保留的內容。確定繼續？')) return
+    setBusy(true)
+    setStatus('AI 正在辨識文章、翻譯、單字、心智圖與每一道題目，通常需要約 1 分鐘。')
+    try {
+      const result = await analyzeEnglishReadingPhotos(photoFiles)
+      setDraft((previous) => ({ ...previous, ...Object.fromEntries(
+        Object.entries(result.lesson).filter(([, value]) => String(value || '').trim()),
+      ) }))
+      setSuggestedQuestions(result.questions)
+      setStatus(result.message || `已建立教材與 ${result.questions.length} 題；請校對辨識結果及正解後再發布。`)
+    } catch (error) { setStatus(error.message) }
+    finally { setBusy(false) }
+  }
+
+  async function runQuestionAssistant(action, currentQuestions) {
+    setBusy(true)
+    setStatus(action === 'evaluate_questions' ? 'AI 正在檢查題量與能力層次……' : 'AI 正在核對解析、提示與原文依據……')
+    try {
+      const result = await requestEnglishReadingAi(action, draft, currentQuestions)
+      if (action === 'evaluate_questions' && result.decision === 'enough') {
+        setStatus('題目足夠，不必再生成新題目')
+        return { ...result, questions: [] }
+      }
+      setStatus(result.message || 'AI 建議已帶入題目設定區，請校對後儲存。')
+      return result
+    } catch (error) {
+      setStatus(error.message)
+      throw error
+    } finally { setBusy(false) }
   }
 
   function finishSelection(event) {
@@ -175,6 +212,7 @@ export default function EnglishReadingWorkshop() {
     setAvailableFrom(selected?.availableFrom || '')
     setAvailableUntil(selected?.availableUntil || '')
     setUsageNote(selected?.usageNote || '')
+    setSuggestedQuestions([])
   }
 
   async function saveDatabase(statusToSave) {
@@ -198,28 +236,35 @@ export default function EnglishReadingWorkshop() {
   if (permission !== 'allowed') return <main className="reading-workshop-gate"><BookOpen aria-hidden="true" /><h1>英語閱讀編題工作台</h1><p>{permission === 'loading' ? '正在確認管理者身分……' : '此頁只開放已核准的管理者編題。'}</p><a href="?subject=english">返回英語科</a></main>
 
   return <main className="reading-workshop">
-    <header className="reading-workshop-header"><a href="?subject=english"><ArrowLeft aria-hidden="true" />返回英語科</a><div><small>ENGLISH READING・管理者編題</small><h1>照片匯入與閱讀預覽</h1><p>先將同一期報紙的兩張照片分區辨識，再校對文章、翻譯、單字與練習題。發布前請確認使用範圍。</p></div></header>
+    <header className="reading-workshop-header"><a href="?subject=english"><ArrowLeft aria-hidden="true" />返回英語科</a><div><small>ENGLISH READING・管理者編題</small><h1>照片自動建稿與閱讀預覽</h1><p>上傳同一期的兩張照片，系統會直接建立文章、雙語內容、視覺心智圖、分組提示與可作答題目。</p></div></header>
     <div className="reading-workshop-columns">
       <section className="reading-editor">
         <h2><ImagePlus aria-hidden="true" />匯入照片</h2>
         <label>已儲存文章<select value={lessonId} onChange={(event) => chooseSavedLesson(event.target.value)}><option value="">建立新文章</option>{savedLessons.map((lesson) => <option key={lesson.id} value={lesson.id}>{lesson.issueDate || '未標日期'}・{lesson.title || '未命名'}（{lesson.status === 'published' ? '已發布' : '草稿'}）</option>)}</select></label>
         <div className="reading-upload-row">{Object.entries(photoLabels).map(([type, label]) => <label key={type}>{label}<input type="file" accept="image/*" onChange={(event) => uploadPhoto(type, event.target.files?.[0])} /></label>)}</div>
-        <div className="reading-recognize-controls"><label>選擇照片<select value={photoType} onChange={(event) => { setPhotoType(event.target.value); setSelectedRect(null) }}><option value="article">文章與翻譯</option><option value="exercise">單字與練習</option></select></label><label>帶入欄位<select value={sectionCode} onChange={(event) => setSectionCode(event.target.value)}>{readingSections.map((section) => <option value={section.code} key={section.code}>{section.label}</option>)}</select></label></div>
+        <div className="reading-auto-import">
+          <button type="button" className="reading-action reading-ai-action" disabled={busy || !photoFiles.article || !photoFiles.exercise} onClick={analyzeAllPhotos}><Sparkles aria-hidden="true" />{busy ? '處理中……' : 'AI 自動辨識兩張照片並建立教材'}</button>
+          <p>只有按下此按鈕時，照片才會傳送到伺服器端 AI 分析；原始照片不會保存。請在發布前核對文字、答案與來源。</p>
+        </div>
+        <details className="reading-manual-ocr"><summary>照片不清楚時，改用手動框選辨識</summary>
+        <div className="reading-recognize-controls"><label>選擇照片<select value={photoType} onChange={(event) => { setPhotoType(event.target.value); setSelectedRect(null) }}><option value="article">文章與翻譯</option><option value="exercise">單字與練習</option></select></label><label>帶入欄位<select value={sectionCode} onChange={(event) => setSectionCode(event.target.value)}>{readingSections.filter((section) => !['mindMap', 'cloze', 'questions'].includes(section.code)).map((section) => <option value={section.code} key={section.code}>{section.label}</option>)}</select></label></div>
         <p>在照片上拖曳框選單一欄位；英文和翻譯請分開選，單字兩欄也分開選。辨識錯字可在下方編輯。</p>
         {photos[photoType] ? <div className="reading-photo" onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); setFirstPoint(pointInImage(event)) }} onPointerUp={finishSelection} onPointerCancel={() => setFirstPoint(null)}>
           <img ref={imageRef} src={photos[photoType]} alt={`${photoLabels[photoType]}編題照片`} draggable="false" />
           {selectedRect && <span className="reading-photo-selection" style={{ left: `${selectedRect.left * 100}%`, top: `${selectedRect.top * 100}%`, width: `${selectedRect.width * 100}%`, height: `${selectedRect.height * 100}%` }} />}
         </div> : <div className="reading-photo-empty">上傳照片後，在這裡選擇要辨識的文字區塊。</div>}
-        <button type="button" className="reading-action" disabled={busy || !selectedRect} onClick={recognize}>{busy ? '辨識中……' : '辨識選取範圍'}</button>
+        <button type="button" className="reading-action" disabled={busy || !selectedRect} onClick={recognize}><ScanText aria-hidden="true" />{busy ? '辨識中……' : '辨識選取範圍'}</button>
+        </details>
         <p className="reading-status" role="status">{status}</p>
         <div className="reading-meta"><label>文章標題<input value={draft.title} onChange={(event) => updateField('title', event.target.value)} /></label><label>作者<input value={draft.author} onChange={(event) => updateField('author', event.target.value)} /></label><label>報紙日期<input type="date" value={draft.issueDate} onChange={(event) => updateField('issueDate', event.target.value)} /></label><label>來源<input value={draft.source} onChange={(event) => updateField('source', event.target.value)} /></label></div>
-        {readingSections.map((section) => <label className="reading-text-field" key={section.code}>{section.label}<textarea value={draft[section.code]} onChange={(event) => updateField(section.code, event.target.value)} rows={section.code === 'english' || section.code === 'translation' ? 8 : 4} placeholder={section.code.endsWith('Words') ? '一行一個，例如：serious 嚴重的' : '辨識後請逐字對照照片校對。'} /></label>)}
+        {readingSections.filter((section) => !['mindMap', 'cloze', 'questions'].includes(section.code)).map((section) => <label className="reading-text-field" key={section.code}>{section.label}<textarea value={draft[section.code]} onChange={(event) => updateField(section.code, event.target.value)} rows={section.code === 'english' || section.code === 'translation' ? 8 : 4} placeholder={section.code.endsWith('Words') ? '一行一個，例如：serious 嚴重的' : '辨識後請逐字對照照片校對。'} /></label>)}
+        <EnglishReadingMindMapEditor value={draft.mindMap} title={draft.title} onChange={(value) => updateField('mindMap', value)} />
         {['A', 'B'].map((group) => <label className="reading-text-field" key={group}>{group} 組提示<textarea value={draft[`group${group}Hint`]} onChange={(event) => updateField(`group${group}Hint`, event.target.value)} rows={2} /></label>)}
         <div className="reading-meta"><label>學生開放日期<input type="date" value={availableFrom} onChange={(event) => setAvailableFrom(event.target.value)} /></label><label>學生截止日期<input type="date" value={availableUntil} onChange={(event) => setAvailableUntil(event.target.value)} /></label></div>
         <label className="reading-text-field">教學使用依據或授權範圍<textarea value={usageNote} onChange={(event) => setUsageNote(event.target.value)} rows={2} placeholder="請記錄適用課程、使用對象與期間，或授權資訊。" /></label>
         <div className="reading-save-actions"><button type="button" className="reading-action" onClick={saveLocalDraft}>儲存此裝置草稿</button><button type="button" className="reading-action" disabled={busy} onClick={() => saveDatabase('draft')}>存入資料庫草稿／暫停發布</button><button type="button" className="reading-action reading-publish" disabled={busy || !lessonId} onClick={() => saveDatabase('published')}>發布閱讀版</button></div>
         <p>發布前請先儲存文章草稿，再建立至少一題有正解的練習題。</p>
-        <EnglishReadingQuestionEditor lessonId={lessonId} />
+        <EnglishReadingQuestionEditor lessonId={lessonId} articleDraft={draft} suggestedQuestions={suggestedQuestions} onSuggestedQuestionsChange={setSuggestedQuestions} onAiAction={runQuestionAssistant} aiBusy={busy} />
         <p className="reading-warning">原圖不儲存；資料庫只保存校對後的文字。發布前請校對文章及每題答案。</p>
       </section>
       <ReadingPreview draft={draft} />
