@@ -47,13 +47,18 @@ export async function loadWordGridPuzzles({ guestMode = false } = {}, client = r
   const permissionPromise = guestMode
     ? Promise.resolve({ data: false, error: null })
     : client.rpc('can_manage_word_grid_puzzles')
-  const { data: permission, error: permissionError } = await permissionPromise
+  const sessionPromise = guestMode
+    ? Promise.resolve({ data: { session: null }, error: null })
+    : client.auth.getSession()
+  const [permissionResult, sessionResult] = await Promise.all([permissionPromise, sessionPromise])
+  const { data: permission, error: permissionError } = permissionResult
   const canManage = !permissionError && Boolean(permission)
+  const progressOwnerId = sessionResult.error ? '' : sessionResult.data.session?.user?.id || ''
   let query = client.from('word_grid_puzzles').select(puzzleSelect).order('published_on', { ascending: false })
   if (!canManage) query = query.eq('status', 'published')
   const { data, error } = await query
   if (error) throw new Error(`無法讀取填字圖：${error.message}`)
-  return { puzzles: (data || []).map(mapWordGridPuzzle), canManage }
+  return { puzzles: (data || []).map(mapWordGridPuzzle), canManage, progressOwnerId }
 }
 
 async function currentUserId(client) {
