@@ -43,21 +43,31 @@ export async function loadStudentReadingLessons(client = requireSupabase()) {
   const { data: sessionData, error: sessionError } = await client.auth.getSession()
   if (sessionError) throw sessionError
   const userId = sessionData.session?.user?.id
-  if (!userId) return { access: 'login', lessons: [], group: 'B' }
+  if (!userId) return { access: 'login', lessons: [], group: 'B', viewerRole: '' }
 
   const { data: allowed, error: permissionError } = await client.rpc('is_active_learning_student')
   if (permissionError) throw new Error(`無法確認學生閱讀權限：${permissionError.message}`)
-  if (!allowed) return { access: 'denied', lessons: [], group: 'B' }
+  let viewerRole = 'student'
+  if (!allowed) {
+    const { data: canManage, error: adminError } = await client.rpc('can_manage_english_reading')
+    if (adminError) throw new Error(`無法確認管理者閱讀權限：${adminError.message}`)
+    if (!canManage) return { access: 'denied', lessons: [], group: 'B', viewerRole: '' }
+    viewerRole = 'admin'
+  }
 
+  const today = taipeiToday()
   const [studentResult, lessonResult] = await Promise.all([
-    client.from('students').select('id').eq('profile_id', userId).eq('is_active', true).maybeSingle(),
+    viewerRole === 'student'
+      ? client.from('students').select('id').eq('profile_id', userId).eq('is_active', true).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
     client.from('english_reading_lessons').select(lessonColumns)
-      .eq('status', 'published').order('issue_on', { ascending: false }),
+      .eq('status', 'published').lte('available_from', today).gte('available_until', today)
+      .order('issue_on', { ascending: false }),
   ])
   if (studentResult.error) throw studentResult.error
   if (lessonResult.error) throw new Error(`無法讀取英語閱讀文章：${lessonResult.error.message}`)
   let group = 'B'
-  if (studentResult.data?.id) {
+  if (viewerRole === 'student' && studentResult.data?.id) {
     const { data, error } = await client.rpc('resolve_student_learning_group', {
       p_student_id: studentResult.data.id,
       p_subject_code: 'english',
@@ -66,7 +76,7 @@ export async function loadStudentReadingLessons(client = requireSupabase()) {
     if (error) throw new Error(`無法確認英語分組：${error.message}`)
     if (String(data).toUpperCase() === 'A') group = 'A'
   }
-  return { access: 'allowed', lessons: (lessonResult.data || []).map(mapReadingLesson), group }
+  return { access: 'allowed', lessons: (lessonResult.data || []).map(mapReadingLesson), group, viewerRole }
 }
 
 export async function loadAdminReadingLessons(client = requireSupabase()) {

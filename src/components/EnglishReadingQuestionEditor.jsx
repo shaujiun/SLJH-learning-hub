@@ -52,9 +52,9 @@ export default function EnglishReadingQuestionEditor({ lessonId }) {
     <h2>可作答題目與私有正解</h2>
     <p>上方辨識的練習文字是校對參考；請在這裡逐題建立。正解不會隨學生題目資料下載。</p>
     {!lessonId && <p className="reading-warning">請先將文章存入資料庫草稿，再建立題目。</p>}
-    {questions.length > 0 && <div className="reading-question-list">{questions.map((item) => <button type="button" key={item.id} onClick={() => { setForm(item); setStatus('') }}>
+    {questions.length > 0 && <><p className="reading-saved-question-count">資料庫已儲存 {questions.length} 題；重新登入後仍會保留。</p><div className="reading-question-list">{questions.map((item) => <button type="button" key={item.id} onClick={() => { setForm(item); setStatus('') }}>
       {item.position}. {item.kind === 'choice' ? '選擇' : '填空'}・{item.prompt.slice(0, 35)}
-    </button>)}</div>}
+    </button>)}</div></>}
     <button type="button" disabled={!lessonId} onClick={() => { setForm(blankQuestion(questions.length + 1)); setStatus('') }}>新增一題</button>
     <div className="reading-question-form">
       <div className="reading-meta"><label>順序<input type="number" min="1" value={form.position} onChange={(event) => update('position', event.target.value)} /></label>
