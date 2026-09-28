@@ -124,9 +124,9 @@ export default function EnglishReadingQuestionEditor({
         <div className="reading-suggestion-buttons"><button type="button" onClick={() => { setForm({ ...blankQuestion(item.position), ...item }); setSuggestionIndex(index); setStatus('') }}>校對這題</button><button type="button" onClick={() => { onSuggestedQuestionsChange(suggestedQuestions.filter((_, itemIndex) => itemIndex !== index)); if (suggestionIndex === index) { setForm(blankQuestion(questions.length + 1)); setSuggestionIndex(null) } }}>移除</button></div>
       </article>)}</div>
     </section>}
-    {questions.length > 0 && <div className="reading-question-list">{questions.map((item) => <button type="button" key={item.id} onClick={() => { setForm(item); setSuggestionIndex(null); setStatus('') }}>
+    {questions.length > 0 && <><p className="reading-saved-question-count">資料庫已儲存 {questions.length} 題；重新登入後仍會保留。</p><div className="reading-question-list">{questions.map((item) => <button type="button" key={item.id} onClick={() => { setForm(item); setSuggestionIndex(null); setStatus('') }}>
       {item.position}. {item.kind === 'choice' ? '選擇' : '填空'}・{item.prompt.slice(0, 35)}
-    </button>)}</div>}
+    </button>)}</div></>}
     <button type="button" disabled={!lessonId} onClick={() => { setForm(blankQuestion(questions.length + suggestedQuestions.length + 1)); setSuggestionIndex(null); setStatus('') }}>新增一題</button>
     <div className="reading-question-form">
       <div className="reading-meta"><label>順序<input type="number" min="1" value={form.position} onChange={(event) => update('position', event.target.value)} /></label>

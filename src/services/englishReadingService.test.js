@@ -10,7 +10,7 @@ describe('英語閱讀資料與學生權限', () => {
       rpc: () => { throw new Error('訪客不應執行 RPC') },
       from: () => { throw new Error('訪客不應查詢資料表') },
     }
-    expect(await loadStudentReadingLessons(client)).toEqual({ access: 'login', lessons: [], group: 'B' })
+    expect(await loadStudentReadingLessons(client)).toEqual({ access: 'login', lessons: [], group: 'B', viewerRole: '' })
   })
 
   it('非有效學生即使有登入也不查詢文章', async () => {
@@ -19,7 +19,27 @@ describe('英語閱讀資料與學生權限', () => {
       rpc: async () => ({ data: false, error: null }),
       from: () => { throw new Error('非學生不應查詢資料表') },
     }
-    expect(await loadStudentReadingLessons(client)).toEqual({ access: 'denied', lessons: [], group: 'B' })
+    expect(await loadStudentReadingLessons(client)).toEqual({ access: 'denied', lessons: [], group: 'B', viewerRole: '' })
+  })
+
+  it('管理者可進入學生閱讀版預覽目前開放文章', async () => {
+    const calls = []
+    const lessonQuery = {
+      eq() { return this }, lte() { return this }, gte() { return this },
+      order: async () => ({ data: [{ id: 'l1', title: 'Preview', english_text: 'Text' }], error: null }),
+    }
+    const client = {
+      auth: { getSession: async () => ({ data: { session: { user: { id: 'admin-1' } } }, error: null }) },
+      rpc: async (name) => { calls.push(name); return { data: name === 'can_manage_english_reading', error: null } },
+      from: (table) => {
+        if (table !== 'english_reading_lessons') throw new Error('管理者預覽不應查詢學生資料')
+        return { select: () => lessonQuery }
+      },
+    }
+    const result = await loadStudentReadingLessons(client)
+    expect(calls).toEqual(['is_active_learning_student', 'can_manage_english_reading'])
+    expect(result).toEqual(expect.objectContaining({ access: 'allowed', viewerRole: 'admin', group: 'B' }))
+    expect(result.lessons).toHaveLength(1)
   })
 
   it('將資料庫文章轉成閱讀頁可使用的欄位', () => {
@@ -51,7 +71,7 @@ describe('英語閱讀資料與學生權限', () => {
         : { data: null, error: { message: 'group service unavailable' } },
       from: (table) => ({ select: () => ({ eq: () => table === 'students'
         ? { eq: () => ({ maybeSingle: async () => ({ data: { id: 's1' }, error: null }) }) }
-        : { order: async () => ({ data: [], error: null }) } }) }),
+        : { lte: () => ({ gte: () => ({ order: async () => ({ data: [], error: null }) }) }) } }) }),
     }
     await expect(loadStudentReadingLessons(client)).rejects.toThrow('無法確認英語分組')
   })

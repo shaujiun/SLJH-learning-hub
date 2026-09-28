@@ -12,16 +12,31 @@ import EnglishReadingQuestionEditor from './EnglishReadingQuestionEditor.jsx'
 import { EnglishReadingMindMap, EnglishReadingMindMapEditor } from './EnglishReadingMindMap.jsx'
 import './englishReadingWorkshop.css'
 
-const storageKey = 'sljh-english-reading-teacher-draft-v1'
+const storageKey = 'sljh-english-reading-teacher-draft-v2'
+const legacyStorageKey = 'sljh-english-reading-teacher-draft-v1'
 const photoLabels = { article: '文章與翻譯', exercise: '單字與練習' }
+const defaultUsageNote = '聯合報好讀周報課堂閱讀練習；限已核准學生帳號於教師設定期間內使用。'
 
-function storedDraft() {
+function storedWorkshopState() {
+  if (typeof window === 'undefined') return { draft: emptyReadingDraft(), lessonId: '', availableFrom: '', availableUntil: '', usageNote: defaultUsageNote, suggestedQuestions: [] }
   try {
-    return normalizeReadingDraft(JSON.parse(window.localStorage.getItem(storageKey) || '{}'))
+    const saved = JSON.parse(window.localStorage.getItem(storageKey) || 'null')
+    if (saved && typeof saved === 'object' && saved.draft) {
+      return {
+        draft: normalizeReadingDraft(saved.draft), lessonId: String(saved.lessonId || ''),
+        availableFrom: String(saved.availableFrom || ''), availableUntil: String(saved.availableUntil || ''),
+        usageNote: String(saved.usageNote || defaultUsageNote),
+        suggestedQuestions: Array.isArray(saved.suggestedQuestions) ? saved.suggestedQuestions : [],
+      }
+    }
+    const legacy = JSON.parse(window.localStorage.getItem(legacyStorageKey) || '{}')
+    return { draft: normalizeReadingDraft(legacy), lessonId: '', availableFrom: '', availableUntil: '', usageNote: defaultUsageNote, suggestedQuestions: [] }
   } catch {
-    return emptyReadingDraft()
+    return { draft: emptyReadingDraft(), lessonId: '', availableFrom: '', availableUntil: '', usageNote: defaultUsageNote, suggestedQuestions: [] }
   }
 }
+
+const initialWorkshopState = storedWorkshopState()
 
 function pointInImage(event) {
   const bounds = event.currentTarget.getBoundingClientRect()
@@ -92,7 +107,7 @@ function ReadingPreview({ draft }) {
 
 export default function EnglishReadingWorkshop() {
   const [permission, setPermission] = useState('loading')
-  const [draft, setDraft] = useState(storedDraft)
+  const [draft, setDraft] = useState(initialWorkshopState.draft)
   const [photos, setPhotos] = useState({ article: '', exercise: '' })
   const [photoFiles, setPhotoFiles] = useState({ article: null, exercise: null })
   const [photoType, setPhotoType] = useState('article')
@@ -102,11 +117,11 @@ export default function EnglishReadingWorkshop() {
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
   const [savedLessons, setSavedLessons] = useState([])
-  const [lessonId, setLessonId] = useState('')
-  const [availableFrom, setAvailableFrom] = useState('')
-  const [availableUntil, setAvailableUntil] = useState('')
-  const [usageNote, setUsageNote] = useState('')
-  const [suggestedQuestions, setSuggestedQuestions] = useState([])
+  const [lessonId, setLessonId] = useState(initialWorkshopState.lessonId)
+  const [availableFrom, setAvailableFrom] = useState(initialWorkshopState.availableFrom)
+  const [availableUntil, setAvailableUntil] = useState(initialWorkshopState.availableUntil)
+  const [usageNote, setUsageNote] = useState(initialWorkshopState.usageNote)
+  const [suggestedQuestions, setSuggestedQuestions] = useState(initialWorkshopState.suggestedQuestions)
   const imageRef = useRef(null)
   const photoUrls = useRef([])
 
@@ -120,7 +135,21 @@ export default function EnglishReadingWorkshop() {
   useEffect(() => {
     if (permission !== 'allowed') return
     let active = true
-    loadAdminReadingLessons().then((lessons) => { if (active) setSavedLessons(lessons) })
+    loadAdminReadingLessons().then((lessons) => {
+      if (!active) return
+      setSavedLessons(lessons)
+      const selected = lessons.find((lesson) => lesson.id === initialWorkshopState.lessonId)
+        || lessons.find((lesson) => lesson.status !== 'archived')
+        || lessons[0]
+      if (selected) {
+        setLessonId(selected.id)
+        setDraft(normalizeReadingDraft(selected))
+        setAvailableFrom(selected.availableFrom || '')
+        setAvailableUntil(selected.availableUntil || '')
+        setUsageNote(selected.usageNote || defaultUsageNote)
+        setStatus(`已自動開啟最近儲存的文章「${selected.title || '未命名'}」；資料庫題目會顯示在下方。`)
+      }
+    })
       .catch((error) => { if (active) setStatus(`尚無法讀取資料庫草稿：${error.message}`) })
     return () => { active = false }
   }, [permission])
@@ -200,8 +229,8 @@ export default function EnglishReadingWorkshop() {
 
   function saveLocalDraft() {
     try {
-      window.localStorage.setItem(storageKey, JSON.stringify(draft))
-      setStatus('草稿只存於此裝置的瀏覽器；尚未存入資料庫，也沒有發布。')
+      window.localStorage.setItem(storageKey, JSON.stringify({ draft, lessonId, availableFrom, availableUntil, usageNote, suggestedQuestions }))
+      setStatus('已備份到此裝置瀏覽器，不會同步到其他裝置；已存入資料庫的題目不受影響。')
     } catch { setStatus('此瀏覽器無法儲存草稿，請先複製編輯欄文字保留。') }
   }
 
@@ -211,24 +240,33 @@ export default function EnglishReadingWorkshop() {
     setDraft(selected ? normalizeReadingDraft(selected) : emptyReadingDraft())
     setAvailableFrom(selected?.availableFrom || '')
     setAvailableUntil(selected?.availableUntil || '')
-    setUsageNote(selected?.usageNote || '')
+    setUsageNote(selected?.usageNote || defaultUsageNote)
     setSuggestedQuestions([])
   }
 
   async function saveDatabase(statusToSave) {
+    const currentLesson = savedLessons.find((lesson) => lesson.id === lessonId)
+    if (statusToSave === 'draft' && currentLesson?.status === 'published'
+      && !window.confirm('這篇文章目前已發布。存為資料庫草稿會立即暫停學生端顯示，確定繼續？')) return
     if (statusToSave === 'published' && !window.confirm('這篇文章將在指定日期內供所有有效學生帳號閱讀；請確認文字、來源及使用範圍均已校對。確定發布？')) return
     setBusy(true)
     try {
+      const noteToSave = usageNote.trim() || defaultUsageNote
+      if (!usageNote.trim()) setUsageNote(noteToSave)
       const id = await saveAdminReadingLesson(draft, {
         id: lessonId || undefined,
         status: statusToSave,
         availableFrom,
         availableUntil,
-        usageNote,
+        usageNote: noteToSave,
       })
       setLessonId(id)
-      setSavedLessons(await loadAdminReadingLessons())
-      setStatus(statusToSave === 'published' ? '已設定發布；只有開放日期內的有效學生帳號可讀取。' : '已存入資料庫草稿，學生看不到。')
+      const lessons = await loadAdminReadingLessons()
+      setSavedLessons(lessons)
+      window.localStorage.setItem(storageKey, JSON.stringify({ draft, lessonId: id, availableFrom, availableUntil, usageNote: noteToSave, suggestedQuestions }))
+      setStatus(statusToSave === 'published'
+        ? `已發布到資料庫；學生與管理者可在 ${availableFrom} 至 ${availableUntil} 進入「英語閱讀練習」查看。`
+        : '已存入資料庫草稿；換裝置或重新登入後仍會保留，但學生看不到。')
     } catch (error) { setStatus(error.message.includes('reading_questions_required_before_publish') ? '發布前請先建立至少一題有正解的練習題。' : error.message) }
     finally { setBusy(false) }
   }
@@ -240,7 +278,7 @@ export default function EnglishReadingWorkshop() {
     <div className="reading-workshop-columns">
       <section className="reading-editor">
         <h2><ImagePlus aria-hidden="true" />匯入照片</h2>
-        <label>已儲存文章<select value={lessonId} onChange={(event) => chooseSavedLesson(event.target.value)}><option value="">建立新文章</option>{savedLessons.map((lesson) => <option key={lesson.id} value={lesson.id}>{lesson.issueDate || '未標日期'}・{lesson.title || '未命名'}（{lesson.status === 'published' ? '已發布' : '草稿'}）</option>)}</select></label>
+        <label>已儲存文章<select value={lessonId} onChange={(event) => chooseSavedLesson(event.target.value)}><option value="">建立新文章</option>{savedLessons.map((lesson) => <option key={lesson.id} value={lesson.id}>{lesson.issueDate || '未標日期'}・{lesson.title || '未命名'}（{lesson.status === 'published' ? '已發布' : lesson.status === 'archived' ? '已封存' : '草稿'}）</option>)}</select></label>
         <div className="reading-upload-row">{Object.entries(photoLabels).map(([type, label]) => <label key={type}>{label}<input type="file" accept="image/*" onChange={(event) => uploadPhoto(type, event.target.files?.[0])} /></label>)}</div>
         <div className="reading-auto-import">
           <button type="button" className="reading-action reading-ai-action" disabled={busy || !photoFiles.article || !photoFiles.exercise} onClick={analyzeAllPhotos}><Sparkles aria-hidden="true" />{busy ? '處理中……' : 'AI 自動辨識兩張照片並建立教材'}</button>
@@ -262,7 +300,8 @@ export default function EnglishReadingWorkshop() {
         {['A', 'B'].map((group) => <label className="reading-text-field" key={group}>{group} 組提示<textarea value={draft[`group${group}Hint`]} onChange={(event) => updateField(`group${group}Hint`, event.target.value)} rows={2} /></label>)}
         <div className="reading-meta"><label>學生開放日期<input type="date" value={availableFrom} onChange={(event) => setAvailableFrom(event.target.value)} /></label><label>學生截止日期<input type="date" value={availableUntil} onChange={(event) => setAvailableUntil(event.target.value)} /></label></div>
         <label className="reading-text-field">教學使用依據或授權範圍<textarea value={usageNote} onChange={(event) => setUsageNote(event.target.value)} rows={2} placeholder="請記錄適用課程、使用對象與期間，或授權資訊。" /></label>
-        <div className="reading-save-actions"><button type="button" className="reading-action" onClick={saveLocalDraft}>儲存此裝置草稿</button><button type="button" className="reading-action" disabled={busy} onClick={() => saveDatabase('draft')}>存入資料庫草稿／暫停發布</button><button type="button" className="reading-action reading-publish" disabled={busy || !lessonId} onClick={() => saveDatabase('published')}>發布閱讀版</button></div>
+        <div className="reading-storage-help"><p><strong>此裝置備份：</strong>只保存在目前瀏覽器，適合暫存尚未完成的文字與 AI 待確認題目，不會同步到其他裝置。</p><p><strong>資料庫草稿：</strong>文章與已按「儲存新題」的題目會跨登入保留，但學生看不到；發布後才會依開放日期顯示。</p></div>
+        <div className="reading-save-actions"><button type="button" className="reading-action" onClick={saveLocalDraft}>備份到此裝置</button><button type="button" className="reading-action" disabled={busy} onClick={() => saveDatabase('draft')}>存入資料庫草稿／暫停發布</button><button type="button" className="reading-action reading-publish" disabled={busy || !lessonId} onClick={() => saveDatabase('published')}>發布閱讀版</button></div>
         <p>發布前請先儲存文章草稿，再建立至少一題有正解的練習題。</p>
         <EnglishReadingQuestionEditor lessonId={lessonId} articleDraft={draft} suggestedQuestions={suggestedQuestions} onSuggestedQuestionsChange={setSuggestedQuestions} onAiAction={runQuestionAssistant} aiBusy={busy} />
         <p className="reading-warning">原圖不儲存；資料庫只保存校對後的文字。發布前請校對文章及每題答案。</p>

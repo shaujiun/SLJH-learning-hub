@@ -27,6 +27,8 @@
 .reading-manual-ocr { margin: 14px 0; border: 1px solid #d7e0df; border-radius: 12px; padding: 10px 12px; }
 .reading-manual-ocr summary { cursor: pointer; font-weight: 750; color: #315c68; }
 .reading-save-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.reading-storage-help { margin: 14px 0 10px; padding: 10px 13px; border-radius: 12px; background: #eef6f5; color: #3c5660; }
+.reading-storage-help p { margin: 3px 0; font-size: .9rem; }
 .reading-publish { background: #9b5a20; }
 .reading-status { min-height: 1.6em; color: #4d6470; }
 .reading-text-field { margin: 14px 0; }
@@ -36,6 +38,8 @@
 .reading-preview-heading h2 { font-size: 1.5rem; margin: 4px 0; }
 .reading-preview-heading p { margin: 4px 0; }
 .reading-preview-heading select { min-width: 90px; }
+.reading-preview-selectors { display: grid; gap: 8px; }
+.reading-admin-preview-badge { display: inline-block; padding: 4px 9px; border-radius: 999px; background: #f0e6ff; color: #66408e; font-size: .82rem; font-weight: 750; }
 .reading-preview-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(190px, 1fr); gap: 18px; margin-top: 18px; }
 .reading-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; color: #586a71; font-size: .9rem; }
 .reading-toolbar button, .reading-word-list button { border: 1px solid #8aadb5; border-radius: 8px; background: #eaf7f5; color: #164e61; padding: 6px 10px; font: inherit; cursor: pointer; }
@@ -62,6 +66,7 @@
 .reading-workshop-gate > svg { width: 50px; height: 50px; color: #286878; }
 .reading-question-editor { border-top: 2px solid #e9d3ac; margin-top: 24px; padding-top: 12px; }
 .reading-question-list { display: grid; gap: 6px; margin-bottom: 10px; }
+.reading-saved-question-count { color: #315f4a; font-weight: 750; }
 .reading-question-list button { text-align: left; }
 .reading-question-form { display: grid; gap: 12px; margin-top: 14px; }
 .reading-ai-question-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 16px; }

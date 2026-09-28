@@ -10,7 +10,7 @@ const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
 
 export default function EnglishReadingPractice() {
-  const [state, setState] = useState({ loading: true, access: '', lessons: [], group: 'B', error: '' })
+  const [state, setState] = useState({ loading: true, access: '', lessons: [], group: 'B', viewerRole: '', error: '' })
   const [lessonId, setLessonId] = useState('')
   const [translationOpen, setTranslationOpen] = useState(false)
   const [evidenceKey, setEvidenceKey] = useState(null)
@@ -19,7 +19,7 @@ export default function EnglishReadingPractice() {
   useEffect(() => {
     let active = true
     loadStudentReadingLessons().then((result) => { if (active) setState({ ...result, loading: false, error: '' }) })
-      .catch((error) => { if (active) setState({ loading: false, access: 'error', lessons: [], group: 'B', error: error.message }) })
+      .catch((error) => { if (active) setState({ loading: false, access: 'error', lessons: [], group: 'B', viewerRole: '', error: error.message }) })
     return () => { active = false; window.speechSynthesis?.cancel() }
   }, [])
 
@@ -47,7 +47,7 @@ export default function EnglishReadingPractice() {
 
   return <main className="reading-workshop reading-student-page"><header className="reading-workshop-header"><a href="?subject=english"><ArrowLeft aria-hidden="true" />返回英語科</a><div><small>ENGLISH READING</small><h1>英語閱讀練習</h1><p>先找出支持答案的原文段落，再完成閱讀題。點選單字可以聽發音。</p></div></header>
     {!lesson ? <section className="reading-editor"><h2>目前沒有開放中的文章</h2><p>老師發布並設定開放日期後，文章才會出現在此處。</p></section> : <section className="reading-preview reading-student-article">
-      <div className="reading-preview-heading"><div><small>{lesson.source}・{lesson.issueDate}</small><h2>{lesson.title}</h2><p>{lesson.author && `作者：${lesson.author}`}</p></div><label>選擇文章<select value={lesson.id} onChange={(event) => { setLessonId(event.target.value); setEvidenceKey(null); setTranslationOpen(false) }}>{state.lessons.map((item) => <option value={item.id} key={item.id}>{item.issueDate || '未標日期'}・{item.title}</option>)}</select></label></div>
+      <div className="reading-preview-heading"><div><small>{lesson.source}・{lesson.issueDate}</small><h2>{lesson.title}</h2><p>{lesson.author && `作者：${lesson.author}`}</p>{state.viewerRole === 'admin' && <span className="reading-admin-preview-badge">管理者閱讀預覽</span>}</div><div className="reading-preview-selectors"><label>選擇文章<select value={lesson.id} onChange={(event) => { setLessonId(event.target.value); setEvidenceKey(null); setTranslationOpen(false) }}>{state.lessons.map((item) => <option value={item.id} key={item.id}>{item.issueDate || '未標日期'}・{item.title}</option>)}</select></label>{state.viewerRole === 'admin' && <label>預覽分組<select value={state.group} onChange={(event) => setState((current) => ({ ...current, group: event.target.value }))}><option value="A">A 組</option><option value="B">B 組</option></select></label>}</div></div>
       <div className="reading-preview-layout"><article><div className="reading-toolbar"><button type="button" onClick={() => setTranslationOpen((open) => !open)}>{translationOpen ? '收起中文翻譯' : '查看中文翻譯'}</button><span>點選一句英文，標記作答依據。</span></div>
         {english.map((paragraph, index) => <div className="reading-paragraph" key={`${lesson.id}-${index}`}><div className="reading-sentence-list">{readingSentences(paragraph).map((sentence, sentenceIndex) => {
           const key = `${index}-${sentenceIndex}`

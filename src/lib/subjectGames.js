@@ -37,7 +37,7 @@ const subjectGameTemplates = {
       section: 'guided',
       name: '英語閱讀練習',
       description: '閱讀英文文章與翻譯，練習找原文依據、文法與國中 2000 單。',
-      availability: '僅已登入的學生帳號可使用',
+      availability: '學生作答・管理者可預覽',
       requiresLogin: true,
       launchUrl: '?reading=practice',
     },
