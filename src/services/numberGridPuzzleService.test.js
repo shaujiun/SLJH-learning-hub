@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createNumberGridDraft } from '../lib/numberGridChallenge.js'
 import { loadNumberGridPuzzles, mapNumberGridPuzzle, saveNumberGridPuzzle } from './numberGridPuzzleService.js'
 
-function fakeClient(rows, canManage = false) {
+function fakeClient(rows, canManage = false, userId = '') {
   let statusFilter = null
   const query = {
     select() { return this },
@@ -13,6 +13,7 @@ function fakeClient(rows, canManage = false) {
     },
   }
   return {
+    auth: { getSession: async () => ({ data: { session: userId ? { user: { id: userId } } : null }, error: null }) },
     rpc: async () => ({ data: canManage, error: null }),
     from: () => query,
   }
@@ -31,12 +32,14 @@ describe('number-grid puzzle service', () => {
   })
 
   it('shows drafts only to managers while retaining the four built-in issues', async () => {
-    const manager = await loadNumberGridPuzzles({}, fakeClient([row], true))
+    const manager = await loadNumberGridPuzzles({}, fakeClient([row], true, 'teacher-1'))
     expect(manager.canManage).toBe(true)
+    expect(manager.progressOwnerId).toBe('teacher-1')
     expect(manager.puzzles).toHaveLength(5)
     expect(manager.puzzles.at(-1).status).toBe('draft')
     const guest = await loadNumberGridPuzzles({ guestMode: true }, fakeClient([row]))
     expect(guest.canManage).toBe(false)
+    expect(guest.progressOwnerId).toBe('')
     expect(guest.puzzles).toHaveLength(4)
   })
 

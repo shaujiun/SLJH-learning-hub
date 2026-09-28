@@ -24,6 +24,7 @@ import {
   wordGridCellTypes,
 } from '../lib/wordGridPuzzle.js'
 import { isSupabaseConfigured } from '../lib/supabase.js'
+import { accountPuzzleProgressKey } from '../lib/puzzleProgress.js'
 import { importWordBankFromPhoto, importWordGridFromPhoto, normalizedPhotoRect } from '../lib/wordGridPhotoImport.js'
 import {
   archiveWordGridPuzzle,
@@ -122,14 +123,12 @@ function PuzzleDateSelects({ puzzles, selectedId, onSelect }) {
   )
 }
 
-function progressKey(puzzleId) {
-  return `sljh-word-grid-progress-v1:${puzzleId}`
-}
-
-function loadSavedProgress(puzzle) {
+function loadSavedProgress(puzzle, progressOwnerId) {
   if (!puzzle?.id || typeof window === 'undefined') return { assignments: {}, perfectCompletedAt: '' }
+  const storageKey = accountPuzzleProgressKey('word-grid', progressOwnerId, puzzle.id)
+  if (!storageKey) return { assignments: {}, perfectCompletedAt: '' }
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(progressKey(puzzle.id)) || '{}')
+    const parsed = JSON.parse(window.localStorage.getItem(storageKey) || '{}')
     return restoreWordGridProgress(parsed, puzzle.grid, puzzle.characterBank)
   } catch {
     return { assignments: {}, perfectCompletedAt: '' }
@@ -220,18 +219,22 @@ export function AnswerPanel({ puzzle, unlocked }) {
   )
 }
 
-function PlayArea({ puzzle }) {
+function PlayArea({ puzzle, progressOwnerId }) {
   const bankTiles = useMemo(() => createBankTiles(puzzle.characterBank), [puzzle.characterBank])
-  const initialProgress = useMemo(() => loadSavedProgress(puzzle), [puzzle])
+  const storageKey = useMemo(
+    () => accountPuzzleProgressKey('word-grid', progressOwnerId, puzzle.id),
+    [progressOwnerId, puzzle.id],
+  )
+  const initialProgress = useMemo(() => loadSavedProgress(puzzle, progressOwnerId), [puzzle, progressOwnerId])
   const [assignments, setAssignments] = useState(initialProgress.assignments)
   const [perfectCompletedAt, setPerfectCompletedAt] = useState(initialProgress.perfectCompletedAt)
   const [selectedTile, setSelectedTile] = useState(null)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    if (!puzzle.id || typeof window === 'undefined') return
-    window.localStorage.setItem(progressKey(puzzle.id), JSON.stringify(serializeWordGridProgress(assignments, perfectCompletedAt)))
-  }, [assignments, perfectCompletedAt, puzzle.id])
+    if (!storageKey || typeof window === 'undefined') return
+    window.localStorage.setItem(storageKey, JSON.stringify(serializeWordGridProgress(assignments, perfectCompletedAt)))
+  }, [assignments, perfectCompletedAt, storageKey])
 
   const usedTileIds = new Set(Object.values(assignments))
   const handleCellClick = (cellIndex) => {
@@ -560,14 +563,14 @@ function PuzzleEditor({ puzzle, onSaved, onCancel }) {
 }
 
 export default function WordGridPuzzle({ guestMode = false }) {
-  const [state, setState] = useState({ loading: true, error: '', puzzles: [], canManage: false })
+  const [state, setState] = useState({ loading: true, error: '', puzzles: [], canManage: false, progressOwnerId: '' })
   const [selectedId, setSelectedId] = useState('')
   const [editing, setEditing] = useState(null)
   const [showInstructions, setShowInstructions] = useState(false)
 
   const load = async () => {
     if (!isSupabaseConfigured) {
-      setState({ loading: false, error: '填字圖尚未連接題庫。', puzzles: [], canManage: false })
+      setState({ loading: false, error: '填字圖尚未連接題庫。', puzzles: [], canManage: false, progressOwnerId: '' })
       return
     }
     setState((current) => ({ ...current, loading: true, error: '' }))
@@ -576,7 +579,7 @@ export default function WordGridPuzzle({ guestMode = false }) {
       setState({ loading: false, error: '', ...data })
       setSelectedId((current) => current && data.puzzles.some((puzzle) => puzzle.id === current) ? current : data.puzzles[0]?.id || '')
     } catch (error) {
-      setState({ loading: false, error: error.message, puzzles: [], canManage: false })
+      setState({ loading: false, error: error.message, puzzles: [], canManage: false, progressOwnerId: '' })
     }
   }
 
@@ -603,7 +606,7 @@ export default function WordGridPuzzle({ guestMode = false }) {
           </div>
           <button type="button" onClick={() => setShowInstructions((value) => !value)} aria-expanded={showInstructions}>遊戲說明<ChevronDown aria-hidden="true" /></button>
         </section>
-        {showInstructions && <div className="word-grid-instructions"><p>將字庫中的文字各使用一次，填入白色空格。橫向由左至右、直向由上至下，都要能形成正確語詞或文句。黑格不可填，題目中的文字是提示。</p><p>可用年、月、日選擇想挑戰的期數；題目會在答案確認後才發布，系統並會保存在目前裝置的作答進度。每一期至少完成一輪並全部答對後，才可展開該期解答與解答說明。</p></div>}
+        {showInstructions && <div className="word-grid-instructions"><p>將字庫中的文字各使用一次，填入白色空格。橫向由左至右、直向由上至下，都要能形成正確語詞或文句。黑格不可填，題目中的文字是提示。</p><p>可用年、月、日選擇想挑戰的期數；題目會在答案確認後才發布。登入後，作答進度會依帳號分開保存於目前裝置，不會與老師或其他學生共用。每一期至少完成一輪並全部答對後，才可展開該期解答與解答說明。</p></div>}
         {editing ? <PuzzleEditor puzzle={editing} onSaved={async () => { await load(); setEditing(null) }} onCancel={() => setEditing(null)} /> : puzzle ? <>
           <div className="word-grid-issue-bar">
             <PuzzleDateSelects puzzles={state.puzzles.filter((item) => state.canManage || item.status === 'published')} selectedId={puzzle.id} onSelect={setSelectedId} />
@@ -611,7 +614,7 @@ export default function WordGridPuzzle({ guestMode = false }) {
             {state.canManage && <div className="word-grid-admin-actions"><button type="button" onClick={() => setEditing(puzzle)}><Pencil aria-hidden="true" />編輯</button><button type="button" onClick={async () => { await archiveWordGridPuzzle(puzzle.id); await load() }}><Eraser aria-hidden="true" />封存</button></div>}
           </div>
           <div className="word-grid-layout">
-            <PlayArea key={puzzle.id} puzzle={puzzle} />
+            <PlayArea key={`${state.progressOwnerId || 'temporary'}:${puzzle.id}`} puzzle={puzzle} progressOwnerId={state.progressOwnerId} />
           </div>
         </> : <section className="word-grid-empty"><h2>目前尚無已發布題目</h2>{state.canManage && <button className="primary-button" type="button" onClick={() => setEditing(defaultPuzzle)}><Plus aria-hidden="true" />建立第一題</button>}</section>}
       </main>

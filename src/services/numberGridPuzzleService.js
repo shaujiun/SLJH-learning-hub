@@ -23,8 +23,12 @@ export function mapNumberGridPuzzle(row) {
 }
 
 export async function loadNumberGridPuzzles({ guestMode = false } = {}, client = requireSupabase()) {
-  const permission = guestMode ? false : await client.rpc('can_manage_word_grid_puzzles')
+  const [permission, sessionResult] = await Promise.all([
+    guestMode ? Promise.resolve({ data: false, error: null }) : client.rpc('can_manage_word_grid_puzzles'),
+    guestMode ? Promise.resolve({ data: { session: null }, error: null }) : client.auth.getSession(),
+  ])
   const canManage = !guestMode && !permission.error && Boolean(permission.data)
+  const progressOwnerId = sessionResult.error ? '' : sessionResult.data.session?.user?.id || ''
   let query = client.from('number_grid_puzzles').select(fields).order('issue_on', { ascending: true })
   if (!canManage) query = query.eq('status', 'published')
   const { data, error } = await query
@@ -40,7 +44,7 @@ export async function loadNumberGridPuzzles({ guestMode = false } = {}, client =
     const puzzle = mapNumberGridPuzzle(row)
     puzzlesByDate.set(puzzle.id, puzzle)
   }
-  return { puzzles: [...puzzlesByDate.values()].sort((a, b) => a.id.localeCompare(b.id)), canManage }
+  return { puzzles: [...puzzlesByDate.values()].sort((a, b) => a.id.localeCompare(b.id)), canManage, progressOwnerId }
 }
 
 async function currentUserId(client) {

@@ -25,17 +25,16 @@ import {
   validateNumberGridPuzzle,
 } from '../lib/numberGridChallenge.js'
 import { isSupabaseConfigured } from '../lib/supabase.js'
+import { accountPuzzleProgressKey } from '../lib/puzzleProgress.js'
 import { loadNumberGridPuzzles, saveNumberGridPuzzle } from '../services/numberGridPuzzleService.js'
 import './numberGridChallenge.css'
 
-function progressKey(challengeId) {
-  return `sljh-number-grid-progress-v1:${challengeId}`
-}
-
-function loadProgress(challenge) {
+function loadProgress(challenge, progressOwnerId) {
   if (typeof window === 'undefined') return restoreNumberGridProgress({})
+  const storageKey = accountPuzzleProgressKey('number-grid', progressOwnerId, challenge.id)
+  if (!storageKey) return restoreNumberGridProgress({})
   try {
-    return restoreNumberGridProgress(JSON.parse(window.localStorage.getItem(progressKey(challenge.id)) || '{}'))
+    return restoreNumberGridProgress(JSON.parse(window.localStorage.getItem(storageKey) || '{}'))
   } catch {
     return restoreNumberGridProgress({})
   }
@@ -240,14 +239,18 @@ export function NumberGridEditor({ puzzle, onSaved, onCancel }) {
 }
 
 export default function NumberGridChallenge({ guestMode = false }) {
-  const [catalog, setCatalog] = useState({ puzzles: numberGridChallenges, canManage: false, warning: '' })
+  const [catalog, setCatalog] = useState({ puzzles: numberGridChallenges, canManage: false, warning: '', progressOwnerId: '' })
   const [editing, setEditing] = useState(null)
   const [selectedId, setSelectedId] = useState(numberGridChallenges.at(-1).id)
   const challenge = useMemo(() => catalog.puzzles.find((item) => item.id === selectedId) || catalog.puzzles.at(-1) || numberGridChallenges.at(-1), [catalog.puzzles, selectedId])
-  const initialProgress = useMemo(() => loadProgress(challenge), [challenge])
+  const storageKey = useMemo(
+    () => accountPuzzleProgressKey('number-grid', catalog.progressOwnerId, challenge.id),
+    [catalog.progressOwnerId, challenge.id],
+  )
+  const initialProgress = useMemo(() => loadProgress(challenge, catalog.progressOwnerId), [challenge, catalog.progressOwnerId])
   const [entries, setEntries] = useState(initialProgress.entries)
   const [perfectCompletedAt, setPerfectCompletedAt] = useState(initialProgress.perfectCompletedAt)
-  const [loadedChallengeId, setLoadedChallengeId] = useState(challenge.id)
+  const [loadedStorageKey, setLoadedStorageKey] = useState(storageKey)
   const [selectedNumber, setSelectedNumber] = useState(null)
   const [checkedResult, setCheckedResult] = useState(null)
   const [message, setMessage] = useState('')
@@ -259,26 +262,26 @@ export default function NumberGridChallenge({ guestMode = false }) {
       const loaded = await loadNumberGridPuzzles({ guestMode })
       setCatalog({ ...loaded, warning: '' })
     } catch (error) {
-      setCatalog({ puzzles: numberGridChallenges, canManage: false, warning: `${error.message}；目前僅顯示內建四期。` })
+      setCatalog({ puzzles: numberGridChallenges, canManage: false, warning: `${error.message}；目前僅顯示內建四期。`, progressOwnerId: '' })
     }
   }
 
   useEffect(() => { loadCatalog() }, [guestMode])
 
   useEffect(() => {
-    const saved = loadProgress(challenge)
+    const saved = loadProgress(challenge, catalog.progressOwnerId)
     setEntries(saved.entries)
     setPerfectCompletedAt(saved.perfectCompletedAt)
-    setLoadedChallengeId(challenge.id)
+    setLoadedStorageKey(storageKey)
     setSelectedNumber(null)
     setCheckedResult(null)
     setMessage('')
-  }, [challenge])
+  }, [catalog.progressOwnerId, challenge, storageKey])
 
   useEffect(() => {
-    if (typeof window === 'undefined' || loadedChallengeId !== challenge.id) return
-    window.localStorage.setItem(progressKey(challenge.id), JSON.stringify(serializeNumberGridProgress(entries, perfectCompletedAt)))
-  }, [challenge.id, entries, loadedChallengeId, perfectCompletedAt])
+    if (typeof window === 'undefined' || !storageKey || loadedStorageKey !== storageKey) return
+    window.localStorage.setItem(storageKey, JSON.stringify(serializeNumberGridProgress(entries, perfectCompletedAt)))
+  }, [entries, loadedStorageKey, perfectCompletedAt, storageKey])
 
   const usedNumbers = new Set(entries.filter(Boolean))
   const placeNumber = (cellIndex) => {
