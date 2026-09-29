@@ -36,6 +36,7 @@
 .reading-preview-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(190px, 1fr); gap: 18px; margin-top: 18px; }
 .reading-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; color: #586a71; font-size: .9rem; }
 .reading-toolbar button, .reading-word-list button { border: 1px solid #8aadb5; border-radius: 8px; background: #eaf7f5; color: #164e61; padding: 6px 10px; font: inherit; cursor: pointer; }
+.reading-toolbar button:disabled { cursor: not-allowed; opacity: .72; background: #eef1f1; color: #5e6c70; }
 .reading-paragraph { margin-bottom: 12px; }
 .reading-sentence-list { background: #faf9f5; border-radius: 9px; padding: 8px; line-height: 1.9; }
 .reading-sentence-list > button { display: inline; border: 1px solid transparent; border-radius: 6px; text-align: left; background: transparent; padding: 2px 4px; color: inherit; font: inherit; line-height: 1.75; cursor: pointer; }
