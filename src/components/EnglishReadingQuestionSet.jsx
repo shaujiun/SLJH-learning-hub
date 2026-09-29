@@ -43,7 +43,7 @@ export function QuestionCard({ question, group, evidenceText, adminPreview = fal
     {result && <div role="status" className={result.correct ? 'reading-feedback is-correct' : 'reading-feedback'}>
       <strong>{result.correct ? '答對了' : '再對照文章看看'}</strong>
       <p>參考答案：{result.expected?.join('、')}</p>
-      {result.explanation && <p>解析：{result.explanation}</p>}
+      {result.explanation && <p><strong>{question.kind === 'choice' ? 'AI 解題思路：' : '解題思路：'}</strong>{result.explanation}</p>}
       {result.evidenceSentence && <p>原文依據：{result.evidenceSentence}</p>}
     </div>}
   </form>
