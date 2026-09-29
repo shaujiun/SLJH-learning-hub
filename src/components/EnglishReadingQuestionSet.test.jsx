@@ -24,5 +24,16 @@ describe('英語閱讀學生作答介面', () => {
     }} group="A" evidenceText="" />)
     expect(html).toContain('第 1 格')
     expect(html).toContain('第 2 格')
+    expect(html).not.toContain('目前標記的原文依據')
+  })
+
+  it('管理者試答不會建立學生作答紀錄', () => {
+    const html = renderToStaticMarkup(<QuestionCard question={{
+      id: 'q3', position: 3, kind: 'choice', prompt: 'Which?', options: ['One', 'Two'],
+      blankCount: 1, answers: ['B'], explanation: 'Because...', evidenceSentence: 'Text.',
+      hintA: '', hintB: '',
+    }} group="B" evidenceText="Text." adminPreview />)
+    expect(html).toContain('檢查答案（不記錄）')
+    expect(html).not.toContain('student_required')
   })
 })

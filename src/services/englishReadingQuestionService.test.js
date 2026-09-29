@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  deleteAdminReadingQuestion, loadStudentReadingQuestions, readingQuestionPayload, saveAdminReadingQuestion,
+  deleteAdminReadingQuestion, gradeAdminReadingAnswer, loadStudentReadingQuestions, readingQuestionPayload, saveAdminReadingQuestion,
   submitStudentReadingAnswer,
 } from './englishReadingQuestionService.js'
 
@@ -44,5 +44,15 @@ describe('英語閱讀互動題目', () => {
     }])
     await deleteAdminReadingQuestion('q1', client)
     expect(calls[2]).toEqual(['delete_english_reading_question', { p_question_id: 'q1' }])
+  })
+
+  it('管理者預覽在瀏覽器判分且接受填空題替代答案', () => {
+    const question = {
+      answers: ['stop', 'crying|to cry'], explanation: 'Grammar note', evidenceSentence: 'Source sentence.',
+    }
+    expect(gradeAdminReadingAnswer(question, [' STOP ', 'to cry'])).toEqual({
+      correct: true, expected: question.answers, explanation: 'Grammar note', evidenceSentence: 'Source sentence.',
+    })
+    expect(gradeAdminReadingAnswer(question, ['stop', 'cry'])).toEqual(expect.objectContaining({ correct: false }))
   })
 })

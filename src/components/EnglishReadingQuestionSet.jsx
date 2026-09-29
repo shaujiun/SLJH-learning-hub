@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
-import { loadStudentReadingQuestions, submitStudentReadingAnswer } from '../services/englishReadingQuestionService.js'
+import {
+  gradeAdminReadingAnswer, loadAdminReadingQuestions, loadStudentReadingQuestions,
+  submitStudentReadingAnswer,
+} from '../services/englishReadingQuestionService.js'
 
-export function QuestionCard({ question, group, evidenceText }) {
+export function QuestionCard({ question, group, evidenceText, adminPreview = false }) {
   const [answers, setAnswers] = useState(() => Array(question.blankCount).fill(''))
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
@@ -18,7 +21,11 @@ export function QuestionCard({ question, group, evidenceText }) {
     if (answers.some((answer) => !answer.trim())) { setError('請先填完或選擇答案。'); return }
     setBusy(true)
     setError('')
-    try { setResult(await submitStudentReadingAnswer(question.id, answers, evidenceText)) }
+    try {
+      setResult(adminPreview
+        ? gradeAdminReadingAnswer(question, answers)
+        : await submitStudentReadingAnswer(question.id, answers, evidenceText))
+    }
     catch (submissionError) { setError(submissionError.message) }
     finally { setBusy(false) }
   }
@@ -30,31 +37,35 @@ export function QuestionCard({ question, group, evidenceText }) {
       const letter = 'ABCD'[index]
       return <label key={letter}><input type="radio" name={`reading-${question.id}`} value={letter} checked={answers[0] === letter} onChange={() => updateAnswer(0, letter)} />{letter}. {option}</label>
     })}</fieldset> : <div className="reading-cloze-inputs">{answers.map((answer, index) => <label key={index}>第 {index + 1} 格<input value={answer} onChange={(event) => updateAnswer(index, event.target.value)} autoComplete="off" /></label>)}</div>}
-    <p className="reading-evidence">{evidenceText ? `目前標記的原文依據：${evidenceText}` : '可先點選文章中的一句英文作為答題依據。'}</p>
-    <button type="submit" className="reading-action" disabled={busy}>{busy ? '判分中……' : '送出答案'}</button>
+    {question.kind === 'choice' && <p className="reading-evidence">{evidenceText ? `目前標記的原文依據：${evidenceText}` : '可先點選文章中的一句英文作為答題依據。'}</p>}
+    <button type="submit" className="reading-action" disabled={busy}>{busy ? '判分中……' : adminPreview ? '檢查答案（不記錄）' : '送出答案'}</button>
     {error && <p role="alert" className="reading-warning">{error}</p>}
     {result && <div role="status" className={result.correct ? 'reading-feedback is-correct' : 'reading-feedback'}>
       <strong>{result.correct ? '答對了' : '再對照文章看看'}</strong>
       <p>參考答案：{result.expected?.join('、')}</p>
-      {result.explanation && <p>解析：{result.explanation}</p>}
+      {result.explanation && <p><strong>{question.kind === 'choice' ? 'AI 解題思路：' : '解題思路：'}</strong>{result.explanation}</p>}
       {result.evidenceSentence && <p>原文依據：{result.evidenceSentence}</p>}
     </div>}
   </form>
 }
 
-export default function EnglishReadingQuestionSet({ lessonId, group, evidenceText, fallback }) {
+export default function EnglishReadingQuestionSet({ lessonId, group, evidenceText, fallback, viewerRole = 'student' }) {
   const [state, setState] = useState({ loading: true, questions: [], error: '' })
   useEffect(() => {
     let active = true
     setState({ loading: true, questions: [], error: '' })
-    loadStudentReadingQuestions(lessonId).then((questions) => {
+    const loader = viewerRole === 'admin' ? loadAdminReadingQuestions : loadStudentReadingQuestions
+    loader(lessonId).then((questions) => {
       if (active) setState({ loading: false, questions, error: '' })
     }).catch((error) => { if (active) setState({ loading: false, questions: [], error: error.message }) })
     return () => { active = false }
-  }, [lessonId])
+  }, [lessonId, viewerRole])
 
   if (state.loading) return <p>正在載入題目……</p>
   if (state.error) return <p role="alert" className="reading-warning">{state.error}</p>
   if (!state.questions.length) return <p className="reading-warning">{fallback ? '老師尚未將紙本練習轉成可作答題目，請稍後再試。' : '目前沒有練習題。'}</p>
-  return <div className="reading-question-set">{state.questions.map((question) => <QuestionCard key={question.id} question={question} group={group} evidenceText={evidenceText} />)}</div>
+  const questions = viewerRole === 'admin'
+    ? state.questions.filter((question) => question.groupScope === 'all' || question.groupScope === group)
+    : state.questions
+  return <div className="reading-question-set">{questions.map((question) => <QuestionCard key={question.id} question={question} group={group} evidenceText={evidenceText} adminPreview={viewerRole === 'admin'} />)}</div>
 }
