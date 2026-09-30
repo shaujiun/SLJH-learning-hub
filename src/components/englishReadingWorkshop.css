@@ -37,11 +37,21 @@
 .reading-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; color: #586a71; font-size: .9rem; }
 .reading-toolbar button, .reading-word-list button { border: 1px solid #8aadb5; border-radius: 8px; background: #eaf7f5; color: #164e61; padding: 6px 10px; font: inherit; cursor: pointer; }
 .reading-toolbar button:disabled { cursor: not-allowed; opacity: .72; background: #eef1f1; color: #5e6c70; }
+.reading-evidence-picker { display: grid; gap: 9px; margin: 0 0 14px; padding: 12px; background: #f3f8f7; border: 1px solid #bdd5d2; border-radius: 12px; scroll-margin-top: 12px; }
+.reading-evidence-picker > div:first-child { display: flex; flex-wrap: wrap; align-items: baseline; gap: 7px; }
+.reading-evidence-picker > div:first-child span { color: #5c6e72; font-size: .86rem; }
+.reading-evidence-question-buttons { display: flex; flex-wrap: wrap; gap: 7px; }
+.reading-evidence-question-buttons button { display: grid; gap: 1px; min-width: 82px; padding: 7px 10px; color: #315b66; background: #fff; border: 1px solid #91adb3; border-radius: 9px; cursor: pointer; }
+.reading-evidence-question-buttons button.is-active { color: #fff; background: #245f70; border-color: #245f70; box-shadow: 0 0 0 3px #245f7026; }
+.reading-evidence-question-buttons button.has-evidence:not(.is-active) { color: #6d4b14; background: #fff4d9; border-color: #d39b42; }
+.reading-evidence-question-buttons small { font-size: .72rem; }
 .reading-paragraph { margin-bottom: 12px; }
 .reading-sentence-list { background: #faf9f5; border-radius: 9px; padding: 8px; line-height: 1.9; }
 .reading-sentence-list > button { display: inline; border: 1px solid transparent; border-radius: 6px; text-align: left; background: transparent; padding: 2px 4px; color: inherit; font: inherit; line-height: 1.75; cursor: pointer; }
 .reading-sentence-list > button:hover { background: #e9f4f1; }
 .reading-sentence-list > button.is-evidence { border-color: #e38b32; background: #fff0d8; }
+.reading-sentence-list > button.is-active-evidence { box-shadow: 0 0 0 2px #2a7180; }
+.reading-evidence-question-tags { display: inline-block; margin-left: 5px; padding: 1px 5px; color: #70440f; background: #ffd98f; border-radius: 999px; font-size: .72rem; font-weight: 800; white-space: nowrap; }
 .reading-paragraph > p { padding: 2px 12px; color: #425766; }
 .reading-evidence { font-size: .88rem; color: #745015; }
 .reading-sidebar section, .reading-exercises section { border: 1px solid #e5e7df; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
@@ -70,8 +80,11 @@
 .reading-question-card fieldset label { display: flex; align-items: baseline; gap: 7px; padding: 8px; font-weight: 400; }
 .reading-question-card fieldset input { width: auto; }
 .reading-cloze-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.reading-question-evidence { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin: 10px 0; padding: 9px 11px; color: #745015; background: #fffaf0; border-radius: 9px; }
+.reading-question-evidence p { margin: 0; font-size: .88rem; }
+.reading-question-evidence button { flex: 0 0 auto; padding: 5px 8px; color: #245f70; background: #fff; border: 1px solid #7da6af; border-radius: 7px; cursor: pointer; }
 .reading-feedback { background: #fff5e7; border: 1px solid #e9bb81; border-radius: 9px; padding: 10px 14px; margin-top: 12px; }
 .reading-feedback.is-correct { background: #eaf7ef; border-color: #9dceb2; }
 .reading-feedback p { margin: 4px 0; }
 @media (max-width: 1050px) { .reading-workshop-columns { grid-template-columns: 1fr; } .reading-preview { position: static; max-height: none; } }
-@media (max-width: 640px) { .reading-workshop { padding: 12px; } .reading-workshop-header { display: block; } .reading-editor, .reading-preview { padding: 14px; } .reading-preview-layout, .reading-upload-row, .reading-recognize-controls, .reading-meta { grid-template-columns: 1fr; } .reading-preview-heading { display: block; } }
+@media (max-width: 640px) { .reading-workshop { padding: 12px; } .reading-workshop-header { display: block; } .reading-editor, .reading-preview { padding: 14px; } .reading-preview-layout, .reading-upload-row, .reading-recognize-controls, .reading-meta { grid-template-columns: 1fr; } .reading-preview-heading { display: block; } .reading-question-evidence { align-items: stretch; flex-direction: column; } .reading-question-evidence button { width: 100%; } }
