@@ -109,6 +109,7 @@ export default function EnglishReadingQuestionEditor({
   return <section className="reading-question-editor" aria-label="可作答題目編輯">
     <h2>可作答題目與私有正解</h2>
     <p>照片辨識的每一題會直接出現在此區，包含選項、正解、AI 解題思路、原文依據與 A／B 組提示。正解不會隨學生題目資料下載。</p>
+    <p className="reading-editor-note">A 組提示提供閱讀策略、同義改寫或定位方向；B 組提示再明確指出段落、關鍵字或文法形式。兩組都不直接公布答案。</p>
     {!lessonId && <p className="reading-warning">請先將文章存入資料庫草稿，再建立題目。</p>}
     <div className="reading-ai-question-actions">
       <button type="button" className="reading-action" disabled={aiBusy || !articleDraft?.english} onClick={() => runAi('evaluate_questions')}><FileCheck2 aria-hidden="true" />判斷是否需要新增題目</button>
@@ -138,8 +139,8 @@ export default function EnglishReadingQuestionEditor({
         : <label>正解（每個空格一行；同格可用 | 分隔可接受的寫法）<textarea rows="3" value={form.answers.join('\n')} onChange={(event) => update('answers', event.target.value.split('\n'))} /></label>}
       <label>解題思路<textarea rows="3" value={form.explanation} onChange={(event) => update('explanation', event.target.value)} placeholder="選擇題可寫：題幹重點、原文定位、正確選項依據及錯誤選項排除。" /></label>
       <label>對應原文句子<textarea rows="2" value={form.evidenceSentence} onChange={(event) => update('evidenceSentence', event.target.value)} /></label>
-      <div className="reading-meta"><label>A 組提示<textarea rows="2" value={form.hintA} onChange={(event) => update('hintA', event.target.value)} /></label>
-        <label>B 組提示<textarea rows="2" value={form.hintB} onChange={(event) => update('hintB', event.target.value)} /></label></div>
+      <div className="reading-meta"><label>A 組提示<textarea rows="2" value={form.hintA} onChange={(event) => update('hintA', event.target.value)} placeholder="提供閱讀策略、同義線索或定位方向，不直接說出答案。" /></label>
+        <label>B 組提示<textarea rows="2" value={form.hintB} onChange={(event) => update('hintB', event.target.value)} placeholder="指出段落、關鍵字或文法形式，但不直接公布答案。" /></label></div>
       <button type="button" className="reading-action" disabled={!lessonId || busy} onClick={save}>{busy ? '儲存中……' : form.id ? '更新此題' : '儲存新題'}</button>
       {form.id && <button type="button" className="reading-delete" disabled={busy} onClick={remove}>刪除此題</button>}
       <p role="status" className="reading-status">{status}</p>

@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { ArrowLeft, BookOpenCheck, Volume2 } from 'lucide-react'
 import { readingParagraphs, readingSentences, parseReadingWords } from '../lib/englishReadingDraft.js'
 import { formatReadingCountdown, READING_TRANSLATION_DELAY_SECONDS } from '../lib/englishReadingTimer.js'
+import { assignReadingEvidence, evidencePositionsForSentence, getReadingEvidenceText } from '../lib/englishReadingEvidence.js'
 import { loadStudentReadingLessons } from '../services/englishReadingService.js'
 import EnglishReadingQuestionSet from './EnglishReadingQuestionSet.jsx'
 import { EnglishReadingMindMap } from './EnglishReadingMindMap.jsx'
@@ -15,7 +16,9 @@ export default function EnglishReadingPractice() {
   const [lessonId, setLessonId] = useState('')
   const [translationOpen, setTranslationOpen] = useState(false)
   const [translationSecondsLeft, setTranslationSecondsLeft] = useState(READING_TRANSLATION_DELAY_SECONDS)
-  const [evidenceKey, setEvidenceKey] = useState(null)
+  const [evidenceQuestions, setEvidenceQuestions] = useState([])
+  const [activeEvidenceQuestionId, setActiveEvidenceQuestionId] = useState('')
+  const [evidenceKeysByQuestion, setEvidenceKeysByQuestion] = useState({})
   const [speechError, setSpeechError] = useState('')
 
   useEffect(() => {
@@ -29,8 +32,38 @@ export default function EnglishReadingPractice() {
   const translationLocked = state.viewerRole !== 'admin' && translationSecondsLeft > 0
   const english = readingParagraphs(lesson?.english)
   const translation = readingParagraphs(lesson?.translation)
-  const [evidenceParagraph, evidenceSentence] = (evidenceKey || '').split('-').map(Number)
-  const evidenceText = evidenceKey === null ? '' : readingSentences(english[evidenceParagraph] || '')[evidenceSentence] || ''
+  const evidenceTextByQuestion = Object.fromEntries(evidenceQuestions.map((question) => [
+    question.id,
+    getReadingEvidenceText(english, evidenceKeysByQuestion[question.id]),
+  ]))
+
+  const handleEvidenceQuestionsChange = useCallback((questions) => {
+    setEvidenceQuestions(questions)
+    setActiveEvidenceQuestionId((current) => (
+      questions.some((question) => question.id === current) ? current : questions[0]?.id || ''
+    ))
+    setEvidenceKeysByQuestion((current) => Object.fromEntries(
+      Object.entries(current).filter(([questionId]) => questions.some((question) => question.id === questionId)),
+    ))
+  }, [])
+
+  function chooseEvidenceSentence(evidenceKey) {
+    if (!activeEvidenceQuestionId) return
+    setEvidenceKeysByQuestion((current) => assignReadingEvidence(current, activeEvidenceQuestionId, evidenceKey))
+  }
+
+  function focusEvidenceQuestion(questionId) {
+    setActiveEvidenceQuestionId(questionId)
+    document.getElementById('reading-evidence-picker')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  function changeLesson(nextLessonId) {
+    setLessonId(nextLessonId)
+    setEvidenceQuestions([])
+    setActiveEvidenceQuestionId('')
+    setEvidenceKeysByQuestion({})
+    setTranslationOpen(false)
+  }
 
   useEffect(() => {
     setTranslationOpen(false)
@@ -79,13 +112,16 @@ export default function EnglishReadingPractice() {
 
   return <main className="reading-workshop reading-student-page"><header className="reading-workshop-header"><a href="?subject=english"><ArrowLeft aria-hidden="true" />返回英語科</a><div><small>ENGLISH READING</small><h1>英語閱讀練習</h1><p>先找出支持答案的原文段落，再完成閱讀題。點選單字可以聽發音。</p></div></header>
     {!lesson ? <section className="reading-editor"><h2>目前沒有開放中的文章</h2><p>老師發布並設定開放日期後，文章才會出現在此處。</p></section> : <section className="reading-preview reading-student-article">
-      <div className="reading-preview-heading"><div><small>{lesson.source}・{lesson.issueDate}</small><h2>{lesson.title}</h2><p>{lesson.author && `作者：${lesson.author}`}</p>{state.viewerRole === 'admin' && <span className="reading-admin-preview-badge">管理者閱讀預覽</span>}</div><div className="reading-preview-selectors"><label>選擇文章<select value={lesson.id} onChange={(event) => { setLessonId(event.target.value); setEvidenceKey(null); setTranslationOpen(false) }}>{state.lessons.map((item) => <option value={item.id} key={item.id}>{item.issueDate || '未標日期'}・{item.title}</option>)}</select></label>{state.viewerRole === 'admin' && <label>預覽分組<select value={state.group} onChange={(event) => setState((current) => ({ ...current, group: event.target.value }))}><option value="A">A 組</option><option value="B">B 組</option></select></label>}</div></div>
-      <div className="reading-preview-layout"><article><div className="reading-toolbar"><button type="button" disabled={translationLocked} aria-describedby={translationLocked ? 'translation-reading-status' : undefined} onClick={() => setTranslationOpen((open) => !open)}>{translationLocked ? `中文譯文（${formatReadingCountdown(translationSecondsLeft)} 後開放）` : translationOpen ? '收起中文譯文' : '查看中文譯文'}</button><span id="translation-reading-status" role="status">{state.viewerRole === 'admin' ? '管理者預覽可直接查看中文譯文。' : translationLocked ? '請持續閱讀英文；離開頁面或切換分頁會重新計時。' : '已完成 3 分鐘閱讀，可以查看中文譯文。'}</span><span>點選一句英文，標記作答依據。</span></div>
+      <div className="reading-preview-heading"><div><small>{lesson.source}・{lesson.issueDate}</small><h2>{lesson.title}</h2><p>{lesson.author && `作者：${lesson.author}`}</p>{state.viewerRole === 'admin' && <span className="reading-admin-preview-badge">管理者閱讀預覽</span>}</div><div className="reading-preview-selectors"><label>選擇文章<select value={lesson.id} onChange={(event) => changeLesson(event.target.value)}>{state.lessons.map((item) => <option value={item.id} key={item.id}>{item.issueDate || '未標日期'}・{item.title}</option>)}</select></label>{state.viewerRole === 'admin' && <label>預覽分組<select value={state.group} onChange={(event) => setState((current) => ({ ...current, group: event.target.value }))}><option value="A">A 組</option><option value="B">B 組</option></select></label>}</div></div>
+      <div className="reading-preview-layout"><article><div className="reading-toolbar"><button type="button" disabled={translationLocked} aria-describedby={translationLocked ? 'translation-reading-status' : undefined} onClick={() => setTranslationOpen((open) => !open)}>{translationLocked ? `中文譯文（${formatReadingCountdown(translationSecondsLeft)} 後開放）` : translationOpen ? '收起中文譯文' : '查看中文譯文'}</button><span id="translation-reading-status" role="status">{state.viewerRole === 'admin' ? '管理者預覽可直接查看中文譯文。' : translationLocked ? '請持續閱讀英文；離開頁面或切換分頁會重新計時。' : '已完成 3 分鐘閱讀，可以查看中文譯文。'}</span></div>
+        {evidenceQuestions.length > 0 && <section className="reading-evidence-picker" id="reading-evidence-picker"><div><strong>先選題號，再點選一句原文</strong><span>同一句可以同時提供給不同題目。</span></div><div className="reading-evidence-question-buttons">{evidenceQuestions.map((question) => <button type="button" key={question.id} className={`${activeEvidenceQuestionId === question.id ? 'is-active' : ''}${evidenceKeysByQuestion[question.id] ? ' has-evidence' : ''}`} aria-pressed={activeEvidenceQuestionId === question.id} onClick={() => setActiveEvidenceQuestionId(question.id)}><strong>第 {question.position} 題</strong><small>{evidenceKeysByQuestion[question.id] ? '已選句' : '未選句'}</small></button>)}</div></section>}
         {english.map((paragraph, index) => <div className="reading-paragraph" key={`${lesson.id}-${index}`}><div className="reading-sentence-list">{readingSentences(paragraph).map((sentence, sentenceIndex) => {
           const key = `${index}-${sentenceIndex}`
-          return <button type="button" key={key} className={evidenceKey === key ? 'is-evidence' : ''} aria-pressed={evidenceKey === key} onClick={() => setEvidenceKey(key)}>{sentence}</button>
+          const assignedPositions = evidencePositionsForSentence(evidenceQuestions, evidenceKeysByQuestion, key)
+          const selectedForActiveQuestion = evidenceKeysByQuestion[activeEvidenceQuestionId] === key
+          return <button type="button" key={key} className={`${assignedPositions.length ? 'is-evidence' : ''}${selectedForActiveQuestion ? ' is-active-evidence' : ''}`} aria-pressed={selectedForActiveQuestion} onClick={() => chooseEvidenceSentence(key)}>{sentence}{assignedPositions.length > 0 && <span className="reading-evidence-question-tags">第 {assignedPositions.join('、')} 題</span>}</button>
         })}</div>{translationOpen && translation[index] && <p lang="zh-Hant">{translation[index]}</p>}</div>)}
-        <p className="reading-evidence">{evidenceKey === null ? '尚未標記原文依據。' : '已標記一句原文作為答案依據。'}</p>
+        <p className="reading-evidence">{activeEvidenceQuestionId ? `目前正在為第 ${evidenceQuestions.find((question) => question.id === activeEvidenceQuestionId)?.position} 題選擇原文依據。` : '閱讀選擇題載入後，即可分題標記原文依據。'}</p>
       </article><aside className="reading-sidebar">{[
         ['國中 2000 單', lesson.coreWords], ['補充單字', lesson.extraWords],
       ].map(([label, value]) => <section key={label}><h3>{label}</h3><div className="reading-word-list">{parseReadingWords(value).map(({ word, meaning }, index) => <div key={`${word}-${index}`}><button type="button" onClick={() => speak(word)}><Volume2 aria-hidden="true" />{word}</button><span>{meaning}</span><button type="button" className="reading-slow" onClick={() => speak(word, true)} aria-label={`慢速播放 ${word}`}>慢速</button></div>)}</div></section>)}
@@ -93,7 +129,7 @@ export default function EnglishReadingPractice() {
         {lesson.grammar && <section><h3>實用文法</h3><p className="reading-raw-text">{lesson.grammar}</p></section>}
         {lesson.mindMap && <EnglishReadingMindMap value={lesson.mindMap} title={lesson.title} />}
       </aside></div>
-      <div className="reading-exercises"><section><h3>練習題</h3><p>{state.viewerRole === 'admin' ? '管理者可完整試答並查看參考答案、AI 解題思路與原文依據，但不會建立學生作答紀錄。' : '完成後送出，系統會顯示參考答案、AI 解題思路與原文依據；可再次練習。'}</p><EnglishReadingQuestionSet key={lesson.id} lessonId={lesson.id} group={state.group} evidenceText={evidenceText} fallback={Boolean(lesson.cloze || lesson.questions)} viewerRole={state.viewerRole} /></section><section><h3>閱讀提示</h3><p>{(state.group === 'A' ? lesson.groupAHint : lesson.groupBHint) || '這篇文章沒有額外提示。'}</p></section></div>
+      <div className="reading-exercises"><section><h3>練習題</h3><p>{state.viewerRole === 'admin' ? '管理者可完整試答並查看參考答案、AI 解題思路與原文依據，但不會建立學生作答紀錄。' : '完成後送出，系統會顯示參考答案、AI 解題思路與原文依據；可再次練習。'}</p><EnglishReadingQuestionSet key={lesson.id} lessonId={lesson.id} group={state.group} evidenceByQuestion={evidenceTextByQuestion} onEvidenceQuestionsChange={handleEvidenceQuestionsChange} onRequestEvidence={focusEvidenceQuestion} fallback={Boolean(lesson.cloze || lesson.questions)} viewerRole={state.viewerRole} /></section><section><h3>閱讀提示</h3><p>{(state.group === 'A' ? lesson.groupAHint : lesson.groupBHint) || '這篇文章沒有額外提示。'}</p></section></div>
     </section>}
   </main>
 }
