@@ -8,13 +8,14 @@ describe('英語閱讀學生作答介面', () => {
       id: 'q1', position: 1, kind: 'choice', prompt: 'What happened?',
       options: ['The signal changed', 'The car stopped'], blankCount: 1,
       hintA: 'A hint', hintB: 'B hint',
-    }} group="B" evidenceText="Source sentence." />)
+    }} group="B" evidenceText="Source sentence." onRequestEvidence={() => {}} />)
     expect(html).toContain('What happened?')
     expect(html).toContain('The signal changed')
     expect(html).toContain('B hint')
     expect(html).not.toContain('A hint')
     expect(html).not.toContain('參考答案')
     expect(html).toContain('Source sentence.')
+    expect(html).toContain('更換本題原文')
   })
 
   it('填空題依空格數提供輸入欄', () => {

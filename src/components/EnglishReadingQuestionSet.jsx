@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   gradeAdminReadingAnswer, loadAdminReadingQuestions, loadStudentReadingQuestions,
   submitStudentReadingAnswer,
 } from '../services/englishReadingQuestionService.js'
 
-export function QuestionCard({ question, group, evidenceText, adminPreview = false }) {
+export function QuestionCard({ question, group, evidenceText, onRequestEvidence, adminPreview = false }) {
   const [answers, setAnswers] = useState(() => Array(question.blankCount).fill(''))
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
@@ -37,7 +37,7 @@ export function QuestionCard({ question, group, evidenceText, adminPreview = fal
       const letter = 'ABCD'[index]
       return <label key={letter}><input type="radio" name={`reading-${question.id}`} value={letter} checked={answers[0] === letter} onChange={() => updateAnswer(0, letter)} />{letter}. {option}</label>
     })}</fieldset> : <div className="reading-cloze-inputs">{answers.map((answer, index) => <label key={index}>第 {index + 1} 格<input value={answer} onChange={(event) => updateAnswer(index, event.target.value)} autoComplete="off" /></label>)}</div>}
-    {question.kind === 'choice' && <p className="reading-evidence">{evidenceText ? `目前標記的原文依據：${evidenceText}` : '可先點選文章中的一句英文作為答題依據。'}</p>}
+    {question.kind === 'choice' && <div className="reading-question-evidence"><p>{evidenceText ? `本題選擇的原文依據：${evidenceText}` : '本題尚未選擇原文依據。'}</p>{onRequestEvidence && <button type="button" onClick={() => onRequestEvidence(question.id)}>{evidenceText ? '更換本題原文' : '選擇本題原文'}</button>}</div>}
     <button type="submit" className="reading-action" disabled={busy}>{busy ? '判分中……' : adminPreview ? '檢查答案（不記錄）' : '送出答案'}</button>
     {error && <p role="alert" className="reading-warning">{error}</p>}
     {result && <div role="status" className={result.correct ? 'reading-feedback is-correct' : 'reading-feedback'}>
@@ -49,7 +49,7 @@ export function QuestionCard({ question, group, evidenceText, adminPreview = fal
   </form>
 }
 
-export default function EnglishReadingQuestionSet({ lessonId, group, evidenceText, fallback, viewerRole = 'student' }) {
+export default function EnglishReadingQuestionSet({ lessonId, group, evidenceByQuestion = {}, onEvidenceQuestionsChange, onRequestEvidence, fallback, viewerRole = 'student' }) {
   const [state, setState] = useState({ loading: true, questions: [], error: '' })
   useEffect(() => {
     let active = true
@@ -61,11 +61,17 @@ export default function EnglishReadingQuestionSet({ lessonId, group, evidenceTex
     return () => { active = false }
   }, [lessonId, viewerRole])
 
+  const questions = useMemo(() => viewerRole === 'admin'
+    ? state.questions.filter((question) => question.groupScope === 'all' || question.groupScope === group)
+    : state.questions, [group, state.questions, viewerRole])
+  useEffect(() => {
+    onEvidenceQuestionsChange?.(questions
+      .filter((question) => question.kind === 'choice')
+      .map(({ id, position, prompt }) => ({ id, position, prompt })))
+  }, [onEvidenceQuestionsChange, questions])
+
   if (state.loading) return <p>正在載入題目……</p>
   if (state.error) return <p role="alert" className="reading-warning">{state.error}</p>
   if (!state.questions.length) return <p className="reading-warning">{fallback ? '老師尚未將紙本練習轉成可作答題目，請稍後再試。' : '目前沒有練習題。'}</p>
-  const questions = viewerRole === 'admin'
-    ? state.questions.filter((question) => question.groupScope === 'all' || question.groupScope === group)
-    : state.questions
-  return <div className="reading-question-set">{questions.map((question) => <QuestionCard key={question.id} question={question} group={group} evidenceText={evidenceText} adminPreview={viewerRole === 'admin'} />)}</div>
+  return <div className="reading-question-set">{questions.map((question) => <QuestionCard key={question.id} question={question} group={group} evidenceText={evidenceByQuestion[question.id] || ''} onRequestEvidence={question.kind === 'choice' ? onRequestEvidence : undefined} adminPreview={viewerRole === 'admin'} />)}</div>
 }
