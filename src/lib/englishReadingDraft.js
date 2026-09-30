@@ -45,6 +45,66 @@ export function parseReadingWords(value) {
   }).filter(Boolean)
 }
 
+const defaultMindMapBranches = [
+  { title: '關鍵概念', keywords: [] },
+  { title: '事件發展', keywords: [] },
+  { title: '影響結果', keywords: [] },
+  { title: '延伸思考', keywords: [] },
+]
+
+export function emptyReadingMindMap(center = '') {
+  return { center: String(center || '').trim(), branches: defaultMindMapBranches.map((branch) => ({ ...branch })) }
+}
+
+function normalizeMindMapBranch(branch, index) {
+  const fallback = defaultMindMapBranches[index] || { title: `重點 ${index + 1}`, keywords: [] }
+  const keywords = Array.isArray(branch?.keywords)
+    ? branch.keywords
+    : String(branch?.keywords || '').split(/[、,，／/]/)
+  return {
+    title: String(branch?.title || fallback.title).trim(),
+    keywords: keywords.map((item) => String(item || '').trim()).filter(Boolean).slice(0, 5),
+  }
+}
+
+export function parseReadingMindMap(value, fallbackCenter = '') {
+  const text = String(value || '').trim()
+  if (!text) return emptyReadingMindMap(fallbackCenter)
+  try {
+    const parsed = JSON.parse(text)
+    if (parsed && typeof parsed === 'object') {
+      const branches = Array.isArray(parsed.branches) ? parsed.branches : []
+      return {
+        center: String(parsed.center || fallbackCenter || '').trim(),
+        branches: [...branches, ...defaultMindMapBranches]
+          .slice(0, Math.max(4, Math.min(6, branches.length || 4)))
+          .map(normalizeMindMapBranch),
+      }
+    }
+  } catch {
+    // 舊資料是一般文字，繼續以箭頭或換行解析。
+  }
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+  const parsedBranches = lines.map((line, index) => {
+    const parts = line.split(/\s*(?:→|｜|\||:|：)\s*/).filter(Boolean)
+    return normalizeMindMapBranch({ title: parts[0], keywords: parts.slice(1) }, index)
+  })
+  return {
+    center: String(fallbackCenter || parsedBranches[0]?.title || '文章主題').trim(),
+    branches: [...parsedBranches, ...defaultMindMapBranches]
+      .slice(0, Math.max(4, Math.min(6, parsedBranches.length || 4)))
+      .map(normalizeMindMapBranch),
+  }
+}
+
+export function serializeReadingMindMap(mindMap) {
+  const center = String(mindMap?.center || '').trim()
+  const branches = (mindMap?.branches || []).map(normalizeMindMapBranch)
+    .filter((branch) => branch.title || branch.keywords.length)
+  if (!center && !branches.some((branch) => branch.keywords.length)) return ''
+  return JSON.stringify({ center, branches })
+}
+
 export function normalizedReadingRect(first, second) {
   if (!first || !second) return null
   const left = Math.max(0, Math.min(first.x, second.x))
