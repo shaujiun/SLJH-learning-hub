@@ -3,6 +3,7 @@ import { ArrowLeft, BookOpenCheck, Volume2 } from 'lucide-react'
 import { readingParagraphs, readingSentences, parseReadingWords } from '../lib/englishReadingDraft.js'
 import { formatReadingCountdown, READING_TRANSLATION_DELAY_SECONDS } from '../lib/englishReadingTimer.js'
 import { assignReadingEvidence, evidencePositionsForSentence, getReadingEvidenceText } from '../lib/englishReadingEvidence.js'
+import { getReadingSpeechRate } from '../lib/englishReadingSpeech.js'
 import { loadStudentReadingLessons } from '../services/englishReadingService.js'
 import EnglishReadingQuestionSet from './EnglishReadingQuestionSet.jsx'
 import './englishReadingWorkshop.css'
@@ -101,7 +102,7 @@ export default function EnglishReadingPractice() {
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(word)
     utterance.lang = 'en-US'
-    utterance.rate = slow ? 0.65 : 0.9
+    utterance.rate = getReadingSpeechRate(slow)
     window.speechSynthesis.speak(utterance)
     setSpeechError('')
   }
