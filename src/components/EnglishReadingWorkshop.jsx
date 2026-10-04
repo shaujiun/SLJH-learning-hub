@@ -6,6 +6,7 @@ import {
   readingParagraphs, readingSections, readingSentences,
 } from '../lib/englishReadingDraft.js'
 import { recognizeReadingRegion } from '../lib/englishReadingPhotoImport.js'
+import { getReadingSpeechRate } from '../lib/englishReadingSpeech.js'
 import { loadAdminReadingLessons, saveAdminReadingLesson } from '../services/englishReadingService.js'
 import EnglishReadingQuestionEditor from './EnglishReadingQuestionEditor.jsx'
 import './englishReadingWorkshop.css'
@@ -63,7 +64,7 @@ function ReadingPreview({ draft }) {
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(word)
     utterance.lang = 'en-US'
-    utterance.rate = slow ? 0.65 : 0.9
+    utterance.rate = getReadingSpeechRate(slow)
     window.speechSynthesis.speak(utterance)
     setSpeechNotice(`正在播放：${word}${slow ? '（慢速）' : ''}`)
   }
