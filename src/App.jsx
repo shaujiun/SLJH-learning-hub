@@ -64,6 +64,7 @@ const WordGridPuzzle = lazy(() => import('./components/WordGridPuzzle.jsx'))
 const NumberGridChallenge = lazy(() => import('./components/NumberGridChallenge.jsx'))
 const EnglishReadingWorkshop = lazy(() => import('./components/EnglishReadingWorkshop.jsx'))
 const EnglishReadingPractice = lazy(() => import('./components/EnglishReadingPractice.jsx'))
+const LearningMapLibrary = lazy(() => import('./components/LearningMapLibrary.jsx'))
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
@@ -115,6 +116,15 @@ function ReadingLoginRequired() {
     <div className="mascot-orb"><BookOpenCheck aria-hidden="true" /></div>
     <h1>英語閱讀需要學生登入</h1>
     <p>訪客不能查看文章或練習題。請先從線上聯絡簿登入學生帳號。</p>
+    <a className="primary-button" href={contactBookUrl}>前往學生登入</a>
+  </main>
+}
+
+function LearningMapLoginRequired() {
+  return <main className="center-screen">
+    <div className="mascot-orb"><Map aria-hidden="true" /></div>
+    <h1>學習地圖需要學生登入</h1>
+    <p>訪客不能查看教師分享的學習地圖。請先從線上聯絡簿登入學生帳號。</p>
     <a className="primary-button" href={contactBookUrl}>前往學生登入</a>
   </main>
 }
@@ -1037,6 +1047,10 @@ export default function App() {
   if (searchParams.get('reading') === 'practice') {
     if (guestMode) return <ReadingLoginRequired />
     return <Suspense fallback={<LoadingScreen />}><EnglishReadingPractice /></Suspense>
+  }
+  if (searchParams.get('learning-maps')) {
+    if (guestMode) return <LearningMapLoginRequired />
+    return <Suspense fallback={<LoadingScreen />}><LearningMapLibrary subjectCode={searchParams.get('learning-maps')} /></Suspense>
   }
   if (guestMode) {
     return <GuestPracticeHub requestedSubject={searchParams.get('subject') || ''} />

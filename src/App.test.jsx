@@ -142,4 +142,20 @@ describe('guest practice routes', () => {
     expect(html).not.toContain('?reading=practice')
     expect(html).not.toContain('英語閱讀練習')
   })
+
+  it('訪客地理科不顯示限登入的學習地圖', () => {
+    useUrl('https://example.test/hub/?subject=geography&guest=1')
+    const html = renderToStaticMarkup(<App />)
+
+    expect(html).not.toContain('?learning-maps=geography')
+    expect(html).not.toContain('地理學習地圖')
+  })
+
+  it('訪客直接開啟學習地圖時要求登入', () => {
+    useUrl('https://example.test/hub/?learning-maps=geography&guest=1')
+    const html = renderToStaticMarkup(<App />)
+
+    expect(html).toContain('請先從線上聯絡簿登入')
+    expect(html).not.toContain('SOCIAL STUDIES MAPS')
+  })
 })

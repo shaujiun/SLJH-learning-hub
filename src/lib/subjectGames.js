@@ -90,6 +90,15 @@ const subjectGameTemplates = {
   ],
   geography: [
     {
+      code: 'geography-learning-maps',
+      section: 'map',
+      name: '地理學習地圖',
+      description: '依年級、冊別與章節閱讀教師整理的心智地圖與學習地圖。',
+      availability: '登入學生可閱讀',
+      requiresLogin: true,
+      launchUrl: '?learning-maps=geography',
+    },
+    {
       code: 'geography-fill-map',
       section: 'guided',
       name: '地理填圖學習系統',

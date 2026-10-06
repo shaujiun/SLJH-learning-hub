@@ -89,7 +89,7 @@ describe('各科遊戲選擇入口', () => {
       ['english', { basic: ['english-vocabulary'], guided: ['english-grammar', 'english-reading'] }],
       ['science', { basic: ['periodic-table'], guided: ['chemical-formula'] }],
       ['history', { map: ['history-atlas'] }],
-      ['geography', { guided: ['geography-fill-map', 'geography-detective'] }],
+      ['geography', { map: ['geography-learning-maps'], guided: ['geography-fill-map', 'geography-detective'] }],
     ]
     examples.forEach(([code, expected]) => {
       const sections = subjectSectionsFor({ code, name: code }, 'https://example.com/english')
@@ -107,6 +107,12 @@ describe('各科遊戲選擇入口', () => {
 
   it('地理科顯示目前已開放的年級與章節', () => {
     expect(subjectGamesFor({ code: 'geography', name: '地理', launchUrl: '' }, '')).toContainEqual(expect.objectContaining({
+      code: 'geography-learning-maps',
+      section: 'map',
+      launchUrl: '?learning-maps=geography',
+      requiresLogin: true,
+    }))
+    expect(subjectGamesFor({ code: 'geography', name: '地理', launchUrl: '' }, '')).toContainEqual(expect.objectContaining({
       code: 'geography-fill-map',
       launchUrl: '?geography=maps',
       availability: '七上、八上全冊、九上第 1～2 章已開放',
@@ -116,6 +122,11 @@ describe('各科遊戲選擇入口', () => {
       launchUrl: '?geography=detective',
       availability: '翰林八上第 1～2 章',
     }))
+  })
+
+  it('地理學習地圖不出現在訪客版', () => {
+    expect(subjectGamesFor({ code: 'geography', name: '地理' }, '', { guestMode: true }).map((game) => game.code))
+      .not.toContain('geography-learning-maps')
   })
 
   it('歷史科先提供八年級歷史時光地圖', () => {
