@@ -32,7 +32,7 @@ export function QuestionCard({ question, group, evidenceText, onRequestEvidence,
 
   return <form className="reading-question-card" onSubmit={submit}>
     <h4>{question.position}. {question.prompt}</h4>
-    {hint && <details><summary>查看提示</summary><p>{hint}</p></details>}
+    {hint && <details><summary>查看提示</summary><p className="reading-raw-text">{hint}</p></details>}
     {question.kind === 'choice' ? <fieldset><legend>請選一個答案</legend>{question.options.map((option, index) => {
       const letter = 'ABCD'[index]
       return <label key={letter}><input type="radio" name={`reading-${question.id}`} value={letter} checked={answers[0] === letter} onChange={() => updateAnswer(0, letter)} />{letter}. {option}</label>

@@ -100,7 +100,7 @@ function ReadingPreview({ draft }) {
     <div className="reading-exercises">
       <section><h3>小試身手</h3><p className="reading-raw-text">{draft.cloze || '題目待校對。'}</p></section>
       <section><h3>閱讀能力測驗</h3><p className="reading-raw-text">{draft.questions || '題目待校對。'}</p></section>
-      <section><h3>{group} 組閱讀提示</h3><p>{(group === 'A' ? draft.groupAHint : draft.groupBHint) || '尚未設定提示。'}</p></section>
+      <section><h3>{group} 組閱讀提示</h3><p className="reading-raw-text">{(group === 'A' ? draft.groupAHint : draft.groupBHint) || '尚未設定提示。'}</p></section>
     </div>
     <p className="reading-warning">此處預覽文章排版及找句子操作；實際作答題目請在編題區另外建立。</p>
   </section>

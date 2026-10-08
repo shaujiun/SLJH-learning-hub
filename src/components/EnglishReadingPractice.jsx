@@ -129,7 +129,7 @@ export default function EnglishReadingPractice() {
         {lesson.grammar && <section><h3>實用文法</h3><p className="reading-raw-text">{lesson.grammar}</p></section>}
         {lesson.mindMap && <section><h3>單字心智圖</h3><p className="reading-raw-text">{lesson.mindMap}</p></section>}
       </aside></div>
-      <div className="reading-exercises"><section><h3>練習題</h3><p>{state.viewerRole === 'admin' ? '管理者可完整試答並查看參考答案、AI 解題思路與原文依據，但不會建立學生作答紀錄。' : '完成後送出，系統會顯示參考答案、AI 解題思路與原文依據；可再次練習。'}</p><EnglishReadingQuestionSet key={lesson.id} lessonId={lesson.id} group={state.group} evidenceByQuestion={evidenceTextByQuestion} onEvidenceQuestionsChange={handleEvidenceQuestionsChange} onRequestEvidence={focusEvidenceQuestion} fallback={Boolean(lesson.cloze || lesson.questions)} viewerRole={state.viewerRole} /></section><section><h3>閱讀提示</h3><p>{(state.group === 'A' ? lesson.groupAHint : lesson.groupBHint) || '這篇文章沒有額外提示。'}</p></section></div>
+      <div className="reading-exercises"><section><h3>練習題</h3><p>{state.viewerRole === 'admin' ? '管理者可完整試答並查看參考答案、AI 解題思路與原文依據，但不會建立學生作答紀錄。' : '完成後送出，系統會顯示參考答案、AI 解題思路與原文依據；可再次練習。'}</p><EnglishReadingQuestionSet key={lesson.id} lessonId={lesson.id} group={state.group} evidenceByQuestion={evidenceTextByQuestion} onEvidenceQuestionsChange={handleEvidenceQuestionsChange} onRequestEvidence={focusEvidenceQuestion} fallback={Boolean(lesson.cloze || lesson.questions)} viewerRole={state.viewerRole} /></section><section><h3>閱讀提示</h3><p className="reading-raw-text">{(state.group === 'A' ? lesson.groupAHint : lesson.groupBHint) || '這篇文章沒有額外提示。'}</p></section></div>
     </section>}
   </main>
 }
