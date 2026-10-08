@@ -18,6 +18,16 @@ describe('英語閱讀學生作答介面', () => {
     expect(html).toContain('更換本題原文')
   })
 
+  it('提示套用保留換行的顯示樣式', () => {
+    const html = renderToStaticMarkup(<QuestionCard question={{
+      id: 'q-lines', position: 4, kind: 'choice', prompt: 'How?',
+      options: ['One', 'Two'], blankCount: 1,
+      hintA: '先找主詞。\n再找動詞。', hintB: '',
+    }} group="A" evidenceText="" />)
+    expect(html).toContain('class="reading-raw-text"')
+    expect(html).toContain('先找主詞。\n再找動詞。')
+  })
+
   it('填空題依空格數提供輸入欄', () => {
     const html = renderToStaticMarkup(<QuestionCard question={{
       id: 'q2', position: 2, kind: 'cloze', prompt: '___ from ___',
