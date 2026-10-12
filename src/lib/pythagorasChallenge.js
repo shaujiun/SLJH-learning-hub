@@ -27,7 +27,7 @@ export const PYTHAGORAS_GROUP_RULES = {
     label: 'B 組',
     integerLimit: 30,
     radicandLimit: 100,
-    description: '整數邊長不超過 30、根號內不超過 100；特殊邊長關係題比例較高。',
+    description: '整數邊長不超過 30；答案保留根號時，根號內不超過 100；特殊邊長關係題比例較高。',
   },
 }
 
