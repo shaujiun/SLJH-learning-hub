@@ -13,6 +13,14 @@ describe('各科遊戲選擇入口', () => {
       availability: '八上第 2 章起適用',
     }))
   })
+  it('數學科提供依 A／B 分組的畢氏定理測驗', () => {
+    expect(subjectGamesFor({ code: 'math', name: '數學科' }, '')).toContainEqual(expect.objectContaining({
+      code: 'pythagoras-challenge',
+      section: 'basic',
+      name: '畢氏定理挑戰賽（測驗類）',
+      launchUrl: '?game=pythagoras-challenge',
+    }))
+  })
   it.each([
     ['english', '?subject=english'],
     ['science', '?subject=science'],
@@ -85,7 +93,7 @@ describe('各科遊戲選擇入口', () => {
 
   it('科目頁固定四區，現有活動各只放入一區', () => {
     const examples = [
-      ['math', { board: ['animal-equation'] }],
+      ['math', { basic: ['pythagoras-challenge'], board: ['animal-equation'] }],
       ['english', { basic: ['english-vocabulary'], guided: ['english-grammar', 'english-reading'] }],
       ['science', { basic: ['periodic-table'], guided: ['chemical-formula'] }],
       ['history', { map: ['history-atlas'] }],

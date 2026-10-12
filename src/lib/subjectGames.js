@@ -8,6 +8,14 @@ export const subjectLearningSections = [
 const subjectGameTemplates = {
   math: [
     {
+      code: 'pythagoras-challenge',
+      section: 'basic',
+      name: '畢氏定理挑戰賽（測驗類）',
+      description: '鍾育潤老師設計。依數學 A／B 分組提供求斜邊、求股長、特殊邊長關係與易錯題。',
+      availability: '八上畢氏定理單元適用',
+      launchUrl: '?game=pythagoras-challenge',
+    },
+    {
       code: 'animal-equation',
       section: 'board',
       name: '根式馬戲團',
