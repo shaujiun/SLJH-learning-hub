@@ -65,6 +65,7 @@ const NumberGridChallenge = lazy(() => import('./components/NumberGridChallenge.
 const EnglishReadingWorkshop = lazy(() => import('./components/EnglishReadingWorkshop.jsx'))
 const EnglishReadingPractice = lazy(() => import('./components/EnglishReadingPractice.jsx'))
 const LearningMapLibrary = lazy(() => import('./components/LearningMapLibrary.jsx'))
+const PythagorasChallenge = lazy(() => import('./components/PythagorasChallenge.jsx'))
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
@@ -1005,6 +1006,9 @@ export default function App() {
   if (requestedGame === 'periodic-table') return <PeriodicTableGame />
   if (requestedGame === 'chemical-formula') {
     return <Suspense fallback={<LoadingScreen />}><ChemicalFormulaOutpost /></Suspense>
+  }
+  if (requestedGame === 'pythagoras-challenge') {
+    return <Suspense fallback={<LoadingScreen />}><PythagorasChallenge /></Suspense>
   }
   if (requestedGame === 'schulte-static') {
     return <Suspense fallback={<LoadingScreen />}><SchulteStaticGame /></Suspense>

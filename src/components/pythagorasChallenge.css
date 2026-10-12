@@ -1,0 +1,252 @@
+.pythagoras-page {
+  min-height: 100vh;
+  padding: 1rem clamp(1rem, 3vw, 2.5rem) 3rem;
+  color: #17324a;
+  background:
+    radial-gradient(circle at 10% 12%, rgba(255, 206, 108, 0.32), transparent 24rem),
+    radial-gradient(circle at 92% 24%, rgba(89, 190, 169, 0.25), transparent 26rem),
+    #f7f3e9;
+  font-family: "Iansui", "Noto Sans TC", sans-serif;
+}
+
+.pythagoras-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  max-width: 1240px;
+  margin: 0 auto 1rem;
+}
+
+.pythagoras-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  color: #234e6f;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.pythagoras-nav svg { width: 1.05rem; }
+
+.pythagoras-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  max-width: 1240px;
+  margin: 0 auto 1.25rem;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  border: 2px solid #244563;
+  border-radius: 26px;
+  color: #fff;
+  background: linear-gradient(130deg, #173d5a, #256c7a 62%, #388e7d);
+  box-shadow: 0 10px 0 rgba(27, 62, 86, 0.18);
+}
+
+.pythagoras-hero p,
+.pythagoras-hero h1 { margin: 0; }
+.pythagoras-hero > div > p:first-child { color: #ffe18f; font-size: 0.78rem; font-weight: 900; letter-spacing: 0.13em; }
+.pythagoras-hero h1 { margin-top: 0.3rem; font-size: clamp(1.65rem, 4vw, 2.7rem); line-height: 1.2; }
+.pythagoras-hero h1 span { font-size: 0.58em; color: #e6f9f5; }
+.pythagoras-hero .pythagoras-credit { margin-top: 0.5rem; color: #d8f3ed; }
+
+.pythagoras-hero-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.48rem;
+  padding: 0.9rem 1.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  font-family: Georgia, serif;
+  font-size: clamp(1.1rem, 3vw, 1.55rem);
+}
+.pythagoras-hero-mark span { padding: 0.25rem 0.45rem; border-radius: 10px; background: rgba(255, 255, 255, 0.14); }
+.pythagoras-hero-mark b { color: #ffe18f; }
+
+.pythagoras-load-warning {
+  max-width: 1240px;
+  margin: 0 auto 1rem;
+  padding: 0.75rem 0.9rem;
+  border-left: 5px solid #d17a28;
+  background: #fff3dd;
+}
+
+.pythagoras-start-layout,
+.pythagoras-game-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.75fr);
+  align-items: start;
+  gap: 1.15rem;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.pythagoras-start-card,
+.pythagoras-rule-card,
+.pythagoras-question-card,
+.pythagoras-progress-card,
+.pythagoras-complete-card {
+  border: 2px solid #294861;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 7px 0 rgba(41, 72, 97, 0.14);
+}
+
+.pythagoras-start-card { padding: clamp(1.25rem, 3vw, 2.25rem); }
+.pythagoras-start-card h2 { margin: 0.35rem 0 0.7rem; font-size: clamp(1.5rem, 3vw, 2.15rem); }
+.pythagoras-start-card > p:not(.pythagoras-kicker):not(.pythagoras-assigned-group) { color: #52697a; line-height: 1.75; }
+.pythagoras-start-icon { display: grid; width: 58px; height: 58px; place-items: center; border-radius: 18px; color: #fff; background: #d97932; }
+.pythagoras-kicker { margin: 1rem 0 0; color: #237866; font-size: 0.78rem; font-weight: 900; letter-spacing: 0.08em; }
+
+.pythagoras-group-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1.2rem 0 0.85rem;
+}
+.pythagoras-group-picker button {
+  display: grid;
+  gap: 0.25rem;
+  min-height: 104px;
+  padding: 0.9rem;
+  border: 2px solid #b5c5cf;
+  border-radius: 16px;
+  color: #294861;
+  text-align: left;
+  background: #f8fbfc;
+  cursor: pointer;
+}
+.pythagoras-group-picker button strong { font-size: 1.15rem; }
+.pythagoras-group-picker button span { color: #647986; line-height: 1.5; }
+.pythagoras-group-picker button.is-selected { border-color: #d97932; background: #fff3e5; box-shadow: inset 0 0 0 2px #ffd7aa; }
+.pythagoras-group-picker button:disabled { cursor: default; opacity: 0.72; }
+.pythagoras-group-picker button.is-selected:disabled { opacity: 1; }
+.pythagoras-assigned-group { color: #237866; font-weight: 800; }
+
+.pythagoras-primary,
+.pythagoras-question-actions button,
+.pythagoras-complete-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 46px;
+  padding: 0.7rem 1rem;
+  border: 2px solid #194c57;
+  border-radius: 13px;
+  color: #173b43;
+  font: inherit;
+  font-weight: 900;
+  background: #fff;
+  cursor: pointer;
+}
+.pythagoras-primary { color: #fff; background: #237866; }
+.pythagoras-primary:disabled,
+.pythagoras-question-actions button:disabled { cursor: not-allowed; opacity: 0.45; }
+
+.pythagoras-rule-card,
+.pythagoras-progress-card { padding: 1.15rem; }
+.pythagoras-rule-card h2,
+.pythagoras-rule-card h3 { display: flex; align-items: center; gap: 0.45rem; margin: 0; }
+.pythagoras-rule-card h2 svg,
+.pythagoras-rule-card h3 svg { width: 1.25rem; color: #d97932; }
+.pythagoras-rule-card h3 { margin-top: 1.2rem; font-size: 1rem; }
+.pythagoras-formula { margin: 0.85rem 0; padding: 0.8rem; border-radius: 14px; color: #173d5a; background: #e6f4f2; text-align: center; font: 900 1.35rem Georgia, serif; }
+.pythagoras-rule-card ul { margin: 0; padding-left: 1.25rem; color: #52697a; line-height: 1.7; }
+.pythagoras-rule-card li + li { margin-top: 0.35rem; }
+.pythagoras-rule-card code { padding: 0.08rem 0.25rem; border-radius: 5px; background: #edf1f4; }
+
+.pythagoras-score-list { list-style: none; margin: 0.65rem 0 0; padding: 0; }
+.pythagoras-score-list li { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 0.55rem; padding: 0.55rem 0; border-bottom: 1px solid #dbe4e8; }
+.pythagoras-score-list li > span:nth-child(2) { display: grid; }
+.pythagoras-score-list small { color: #71828d; }
+.pythagoras-rank { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 9px; color: #fff; background: #d97932; font-weight: 900; }
+.pythagoras-empty-score { padding: 0.8rem; border: 1px dashed #aebec7; border-radius: 12px; color: #71828d; background: #f7fafb; font-size: 0.88rem; }
+
+.pythagoras-question-card { padding: clamp(1rem, 2.5vw, 1.75rem); }
+.pythagoras-question-heading { display: flex; justify-content: space-between; align-items: start; gap: 1rem; }
+.pythagoras-question-heading p,
+.pythagoras-question-heading h2 { margin: 0; }
+.pythagoras-question-heading p { color: #237866; font-size: 0.8rem; font-weight: 900; }
+.pythagoras-question-heading h2 { margin-top: 0.15rem; font-size: clamp(1.15rem, 2.5vw, 1.55rem); }
+.pythagoras-question-heading > span { flex: none; padding: 0.4rem 0.65rem; border-radius: 999px; color: #8a4b16; background: #ffead2; font-weight: 900; }
+.pythagoras-angle-hint { margin-top: 0.8rem; padding: 0.55rem 0.75rem; border-left: 4px solid #5c70bc; color: #40528d; background: #eef0ff; font-weight: 800; }
+
+.pythagoras-diagram-wrap { max-width: 680px; margin: 0.4rem auto; }
+.pythagoras-diagram-wrap svg { display: block; width: 100%; max-height: 370px; }
+.pythagoras-diagram-wrap > small { display: block; color: #71828d; text-align: center; }
+.pythagoras-side-value { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: #17324a; font-family: "Iansui", sans-serif; font-size: 1.3rem; font-weight: 900; }
+.pythagoras-side-value > span { padding: 0.22rem 0.5rem; border: 2px solid #294861; border-radius: 10px; background: #fff; box-shadow: 0 3px 0 rgba(41, 72, 97, 0.15); }
+.pythagoras-side-value .pythagoras-radical { padding: 0.17rem 0.42rem; }
+.pythagoras-unknown { color: #c45536; }
+.pythagoras-radical { display: inline-flex; align-items: baseline; white-space: nowrap; }
+.pythagoras-root-symbol { margin-right: -0.08em; font-family: Georgia, serif; font-size: 1.16em; }
+.pythagoras-radicand { border-top: 0.09em solid currentColor; line-height: 1; }
+.pythagoras-radical-coefficient { margin-right: 0.08em; }
+
+.pythagoras-answer-form { max-width: 640px; margin: 0.8rem auto 0; }
+.pythagoras-answer-form label { display: block; margin-bottom: 0.35rem; font-weight: 900; }
+.pythagoras-answer-form > div { display: grid; grid-template-columns: minmax(0, 1fr) 52px auto; gap: 0.5rem; }
+.pythagoras-answer-form input,
+.pythagoras-complete-card input { min-width: 0; padding: 0.72rem 0.85rem; border: 2px solid #91a7b5; border-radius: 12px; color: #17324a; font: inherit; background: #fff; }
+.pythagoras-answer-form input:focus,
+.pythagoras-complete-card input:focus { border-color: #237866; outline: 3px solid rgba(35, 120, 102, 0.15); }
+.pythagoras-root-key { border: 2px solid #d4a14c; border-radius: 12px; color: #744a08; font: 900 1.3rem Georgia, serif; background: #fff2ca; cursor: pointer; }
+
+.pythagoras-feedback { max-width: 640px; margin: 0.8rem auto 0; padding: 0.75rem 0.9rem; border-left: 5px solid; border-radius: 9px; }
+.pythagoras-feedback strong { display: flex; align-items: flex-start; gap: 0.4rem; }
+.pythagoras-feedback svg { flex: none; width: 1.2rem; }
+.pythagoras-feedback p { margin: 0.45rem 0 0; }
+.pythagoras-feedback.is-correct { border-color: #258167; color: #1a664f; background: #e5f7f0; }
+.pythagoras-feedback.is-wrong { border-color: #d36a42; color: #8c3f25; background: #fff0e9; }
+.pythagoras-question-actions { display: flex; justify-content: flex-end; gap: 0.6rem; max-width: 640px; margin: 0.8rem auto 0; }
+
+.pythagoras-stats { display: grid; gap: 0.65rem; }
+.pythagoras-stats span { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-bottom: 0.6rem; border-bottom: 1px solid #dbe4e8; color: #647986; }
+.pythagoras-stats b { display: inline-flex; align-items: center; gap: 0.3rem; color: #17324a; font-size: 1.15rem; }
+.pythagoras-stats svg { width: 1.05rem; }
+.pythagoras-progress-track { height: 12px; margin: 1rem 0 0.75rem; overflow: hidden; border-radius: 999px; background: #dfe8eb; }
+.pythagoras-progress-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #d97932, #f3b854); transition: width 180ms ease; }
+.pythagoras-progress-card > p { color: #647986; line-height: 1.55; }
+.pythagoras-mini-reminder { display: flex; gap: 0.65rem; padding: 0.8rem; border-radius: 14px; color: #365879; background: #eaf2ff; line-height: 1.5; }
+.pythagoras-mini-reminder svg { flex: none; width: 1.2rem; color: #5c70bc; }
+.pythagoras-mini-reminder span { display: grid; }
+
+.pythagoras-complete-card { max-width: 720px; margin: 0 auto; padding: clamp(1.25rem, 4vw, 2.5rem); text-align: center; }
+.pythagoras-complete-card > svg { width: 70px; height: 70px; color: #d97932; }
+.pythagoras-complete-card h2 { margin: 0.25rem 0; font-size: clamp(1.55rem, 4vw, 2.4rem); }
+.pythagoras-complete-card > p:not(.pythagoras-kicker) { color: #52697a; }
+.pythagoras-complete-card > label { display: block; max-width: 520px; margin: 1rem auto 0.35rem; text-align: left; font-weight: 900; }
+.pythagoras-save-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.55rem; max-width: 520px; margin: 0 auto 1rem; }
+.pythagoras-complete-card .pythagoras-score-list { max-width: 520px; margin: 0.8rem auto; text-align: left; }
+.pythagoras-complete-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.65rem; margin-top: 1.2rem; }
+
+.pythagoras-center { display: grid; min-height: 100vh; place-content: center; justify-items: center; color: #17324a; background: #f7f3e9; }
+.pythagoras-loader { width: 52px; height: 52px; border: 6px solid #dce6e9; border-top-color: #237866; border-radius: 50%; animation: pythagoras-spin 0.8s linear infinite; }
+@keyframes pythagoras-spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 850px) {
+  .pythagoras-start-layout,
+  .pythagoras-game-layout { grid-template-columns: 1fr; }
+  .pythagoras-progress-card { order: -1; }
+  .pythagoras-stats { grid-template-columns: repeat(3, 1fr); }
+  .pythagoras-stats span { display: grid; justify-items: center; gap: 0.2rem; text-align: center; }
+}
+
+@media (max-width: 600px) {
+  .pythagoras-page { padding: 0.7rem 0.7rem 2rem; }
+  .pythagoras-nav { font-size: 0.82rem; }
+  .pythagoras-hero { align-items: flex-start; border-radius: 19px; }
+  .pythagoras-hero-mark { display: none; }
+  .pythagoras-group-picker { grid-template-columns: 1fr; }
+  .pythagoras-answer-form > div { grid-template-columns: minmax(0, 1fr) 48px; }
+  .pythagoras-answer-form .pythagoras-primary { grid-column: 1 / -1; }
+  .pythagoras-question-actions { display: grid; grid-template-columns: 1fr; }
+  .pythagoras-save-row { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pythagoras-loader { animation: none; }
+  .pythagoras-progress-track span { transition: none; }
+}
