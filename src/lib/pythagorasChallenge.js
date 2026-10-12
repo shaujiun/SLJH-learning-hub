@@ -86,6 +86,21 @@ export function pythagorasValueText(value) {
   return `${value.coefficient === 1 ? '' : value.coefficient}√${value.radicand}`
 }
 
+export function calculatePythagorasTriangleSize(a, b, {
+  maxWidth = 360,
+  maxHeight = 220,
+  minimumVisibleLeg = 48,
+} = {}) {
+  const safeA = Math.max(0.001, Number(a) || 0.001)
+  const safeB = Math.max(0.001, Number(b) || 0.001)
+  const scale = Math.min(maxWidth / safeA, maxHeight / safeB)
+  return {
+    width: Math.max(minimumVisibleLeg, safeA * scale),
+    height: Math.max(minimumVisibleLeg, safeB * scale),
+    preservedRatio: safeA * scale >= minimumVisibleLeg && safeB * scale >= minimumVisibleLeg,
+  }
+}
+
 function expressionText(value) {
   return pythagorasValueText(value)
 }

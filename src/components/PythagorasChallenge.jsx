@@ -12,20 +12,24 @@ import {
   Trophy,
 } from 'lucide-react'
 import {
+  calculatePythagorasTriangleSize,
   createPythagorasDeck,
   isPythagorasAnswerCorrect,
   normalizePythagorasGroup,
-  PYTHAGORAS_GROUP_RULES,
   pythagorasValueNumber,
   pythagorasValueText,
 } from '../lib/pythagorasChallenge.js'
+import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
 import { isGuestMode, learningHubUrl } from '../lib/guestPractice.js'
-import { loadPythagorasChallengeAccess } from '../services/pythagorasChallengeService.js'
+import {
+  loadPythagorasChallengeAccess,
+  recordPythagorasChallengeAttempt,
+} from '../services/pythagorasChallengeService.js'
 import './pythagorasChallenge.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
-const targetCorrectCount = 10
+const defaultTargetCorrectCount = 10
 
 function formatTime(seconds) {
   const safeSeconds = Math.max(0, Math.floor(seconds))
@@ -78,9 +82,7 @@ function TriangleValue({ x, y, value, label }) {
 function TriangleDiagram({ question }) {
   const numericA = pythagorasValueNumber(question.exactSides.a)
   const numericB = pythagorasValueNumber(question.exactSides.b)
-  const largestLeg = Math.max(numericA, numericB, 1)
-  const width = Math.max(145, (numericA / largestLeg) * 320)
-  const height = Math.max(135, (numericB / largestLeg) * 215)
+  const { width, height, preservedRatio } = calculatePythagorasTriangleSize(numericA, numericB)
   const x0 = (560 - width) / 2
   const y0 = 270
   const x1 = x0 + width
@@ -102,7 +104,9 @@ function TriangleDiagram({ question }) {
         <TriangleValue x={x0 - 33} y={(y0 + y1) / 2} value={question.sides.b} label="股長" />
         <TriangleValue x={hypotenuseMidX} y={hypotenuseMidY} value={question.sides.c} label="斜邊" />
       </svg>
-      <small>直角以橘色標示；圖形僅為示意，不一定依實際比例繪製。</small>
+      <small>{preservedRatio
+        ? '直角以橘色標示；圖形已依邊長比例縮放。'
+        : '直角以橘色標示；此題比例差距較大，短邊已略微放大以便閱讀。'}</small>
     </div>
   )
 }
@@ -123,7 +127,12 @@ function ScoreList({ scores }) {
 }
 
 export default function PythagorasChallenge() {
+  const query = useMemo(() => new URLSearchParams(window.location.search), [])
   const guestMode = isGuestMode()
+  const focusTaskId = guestMode ? '' : resolveFocusTaskId(query, {
+    subjectCode: 'math',
+    activityCode: 'pythagoras_challenge',
+  })
   const [access, setAccess] = useState(() => (guestMode
     ? { role: 'guest', group: 'B', canChooseGroup: true, displayName: '' }
     : null))
@@ -141,21 +150,26 @@ export default function PythagorasChallenge() {
   const [scores, setScores] = useState(() => readScores('B'))
   const [playerName, setPlayerName] = useState('')
   const [saved, setSaved] = useState(false)
+  const [challengeTarget, setChallengeTarget] = useState(defaultTargetCorrectCount)
+  const [taskSaveState, setTaskSaveState] = useState({ status: 'idle', message: '' })
   const inputRef = useRef(null)
 
   useEffect(() => {
     let active = true
-    loadPythagorasChallengeAccess({ guestMode })
+    loadPythagorasChallengeAccess({ guestMode, focusTaskId })
       .then((result) => {
         if (!active) return
         setAccess(result)
         setGroup(result.group)
         setScores(readScores(result.group))
         setPlayerName(result.displayName || '')
+        const nextTarget = Math.max(1, Number(result.task?.questionCount) || defaultTargetCorrectCount)
+        setChallengeTarget(nextTarget)
+        if (result.role === 'student') startChallenge(result.group, nextTarget)
       })
       .catch((error) => { if (active) setLoadError(error.message || '無法讀取數學分組。') })
     return () => { active = false }
-  }, [guestMode])
+  }, [guestMode, focusTaskId])
 
   useEffect(() => {
     if (phase !== 'playing' || !startedAt) return undefined
@@ -164,9 +178,8 @@ export default function PythagorasChallenge() {
   }, [phase, startedAt])
 
   const question = deck[questionIndex]
-  const progress = Math.min(100, (correctCount / targetCorrectCount) * 100)
-  const groupRule = PYTHAGORAS_GROUP_RULES[group]
-  const score = correctCount * 10
+  const progress = Math.min(100, (correctCount / challengeTarget) * 100)
+  const score = Math.min(100, Math.round((correctCount / challengeTarget) * 100))
 
   function chooseGroup(nextGroup) {
     if (!access?.canChooseGroup || phase !== 'start') return
@@ -175,8 +188,12 @@ export default function PythagorasChallenge() {
     setScores(readScores(normalized))
   }
 
-  function startChallenge() {
-    setDeck(createPythagorasDeck(group, 24))
+  function startChallenge(nextGroup = group, nextTarget = challengeTarget) {
+    const normalizedGroup = normalizePythagorasGroup(nextGroup)
+    const normalizedTarget = Math.max(1, Number(nextTarget) || defaultTargetCorrectCount)
+    setGroup(normalizedGroup)
+    setChallengeTarget(normalizedTarget)
+    setDeck(createPythagorasDeck(normalizedGroup, Math.max(24, normalizedTarget * 2)))
     setQuestionIndex(0)
     setAnswer('')
     setFeedback(null)
@@ -185,6 +202,7 @@ export default function PythagorasChallenge() {
     setElapsed(0)
     setStartedAt(Date.now())
     setSaved(false)
+    setTaskSaveState({ status: 'idle', message: '' })
     setPhase('playing')
     window.setTimeout(() => inputRef.current?.focus(), 0)
   }
@@ -212,11 +230,34 @@ export default function PythagorasChallenge() {
     })
   }
 
+  async function finishChallenge() {
+    const finalElapsed = Math.floor((Date.now() - startedAt) / 1000)
+    setElapsed(finalElapsed)
+    setPhase('complete')
+    if (access?.role !== 'student' || !focusTaskId) return
+
+    setTaskSaveState({ status: 'saving', message: '正在儲存每日任務完成紀錄……' })
+    try {
+      const result = await recordPythagorasChallengeAttempt({
+        focusTaskId,
+        trackStudentProgress: true,
+        score: 100,
+        correctCount: challengeTarget,
+        questionCount: challengeTarget,
+      })
+      setTaskSaveState({
+        status: result?.passed ? 'saved' : 'not-passed',
+        message: result?.passed ? '每日任務已完成並儲存。' : '本次紀錄已儲存，但尚未達到任務標準。',
+      })
+    } catch (error) {
+      setTaskSaveState({ status: 'error', message: error.message || '無法儲存每日任務。' })
+    }
+  }
+
   function nextQuestion() {
     if (!feedback || (!feedback.correct && !feedback.revealed)) return
-    if (correctCount >= targetCorrectCount) {
-      setElapsed(Math.floor((Date.now() - startedAt) / 1000))
-      setPhase('complete')
+    if (correctCount >= challengeTarget) {
+      finishChallenge()
       return
     }
     let nextDeck = deck
@@ -292,18 +333,18 @@ export default function PythagorasChallenge() {
               <button
                 type="button"
                 key={option}
+                aria-label={`${option} 組`}
                 className={group === option ? 'is-selected' : ''}
                 onClick={() => chooseGroup(option)}
                 disabled={!access?.canChooseGroup}
                 aria-pressed={group === option}
               >
                 <strong>{option} 組</strong>
-                <span>{PYTHAGORAS_GROUP_RULES[option].description}</span>
               </button>
             ))}
           </div>
           {!access?.canChooseGroup && <p className="pythagoras-assigned-group">系統已依你的數學分組設定為 {group} 組。</p>}
-          <button className="pythagoras-primary" type="button" onClick={startChallenge}><Play aria-hidden="true" />開始挑戰</button>
+          <button className="pythagoras-primary" type="button" onClick={() => startChallenge()}><Play aria-hidden="true" />開始挑戰</button>
         </section>
 
         <aside className="pythagoras-rule-card">
@@ -352,7 +393,7 @@ export default function PythagorasChallenge() {
           <div className="pythagoras-question-actions">
             <button type="button" onClick={revealAnswer} disabled={!feedback || feedback.correct || feedback.revealed}>查看答案並略過</button>
             <button type="button" className="pythagoras-primary" onClick={nextQuestion} disabled={!feedback || (!feedback.correct && !feedback.revealed)}>
-              {feedback?.correct && correctCount >= targetCorrectCount ? '查看結果' : '下一題'}
+              {feedback?.correct && correctCount >= challengeTarget ? '查看結果' : '下一題'}
             </button>
           </div>
         </section>
@@ -360,11 +401,10 @@ export default function PythagorasChallenge() {
         <aside className="pythagoras-progress-card">
           <div className="pythagoras-stats">
             <span><b>{score}</b>目前得分</span>
-            <span><b>{correctCount}／{targetCorrectCount}</b>已答對</span>
+            <span><b>{correctCount}／{challengeTarget}</b>已答對</span>
             <span><b><Clock3 aria-hidden="true" />{formatTime(elapsed)}</b>經過時間</span>
           </div>
           <div className="pythagoras-progress-track"><span style={{ width: `${progress}%` }} /></div>
-          <p>{groupRule.description}</p>
           <div className="pythagoras-mini-reminder"><Sparkles aria-hidden="true" /><span><strong>快速判斷</strong>求斜邊用加法；求股長用減法。平方差可以幫你更快算出股長。</span></div>
         </aside>
       </main>}
@@ -374,6 +414,7 @@ export default function PythagorasChallenge() {
         <p className="pythagoras-kicker">CHALLENGE COMPLETE</p>
         <h2>{group} 組挑戰完成！</h2>
         <p>你答對了 {correctCount} 題，獲得 {score} 分；總共嘗試 {attempts} 題，用時 {formatTime(elapsed)}。</p>
+        {taskSaveState.status !== 'idle' && <p className={`pythagoras-task-save is-${taskSaveState.status}`} role="status">{taskSaveState.message}</p>}
         <label htmlFor="pythagoras-player-name">姓名或暱稱</label>
         <div className="pythagoras-save-row">
           <input id="pythagoras-player-name" value={playerName} onChange={(event) => setPlayerName(event.target.value)} maxLength="18" disabled={saved} />
@@ -381,7 +422,7 @@ export default function PythagorasChallenge() {
         </div>
         <ScoreList scores={scores} />
         <div className="pythagoras-complete-actions">
-          <button type="button" onClick={startChallenge}><RotateCcw aria-hidden="true" />同組再挑戰</button>
+          <button type="button" onClick={() => startChallenge()}><RotateCcw aria-hidden="true" />同組再挑戰</button>
           <button type="button" onClick={() => setPhase('start')}>返回難度說明</button>
         </div>
       </main>}
