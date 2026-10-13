@@ -26,7 +26,7 @@ export const animalEquationFunctions = [
 ]
 
 // 教師提供影片後，只需填入 YouTube 網址；也可由 VITE_ANIMAL_EQUATION_TUTORIAL_URL 覆寫。
-export const animalEquationTutorialUrl = ''
+export const animalEquationTutorialUrl = 'https://www.youtube.com/watch?v=NSi31da2OJg&list=PLkNQUBglz8EzmnwkrtyCmDs2lEm7hAGWj&index=22'
 
 // 依《卡牌種類與數量》彙總。四個運算家族各 18 張，連同 28 張功能牌共 100 張。
 export const animalEquationRadicals = [

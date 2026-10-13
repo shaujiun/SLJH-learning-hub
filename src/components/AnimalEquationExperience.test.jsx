@@ -9,6 +9,8 @@ describe('根式馬戲團入口與桌面', () => {
     const html = renderToStaticMarkup(<AnimalEquationExperience />)
     expect(html).toContain('進入遊戲前，先看懂這 4 件事')
     expect(html).toContain('新手說明')
+    expect(html).toContain('https://www.youtube.com/watch?v=NSi31da2OJg')
+    expect(html).toContain('觀看教學影片')
     expect(html).toContain('教學試玩')
     expect(html).toContain('直接自由試玩')
     expect(html).toContain('4 人真人對戰')
