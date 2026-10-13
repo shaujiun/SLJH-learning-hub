@@ -22,6 +22,7 @@ jobs:
       VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
       VITE_CONTACT_BOOK_URL: https://shaujiun.github.io/SLJH114-06OCB/
       VITE_ENGLISH_VOCAB_URL: https://shaujiun.github.io/englishvocabking/
+      VITE_ANIMAL_EQUATION_TUTORIAL_URL: ${{ vars.VITE_ANIMAL_EQUATION_TUTORIAL_URL }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4

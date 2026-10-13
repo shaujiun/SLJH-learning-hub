@@ -15,12 +15,13 @@ describe('AnimalEquationGame', () => {
       location: { href: 'http://127.0.0.1:4174/?game=animal-equation' },
       sessionStorage: { getItem: () => null, removeItem: () => {} },
     }
-    const html = renderToStaticMarkup(<AnimalEquationGame />)
+    const html = renderToStaticMarkup(<AnimalEquationGame onGuide={() => {}} />)
     expect(html).toContain('根式馬戲團')
     expect(html).toContain('八上第 2 章起適用')
     expect(html).toContain('建立對戰房')
     expect(html).toContain('1 位真人＋3 位 AI')
     expect(html).toContain('名稱會與目前登入帳號綁定')
+    expect(html).toContain('新手說明')
   })
 
   it('結算後提供開新房入口', () => {

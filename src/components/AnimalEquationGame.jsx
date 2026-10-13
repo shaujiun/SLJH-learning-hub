@@ -546,7 +546,7 @@ export function WinnerPanel({ room }) {
   )
 }
 
-export default function AnimalEquationGame({ onBack }) {
+export default function AnimalEquationGame({ onBack, onGuide }) {
   const query = useMemo(() => new URLSearchParams(window.location.search), [])
   const focusTaskId = useMemo(() => resolveFocusTaskId(query, {
     subjectCode: 'math', activityCode: 'animal_equation_solo',
@@ -691,6 +691,7 @@ export default function AnimalEquationGame({ onBack }) {
     <div className="animal-equation-shell">
       <nav className="game-floating-nav animal-equation-floating-nav" aria-label="學習系統導覽">
         {onBack && <button type="button" onClick={onBack}><ArrowLeft />返回玩法選擇</button>}
+        {onGuide && <button type="button" onClick={onGuide}><BookOpen />新手說明</button>}
         <a href={learningHubUrl()}><Home />返回任務頁</a>
         <a href={contactBookUrl}><ArrowLeft />返回聯絡簿</a>
       </nav>

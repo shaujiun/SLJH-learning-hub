@@ -2,14 +2,19 @@ import { lazy, Suspense, useState } from 'react'
 import { ArrowLeft, BookOpen, Play, Users } from 'lucide-react'
 import AnimalEquationDemo from './AnimalEquationDemo.jsx'
 import AnimalEquationPractice from './AnimalEquationPractice.jsx'
+import AnimalEquationGuideDialog from './AnimalEquationGuideDialog.jsx'
+import { animalEquationTutorialUrl } from '../data/animalEquationCards.js'
 import './animalEquationExperience.css'
 
 const AnimalEquationGame = lazy(() => import('./AnimalEquationGame.jsx'))
 
 const preferenceKey = 'animal-equation-played-before'
+const tutorialUrl = import.meta.env.VITE_ANIMAL_EQUATION_TUTORIAL_URL?.trim()
+  || animalEquationTutorialUrl
 
 export default function AnimalEquationExperience() {
   const [mode, setMode] = useState('choose')
+  const [guideOpen, setGuideOpen] = useState(true)
   const [playedBefore, setPlayedBefore] = useState(() => {
     try { return typeof window !== 'undefined' && window.localStorage.getItem(preferenceKey) === '1' }
     catch { return false }
@@ -21,12 +26,14 @@ export default function AnimalEquationExperience() {
     setMode('practice')
   }
 
-  if (mode === 'tutorial') return <AnimalEquationDemo onBack={() => setMode('choose')} onStartGame={startPractice} />
-  if (mode === 'practice') return <AnimalEquationPractice onBack={() => setMode('choose')} />
-  if (mode === 'live') return <Suspense fallback={<div className="animal-experience-shell"><main>正在開啟真人牌桌…</main></div>}><AnimalEquationGame onBack={() => setMode('choose')} /></Suspense>
+  const guideDialog = <AnimalEquationGuideDialog open={guideOpen} onClose={() => setGuideOpen(false)} tutorialUrl={tutorialUrl} />
 
-  return <div className="animal-experience-shell">
-    <header><a href="?guest=1&subject=math"><ArrowLeft aria-hidden="true" />返回數學練習</a><strong>根式馬戲團</strong></header>
+  if (mode === 'tutorial') return <><AnimalEquationDemo onBack={() => setMode('choose')} onStartGame={startPractice} />{guideDialog}</>
+  if (mode === 'practice') return <><AnimalEquationPractice onBack={() => setMode('choose')} />{guideDialog}</>
+  if (mode === 'live') return <><Suspense fallback={<div className="animal-experience-shell"><main>正在開啟真人牌桌…</main></div>}><AnimalEquationGame onBack={() => setMode('choose')} onGuide={() => setGuideOpen(true)} /></Suspense>{guideDialog}</>
+
+  return <><div className="animal-experience-shell">
+    <header><a href="?guest=1&subject=math"><ArrowLeft aria-hidden="true" />返回數學練習</a><strong>根式馬戲團</strong><button type="button" onClick={() => setGuideOpen(true)}><BookOpen aria-hidden="true" />新手說明</button></header>
     <main>
       <p className="animal-experience-eyebrow">教學試玩、自由練習、4 人真人對戰</p>
       <h1>{playedBefore ? '這次想怎麼玩？' : '第一次玩？先選擇方式'}</h1>
@@ -44,5 +51,5 @@ export default function AnimalEquationExperience() {
       </div>
       <small>教學與自由試玩為本機模擬，不寫入每日任務；真人對戰需使用學習系統帳號登入。</small>
     </main>
-  </div>
+  </div>{guideDialog}</>
 }

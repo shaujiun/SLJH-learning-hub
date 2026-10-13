@@ -25,6 +25,9 @@ export const animalEquationFunctions = [
   { code: 'gender_error', name: '性別錯誤', icon: '🚫', quantity: 3, description: '遭到誘惑時立即打出，使該張動物卡免於被移走。' },
 ]
 
+// 教師提供影片後，只需填入 YouTube 網址；也可由 VITE_ANIMAL_EQUATION_TUTORIAL_URL 覆寫。
+export const animalEquationTutorialUrl = ''
+
 // 依《卡牌種類與數量》彙總。四個運算家族各 18 張，連同 28 張功能牌共 100 張。
 export const animalEquationRadicals = [
   { code: 'sqrt1', label: '√1', coefficient: 1, radicand: 1, family: 'integer', quantity: 3 },

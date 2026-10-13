@@ -5,8 +5,10 @@ import AnimalEquationExperience from './AnimalEquationExperience.jsx'
 import AnimalEquationPractice from './AnimalEquationPractice.jsx'
 
 describe('根式馬戲團入口與桌面', () => {
-  it('讓學生自行選擇教學或直接開始', () => {
+  it('讓學生自行選擇玩法，進入畫面即顯示新手說明', () => {
     const html = renderToStaticMarkup(<AnimalEquationExperience />)
+    expect(html).toContain('進入遊戲前，先看懂這 4 件事')
+    expect(html).toContain('新手說明')
     expect(html).toContain('教學試玩')
     expect(html).toContain('直接自由試玩')
     expect(html).toContain('4 人真人對戰')
