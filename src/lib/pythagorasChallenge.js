@@ -20,8 +20,8 @@ export const PYTHAGORAS_GROUP_RULES = {
   A: {
     label: 'A 組',
     integerLimit: 100,
-    radicandLimit: Number.POSITIVE_INFINITY,
-    description: '整數邊長不超過 100；根號內數字不限，混合一般題、特殊關係與易錯題。',
+    radicandLimit: 1000,
+    description: '整數邊長不超過 100；答案保留根號時，根號內不超過 1000，混合一般題、特殊關係與易錯題。',
   },
   B: {
     label: 'B 組',

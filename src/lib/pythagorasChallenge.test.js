@@ -39,14 +39,17 @@ describe('畢氏定理挑戰賽題目生成', () => {
     })
   })
 
-  it('A 組整數邊長不超過 100，並確實會出現根號內超過 100 的題目', () => {
+  it('A 組整數邊長不超過 100，答案的根號內介於 1 到 1000', () => {
     const deck = createPythagorasDeck('A', 500, seededRandom(44))
-    expect(deck.some((question) => question.calculationRadicand > 100)).toBe(true)
+    expect(deck.some((question) => question.answer.kind === 'radical' && question.answer.radicand > 100)).toBe(true)
     deck.forEach((question) => {
       Object.values(question.exactSides).forEach((value) => {
         if (value.kind === 'integer') expect(value.value).toBeLessThanOrEqual(100)
         else expect(value.coefficient).toBeLessThanOrEqual(100)
       })
+      if (question.answer.kind === 'radical') {
+        expect(question.answer.radicand).toBeLessThanOrEqual(1000)
+      }
       expect(questionSatisfiesPythagoreanTheorem(question)).toBe(true)
     })
   })
