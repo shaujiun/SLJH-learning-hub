@@ -45,7 +45,7 @@ describe('各科遊戲選擇入口', () => {
       launchUrl: '?game=measurement-lab',
     }))
     expect(subjectSectionsFor({ code: 'science', name: '自然' }, '', { adminPreview: true })[2].games.map((game) => game.code))
-      .toEqual(['measurement-lab', 'chemical-formula'])
+      .toEqual(['measurement-lab', 'chemical-formula', 'chemical-balance'])
     expect(publicGames).toContainEqual(expect.objectContaining({
       code: 'periodic-table',
       availability: '八上 CH6 後都適用',
@@ -56,6 +56,12 @@ describe('各科遊戲選擇入口', () => {
       name: '化學事前哨站',
       availability: '八上第 6 章起適用',
       launchUrl: '?game=chemical-formula',
+    }))
+    expect(publicGames).toContainEqual(expect.objectContaining({
+      code: 'chemical-balance',
+      name: '化學反應平衡站',
+      availability: '第 1 關「分子組裝室」開放',
+      launchUrl: '?game=chemical-balance',
     }))
   })
 
@@ -95,7 +101,7 @@ describe('各科遊戲選擇入口', () => {
     const examples = [
       ['math', { basic: ['pythagoras-challenge'], board: ['animal-equation'] }],
       ['english', { basic: ['english-vocabulary'], guided: ['english-grammar', 'english-reading'] }],
-      ['science', { basic: ['periodic-table'], guided: ['chemical-formula'] }],
+      ['science', { basic: ['periodic-table'], guided: ['chemical-formula', 'chemical-balance'] }],
       ['history', { map: ['history-atlas'] }],
       ['geography', { map: ['geography-learning-maps'], guided: ['geography-fill-map', 'geography-detective'] }],
     ]
