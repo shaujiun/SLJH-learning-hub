@@ -82,7 +82,7 @@
 .balance-assembly > button.is-selected { outline: 5px solid #f1a447; outline-offset: 4px; }
 .balance-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 .balance-builder-status { min-height: 1.5em; margin: -0.25rem 0 0; color: #526a70; font-size: 0.9rem; font-weight: 800; text-align: center; }
-.balance-atom-bank { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.5rem; }
+.balance-atom-bank { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.5rem; }
 .balance-atom-bank button { display: flex; min-height: 66px; align-items: center; justify-content: center; gap: 0.35rem; border: 2px solid var(--atom-border); border-radius: 13px; background: radial-gradient(circle at 28% 18%, #fff 0, var(--atom-fill) 42%, var(--atom-border) 125%); color: var(--atom-text); cursor: grab; }
 .balance-atom-bank button:active { cursor: grabbing; }
 .balance-atom-bank b { font: 900 1.2rem/1 system-ui; }

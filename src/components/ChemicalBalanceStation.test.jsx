@@ -51,5 +51,6 @@ describe('化學反應平衡站', () => {
     expect(html).toContain('draggable="true"')
     expect(html).not.toContain('<span>C</span>')
     expect(html).toContain('碳原子')
+    expect(html).toContain('<b>S</b><span>硫</span>')
   })
 })
