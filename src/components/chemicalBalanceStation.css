@@ -80,7 +80,7 @@
 .balance-assembly > button { position: absolute; z-index: 2; display: grid; width: clamp(55px, 10vw, 72px); height: clamp(55px, 10vw, 72px); place-items: center; transform: translate(-50%, -50%); border: 3px solid var(--atom-border); border-radius: 50%; background: radial-gradient(circle at 30% 23%, #fff 0, var(--atom-fill) 34%, var(--atom-border) 100%); color: var(--atom-text); box-shadow: 0 7px 12px rgba(28, 52, 63, 0.3), inset -4px -5px 9px rgba(0, 0, 0, 0.16); font: 900 1.2rem/1 system-ui; cursor: inherit; user-select: none; }
 .balance-assembly > button::after { position: absolute; top: 14%; left: 20%; width: 20%; height: 14%; border-radius: 50%; background: rgba(255, 255, 255, 0.65); content: ""; transform: rotate(-28deg); }
 .balance-assembly > button.is-selected { outline: 5px solid #f1a447; outline-offset: 4px; }
-.balance-assembly > button span { position: relative; z-index: 1; }
+.balance-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 .balance-builder-status { min-height: 1.5em; margin: -0.25rem 0 0; color: #526a70; font-size: 0.9rem; font-weight: 800; text-align: center; }
 .balance-atom-bank { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.5rem; }
 .balance-atom-bank button { display: flex; min-height: 66px; align-items: center; justify-content: center; gap: 0.35rem; border: 2px solid var(--atom-border); border-radius: 13px; background: radial-gradient(circle at 28% 18%, #fff 0, var(--atom-fill) 42%, var(--atom-border) 125%); color: var(--atom-text); cursor: grab; }

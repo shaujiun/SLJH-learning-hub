@@ -49,5 +49,7 @@ describe('化學反應平衡站', () => {
     expect(html).toContain('只清除鍵結')
     expect(html).toContain('已選第 1 顆原子')
     expect(html).toContain('draggable="true"')
+    expect(html).not.toContain('<span>C</span>')
+    expect(html).toContain('碳原子')
   })
 })
