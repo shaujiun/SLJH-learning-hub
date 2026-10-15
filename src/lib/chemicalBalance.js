@@ -25,7 +25,7 @@ export function countAtomSymbols(symbols) {
   return symbols.reduce((counts, symbol) => ({ ...counts, [symbol]: (counts[symbol] || 0) + 1 }), {})
 }
 
-export const typicalBondCapacity = { H: 1, C: 4, N: 3, O: 2, Cl: 1 }
+export const typicalBondCapacity = { H: 1, C: 4, N: 3, O: 2, S: 6, Cl: 1 }
 
 export function collapseRepeatedBonds(bonds) {
   const collapsed = new Map()

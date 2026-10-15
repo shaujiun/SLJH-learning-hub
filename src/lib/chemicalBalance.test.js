@@ -87,12 +87,14 @@ describe('化學反應平衡站第一關邏輯', () => {
     expect(describeMoleculeBuild(atoms, collapseRepeatedBonds(water.bonds), water)).toContain('都正確')
   })
 
-  it('擴充題庫仍只使用五種指定元素，且每個分子的模型都能通過結構判定', () => {
-    expect(stageOneMolecules).toHaveLength(16)
+  it('擴充題庫只使用六種指定元素，且每個分子的模型都能通過結構判定', () => {
+    expect(stageOneMolecules).toHaveLength(21)
     const usedElements = new Set(stageOneMolecules.flatMap((molecule) => Object.keys(molecule.atoms)))
-    expect([...usedElements].sort()).toEqual(['C', 'Cl', 'H', 'N', 'O'])
+    expect([...usedElements].sort()).toEqual(['C', 'Cl', 'H', 'N', 'O', 'S'])
     stageOneMolecules.forEach((molecule) => {
       const atoms = molecule.model.map((atom, index) => ({ id: `a${index}`, symbol: atom.symbol }))
+      expect(parseMolecularFormula(molecule.formula), molecule.formula).toEqual(molecule.atoms)
+      expect(countAtomSymbols(atoms.map((atom) => atom.symbol)), molecule.formula).toEqual(molecule.atoms)
       const targetBonds = collapseRepeatedBonds(molecule.bonds)
       expect(moleculeGraphMatches(atoms, targetBonds, molecule), molecule.formula).toBe(true)
       const builtBonds = targetBonds.reduce((currentBonds, bond) => {

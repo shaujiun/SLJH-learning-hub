@@ -3,6 +3,7 @@ export const particleElementStyles = {
   C: { name: '碳', color: '#344052', border: '#172131', text: '#ffffff' },
   N: { name: '氮', color: '#6e8fe8', border: '#3858aa', text: '#ffffff' },
   O: { name: '氧', color: '#ef6b62', border: '#a93632', text: '#ffffff' },
+  S: { name: '硫', color: '#f3c744', border: '#9b7614', text: '#3f3006' },
   Cl: { name: '氯', color: '#62bd77', border: '#287940', text: '#173b22' },
 }
 
@@ -86,6 +87,31 @@ export const stageOneMolecules = [
     id: 'ethane', name: '乙烷分子', formula: 'C2H6', atoms: { C: 2, H: 6 }, bondHint: '兩顆 C 之間建立單鍵，每顆 C 再分別連接三顆 H。',
     model: [{ symbol: 'C', x: 42, y: 50 }, { symbol: 'C', x: 58, y: 50 }, { symbol: 'H', x: 27, y: 25 }, { symbol: 'H', x: 22, y: 50 }, { symbol: 'H', x: 27, y: 75 }, { symbol: 'H', x: 73, y: 25 }, { symbol: 'H', x: 78, y: 50 }, { symbol: 'H', x: 73, y: 75 }],
     bonds: [[0, 1], [0, 2], [0, 3], [0, 4], [1, 5], [1, 6], [1, 7]],
+  },
+  {
+    id: 'hydrogen-sulfide', name: '硫化氫分子', formula: 'H2S', atoms: { H: 2, S: 1 }, bondHint: 'S 放中央，分別和兩顆 H 建立單鍵。',
+    model: [{ symbol: 'S', x: 50, y: 55 }, { symbol: 'H', x: 31, y: 35 }, { symbol: 'H', x: 69, y: 35 }],
+    bonds: [[0, 1], [0, 2]],
+  },
+  {
+    id: 'sulfur-dioxide', name: '二氧化硫分子', formula: 'SO2', atoms: { S: 1, O: 2 }, bondHint: 'S 放中央，分別和兩顆 O 建立雙鍵。',
+    model: [{ symbol: 'S', x: 50, y: 57 }, { symbol: 'O', x: 27, y: 37 }, { symbol: 'O', x: 73, y: 37 }],
+    bonds: [[0, 1], [0, 1], [0, 2], [0, 2]],
+  },
+  {
+    id: 'sulfur-trioxide', name: '三氧化硫分子', formula: 'SO3', atoms: { S: 1, O: 3 }, bondHint: 'S 放中央，分別和三顆 O 建立雙鍵。',
+    model: [{ symbol: 'S', x: 50, y: 50 }, { symbol: 'O', x: 50, y: 20 }, { symbol: 'O', x: 24, y: 70 }, { symbol: 'O', x: 76, y: 70 }],
+    bonds: [[0, 1], [0, 1], [0, 2], [0, 2], [0, 3], [0, 3]],
+  },
+  {
+    id: 'sulfurous-acid', name: '亞硫酸分子', formula: 'H2SO3', atoms: { H: 2, S: 1, O: 3 }, bondHint: 'S 和一顆 O 建立雙鍵，再和兩個 O－H 結構建立單鍵。',
+    model: [{ symbol: 'S', x: 50, y: 50 }, { symbol: 'O', x: 50, y: 18 }, { symbol: 'O', x: 29, y: 65 }, { symbol: 'O', x: 71, y: 65 }, { symbol: 'H', x: 13, y: 80 }, { symbol: 'H', x: 87, y: 80 }],
+    bonds: [[0, 1], [0, 1], [0, 2], [0, 3], [2, 4], [3, 5]],
+  },
+  {
+    id: 'sulfuric-acid', name: '硫酸分子', formula: 'H2SO4', atoms: { H: 2, S: 1, O: 4 }, bondHint: 'S 和兩顆 O 建立雙鍵，再和兩個 O－H 結構建立單鍵。',
+    model: [{ symbol: 'S', x: 50, y: 50 }, { symbol: 'O', x: 50, y: 18 }, { symbol: 'O', x: 50, y: 82 }, { symbol: 'O', x: 27, y: 50 }, { symbol: 'O', x: 73, y: 50 }, { symbol: 'H', x: 10, y: 50 }, { symbol: 'H', x: 90, y: 50 }],
+    bonds: [[0, 1], [0, 1], [0, 2], [0, 2], [0, 3], [0, 4], [3, 5], [4, 6]],
   },
 ]
 
