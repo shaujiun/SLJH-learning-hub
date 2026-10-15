@@ -50,6 +50,7 @@ describe('guest practice routes', () => {
 
     expect(html).toContain('?game=periodic-table&amp;guest=1')
     expect(html).toContain('?game=chemical-formula&amp;guest=1')
+    expect(html).toContain('?game=chemical-balance&amp;guest=1')
     expect(html).not.toContain('量測實驗室')
     expect(html).not.toContain('?game=measurement-lab')
     expect(html).toContain('href="?guest=1"')
@@ -70,6 +71,7 @@ describe('guest practice routes', () => {
     expect(html.slice(basic, guided)).not.toContain('化學事前哨站')
     expect(html.slice(guided, board)).not.toContain('量測實驗室')
     expect(html.slice(guided, board)).toContain('化學事前哨站')
+    expect(html.slice(guided, board)).toContain('化學反應平衡站')
     expect(html.slice(map, basic)).toContain('冊別與章節地圖尚在規劃中')
   })
 

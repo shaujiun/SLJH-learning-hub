@@ -85,6 +85,14 @@ const subjectGameTemplates = {
       availability: '八上第 6 章起適用',
       launchUrl: '?game=chemical-formula',
     },
+    {
+      code: 'chemical-balance',
+      section: 'guided',
+      name: '化學反應平衡站',
+      description: '從化學式與粒子模型開始，逐步理解原子守恆，再學會平衡化學反應式。',
+      availability: '第 1 關「分子組裝室」開放',
+      launchUrl: '?game=chemical-balance',
+    },
   ],
   history: [
     {

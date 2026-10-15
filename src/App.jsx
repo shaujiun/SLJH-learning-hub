@@ -59,6 +59,7 @@ const SchulteMemorizationGame = lazy(() => import('./components/SchulteMemorizat
 const GeographyFillMap = lazy(() => import('./components/GeographyFillMap.jsx'))
 const GeographyDetective = lazy(() => import('./components/GeographyDetective.jsx'))
 const ChemicalFormulaOutpost = lazy(() => import('./components/ChemicalFormulaOutpost.jsx'))
+const ChemicalBalanceStation = lazy(() => import('./components/ChemicalBalanceStation.jsx'))
 const AnimalEquationExperience = lazy(() => import('./components/AnimalEquationExperience.jsx'))
 const WordGridPuzzle = lazy(() => import('./components/WordGridPuzzle.jsx'))
 const NumberGridChallenge = lazy(() => import('./components/NumberGridChallenge.jsx'))
@@ -1006,6 +1007,9 @@ export default function App() {
   if (requestedGame === 'periodic-table') return <PeriodicTableGame />
   if (requestedGame === 'chemical-formula') {
     return <Suspense fallback={<LoadingScreen />}><ChemicalFormulaOutpost /></Suspense>
+  }
+  if (requestedGame === 'chemical-balance') {
+    return <Suspense fallback={<LoadingScreen />}><ChemicalBalanceStation /></Suspense>
   }
   if (requestedGame === 'pythagoras-challenge') {
     return <Suspense fallback={<LoadingScreen />}><PythagorasChallenge /></Suspense>

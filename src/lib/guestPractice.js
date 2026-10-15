@@ -11,7 +11,7 @@ export const guestLearningSystems = [
     id: 'guest-science',
     code: 'science',
     name: '自然科',
-    description: '練習元素週期表、粒子與化學式，不需要建立帳號。',
+    description: '練習元素週期表、粒子、化學式與反應式，不需要建立帳號。',
     audienceLabel: '訪客開放',
     activities: [],
   },
