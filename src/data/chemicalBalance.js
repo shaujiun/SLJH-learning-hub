@@ -47,6 +47,46 @@ export const stageOneMolecules = [
     model: [{ symbol: 'H', x: 37, y: 50 }, { symbol: 'Cl', x: 63, y: 50 }],
     bonds: [[0, 1]],
   },
+  {
+    id: 'chlorine', name: '氯分子', formula: 'Cl2', atoms: { Cl: 2 }, bondHint: '兩顆 Cl 之間建立 1 個單鍵。',
+    model: [{ symbol: 'Cl', x: 38, y: 50 }, { symbol: 'Cl', x: 62, y: 50 }],
+    bonds: [[0, 1]],
+  },
+  {
+    id: 'hydrogen-peroxide', name: '過氧化氫分子', formula: 'H2O2', atoms: { H: 2, O: 2 }, bondHint: '依照 H－O－O－H 的順序建立單鍵。',
+    model: [{ symbol: 'H', x: 18, y: 39 }, { symbol: 'O', x: 39, y: 54 }, { symbol: 'O', x: 61, y: 46 }, { symbol: 'H', x: 82, y: 61 }],
+    bonds: [[0, 1], [1, 2], [2, 3]],
+  },
+  {
+    id: 'formaldehyde', name: '甲醛分子', formula: 'CH2O', atoms: { C: 1, H: 2, O: 1 }, bondHint: 'C 放中央，和 O 建立雙鍵，再分別和兩顆 H 建立單鍵。',
+    model: [{ symbol: 'C', x: 48, y: 50 }, { symbol: 'O', x: 73, y: 50 }, { symbol: 'H', x: 30, y: 30 }, { symbol: 'H', x: 30, y: 70 }],
+    bonds: [[0, 1], [0, 1], [0, 2], [0, 3]],
+  },
+  {
+    id: 'chloromethane', name: '氯甲烷分子', formula: 'CH3Cl', atoms: { C: 1, H: 3, Cl: 1 }, bondHint: 'C 放中央，分別和三顆 H、一顆 Cl 建立單鍵。',
+    model: [{ symbol: 'C', x: 50, y: 50 }, { symbol: 'Cl', x: 78, y: 50 }, { symbol: 'H', x: 35, y: 25 }, { symbol: 'H', x: 35, y: 75 }, { symbol: 'H', x: 22, y: 50 }],
+    bonds: [[0, 1], [0, 2], [0, 3], [0, 4]],
+  },
+  {
+    id: 'methanol', name: '甲醇分子', formula: 'CH3OH', atoms: { C: 1, H: 4, O: 1 }, bondHint: 'C 和三顆 H、O 建立單鍵；O 再和另一顆 H 建立單鍵。',
+    model: [{ symbol: 'C', x: 39, y: 50 }, { symbol: 'O', x: 64, y: 50 }, { symbol: 'H', x: 25, y: 27 }, { symbol: 'H', x: 25, y: 73 }, { symbol: 'H', x: 15, y: 50 }, { symbol: 'H', x: 84, y: 50 }],
+    bonds: [[0, 1], [0, 2], [0, 3], [0, 4], [1, 5]],
+  },
+  {
+    id: 'ethyne', name: '乙炔分子', formula: 'C2H2', atoms: { C: 2, H: 2 }, bondHint: '兩顆 C 之間建立三鍵，兩端再各連接一顆 H。',
+    model: [{ symbol: 'C', x: 40, y: 50 }, { symbol: 'C', x: 60, y: 50 }, { symbol: 'H', x: 17, y: 50 }, { symbol: 'H', x: 83, y: 50 }],
+    bonds: [[0, 1], [0, 1], [0, 1], [0, 2], [1, 3]],
+  },
+  {
+    id: 'ethene', name: '乙烯分子', formula: 'C2H4', atoms: { C: 2, H: 4 }, bondHint: '兩顆 C 之間建立雙鍵，每顆 C 再分別連接兩顆 H。',
+    model: [{ symbol: 'C', x: 42, y: 50 }, { symbol: 'C', x: 58, y: 50 }, { symbol: 'H', x: 24, y: 27 }, { symbol: 'H', x: 24, y: 73 }, { symbol: 'H', x: 76, y: 27 }, { symbol: 'H', x: 76, y: 73 }],
+    bonds: [[0, 1], [0, 1], [0, 2], [0, 3], [1, 4], [1, 5]],
+  },
+  {
+    id: 'ethane', name: '乙烷分子', formula: 'C2H6', atoms: { C: 2, H: 6 }, bondHint: '兩顆 C 之間建立單鍵，每顆 C 再分別連接三顆 H。',
+    model: [{ symbol: 'C', x: 42, y: 50 }, { symbol: 'C', x: 58, y: 50 }, { symbol: 'H', x: 27, y: 25 }, { symbol: 'H', x: 22, y: 50 }, { symbol: 'H', x: 27, y: 75 }, { symbol: 'H', x: 73, y: 25 }, { symbol: 'H', x: 78, y: 50 }, { symbol: 'H', x: 73, y: 75 }],
+    bonds: [[0, 1], [0, 2], [0, 3], [0, 4], [1, 5], [1, 6], [1, 7]],
+  },
 ]
 
 export const coefficientConceptQuestions = [

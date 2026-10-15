@@ -215,7 +215,7 @@ export function AtomBuilder({
               }}
               aria-label={`${style.name}原子 ${tool === 'bond' ? '，點選以建立鍵結' : tool === 'delete' ? '，點選以刪除' : '，可拖曳移動'}`}
             >
-              <span>{atom.symbol}</span>
+              <span className="balance-visually-hidden">{style.name}原子</span>
             </button>
           )
         })}
