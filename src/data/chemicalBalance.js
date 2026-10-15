@@ -8,42 +8,42 @@ export const particleElementStyles = {
 
 export const stageOneMolecules = [
   {
-    id: 'hydrogen', name: '氫分子', formula: 'H2', atoms: { H: 2 },
+    id: 'hydrogen', name: '氫分子', formula: 'H2', atoms: { H: 2 }, bondHint: '兩顆 H 之間建立 1 個單鍵。',
     model: [{ symbol: 'H', x: 39, y: 50 }, { symbol: 'H', x: 61, y: 50 }],
     bonds: [[0, 1]],
   },
   {
-    id: 'oxygen', name: '氧分子', formula: 'O2', atoms: { O: 2 },
+    id: 'oxygen', name: '氧分子', formula: 'O2', atoms: { O: 2 }, bondHint: '兩顆 O 之間建立 1 個雙鍵。',
     model: [{ symbol: 'O', x: 38, y: 50 }, { symbol: 'O', x: 62, y: 50 }],
     bonds: [[0, 1], [0, 1]],
   },
   {
-    id: 'nitrogen', name: '氮分子', formula: 'N2', atoms: { N: 2 },
+    id: 'nitrogen', name: '氮分子', formula: 'N2', atoms: { N: 2 }, bondHint: '兩顆 N 之間建立 1 個三鍵。',
     model: [{ symbol: 'N', x: 38, y: 50 }, { symbol: 'N', x: 62, y: 50 }],
     bonds: [[0, 1], [0, 1], [0, 1]],
   },
   {
-    id: 'water', name: '水分子', formula: 'H2O', atoms: { H: 2, O: 1 },
+    id: 'water', name: '水分子', formula: 'H2O', atoms: { H: 2, O: 1 }, bondHint: 'O 放中央，分別和兩顆 H 建立單鍵。',
     model: [{ symbol: 'O', x: 50, y: 54 }, { symbol: 'H', x: 31, y: 35 }, { symbol: 'H', x: 69, y: 35 }],
     bonds: [[0, 1], [0, 2]],
   },
   {
-    id: 'carbon-dioxide', name: '二氧化碳分子', formula: 'CO2', atoms: { C: 1, O: 2 },
+    id: 'carbon-dioxide', name: '二氧化碳分子', formula: 'CO2', atoms: { C: 1, O: 2 }, bondHint: 'C 放中央，分別和兩顆 O 建立雙鍵。',
     model: [{ symbol: 'O', x: 25, y: 50 }, { symbol: 'C', x: 50, y: 50 }, { symbol: 'O', x: 75, y: 50 }],
     bonds: [[0, 1], [0, 1], [1, 2], [1, 2]],
   },
   {
-    id: 'ammonia', name: '氨分子', formula: 'NH3', atoms: { N: 1, H: 3 },
+    id: 'ammonia', name: '氨分子', formula: 'NH3', atoms: { N: 1, H: 3 }, bondHint: 'N 放中央，分別和三顆 H 建立單鍵。',
     model: [{ symbol: 'N', x: 50, y: 48 }, { symbol: 'H', x: 50, y: 22 }, { symbol: 'H', x: 27, y: 70 }, { symbol: 'H', x: 73, y: 70 }],
     bonds: [[0, 1], [0, 2], [0, 3]],
   },
   {
-    id: 'methane', name: '甲烷分子', formula: 'CH4', atoms: { C: 1, H: 4 },
+    id: 'methane', name: '甲烷分子', formula: 'CH4', atoms: { C: 1, H: 4 }, bondHint: 'C 放中央，分別和四顆 H 建立單鍵。',
     model: [{ symbol: 'C', x: 50, y: 50 }, { symbol: 'H', x: 50, y: 19 }, { symbol: 'H', x: 50, y: 81 }, { symbol: 'H', x: 19, y: 50 }, { symbol: 'H', x: 81, y: 50 }],
     bonds: [[0, 1], [0, 2], [0, 3], [0, 4]],
   },
   {
-    id: 'hydrogen-chloride', name: '氯化氫分子', formula: 'HCl', atoms: { H: 1, Cl: 1 },
+    id: 'hydrogen-chloride', name: '氯化氫分子', formula: 'HCl', atoms: { H: 1, Cl: 1 }, bondHint: 'H 和 Cl 之間建立 1 個單鍵。',
     model: [{ symbol: 'H', x: 37, y: 50 }, { symbol: 'Cl', x: 63, y: 50 }],
     bonds: [[0, 1]],
   },

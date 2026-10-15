@@ -1,7 +1,7 @@
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import ChemicalBalanceStation from './ChemicalBalanceStation.jsx'
+import ChemicalBalanceStation, { AtomBuilder } from './ChemicalBalanceStation.jsx'
 
 describe('化學反應平衡站', () => {
   beforeEach(() => {
@@ -24,5 +24,30 @@ describe('化學反應平衡站', () => {
     expect(html).toContain('開始第 1 關')
     expect(html).toContain('右下角數字改變粒子的組成')
     expect(html).toContain('?subject=science&amp;guest=1')
+  })
+
+  it('提供可拖曳原子、選擇鍵級與清除鍵結的球棒模型工具', () => {
+    const html = renderToStaticMarkup(<AtomBuilder
+      atoms={[{ id: 'c1', symbol: 'C', x: 50, y: 50 }]}
+      bonds={[]}
+      disabled={false}
+      tool="bond"
+      bondOrder={1}
+      activeBondAtom="c1"
+      builderMessage="已選第 1 顆原子"
+      onAdd={() => {}}
+      onMove={() => {}}
+      onAtomAction={() => {}}
+      onTool={() => {}}
+      onClearBonds={() => {}}
+      onClear={() => {}}
+    />)
+    expect(html).toContain('分子模型組裝畫布')
+    expect(html).toContain('單鍵')
+    expect(html).toContain('雙鍵')
+    expect(html).toContain('三鍵')
+    expect(html).toContain('只清除鍵結')
+    expect(html).toContain('已選第 1 顆原子')
+    expect(html).toContain('draggable="true"')
   })
 })

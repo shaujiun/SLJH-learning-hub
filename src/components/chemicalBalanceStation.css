@@ -59,17 +59,36 @@
 .balance-formula-target small { color: #6e7b82; font-weight: 900; }
 .balance-formula-target b { margin: 0.25rem 0; font: 900 clamp(2.5rem, 8vw, 4.5rem)/1 system-ui; }
 .balance-formula-target span { color: #5c6d75; font-weight: 800; }
+.balance-formula-target em { margin-top: 0.45rem; border-radius: 999px; padding: 0.38rem 0.65rem; background: #fff0cd; color: #795323; font-size: 0.86rem; font-style: normal; font-weight: 900; text-align: center; }
 
 .balance-builder { display: grid; gap: 0.8rem; }
-.balance-assembly { display: flex; min-height: 145px; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.55rem; border: 3px dashed #6fa99e; border-radius: 20px; padding: 1rem; background: #effbf7; }
-.balance-assembly > span { color: #63777a; font-weight: 800; }
-.balance-assembly > button { position: relative; display: grid; width: 62px; height: 62px; place-items: center; border: 3px solid var(--atom-border); border-radius: 50%; background: var(--atom-fill); color: var(--atom-text); font: 900 1.2rem/1 system-ui; cursor: pointer; }
-.balance-assembly > button svg { position: absolute; top: -5px; right: -5px; width: 20px; border-radius: 50%; padding: 2px; background: #20364c; color: #fff; }
+.balance-builder-guide { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.4rem; color: #4d676d; font-size: 0.88rem; }
+.balance-builder-guide b { border-radius: 999px; padding: 0.35rem 0.55rem; background: #e4f4ef; }
+.balance-builder-guide i { color: #b06b31; font: 900 1rem/1 system-ui; }
+.balance-builder-toolbar { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.45rem; }
+.balance-builder-toolbar button { display: flex; min-height: 45px; align-items: center; justify-content: center; gap: 0.3rem; border: 2px solid #71868e; border-radius: 11px; background: #fff; color: #38515d; font: 900 0.88rem/1 inherit; cursor: pointer; }
+.balance-builder-toolbar button svg { width: 17px; }
+.balance-builder-toolbar button.is-active { border-color: #20364c; background: #ffe0a2; box-shadow: inset 0 -3px 0 #d99b46; color: #20364c; }
+.balance-builder-toolbar button.is-delete { color: #9a4439; }
+.balance-builder-toolbar button.is-delete.is-active { background: #ffe7e1; box-shadow: inset 0 -3px 0 #d78b7d; }
+.balance-assembly { position: relative; min-height: 350px; overflow: hidden; border: 3px solid #6fa99e; border-radius: 20px; background-color: #effbf7; background-image: radial-gradient(circle, rgba(57, 116, 107, 0.16) 1.2px, transparent 1.2px); background-size: 20px 20px; touch-action: none; }
+.balance-assembly.is-move { cursor: move; }
+.balance-assembly.is-bond { cursor: crosshair; }
+.balance-assembly > span { position: absolute; inset: 0; display: grid; place-items: center; padding: 1rem; color: #63777a; font-weight: 800; text-align: center; }
+.balance-assembly > svg { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.balance-assembly > svg line { stroke: #4b5f68; stroke-width: 2.2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.balance-assembly > button { position: absolute; z-index: 2; display: grid; width: clamp(55px, 10vw, 72px); height: clamp(55px, 10vw, 72px); place-items: center; transform: translate(-50%, -50%); border: 3px solid var(--atom-border); border-radius: 50%; background: radial-gradient(circle at 30% 23%, #fff 0, var(--atom-fill) 34%, var(--atom-border) 100%); color: var(--atom-text); box-shadow: 0 7px 12px rgba(28, 52, 63, 0.3), inset -4px -5px 9px rgba(0, 0, 0, 0.16); font: 900 1.2rem/1 system-ui; cursor: inherit; user-select: none; }
+.balance-assembly > button::after { position: absolute; top: 14%; left: 20%; width: 20%; height: 14%; border-radius: 50%; background: rgba(255, 255, 255, 0.65); content: ""; transform: rotate(-28deg); }
+.balance-assembly > button.is-selected { outline: 5px solid #f1a447; outline-offset: 4px; }
+.balance-assembly > button span { position: relative; z-index: 1; }
+.balance-builder-status { min-height: 1.5em; margin: -0.25rem 0 0; color: #526a70; font-size: 0.9rem; font-weight: 800; text-align: center; }
 .balance-atom-bank { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.5rem; }
-.balance-atom-bank button { display: flex; min-height: 66px; align-items: center; justify-content: center; gap: 0.35rem; border: 2px solid var(--atom-border); border-radius: 13px; background: var(--atom-fill); color: var(--atom-text); cursor: pointer; }
+.balance-atom-bank button { display: flex; min-height: 66px; align-items: center; justify-content: center; gap: 0.35rem; border: 2px solid var(--atom-border); border-radius: 13px; background: radial-gradient(circle at 28% 18%, #fff 0, var(--atom-fill) 42%, var(--atom-border) 125%); color: var(--atom-text); cursor: grab; }
+.balance-atom-bank button:active { cursor: grabbing; }
 .balance-atom-bank b { font: 900 1.2rem/1 system-ui; }
 .balance-atom-bank span { font-weight: 900; }
-.balance-clear { display: inline-flex; align-items: center; justify-self: end; gap: 0.3rem; border: 0; background: transparent; color: #50666d; font: 900 0.9rem/1 inherit; cursor: pointer; }
+.balance-builder-reset { display: flex; justify-content: flex-end; gap: 0.75rem; }
+.balance-clear { display: inline-flex; align-items: center; gap: 0.3rem; border: 0; background: transparent; color: #50666d; font: 900 0.9rem/1 inherit; cursor: pointer; }
 .balance-clear svg { width: 17px; }
 
 .balance-particle-model { display: grid; justify-items: center; margin: 0.5rem auto 1rem; }
@@ -122,6 +141,8 @@
   .balance-stage-grid { grid-template-columns: 1fr; }
   .balance-stage-grid article { min-height: 205px; }
   .balance-atom-bank { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .balance-builder-toolbar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .balance-assembly { min-height: 310px; }
   .balance-choice-grid { grid-template-columns: 1fr; }
   .balance-lesson > header { align-items: flex-start; }
 }
@@ -129,6 +150,8 @@
 @media (max-width: 390px) {
   .balance-atom-bank button { min-height: 56px; }
   .balance-atom-bank span { display: none; }
+  .balance-builder-guide i { display: none; }
+  .balance-builder-guide b { flex: 1 1 100%; text-align: center; }
   .balance-result > div { width: 100%; flex-direction: column; }
   .balance-result button { justify-content: center; }
 }
