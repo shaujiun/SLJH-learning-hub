@@ -148,6 +148,21 @@
 .balance-formula-term strong > span.is-one { visibility: hidden; }
 .balance-formula-term > small { margin-top: 0.25rem; color: #687a80; font-weight: 900; }
 .balance-ledger-placeholder { margin: 0.85rem 0 0; border: 2px dashed #8c989c; border-radius: 14px; padding: 0.85rem; background: #f5f6f4; color: #596b70; font-weight: 900; text-align: center; }
+.balance-stage-four { max-width: 1000px; }
+.balance-stage-four-steps { display: flex; align-items: center; justify-content: center; gap: 0.65rem; margin-bottom: 0.8rem; color: #7a8589; font-weight: 900; }
+.balance-stage-four-steps > svg { width: 22px; }
+.balance-stage-four-steps span { display: inline-flex; align-items: center; gap: 0.35rem; border: 2px solid #a4afb2; border-radius: 999px; padding: 0.42rem 0.7rem; background: #f2f4f3; }
+.balance-stage-four-steps span b { display: grid; width: 24px; height: 24px; place-items: center; border-radius: 50%; background: #8a969a; color: #fff; font: 900 0.78rem/1 system-ui; }
+.balance-stage-four-steps span.is-current { border-color: #b56a2c; background: #fff1d6; color: #77471f; }
+.balance-stage-four-steps span.is-current b { background: #b56a2c; }
+.balance-stage-four-steps span.is-complete { border-color: #29786e; background: #e6f8f3; color: #245e56; }
+.balance-stage-four-steps span.is-complete b { background: #29786e; }
+.balance-stage-four-instruction { margin: 0; color: #50666d; font-weight: 900; line-height: 1.5; text-align: center; }
+.balance-formula-equation.is-selection { background: linear-gradient(135deg, #f3f1fb, #fff7e8); }
+.balance-formula-selection-term { display: grid; min-width: 165px; justify-items: center; gap: 0.55rem; border: 2px solid #817b9b; border-radius: 14px; padding: 0.8rem 0.65rem; background: rgba(255, 255, 255, 0.94); }
+.balance-formula-selection-term > strong { color: #334b57; font-size: 1rem; }
+.balance-formula-selection-term label { width: 100%; }
+.balance-formula-selection-term select { width: 100%; min-height: 45px; border: 2px solid #607781; border-radius: 10px; padding: 0.5rem 2rem 0.5rem 0.65rem; background: #fff; color: #20364c; font: 900 1rem/1.2 inherit; cursor: pointer; }
 .balance-choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem; }
 .balance-choice-grid button { display: flex; min-height: 65px; align-items: center; gap: 0.65rem; border: 2px solid #708894; border-radius: 14px; padding: 0.7rem; background: #fff; color: #20364c; font: 900 1rem/1.35 inherit; text-align: left; cursor: pointer; }
 .balance-choice-grid button b { display: grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border-radius: 9px; background: #dfeae9; font: 900 0.9rem/1 system-ui; }
@@ -200,7 +215,7 @@
   .balance-assembly { min-height: 310px; }
   .balance-choice-grid { grid-template-columns: 1fr; }
   .balance-lesson > header { align-items: flex-start; }
-  .balance-stage-two, .balance-stage-three { padding-inline: 0.7rem; }
+  .balance-stage-two, .balance-stage-three, .balance-stage-four { padding-inline: 0.7rem; }
   .balance-stage-three-guide { align-items: flex-start; flex-direction: column; }
   .balance-reaction-board > section > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); height: auto; }
   .balance-reaction-term:only-child { grid-column: 1 / -1; }
@@ -209,6 +224,9 @@
   .balance-formula-unit { width: 100%; justify-content: center; flex-wrap: wrap; }
   .balance-formula-plus { width: 100%; text-align: center; }
   .balance-formula-term { width: min(100%, 280px); }
+  .balance-formula-selection-term { width: min(100%, 280px); }
+  .balance-stage-four-steps { align-items: stretch; }
+  .balance-stage-four-steps span { flex: 1 1 0; justify-content: center; border-radius: 14px; padding-inline: 0.45rem; text-align: center; }
 }
 
 @media (max-width: 390px) {
@@ -220,6 +238,8 @@
   .balance-result button { justify-content: center; }
   .balance-reaction-board > section > div { grid-template-columns: 1fr; }
   .balance-reaction-term:only-child { grid-column: auto; }
+  .balance-stage-four-steps { display: grid; grid-template-columns: 1fr; }
+  .balance-stage-four-steps > svg { justify-self: center; transform: rotate(90deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {

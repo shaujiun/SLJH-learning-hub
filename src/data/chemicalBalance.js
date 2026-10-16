@@ -246,9 +246,35 @@ export const stageThreeProgression = [
   },
 ]
 
+export const formulaChoicesByMoleculeId = {
+  hydrogen: ['H', 'H2O'],
+  chlorine: ['Cl', 'HCl'],
+  'hydrogen-chloride': ['H2Cl', 'HCl2'],
+  oxygen: ['O', 'O3'],
+  water: ['H2O2', 'HO2'],
+  nitrogen: ['N', 'NH3'],
+  ammonia: ['NH2', 'N3H'],
+  methane: ['CH3', 'C2H4'],
+  'carbon-dioxide': ['CO', 'C2O'],
+  'hydrogen-peroxide': ['H2O', 'HO2'],
+  'sulfur-dioxide': ['SO', 'SO3'],
+  'sulfur-trioxide': ['SO2', 'H2SO3'],
+  'hydrogen-sulfide': ['HS', 'H2SO3'],
+}
+
+export const stageFourReactionIds = [
+  'hydrogen-chloride-formation',
+  'water-formation',
+  'ammonia-formation',
+  'hydrogen-peroxide-decomposition',
+  'sulfur-trioxide-formation',
+  'methane-combustion',
+  'hydrogen-sulfide-combustion',
+]
+
 export const chemicalBalanceRoadmap = [
   { stage: 1, title: '分子組裝室', description: '化學式與粒子模型雙向判讀。', status: 'open' },
   { stage: 2, title: '原子守恆天平', description: '用粒子模型讓反應前後原子數相同。', status: 'open' },
   { stage: 3, title: '係數平衡訓練', description: '從統計表逐步過渡到只看反應式。', status: 'open' },
-  { stage: 4, title: '完整反應式挑戰', description: '先確認化學式，再化為最簡整數係數。', status: 'planned' },
+  { stage: 4, title: '完整反應式挑戰', description: '先確認化學式，再化為最簡整數係數。', status: 'open' },
 ]

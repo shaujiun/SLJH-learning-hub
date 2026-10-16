@@ -24,14 +24,18 @@ import {
 } from '../data/chemicalBalance.js'
 import {
   buildStageOneRound,
+  buildStageFourRound,
   buildStageThreeRound,
   buildStageTwoRound,
   collapseRepeatedBonds,
   describeMoleculeBuild,
+  describeFormulaSelections,
   displayMolecularFormula,
   describeFormulaOnlyBalance,
   describeReactionBalance,
+  evaluateFormulaSelections,
   evaluateReactionCoefficients,
+  initialFormulaSelections,
   initialReactionCoefficients,
   moleculeGraphMatches,
   pointsForAttempt,
@@ -47,6 +51,7 @@ const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
 const bestScoreKey = 'sljh.chemicalBalance.stageOne.best.v1'
 const stageTwoBestScoreKey = 'sljh.chemicalBalance.stageTwo.best.v1'
 const stageThreeBestScoreKey = 'sljh.chemicalBalance.stageThree.best.v1'
+const stageFourBestScoreKey = 'sljh.chemicalBalance.stageFour.best.v1'
 
 function readStoredScore(key = bestScoreKey) {
   if (typeof window === 'undefined' || !window.localStorage) return 0
@@ -98,7 +103,7 @@ function ParticleModel({ molecule, label = `${molecule.name}的球棒模型`, co
   )
 }
 
-function Roadmap({ bestScore, stageTwoBestScore, stageThreeBestScore, onStart }) {
+function Roadmap({ bestScore, stageTwoBestScore, stageThreeBestScore, stageFourBestScore, onStart }) {
   return (
     <>
       <section className="balance-hero">
@@ -136,6 +141,7 @@ function Roadmap({ bestScore, stageTwoBestScore, stageThreeBestScore, onStart })
           <p className="balance-best"><Trophy aria-hidden="true" />第 1 關此裝置最高成績：{bestScore || '尚未完成'}{bestScore ? ' 分' : ''}</p>
           <p className="balance-best"><Scale aria-hidden="true" />第 2 關此裝置最高成績：{stageTwoBestScore || '尚未完成'}{stageTwoBestScore ? ' 分' : ''}</p>
           <p className="balance-best"><CheckCircle2 aria-hidden="true" />第 3 關此裝置最高成績：{stageThreeBestScore || '尚未完成'}{stageThreeBestScore ? ' 分' : ''}</p>
+          <p className="balance-best"><FlaskConical aria-hidden="true" />第 4 關此裝置最高成績：{stageFourBestScore || '尚未完成'}{stageFourBestScore ? ' 分' : ''}</p>
         </div>
       </section>
     </>
@@ -397,12 +403,103 @@ export function StageThreeLesson({ question, coefficients, resolved, feedback, r
   )
 }
 
+function FormulaSelectionTerm({ term, value, side, index, onChange }) {
+  return (
+    <article className="balance-formula-selection-term">
+      <strong>{term.molecule.name}</strong>
+      <label>
+        <span className="balance-visually-hidden">選擇{term.molecule.name}的化學式</span>
+        <select value={value} onChange={(event) => onChange(side, index, event.target.value)} aria-label={`${term.molecule.name}的化學式`}>
+          <option value="">選擇化學式</option>
+          {term.formulaOptions.map((formula) => <option key={formula} value={formula}>{displayMolecularFormula(formula)}</option>)}
+        </select>
+      </label>
+    </article>
+  )
+}
+
+function FormulaSelectionSide({ terms, selections, side, onChange }) {
+  return (
+    <div className="balance-formula-side">
+      {terms.map((term, index) => (
+        <div className="balance-formula-unit" key={term.moleculeId}>
+          {index > 0 && <b className="balance-formula-plus" aria-hidden="true">＋</b>}
+          <FormulaSelectionTerm term={term} value={selections[index]} side={side} index={index} onChange={onChange} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function StageFourLesson({
+  question,
+  formulaSelections,
+  formulaConfirmed,
+  coefficients,
+  resolved,
+  feedback,
+  feedbackKind,
+  onFormulaChange,
+  onFormulaSubmit,
+  onCoefficientChange,
+  onCoefficientSubmit,
+  onNext,
+  questionIndex = 0,
+  totalQuestions = 1,
+}) {
+  const evaluation = evaluateReactionCoefficients(question, coefficients)
+  return (
+    <section className="balance-lesson balance-stage-four">
+      <header>
+        <div><p>STAGE 4・完整反應式挑戰</p><h1>{question.prompt}</h1></div>
+        <strong>{questionIndex + 1}<small>／{totalQuestions}</small></strong>
+      </header>
+      <div className="balance-progress" aria-label={`第 ${questionIndex + 1} 題，共 ${totalQuestions} 題`}><i style={{ width: `${((questionIndex + 1) / totalQuestions) * 100}%` }} /></div>
+      <div className="balance-stage-four-steps" aria-label="本題作答步驟">
+        <span className={formulaConfirmed ? 'is-complete' : 'is-current'}><b>1</b>確認化學式</span>
+        <ArrowRight aria-hidden="true" />
+        <span className={formulaConfirmed ? 'is-current' : ''}><b>2</b>配平係數</span>
+      </div>
+
+      {!formulaConfirmed ? (
+        <>
+          <p className="balance-stage-four-instruction">先依照物質名稱完成化學式，這一步不處理係數。</p>
+          <div className="balance-formula-equation is-selection" aria-label="選擇反應物與生成物的化學式">
+            <FormulaSelectionSide terms={question.reactants} selections={formulaSelections.reactants} side="reactants" onChange={onFormulaChange} />
+            <ArrowRight className="balance-formula-arrow" aria-label="生成" />
+            <FormulaSelectionSide terms={question.products} selections={formulaSelections.products} side="products" onChange={onFormulaChange} />
+          </div>
+          <button type="button" className="balance-primary" onClick={onFormulaSubmit}><CheckCircle2 aria-hidden="true" />檢查化學式</button>
+        </>
+      ) : (
+        <>
+          <p className="balance-stage-four-instruction">化學式已固定。只能調整前方係數，並化成最簡整數比。</p>
+          <div className="balance-formula-equation" aria-label="完整化學反應式配平">
+            <FormulaSide terms={question.reactants} coefficients={coefficients.reactants} side="reactants" disabled={resolved} onChange={onCoefficientChange} />
+            <ArrowRight className="balance-formula-arrow" aria-label="生成" />
+            <FormulaSide terms={question.products} coefficients={coefficients.products} side="products" disabled={resolved} onChange={onCoefficientChange} />
+          </div>
+          {resolved
+            ? <AtomLedger evaluation={evaluation} title="完整反應式核對" />
+            : <p className="balance-ledger-placeholder">完整挑戰不提供作答中的原子統計；請自行逐項計算。</p>}
+          {!resolved && <button type="button" className="balance-primary" onClick={onCoefficientSubmit}><CheckCircle2 aria-hidden="true" />檢查完整反應式</button>}
+        </>
+      )}
+
+      {feedback && <div className={`balance-feedback ${feedbackKind === 'success' ? 'is-correct' : 'is-hint'}`} role="status">{feedbackKind === 'success' ? <CheckCircle2 aria-hidden="true" /> : <Lightbulb aria-hidden="true" />}<span>{feedback}</span></div>}
+      {resolved && <button type="button" className="balance-next" onClick={onNext}>{questionIndex === totalQuestions - 1 ? '查看本關成果' : '下一題'}<ChevronRight aria-hidden="true" /></button>}
+    </section>
+  )
+}
+
 function ResultPanel({ stage, score, bestScore, onRestart, onBack }) {
   const resultMessage = stage === 1
     ? (score >= 80 ? '你已能區分粒子的組成與數量，可以準備挑戰原子守恆。' : '建議再練一次，特別留意前方係數與右下角數字。')
     : stage === 2
       ? (score >= 80 ? '你已能利用粒子與原子統計完成基礎配平，可以準備進入只看化學式的訓練。' : '建議再練一次，調整係數後逐項核對左右兩側的原子數。')
-      : (score >= 80 ? '你已能逐步撤除統計提示並直接配平反應式，可以準備挑戰完整反應式。' : '建議再練一次，先處理較容易判斷的元素，最後再檢查所有係數是否為最簡整數比。')
+      : stage === 3
+        ? (score >= 80 ? '你已能逐步撤除統計提示並直接配平反應式，可以準備挑戰完整反應式。' : '建議再練一次，先處理較容易判斷的元素，最後再檢查所有係數是否為最簡整數比。')
+        : (score >= 80 ? '你已能從物質名稱建立完整化學反應式，並以最簡整數係數完成配平。' : '建議再練一次，先確認每一個化學式，再逐項計算反應前後的原子數。')
   return (
     <section className="balance-result">
       <Trophy aria-hidden="true" />
@@ -457,6 +554,19 @@ export default function ChemicalBalanceStation() {
   const [stageThreePoints, setStageThreePoints] = useState(0)
   const [stageThreeBestScore, setStageThreeBestScore] = useState(() => readStoredScore(stageThreeBestScoreKey))
   const stageThreeScore = stageOneScore(stageThreePoints, stageThreeQuestions.length)
+  const [stageFourQuestions, setStageFourQuestions] = useState(() => buildStageFourRound())
+  const [stageFourQuestionIndex, setStageFourQuestionIndex] = useState(0)
+  const stageFourQuestion = stageFourQuestions[stageFourQuestionIndex]
+  const [stageFourFormulaSelections, setStageFourFormulaSelections] = useState(() => initialFormulaSelections(stageFourQuestion))
+  const [stageFourFormulaConfirmed, setStageFourFormulaConfirmed] = useState(false)
+  const [stageFourCoefficients, setStageFourCoefficients] = useState(() => initialReactionCoefficients(stageFourQuestion))
+  const [stageFourMistakes, setStageFourMistakes] = useState(0)
+  const [stageFourResolved, setStageFourResolved] = useState(false)
+  const [stageFourFeedback, setStageFourFeedback] = useState('')
+  const [stageFourFeedbackKind, setStageFourFeedbackKind] = useState('hint')
+  const [stageFourPoints, setStageFourPoints] = useState(0)
+  const [stageFourBestScore, setStageFourBestScore] = useState(() => readStoredScore(stageFourBestScoreKey))
+  const stageFourScore = stageOneScore(stageFourPoints, stageFourQuestions.length)
 
   function resetQuestion() {
     setSelectedAtoms([])
@@ -515,8 +625,29 @@ export default function ChemicalBalanceStation() {
     if (typeof window !== 'undefined') window.scrollTo?.({ top: 0, behavior: 'smooth' })
   }
 
+  function resetStageFour(nextQuestion) {
+    setStageFourFormulaSelections(initialFormulaSelections(nextQuestion))
+    setStageFourFormulaConfirmed(false)
+    setStageFourCoefficients(initialReactionCoefficients(nextQuestion))
+    setStageFourMistakes(0)
+    setStageFourResolved(false)
+    setStageFourFeedback('')
+    setStageFourFeedbackKind('hint')
+  }
+
+  function startStageFour() {
+    const nextQuestions = buildStageFourRound()
+    setStageFourQuestions(nextQuestions)
+    setStageFourQuestionIndex(0)
+    setStageFourPoints(0)
+    resetStageFour(nextQuestions[0])
+    setView('stage4')
+    if (typeof window !== 'undefined') window.scrollTo?.({ top: 0, behavior: 'smooth' })
+  }
+
   function startStage(stage) {
-    if (stage === 3) startStageThree()
+    if (stage === 4) startStageFour()
+    else if (stage === 3) startStageThree()
     else if (stage === 2) startStageTwo()
     else startStageOne()
   }
@@ -675,6 +806,63 @@ export default function ChemicalBalanceStation() {
     resetStageThree(stageThreeQuestions[nextIndex])
   }
 
+  function changeStageFourFormula(side, index, value) {
+    setStageFourFormulaSelections((current) => ({
+      ...current,
+      [side]: current[side].map((formula, termIndex) => termIndex === index ? value : formula),
+    }))
+    setStageFourFeedback('')
+  }
+
+  function submitStageFourFormulas() {
+    const evaluation = evaluateFormulaSelections(stageFourQuestion, stageFourFormulaSelections)
+    if (evaluation.correct) {
+      setStageFourFormulaConfirmed(true)
+      setStageFourFeedbackKind('success')
+      setStageFourFeedback(describeFormulaSelections(evaluation))
+      return
+    }
+    setStageFourMistakes((value) => value + 1)
+    setStageFourFeedbackKind('hint')
+    setStageFourFeedback(describeFormulaSelections(evaluation))
+  }
+
+  function changeStageFourCoefficient(side, index, delta) {
+    setStageFourCoefficients((current) => ({
+      ...current,
+      [side]: current[side].map((value, termIndex) => termIndex === index ? Math.max(1, Math.min(4, value + delta)) : value),
+    }))
+    setStageFourFeedback('')
+  }
+
+  function submitStageFourCoefficients() {
+    const evaluation = evaluateReactionCoefficients(stageFourQuestion, stageFourCoefficients)
+    const message = describeFormulaOnlyBalance(evaluation)
+    if (evaluation.simplest) {
+      setStageFourResolved(true)
+      setStageFourPoints((value) => value + pointsForAttempt(stageFourMistakes))
+      setStageFourFeedbackKind('success')
+      setStageFourFeedback(`完整反應式正確！${message}`)
+      return
+    }
+    setStageFourMistakes((value) => value + 1)
+    setStageFourFeedbackKind('hint')
+    setStageFourFeedback(message)
+  }
+
+  function nextStageFourQuestion() {
+    if (stageFourQuestionIndex === stageFourQuestions.length - 1) {
+      const nextBest = Math.max(stageFourBestScore, stageFourScore)
+      setStageFourBestScore(nextBest)
+      saveStoredScore(stageFourBestScoreKey, nextBest)
+      setView('stage4-result')
+      return
+    }
+    const nextIndex = stageFourQuestionIndex + 1
+    setStageFourQuestionIndex(nextIndex)
+    resetStageFour(stageFourQuestions[nextIndex])
+  }
+
   return (
     <div className="chemical-balance-shell">
       <nav className="balance-floating-nav" aria-label="學習系統導覽">
@@ -683,7 +871,7 @@ export default function ChemicalBalanceStation() {
         <a href={contactBookUrl}><ArrowLeft aria-hidden="true" />返回聯絡簿</a>
       </nav>
       <main>
-        {view === 'roadmap' && <Roadmap bestScore={bestScore} stageTwoBestScore={stageTwoBestScore} stageThreeBestScore={stageThreeBestScore} onStart={startStage} />}
+        {view === 'roadmap' && <Roadmap bestScore={bestScore} stageTwoBestScore={stageTwoBestScore} stageThreeBestScore={stageThreeBestScore} stageFourBestScore={stageFourBestScore} onStart={startStage} />}
 
         {view === 'stage1' && (
           <section className="balance-lesson">
@@ -754,9 +942,27 @@ export default function ChemicalBalanceStation() {
           totalQuestions={stageThreeQuestions.length}
         />}
 
+        {view === 'stage4' && <StageFourLesson
+          question={stageFourQuestion}
+          formulaSelections={stageFourFormulaSelections}
+          formulaConfirmed={stageFourFormulaConfirmed}
+          coefficients={stageFourCoefficients}
+          resolved={stageFourResolved}
+          feedback={stageFourFeedback}
+          feedbackKind={stageFourFeedbackKind}
+          onFormulaChange={changeStageFourFormula}
+          onFormulaSubmit={submitStageFourFormulas}
+          onCoefficientChange={changeStageFourCoefficient}
+          onCoefficientSubmit={submitStageFourCoefficients}
+          onNext={nextStageFourQuestion}
+          questionIndex={stageFourQuestionIndex}
+          totalQuestions={stageFourQuestions.length}
+        />}
+
         {view === 'stage1-result' && <ResultPanel stage={1} score={score} bestScore={bestScore} onRestart={startStageOne} onBack={() => setView('roadmap')} />}
         {view === 'stage2-result' && <ResultPanel stage={2} score={stageTwoScore} bestScore={stageTwoBestScore} onRestart={startStageTwo} onBack={() => setView('roadmap')} />}
         {view === 'stage3-result' && <ResultPanel stage={3} score={stageThreeScore} bestScore={stageThreeBestScore} onRestart={startStageThree} onBack={() => setView('roadmap')} />}
+        {view === 'stage4-result' && <ResultPanel stage={4} score={stageFourScore} bestScore={stageFourBestScore} onRestart={startStageFour} onBack={() => setView('roadmap')} />}
       </main>
     </div>
   )
