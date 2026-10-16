@@ -46,7 +46,7 @@ describe('化學反應平衡站', () => {
       onCoefficientSubmit={() => {}}
       onNext={() => {}}
       questionIndex={0}
-      totalQuestions={7}
+      totalQuestions={10}
     />)
     const correctFormulas = {
       reactants: question.reactants.map((term) => term.molecule.formula),
@@ -66,7 +66,7 @@ describe('化學反應平衡站', () => {
       onCoefficientSubmit={() => {}}
       onNext={() => {}}
       questionIndex={0}
-      totalQuestions={7}
+      totalQuestions={10}
     />)
 
     expect(initial).toContain('STAGE 4・完整反應式挑戰')
@@ -74,6 +74,7 @@ describe('化學反應平衡站', () => {
     expect(initial).toContain('檢查化學式')
     expect(initial).not.toContain('檢查完整反應式')
     expect(balancing).toContain('化學式已固定')
+    expect(balancing).toContain('本關係數可調整為 1～8')
     expect(balancing).toContain('檢查完整反應式')
     expect(balancing).toContain('完整挑戰不提供作答中的原子統計')
   })

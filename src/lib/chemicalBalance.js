@@ -1,7 +1,9 @@
 import {
   coefficientConceptQuestions,
   formulaChoicesByMoleculeId,
-  stageFourReactionIds,
+  stageFourMolecules,
+  stageFourQuestionMix,
+  stageFourReactionBank,
   stageOneMolecules,
   stageThreeProgression,
   stageTwoReactions,
@@ -165,8 +167,8 @@ export function buildStageOneRound(random = Math.random) {
   return [...buildQuestions, ...identifyQuestions, ...coefficientConceptQuestions]
 }
 
-const moleculeIndex = new Map(stageOneMolecules.map((molecule) => [molecule.id, molecule]))
-const reactionIndex = new Map(stageTwoReactions.map((reaction) => [reaction.id, reaction]))
+const moleculeIndex = new Map([...stageOneMolecules, ...stageFourMolecules].map((molecule) => [molecule.id, molecule]))
+const reactionIndex = new Map([...stageTwoReactions, ...stageFourReactionBank].map((reaction) => [reaction.id, reaction]))
 
 function hydrateReaction(reaction) {
   return {
@@ -190,8 +192,15 @@ export function buildStageThreeRound() {
 }
 
 export function buildStageFourRound(random = Math.random) {
-  return stageFourReactionIds.map((reactionId) => {
-    const reaction = hydrateReaction(reactionIndex.get(reactionId))
+  const selectedReactions = Object.entries(stageFourQuestionMix).flatMap(([difficulty, count]) => (
+    shuffleBalanceItems(
+      stageFourReactionBank.filter((reaction) => reaction.difficulty === difficulty),
+      random,
+    ).slice(0, count)
+  ))
+
+  return shuffleBalanceItems(selectedReactions, random).map((selectedReaction) => {
+    const reaction = hydrateReaction(selectedReaction)
     const addFormulaOptions = (term) => ({
       ...term,
       formulaOptions: shuffleBalanceItems([

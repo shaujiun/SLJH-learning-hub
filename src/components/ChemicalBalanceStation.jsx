@@ -348,13 +348,13 @@ export function StageTwoLesson({ question, coefficients, resolved, feedback, onC
   )
 }
 
-function FormulaTerm({ term, coefficient, side, index, disabled, onChange }) {
+function FormulaTerm({ term, coefficient, side, index, disabled, onChange, maxCoefficient = 4 }) {
   return (
     <article className="balance-formula-term">
       <div className="balance-coefficient-control">
         <button type="button" disabled={disabled || coefficient <= 1} onClick={() => onChange(side, index, -1)} aria-label={`${term.molecule.name}係數減一`}><Minus aria-hidden="true" /></button>
         <output aria-label={`${term.molecule.name}目前係數`}>{coefficient}</output>
-        <button type="button" disabled={disabled || coefficient >= 4} onClick={() => onChange(side, index, 1)} aria-label={`${term.molecule.name}係數加一`}><Plus aria-hidden="true" /></button>
+        <button type="button" disabled={disabled || coefficient >= maxCoefficient} onClick={() => onChange(side, index, 1)} aria-label={`${term.molecule.name}係數加一`}><Plus aria-hidden="true" /></button>
       </div>
       <strong><span className={coefficient === 1 ? 'is-one' : ''} aria-hidden={coefficient === 1}>{coefficient}</span>{displayMolecularFormula(term.molecule.formula)}</strong>
       <small>{term.molecule.name}</small>
@@ -362,13 +362,13 @@ function FormulaTerm({ term, coefficient, side, index, disabled, onChange }) {
   )
 }
 
-function FormulaSide({ terms, coefficients, side, disabled, onChange }) {
+function FormulaSide({ terms, coefficients, side, disabled, onChange, maxCoefficient = 4 }) {
   return (
     <div className="balance-formula-side">
       {terms.map((term, index) => (
         <div className="balance-formula-unit" key={term.moleculeId}>
           {index > 0 && <b className="balance-formula-plus" aria-hidden="true">＋</b>}
-          <FormulaTerm term={term} coefficient={coefficients[index]} side={side} index={index} disabled={disabled} onChange={onChange} />
+          <FormulaTerm term={term} coefficient={coefficients[index]} side={side} index={index} disabled={disabled} onChange={onChange} maxCoefficient={maxCoefficient} />
         </div>
       ))}
     </div>
@@ -473,11 +473,11 @@ export function StageFourLesson({
         </>
       ) : (
         <>
-          <p className="balance-stage-four-instruction">化學式已固定。只能調整前方係數，並化成最簡整數比。</p>
+          <p className="balance-stage-four-instruction">化學式已固定。只能調整前方係數，並化成最簡整數比；本關係數可調整為 1～8。</p>
           <div className="balance-formula-equation" aria-label="完整化學反應式配平">
-            <FormulaSide terms={question.reactants} coefficients={coefficients.reactants} side="reactants" disabled={resolved} onChange={onCoefficientChange} />
+            <FormulaSide terms={question.reactants} coefficients={coefficients.reactants} side="reactants" disabled={resolved} onChange={onCoefficientChange} maxCoefficient={8} />
             <ArrowRight className="balance-formula-arrow" aria-label="生成" />
-            <FormulaSide terms={question.products} coefficients={coefficients.products} side="products" disabled={resolved} onChange={onCoefficientChange} />
+            <FormulaSide terms={question.products} coefficients={coefficients.products} side="products" disabled={resolved} onChange={onCoefficientChange} maxCoefficient={8} />
           </div>
           {resolved
             ? <AtomLedger evaluation={evaluation} title="完整反應式核對" />
