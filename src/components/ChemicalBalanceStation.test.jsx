@@ -1,7 +1,8 @@
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import ChemicalBalanceStation, { AtomBuilder } from './ChemicalBalanceStation.jsx'
+import ChemicalBalanceStation, { AtomBuilder, StageTwoLesson } from './ChemicalBalanceStation.jsx'
+import { buildStageTwoRound, initialReactionCoefficients } from '../lib/chemicalBalance.js'
 
 describe('化學反應平衡站', () => {
   beforeEach(() => {
@@ -14,7 +15,7 @@ describe('化學反應平衡站', () => {
 
   afterEach(() => vi.unstubAllGlobals())
 
-  it('呈現四關路線，且目前只開放分子組裝室', () => {
+  it('呈現四關路線，且目前開放前兩關', () => {
     const html = renderToStaticMarkup(<ChemicalBalanceStation />)
     expect(html).toContain('化學反應平衡站')
     expect(html).toContain('分子組裝室')
@@ -22,8 +23,30 @@ describe('化學反應平衡站', () => {
     expect(html).toContain('係數平衡訓練')
     expect(html).toContain('完整反應式挑戰')
     expect(html).toContain('開始第 1 關')
+    expect(html).toContain('開始第 2 關')
     expect(html).toContain('右下角數字改變粒子的組成')
     expect(html).toContain('?subject=science&amp;guest=1')
+  })
+
+  it('第二關同時呈現係數操作、分子模型與原子守恆表', () => {
+    const question = buildStageTwoRound(() => 0.999)[0]
+    const html = renderToStaticMarkup(<StageTwoLesson
+      question={question}
+      coefficients={initialReactionCoefficients(question)}
+      resolved={false}
+      feedback=""
+      onChange={() => {}}
+      onSubmit={() => {}}
+      onNext={() => {}}
+      questionIndex={0}
+      totalQuestions={7}
+    />)
+    expect(html).toContain('STAGE 2・原子守恆天平')
+    expect(html).toContain('反應前')
+    expect(html).toContain('反應後')
+    expect(html).toContain('原子守恆檢查')
+    expect(html).toContain('係數加一')
+    expect(html).toContain('檢查是否守恆')
   })
 
   it('提供可拖曳原子、選擇鍵級與清除鍵結的球棒模型工具', () => {

@@ -142,9 +142,68 @@ export const coefficientConceptQuestions = [
   },
 ]
 
+export const stageTwoReactions = [
+  {
+    id: 'hydrogen-chloride-formation',
+    prompt: '讓氫氣與氯氣生成氯化氫，使反應前後原子數相同。',
+    tip: '左側的 H 與 Cl 都是兩個一組，右側也要出現相同數量。',
+    reactants: [{ moleculeId: 'hydrogen' }, { moleculeId: 'chlorine' }],
+    products: [{ moleculeId: 'hydrogen-chloride' }],
+    answer: { reactants: [1, 1], products: [2] },
+  },
+  {
+    id: 'water-formation',
+    prompt: '讓氫氣與氧氣生成水，使反應前後原子數相同。',
+    tip: '先看 O₂ 的兩顆氧，右側需要幾個水分子？',
+    reactants: [{ moleculeId: 'hydrogen' }, { moleculeId: 'oxygen' }],
+    products: [{ moleculeId: 'water' }],
+    answer: { reactants: [2, 1], products: [2] },
+  },
+  {
+    id: 'ammonia-formation',
+    prompt: '讓氮氣與氫氣生成氨，使反應前後原子數相同。',
+    tip: '先讓右側有兩個 N，再調整 H 的數量。',
+    reactants: [{ moleculeId: 'nitrogen' }, { moleculeId: 'hydrogen' }],
+    products: [{ moleculeId: 'ammonia' }],
+    answer: { reactants: [1, 3], products: [2] },
+  },
+  {
+    id: 'methane-combustion',
+    prompt: '讓甲烷完全燃燒生成二氧化碳與水。',
+    tip: '依序平衡 C、H，最後再調整 O。',
+    reactants: [{ moleculeId: 'methane' }, { moleculeId: 'oxygen' }],
+    products: [{ moleculeId: 'carbon-dioxide' }, { moleculeId: 'water' }],
+    answer: { reactants: [1, 2], products: [1, 2] },
+  },
+  {
+    id: 'hydrogen-peroxide-decomposition',
+    prompt: '讓過氧化氫分解生成水與氧氣。',
+    tip: '先把過氧化氫與水的係數調成相同，再檢查剩下的氧。',
+    reactants: [{ moleculeId: 'hydrogen-peroxide' }],
+    products: [{ moleculeId: 'water' }, { moleculeId: 'oxygen' }],
+    answer: { reactants: [2], products: [2, 1] },
+  },
+  {
+    id: 'sulfur-trioxide-formation',
+    prompt: '讓二氧化硫與氧氣生成三氧化硫。',
+    tip: '先讓左右兩側的 S 相同，再檢查 O。',
+    reactants: [{ moleculeId: 'sulfur-dioxide' }, { moleculeId: 'oxygen' }],
+    products: [{ moleculeId: 'sulfur-trioxide' }],
+    answer: { reactants: [2, 1], products: [2] },
+  },
+  {
+    id: 'hydrogen-sulfide-combustion',
+    prompt: '讓硫化氫燃燒生成二氧化硫與水。',
+    tip: '先平衡 H 與 S，最後再數兩側的 O。',
+    reactants: [{ moleculeId: 'hydrogen-sulfide' }, { moleculeId: 'oxygen' }],
+    products: [{ moleculeId: 'sulfur-dioxide' }, { moleculeId: 'water' }],
+    answer: { reactants: [2, 3], products: [2, 2] },
+  },
+]
+
 export const chemicalBalanceRoadmap = [
   { stage: 1, title: '分子組裝室', description: '化學式與粒子模型雙向判讀。', status: 'open' },
-  { stage: 2, title: '原子守恆天平', description: '用粒子模型讓反應前後原子數相同。', status: 'planned' },
+  { stage: 2, title: '原子守恆天平', description: '用粒子模型讓反應前後原子數相同。', status: 'open' },
   { stage: 3, title: '係數平衡訓練', description: '從統計表逐步過渡到只看反應式。', status: 'planned' },
   { stage: 4, title: '完整反應式挑戰', description: '先確認化學式，再化為最簡整數係數。', status: 'planned' },
 ]
