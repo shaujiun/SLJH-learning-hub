@@ -2,11 +2,15 @@ import { describe, expect, it } from 'vitest'
 import {
   atomCountsMatch,
   buildStageOneRound,
+  buildStageTwoRound,
   collapseRepeatedBonds,
   countAtomSymbols,
   describeAtomDifference,
   describeMoleculeBuild,
+  describeReactionBalance,
   displayMolecularFormula,
+  evaluateReactionCoefficients,
+  initialReactionCoefficients,
   moleculeGraphMatches,
   parseMolecularFormula,
   pointsForAttempt,
@@ -14,7 +18,7 @@ import {
   setMoleculeBond,
   stageOneScore,
 } from './chemicalBalance.js'
-import { stageOneMolecules } from '../data/chemicalBalance.js'
+import { stageOneMolecules, stageTwoReactions } from '../data/chemicalBalance.js'
 
 describe('化學反應平衡站第一關邏輯', () => {
   it('能解析含雙字母元素與右下角數字的分子式', () => {
@@ -103,6 +107,42 @@ describe('化學反應平衡站第一關邏輯', () => {
         return result.bonds
       }, [])
       expect(moleculeGraphMatches(atoms, builtBonds, molecule), molecule.formula).toBe(true)
+    })
+  })
+})
+
+describe('化學反應平衡站第二關邏輯', () => {
+  it('建立七題並補上可顯示的分子模型', () => {
+    const round = buildStageTwoRound(() => 0.999)
+    expect(round).toHaveLength(7)
+    round.forEach((reaction) => {
+      ;[...reaction.reactants, ...reaction.products].forEach((term) => {
+        expect(term.molecule.id).toBe(term.moleculeId)
+        expect(term.molecule.model.length).toBeGreaterThan(0)
+      })
+    })
+  })
+
+  it('能判斷未守恆、已守恆但未約分，以及最簡整數比', () => {
+    const water = buildStageTwoRound(() => 0.999).find((reaction) => reaction.id === 'water-formation')
+    const initial = evaluateReactionCoefficients(water, initialReactionCoefficients(water))
+    const doubled = evaluateReactionCoefficients(water, { reactants: [4, 2], products: [4] })
+    const simplest = evaluateReactionCoefficients(water, water.answer)
+
+    expect(initial.balanced).toBe(false)
+    expect(describeReactionBalance(initial)).toContain('還沒有守恆')
+    expect(doubled.balanced).toBe(true)
+    expect(doubled.simplest).toBe(false)
+    expect(describeReactionBalance(doubled)).toContain('最簡整數比')
+    expect(simplest.simplest).toBe(true)
+  })
+
+  it('每一題的參考係數都在操作範圍內且為最簡守恆解', () => {
+    const round = buildStageTwoRound(() => 0.999)
+    expect(stageTwoReactions).toHaveLength(7)
+    round.forEach((reaction) => {
+      expect(evaluateReactionCoefficients(reaction, reaction.answer).simplest, reaction.id).toBe(true)
+      expect([...reaction.answer.reactants, ...reaction.answer.products].every((value) => value >= 1 && value <= 4), reaction.id).toBe(true)
     })
   })
 })

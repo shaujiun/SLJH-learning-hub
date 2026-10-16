@@ -1,4 +1,4 @@
-import { coefficientConceptQuestions, stageOneMolecules } from '../data/chemicalBalance.js'
+import { coefficientConceptQuestions, stageOneMolecules, stageTwoReactions } from '../data/chemicalBalance.js'
 
 const subscriptDigits = '₀₁₂₃₄₅₆₇₈₉'
 
@@ -156,6 +156,67 @@ export function buildStageOneRound(random = Math.random) {
   }))
   const identifyQuestions = molecules.slice(4, 8).map((molecule) => identifyQuestion(molecule, stageOneMolecules, random))
   return [...buildQuestions, ...identifyQuestions, ...coefficientConceptQuestions]
+}
+
+const moleculeIndex = new Map(stageOneMolecules.map((molecule) => [molecule.id, molecule]))
+
+export function buildStageTwoRound(random = Math.random) {
+  return shuffleBalanceItems(stageTwoReactions, random).map((reaction) => ({
+    ...reaction,
+    reactants: reaction.reactants.map((term) => ({ ...term, molecule: moleculeIndex.get(term.moleculeId) })),
+    products: reaction.products.map((term) => ({ ...term, molecule: moleculeIndex.get(term.moleculeId) })),
+  }))
+}
+
+export function initialReactionCoefficients(reaction) {
+  return {
+    reactants: reaction.reactants.map(() => 1),
+    products: reaction.products.map(() => 1),
+  }
+}
+
+export function reactionAtomTotals(terms, coefficients) {
+  return terms.reduce((totals, term, index) => {
+    const atoms = term.molecule?.atoms || parseMolecularFormula(term.formula) || {}
+    const coefficient = Math.max(0, Number(coefficients?.[index] || 0))
+    Object.entries(atoms).forEach(([symbol, count]) => {
+      totals[symbol] = (totals[symbol] || 0) + (count * coefficient)
+    })
+    return totals
+  }, {})
+}
+
+function greatestCommonDivisor(left, right) {
+  let first = Math.abs(Number(left) || 0)
+  let second = Math.abs(Number(right) || 0)
+  while (second) [first, second] = [second, first % second]
+  return first
+}
+
+export function evaluateReactionCoefficients(reaction, coefficients) {
+  const reactantTotals = reactionAtomTotals(reaction.reactants, coefficients.reactants)
+  const productTotals = reactionAtomTotals(reaction.products, coefficients.products)
+  const elements = [...new Set([...Object.keys(reactantTotals), ...Object.keys(productTotals)])].sort()
+  const balanced = elements.every((symbol) => reactantTotals[symbol] === productTotals[symbol])
+  const values = [...coefficients.reactants, ...coefficients.products]
+  const commonFactor = values.reduce(greatestCommonDivisor)
+  return {
+    reactantTotals,
+    productTotals,
+    elements,
+    balanced,
+    commonFactor,
+    simplest: balanced && commonFactor === 1,
+  }
+}
+
+export function describeReactionBalance(evaluation) {
+  if (evaluation.balanced && evaluation.commonFactor > 1) return `原子已守恆，但所有係數還能同除以 ${evaluation.commonFactor}，請化成最簡整數比。`
+  if (evaluation.balanced) return '反應前後每一種原子數都相同，而且係數已是最簡整數比。'
+  const differences = evaluation.elements
+    .filter((symbol) => evaluation.reactantTotals[symbol] !== evaluation.productTotals[symbol])
+    .map((symbol) => `${symbol}：反應前 ${evaluation.reactantTotals[symbol] || 0}、反應後 ${evaluation.productTotals[symbol] || 0}`)
+  return `還沒有守恆。${differences.join('；')}。`
 }
 
 export function pointsForAttempt(mistakes) {

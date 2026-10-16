@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
+  ArrowRight,
   Atom,
   CheckCircle2,
   ChevronRight,
@@ -8,9 +9,12 @@ import {
   Home,
   Lightbulb,
   Link2,
+  Minus,
   Move,
   Play,
+  Plus,
   RotateCcw,
+  Scale,
   Trash2,
   Trophy,
 } from 'lucide-react'
@@ -20,9 +24,13 @@ import {
 } from '../data/chemicalBalance.js'
 import {
   buildStageOneRound,
+  buildStageTwoRound,
   collapseRepeatedBonds,
   describeMoleculeBuild,
   displayMolecularFormula,
+  describeReactionBalance,
+  evaluateReactionCoefficients,
+  initialReactionCoefficients,
   moleculeGraphMatches,
   pointsForAttempt,
   removeMoleculeAtom,
@@ -35,15 +43,16 @@ import './chemicalBalanceStation.css'
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
 const bestScoreKey = 'sljh.chemicalBalance.stageOne.best.v1'
+const stageTwoBestScoreKey = 'sljh.chemicalBalance.stageTwo.best.v1'
 
-function readBestScore() {
+function readStoredScore(key = bestScoreKey) {
   if (typeof window === 'undefined' || !window.localStorage) return 0
-  try { return Number(window.localStorage.getItem(bestScoreKey)) || 0 } catch { return 0 }
+  try { return Number(window.localStorage.getItem(key)) || 0 } catch { return 0 }
 }
 
-function saveBestScore(score) {
+function saveStoredScore(key, score) {
   if (typeof window === 'undefined' || !window.localStorage) return
-  try { window.localStorage.setItem(bestScoreKey, String(score)) } catch { /* Keep the lesson usable in private mode. */ }
+  try { window.localStorage.setItem(key, String(score)) } catch { /* Keep the lesson usable in private mode. */ }
 }
 
 function bondSegments(first, second, order) {
@@ -59,10 +68,10 @@ function bondSegments(first, second, order) {
   }))
 }
 
-function ParticleModel({ molecule, label = `${molecule.name}的球棒模型` }) {
+function ParticleModel({ molecule, label = `${molecule.name}的球棒模型`, compact = false }) {
   const bonds = collapseRepeatedBonds(molecule.bonds)
   return (
-    <figure className="balance-particle-model">
+    <figure className={`balance-particle-model ${compact ? 'is-compact' : ''}`}>
       <svg viewBox="0 0 100 100" role="img" aria-label={label}>
         <defs>
           {Object.entries(particleElementStyles).map(([symbol, style]) => <radialGradient key={symbol} id={`particle-${symbol}`} cx="32%" cy="25%">
@@ -81,12 +90,12 @@ function ParticleModel({ molecule, label = `${molecule.name}的球棒模型` }) 
           )
         })}
       </svg>
-      <figcaption>不同顏色的球代表原子，球之間的棒代表化學鍵。</figcaption>
+      {!compact && <figcaption>不同顏色的球代表原子，球之間的棒代表化學鍵。</figcaption>}
     </figure>
   )
 }
 
-function Roadmap({ bestScore, onStart }) {
+function Roadmap({ bestScore, stageTwoBestScore, onStart }) {
   return (
     <>
       <section className="balance-hero">
@@ -107,11 +116,11 @@ function Roadmap({ bestScore, onStart }) {
           {chemicalBalanceRoadmap.map((stage) => (
             <article key={stage.stage} className={stage.status === 'open' ? 'is-open' : 'is-planned'}>
               <b>{stage.stage}</b>
-              <small>{stage.status === 'open' ? '本次開放' : '後續關卡'}</small>
+              <small>{stage.status === 'open' ? '已開放' : '後續關卡'}</small>
               <h3>{stage.title}</h3>
               <p>{stage.description}</p>
               {stage.status === 'open'
-                ? <button type="button" onClick={onStart}><Play aria-hidden="true" />開始第 1 關</button>
+                ? <button type="button" onClick={() => onStart(stage.stage)}><Play aria-hidden="true" />開始第 {stage.stage} 關</button>
                 : <span>完成前一關後陸續開放</span>}
             </article>
           ))}
@@ -120,7 +129,10 @@ function Roadmap({ bestScore, onStart }) {
           <Lightbulb aria-hidden="true" />
           <div><strong>第一個重要規則</strong><span>右下角數字改變粒子的組成；前方係數只改變粒子的數量。</span></div>
         </aside>
-        <p className="balance-best"><Trophy aria-hidden="true" />第 1 關此裝置最高成績：{bestScore || '尚未完成'}{bestScore ? ' 分' : ''}</p>
+        <div className="balance-best-list">
+          <p className="balance-best"><Trophy aria-hidden="true" />第 1 關此裝置最高成績：{bestScore || '尚未完成'}{bestScore ? ' 分' : ''}</p>
+          <p className="balance-best"><Scale aria-hidden="true" />第 2 關此裝置最高成績：{stageTwoBestScore || '尚未完成'}{stageTwoBestScore ? ' 分' : ''}</p>
+        </div>
       </section>
     </>
   )
@@ -265,14 +277,71 @@ function ChoiceQuestion({ choices, attempted, resolved, onChoose }) {
   )
 }
 
-function ResultPanel({ score, bestScore, onRestart, onBack }) {
+function ReactionTerm({ term, coefficient, side, index, disabled, onChange }) {
+  return (
+    <article className="balance-reaction-term">
+      <div className="balance-coefficient-control">
+        <button type="button" disabled={disabled || coefficient <= 1} onClick={() => onChange(side, index, -1)} aria-label={`${term.molecule.name}係數減一`}><Minus aria-hidden="true" /></button>
+        <output aria-label={`${term.molecule.name}目前係數`}>{coefficient}</output>
+        <button type="button" disabled={disabled || coefficient >= 4} onClick={() => onChange(side, index, 1)} aria-label={`${term.molecule.name}係數加一`}><Plus aria-hidden="true" /></button>
+      </div>
+      <h3>{coefficient > 1 && <span>{coefficient}</span>}{displayMolecularFormula(term.molecule.formula)}</h3>
+      <small>{term.molecule.name}</small>
+      <div className="balance-reaction-particles" aria-label={`${coefficient} 個${term.molecule.name}`}>
+        {Array.from({ length: coefficient }, (_, particleIndex) => (
+          <ParticleModel key={particleIndex} molecule={term.molecule} compact label={`${term.molecule.name}第 ${particleIndex + 1} 個粒子`} />
+        ))}
+      </div>
+    </article>
+  )
+}
+
+export function StageTwoLesson({ question, coefficients, resolved, feedback, onChange, onSubmit, onNext, questionIndex = 0, totalQuestions = 1 }) {
+  const evaluation = evaluateReactionCoefficients(question, coefficients)
+  return (
+    <section className="balance-lesson balance-stage-two">
+      <header>
+        <div><p>STAGE 2・原子守恆天平</p><h1>{question.prompt}</h1></div>
+        <strong>{questionIndex + 1}<small>／{totalQuestions}</small></strong>
+      </header>
+      <div className="balance-progress" aria-label={`第 ${questionIndex + 1} 題，共 ${totalQuestions} 題`}><i style={{ width: `${((questionIndex + 1) / totalQuestions) * 100}%` }} /></div>
+      <aside className="balance-stage-two-tip"><Lightbulb aria-hidden="true" /><span>{question.tip}</span></aside>
+      <div className="balance-reaction-board">
+        <section aria-label="反應前">
+          <h2>反應前</h2>
+          <div>{question.reactants.map((term, index) => <ReactionTerm key={term.moleculeId} term={term} coefficient={coefficients.reactants[index]} side="reactants" index={index} disabled={resolved} onChange={onChange} />)}</div>
+        </section>
+        <ArrowRight className="balance-reaction-arrow" aria-label="生成" />
+        <section aria-label="反應後">
+          <h2>反應後</h2>
+          <div>{question.products.map((term, index) => <ReactionTerm key={term.moleculeId} term={term} coefficient={coefficients.products[index]} side="products" index={index} disabled={resolved} onChange={onChange} />)}</div>
+        </section>
+      </div>
+      <div className="balance-atom-ledger">
+        <h2><Scale aria-hidden="true" />原子守恆檢查</h2>
+        <div className="balance-ledger-head"><span>元素</span><span>反應前</span><span>反應後</span></div>
+        {evaluation.elements.map((symbol) => {
+          const matched = evaluation.reactantTotals[symbol] === evaluation.productTotals[symbol]
+          return <div key={symbol} className={matched ? 'is-matched' : 'is-unmatched'}><b>{symbol}</b><span>{evaluation.reactantTotals[symbol] || 0}</span><span>{evaluation.productTotals[symbol] || 0}</span></div>
+        })}
+      </div>
+      {!resolved && <button type="button" className="balance-primary" onClick={onSubmit}><CheckCircle2 aria-hidden="true" />檢查是否守恆</button>}
+      {feedback && <div className={`balance-feedback ${resolved ? 'is-correct' : 'is-hint'}`} role="status">{resolved ? <CheckCircle2 aria-hidden="true" /> : <Lightbulb aria-hidden="true" />}<span>{feedback}</span></div>}
+      {resolved && <button type="button" className="balance-next" onClick={onNext}>{questionIndex === totalQuestions - 1 ? '查看本關成果' : '下一題'}<ChevronRight aria-hidden="true" /></button>}
+    </section>
+  )
+}
+
+function ResultPanel({ stage, score, bestScore, onRestart, onBack }) {
   return (
     <section className="balance-result">
       <Trophy aria-hidden="true" />
-      <p>STAGE 1 COMPLETE</p>
-      <h1>第 1 關完成</h1>
+      <p>STAGE {stage} COMPLETE</p>
+      <h1>第 {stage} 關完成</h1>
       <strong>{score} 分</strong>
-      <span>{score >= 80 ? '你已能區分粒子的組成與數量，可以準備挑戰原子守恆。' : '建議再練一次，特別留意前方係數與右下角數字。'}</span>
+      <span>{stage === 1
+        ? (score >= 80 ? '你已能區分粒子的組成與數量，可以準備挑戰原子守恆。' : '建議再練一次，特別留意前方係數與右下角數字。')
+        : (score >= 80 ? '你已能利用粒子與原子統計完成基礎配平，可以準備進入只看化學式的訓練。' : '建議再練一次，調整係數後逐項核對左右兩側的原子數。')}</span>
       <small>此裝置最高成績：{bestScore} 分</small>
       <div><button type="button" onClick={onRestart}><RotateCcw aria-hidden="true" />再練一次</button><button type="button" onClick={onBack}>返回學習路線</button></div>
     </section>
@@ -296,9 +365,19 @@ export default function ChemicalBalanceStation() {
   const [resolved, setResolved] = useState(false)
   const [feedback, setFeedback] = useState('')
   const [points, setPoints] = useState(0)
-  const [bestScore, setBestScore] = useState(readBestScore)
+  const [bestScore, setBestScore] = useState(() => readStoredScore(bestScoreKey))
   const question = questions[questionIndex]
   const score = stageOneScore(points, questions.length)
+  const [stageTwoQuestions, setStageTwoQuestions] = useState(() => buildStageTwoRound())
+  const [stageTwoQuestionIndex, setStageTwoQuestionIndex] = useState(0)
+  const stageTwoQuestion = stageTwoQuestions[stageTwoQuestionIndex]
+  const [stageTwoCoefficients, setStageTwoCoefficients] = useState(() => initialReactionCoefficients(stageTwoQuestion))
+  const [stageTwoMistakes, setStageTwoMistakes] = useState(0)
+  const [stageTwoResolved, setStageTwoResolved] = useState(false)
+  const [stageTwoFeedback, setStageTwoFeedback] = useState('')
+  const [stageTwoPoints, setStageTwoPoints] = useState(0)
+  const [stageTwoBestScore, setStageTwoBestScore] = useState(() => readStoredScore(stageTwoBestScoreKey))
+  const stageTwoScore = stageOneScore(stageTwoPoints, stageTwoQuestions.length)
 
   function resetQuestion() {
     setSelectedAtoms([])
@@ -313,13 +392,35 @@ export default function ChemicalBalanceStation() {
     setFeedback('')
   }
 
-  function startRound() {
+  function startStageOne() {
     setRoundId((value) => value + 1)
     setQuestionIndex(0)
     setPoints(0)
     resetQuestion()
-    setView('play')
+    setView('stage1')
     if (typeof window !== 'undefined') window.scrollTo?.({ top: 0, behavior: 'smooth' })
+  }
+
+  function resetStageTwo(nextQuestion) {
+    setStageTwoCoefficients(initialReactionCoefficients(nextQuestion))
+    setStageTwoMistakes(0)
+    setStageTwoResolved(false)
+    setStageTwoFeedback('')
+  }
+
+  function startStageTwo() {
+    const nextQuestions = buildStageTwoRound()
+    setStageTwoQuestions(nextQuestions)
+    setStageTwoQuestionIndex(0)
+    setStageTwoPoints(0)
+    resetStageTwo(nextQuestions[0])
+    setView('stage2')
+    if (typeof window !== 'undefined') window.scrollTo?.({ top: 0, behavior: 'smooth' })
+  }
+
+  function startStage(stage) {
+    if (stage === 2) startStageTwo()
+    else startStageOne()
   }
 
   function resolveCorrect(message) {
@@ -398,12 +499,45 @@ export default function ChemicalBalanceStation() {
     if (questionIndex === questions.length - 1) {
       const nextBest = Math.max(bestScore, score)
       setBestScore(nextBest)
-      saveBestScore(nextBest)
-      setView('result')
+      saveStoredScore(bestScoreKey, nextBest)
+      setView('stage1-result')
       return
     }
     setQuestionIndex((value) => value + 1)
     resetQuestion()
+  }
+
+  function changeStageTwoCoefficient(side, index, delta) {
+    setStageTwoCoefficients((current) => ({
+      ...current,
+      [side]: current[side].map((value, termIndex) => termIndex === index ? Math.max(1, Math.min(4, value + delta)) : value),
+    }))
+    setStageTwoFeedback('')
+  }
+
+  function submitStageTwo() {
+    const evaluation = evaluateReactionCoefficients(stageTwoQuestion, stageTwoCoefficients)
+    if (evaluation.simplest) {
+      setStageTwoResolved(true)
+      setStageTwoPoints((value) => value + pointsForAttempt(stageTwoMistakes))
+      setStageTwoFeedback(`配平正確！${describeReactionBalance(evaluation)}`)
+      return
+    }
+    setStageTwoMistakes((value) => value + 1)
+    setStageTwoFeedback(describeReactionBalance(evaluation))
+  }
+
+  function nextStageTwoQuestion() {
+    if (stageTwoQuestionIndex === stageTwoQuestions.length - 1) {
+      const nextBest = Math.max(stageTwoBestScore, stageTwoScore)
+      setStageTwoBestScore(nextBest)
+      saveStoredScore(stageTwoBestScoreKey, nextBest)
+      setView('stage2-result')
+      return
+    }
+    const nextIndex = stageTwoQuestionIndex + 1
+    setStageTwoQuestionIndex(nextIndex)
+    resetStageTwo(stageTwoQuestions[nextIndex])
   }
 
   return (
@@ -414,9 +548,9 @@ export default function ChemicalBalanceStation() {
         <a href={contactBookUrl}><ArrowLeft aria-hidden="true" />返回聯絡簿</a>
       </nav>
       <main>
-        {view === 'roadmap' && <Roadmap bestScore={bestScore} onStart={startRound} />}
+        {view === 'roadmap' && <Roadmap bestScore={bestScore} stageTwoBestScore={stageTwoBestScore} onStart={startStage} />}
 
-        {view === 'play' && (
+        {view === 'stage1' && (
           <section className="balance-lesson">
             <header>
               <div><p>STAGE 1・分子組裝室</p><h1>{question.prompt}</h1></div>
@@ -460,7 +594,20 @@ export default function ChemicalBalanceStation() {
           </section>
         )}
 
-        {view === 'result' && <ResultPanel score={score} bestScore={bestScore} onRestart={startRound} onBack={() => setView('roadmap')} />}
+        {view === 'stage2' && <StageTwoLesson
+          question={stageTwoQuestion}
+          coefficients={stageTwoCoefficients}
+          resolved={stageTwoResolved}
+          feedback={stageTwoFeedback}
+          onChange={changeStageTwoCoefficient}
+          onSubmit={submitStageTwo}
+          onNext={nextStageTwoQuestion}
+          questionIndex={stageTwoQuestionIndex}
+          totalQuestions={stageTwoQuestions.length}
+        />}
+
+        {view === 'stage1-result' && <ResultPanel stage={1} score={score} bestScore={bestScore} onRestart={startStageOne} onBack={() => setView('roadmap')} />}
+        {view === 'stage2-result' && <ResultPanel stage={2} score={stageTwoScore} bestScore={stageTwoBestScore} onRestart={startStageTwo} onBack={() => setView('roadmap')} />}
       </main>
     </div>
   )
