@@ -201,9 +201,54 @@ export const stageTwoReactions = [
   },
 ]
 
+export const stageThreeProgression = [
+  {
+    reactionId: 'hydrogen-chloride-formation',
+    support: 'live',
+    supportLabel: '統計輔助',
+    instruction: '原子統計會隨係數同步變化。先觀察數字，再找出最簡整數比。',
+  },
+  {
+    reactionId: 'water-formation',
+    support: 'live',
+    supportLabel: '統計輔助',
+    instruction: '先平衡只出現在一種物質中的元素，再處理另一種元素。',
+  },
+  {
+    reactionId: 'ammonia-formation',
+    support: 'after-check',
+    supportLabel: '檢查後提示',
+    instruction: '先自行計算；第一次檢查後，若尚未守恆才會開啟原子統計。',
+  },
+  {
+    reactionId: 'hydrogen-peroxide-decomposition',
+    support: 'after-check',
+    supportLabel: '檢查後提示',
+    instruction: '不要更改化學式的右下角數字，只能調整各物質前方的係數。',
+  },
+  {
+    reactionId: 'sulfur-trioxide-formation',
+    support: 'after-check',
+    supportLabel: '檢查後提示',
+    instruction: '先處理硫，再用氧原子數檢查是否完整守恆。',
+  },
+  {
+    reactionId: 'methane-combustion',
+    support: 'formula-only',
+    supportLabel: '反應式挑戰',
+    instruction: '依序平衡 C、H、O；作答期間不再提供原子統計表。',
+  },
+  {
+    reactionId: 'hydrogen-sulfide-combustion',
+    support: 'formula-only',
+    supportLabel: '反應式挑戰',
+    instruction: '依序平衡 H、S、O，最後確認所有係數已是最簡整數比。',
+  },
+]
+
 export const chemicalBalanceRoadmap = [
   { stage: 1, title: '分子組裝室', description: '化學式與粒子模型雙向判讀。', status: 'open' },
   { stage: 2, title: '原子守恆天平', description: '用粒子模型讓反應前後原子數相同。', status: 'open' },
-  { stage: 3, title: '係數平衡訓練', description: '從統計表逐步過渡到只看反應式。', status: 'planned' },
+  { stage: 3, title: '係數平衡訓練', description: '從統計表逐步過渡到只看反應式。', status: 'open' },
   { stage: 4, title: '完整反應式挑戰', description: '先確認化學式，再化為最簡整數係數。', status: 'planned' },
 ]

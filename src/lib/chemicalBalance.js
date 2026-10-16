@@ -1,4 +1,4 @@
-import { coefficientConceptQuestions, stageOneMolecules, stageTwoReactions } from '../data/chemicalBalance.js'
+import { coefficientConceptQuestions, stageOneMolecules, stageThreeProgression, stageTwoReactions } from '../data/chemicalBalance.js'
 
 const subscriptDigits = '₀₁₂₃₄₅₆₇₈₉'
 
@@ -159,12 +159,26 @@ export function buildStageOneRound(random = Math.random) {
 }
 
 const moleculeIndex = new Map(stageOneMolecules.map((molecule) => [molecule.id, molecule]))
+const reactionIndex = new Map(stageTwoReactions.map((reaction) => [reaction.id, reaction]))
 
-export function buildStageTwoRound(random = Math.random) {
-  return shuffleBalanceItems(stageTwoReactions, random).map((reaction) => ({
+function hydrateReaction(reaction) {
+  return {
     ...reaction,
     reactants: reaction.reactants.map((term) => ({ ...term, molecule: moleculeIndex.get(term.moleculeId) })),
     products: reaction.products.map((term) => ({ ...term, molecule: moleculeIndex.get(term.moleculeId) })),
+  }
+}
+
+export function buildStageTwoRound(random = Math.random) {
+  return shuffleBalanceItems(stageTwoReactions, random).map(hydrateReaction)
+}
+
+export function buildStageThreeRound() {
+  return stageThreeProgression.map((step) => ({
+    ...hydrateReaction(reactionIndex.get(step.reactionId)),
+    support: step.support,
+    supportLabel: step.supportLabel,
+    instruction: step.instruction,
   }))
 }
 
@@ -217,6 +231,14 @@ export function describeReactionBalance(evaluation) {
     .filter((symbol) => evaluation.reactantTotals[symbol] !== evaluation.productTotals[symbol])
     .map((symbol) => `${symbol}：反應前 ${evaluation.reactantTotals[symbol] || 0}、反應後 ${evaluation.productTotals[symbol] || 0}`)
   return `還沒有守恆。${differences.join('；')}。`
+}
+
+export function describeFormulaOnlyBalance(evaluation) {
+  if (evaluation.balanced && evaluation.commonFactor > 1) return `原子已守恆，但所有係數還能同除以 ${evaluation.commonFactor}，請化成最簡整數比。`
+  if (evaluation.balanced) return '反應式已配平，所有係數也是最簡整數比。'
+  const unmatched = evaluation.elements
+    .filter((symbol) => evaluation.reactantTotals[symbol] !== evaluation.productTotals[symbol])
+  return `尚未守恆的元素：${unmatched.join('、')}。請重新檢查這些元素在反應前後的原子數。`
 }
 
 export function pointsForAttempt(mistakes) {

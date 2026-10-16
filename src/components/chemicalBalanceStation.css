@@ -130,6 +130,24 @@
 .balance-atom-ledger > div:not(.balance-ledger-head) { border-top: 1px solid #d7e0df; font: 900 1rem/1.2 system-ui; }
 .balance-atom-ledger > div.is-matched { background: #ecfaf6; color: #216b60; }
 .balance-atom-ledger > div.is-unmatched { background: #fff0ec; color: #a3483d; }
+.balance-stage-three { max-width: 1000px; }
+.balance-stage-three-guide { display: flex; align-items: center; gap: 0.65rem; border: 2px solid #76928b; border-radius: 14px; padding: 0.7rem 0.8rem; background: #edf8f5; color: #385b57; font-weight: 900; line-height: 1.45; }
+.balance-stage-three-guide b { flex: 0 0 auto; border-radius: 999px; padding: 0.38rem 0.58rem; background: #2c746b; color: #fff; font-size: 0.82rem; }
+.balance-stage-three-guide.is-after-check { border-color: #c18b4e; background: #fff7e7; color: #765027; }
+.balance-stage-three-guide.is-after-check b { background: #a66428; }
+.balance-stage-three-guide.is-formula-only { border-color: #6b6f9f; background: #f0effa; color: #4a4d78; }
+.balance-stage-three-guide.is-formula-only b { background: #55598b; }
+.balance-formula-equation { display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); align-items: center; gap: 0.5rem; margin-top: 0.85rem; border: 3px solid #45636c; border-radius: 19px; padding: clamp(0.75rem, 2vw, 1.25rem); background: linear-gradient(135deg, #f0faf7, #fff8e9); }
+.balance-formula-side { display: flex; min-width: 0; align-items: stretch; justify-content: center; flex-wrap: wrap; gap: 0.55rem; }
+.balance-formula-unit { display: flex; min-width: 0; align-items: center; gap: 0.45rem; }
+.balance-formula-plus { color: #8f6032; font: 900 1.5rem/1 system-ui; }
+.balance-formula-arrow { justify-self: center; width: 38px; height: 38px; color: #af632f; }
+.balance-formula-term { display: grid; min-width: 145px; justify-items: center; border: 2px solid #81979b; border-radius: 14px; padding: 0.7rem 0.55rem; background: rgba(255, 255, 255, 0.9); }
+.balance-formula-term strong { margin-top: 0.45rem; color: #20364c; font: 900 clamp(1.65rem, 4vw, 2.25rem)/1.1 system-ui; white-space: nowrap; }
+.balance-formula-term strong > span { margin-right: 0.08em; color: #b55d2b; }
+.balance-formula-term strong > span.is-one { visibility: hidden; }
+.balance-formula-term > small { margin-top: 0.25rem; color: #687a80; font-weight: 900; }
+.balance-ledger-placeholder { margin: 0.85rem 0 0; border: 2px dashed #8c989c; border-radius: 14px; padding: 0.85rem; background: #f5f6f4; color: #596b70; font-weight: 900; text-align: center; }
 .balance-choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem; }
 .balance-choice-grid button { display: flex; min-height: 65px; align-items: center; gap: 0.65rem; border: 2px solid #708894; border-radius: 14px; padding: 0.7rem; background: #fff; color: #20364c; font: 900 1rem/1.35 inherit; text-align: left; cursor: pointer; }
 .balance-choice-grid button b { display: grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border-radius: 9px; background: #dfeae9; font: 900 0.9rem/1 system-ui; }
@@ -164,6 +182,8 @@
   .balance-hero-art svg { width: 105px; height: 105px; }
   .balance-reaction-board { grid-template-columns: 1fr; }
   .balance-reaction-arrow { transform: rotate(90deg); }
+  .balance-formula-equation { grid-template-columns: 1fr; }
+  .balance-formula-arrow { transform: rotate(90deg); }
 }
 
 @media (max-width: 600px) {
@@ -180,10 +200,15 @@
   .balance-assembly { min-height: 310px; }
   .balance-choice-grid { grid-template-columns: 1fr; }
   .balance-lesson > header { align-items: flex-start; }
-  .balance-stage-two { padding-inline: 0.7rem; }
+  .balance-stage-two, .balance-stage-three { padding-inline: 0.7rem; }
+  .balance-stage-three-guide { align-items: flex-start; flex-direction: column; }
   .balance-reaction-board > section > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); height: auto; }
   .balance-reaction-term:only-child { grid-column: 1 / -1; }
   .balance-particle-model.is-compact svg { width: 66px; }
+  .balance-formula-side { flex-direction: column; }
+  .balance-formula-unit { width: 100%; justify-content: center; flex-wrap: wrap; }
+  .balance-formula-plus { width: 100%; text-align: center; }
+  .balance-formula-term { width: min(100%, 280px); }
 }
 
 @media (max-width: 390px) {
