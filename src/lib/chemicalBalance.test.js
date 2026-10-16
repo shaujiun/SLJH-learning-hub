@@ -24,7 +24,23 @@ import {
   setMoleculeBond,
   stageOneScore,
 } from './chemicalBalance.js'
-import { stageFourReactionIds, stageOneMolecules, stageThreeProgression, stageTwoReactions } from '../data/chemicalBalance.js'
+import {
+  formulaChoicesByMoleculeId,
+  stageFourMolecules,
+  stageFourQuestionMix,
+  stageFourReactionBank,
+  stageOneMolecules,
+  stageThreeProgression,
+  stageTwoReactions,
+} from '../data/chemicalBalance.js'
+
+function seededRandom(seed) {
+  let value = seed >>> 0
+  return () => {
+    value = ((value * 1664525) + 1013904223) >>> 0
+    return value / 4294967296
+  }
+}
 
 describe('化學反應平衡站第一關邏輯', () => {
   it('能解析含雙字母元素與右下角數字的分子式', () => {
@@ -185,10 +201,27 @@ describe('化學反應平衡站第三關邏輯', () => {
 })
 
 describe('化學反應平衡站第四關邏輯', () => {
-  it('建立七題完整反應式，每個物質都有三個不重複的化學式選項', () => {
-    const round = buildStageFourRound(() => 0.999)
-    expect(round).toHaveLength(7)
-    expect(round.map((reaction) => reaction.id)).toEqual(stageFourReactionIds)
+  it('從大型題庫依難度比例抽出十題，且不同輪次會更換題目', () => {
+    const firstRound = buildStageFourRound(seededRandom(7))
+    const secondRound = buildStageFourRound(seededRandom(97))
+
+    expect(stageFourReactionBank.length).toBeGreaterThanOrEqual(20)
+    expect(firstRound).toHaveLength(10)
+    expect(firstRound.filter((reaction) => reaction.difficulty === 'foundation')).toHaveLength(stageFourQuestionMix.foundation)
+    expect(firstRound.filter((reaction) => reaction.difficulty === 'core')).toHaveLength(stageFourQuestionMix.core)
+    expect(firstRound.filter((reaction) => reaction.difficulty === 'challenge')).toHaveLength(stageFourQuestionMix.challenge)
+    expect(firstRound.map((reaction) => reaction.id)).not.toEqual(secondRound.map((reaction) => reaction.id))
+  })
+
+  it('每個物質都有三個不重複且含正解的化學式選項', () => {
+    const moleculeIds = new Set(stageFourReactionBank.flatMap((reaction) => (
+      [...reaction.reactants, ...reaction.products].map((term) => term.moleculeId)
+    )))
+    moleculeIds.forEach((moleculeId) => {
+      expect(formulaChoicesByMoleculeId[moleculeId], moleculeId).toHaveLength(2)
+    })
+
+    const round = buildStageFourRound(seededRandom(19))
     round.forEach((reaction) => {
       ;[...reaction.reactants, ...reaction.products].forEach((term) => {
         expect(term.formulaOptions).toHaveLength(3)
@@ -196,6 +229,26 @@ describe('化學反應平衡站第四關邏輯', () => {
         expect(term.formulaOptions).toContain(term.molecule.formula)
       })
     })
+  })
+
+  it('完整題庫的化學式原子組成與最簡係數都正確', () => {
+    expect(stageFourMolecules.every((molecule) => (
+      JSON.stringify(parseMolecularFormula(molecule.formula)) === JSON.stringify(molecule.atoms)
+    ))).toBe(true)
+
+    const checkedReactionIds = new Set()
+    for (let seed = 1; seed <= 1000; seed += 1) {
+      buildStageFourRound(seededRandom(seed)).forEach((reaction) => {
+        checkedReactionIds.add(reaction.id)
+        expect(evaluateReactionCoefficients(reaction, reaction.answer).simplest, reaction.id).toBe(true)
+        expect(
+          [...reaction.answer.reactants, ...reaction.answer.products]
+            .every((coefficient) => coefficient >= 1 && coefficient <= 8),
+          reaction.id,
+        ).toBe(true)
+      })
+    }
+    expect(checkedReactionIds.size).toBe(stageFourReactionBank.length)
   })
 
   it('能分別判斷化學式選擇與係數配平', () => {
