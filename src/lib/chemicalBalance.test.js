@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest'
 import {
   atomCountsMatch,
   buildStageOneRound,
+  buildStageThreeRound,
   buildStageTwoRound,
   collapseRepeatedBonds,
   countAtomSymbols,
   describeAtomDifference,
   describeMoleculeBuild,
+  describeFormulaOnlyBalance,
   describeReactionBalance,
   displayMolecularFormula,
   evaluateReactionCoefficients,
@@ -18,7 +20,7 @@ import {
   setMoleculeBond,
   stageOneScore,
 } from './chemicalBalance.js'
-import { stageOneMolecules, stageTwoReactions } from '../data/chemicalBalance.js'
+import { stageOneMolecules, stageThreeProgression, stageTwoReactions } from '../data/chemicalBalance.js'
 
 describe('化學反應平衡站第一關邏輯', () => {
   it('能解析含雙字母元素與右下角數字的分子式', () => {
@@ -144,5 +146,36 @@ describe('化學反應平衡站第二關邏輯', () => {
       expect(evaluateReactionCoefficients(reaction, reaction.answer).simplest, reaction.id).toBe(true)
       expect([...reaction.answer.reactants, ...reaction.answer.products].every((value) => value >= 1 && value <= 4), reaction.id).toBe(true)
     })
+  })
+})
+
+describe('化學反應平衡站第三關邏輯', () => {
+  it('依序提供兩題統計輔助、三題檢查後提示與兩題反應式挑戰', () => {
+    const round = buildStageThreeRound()
+    expect(round).toHaveLength(7)
+    expect(stageThreeProgression.map((step) => step.support)).toEqual([
+      'live', 'live',
+      'after-check', 'after-check', 'after-check',
+      'formula-only', 'formula-only',
+    ])
+    expect(round.map((question) => question.support)).toEqual(stageThreeProgression.map((step) => step.support))
+  })
+
+  it('每題都有完整分子資料，且參考答案為最簡守恆解', () => {
+    buildStageThreeRound().forEach((reaction) => {
+      ;[...reaction.reactants, ...reaction.products].forEach((term) => {
+        expect(term.molecule.id).toBe(term.moleculeId)
+      })
+      expect(evaluateReactionCoefficients(reaction, reaction.answer).simplest, reaction.id).toBe(true)
+    })
+  })
+
+  it('反應式挑戰只指出未守恆元素，不直接提供左右原子數', () => {
+    const methane = buildStageThreeRound().find((reaction) => reaction.id === 'methane-combustion')
+    const evaluation = evaluateReactionCoefficients(methane, initialReactionCoefficients(methane))
+    const message = describeFormulaOnlyBalance(evaluation)
+    expect(message).toContain('尚未守恆的元素')
+    expect(message).toContain('H')
+    expect(message).not.toMatch(/\d/)
   })
 })
