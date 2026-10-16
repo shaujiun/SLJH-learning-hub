@@ -1,8 +1,8 @@
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import ChemicalBalanceStation, { AtomBuilder, StageThreeLesson, StageTwoLesson } from './ChemicalBalanceStation.jsx'
-import { buildStageThreeRound, buildStageTwoRound, initialReactionCoefficients } from '../lib/chemicalBalance.js'
+import ChemicalBalanceStation, { AtomBuilder, StageFourLesson, StageThreeLesson, StageTwoLesson } from './ChemicalBalanceStation.jsx'
+import { buildStageFourRound, buildStageThreeRound, buildStageTwoRound, initialFormulaSelections, initialReactionCoefficients } from '../lib/chemicalBalance.js'
 
 describe('化學反應平衡站', () => {
   beforeEach(() => {
@@ -15,7 +15,7 @@ describe('化學反應平衡站', () => {
 
   afterEach(() => vi.unstubAllGlobals())
 
-  it('呈現四關路線，且目前開放前三關', () => {
+  it('呈現並開放完整四關學習路線', () => {
     const html = renderToStaticMarkup(<ChemicalBalanceStation />)
     expect(html).toContain('化學反應平衡站')
     expect(html).toContain('分子組裝室')
@@ -25,8 +25,57 @@ describe('化學反應平衡站', () => {
     expect(html).toContain('開始第 1 關')
     expect(html).toContain('開始第 2 關')
     expect(html).toContain('開始第 3 關')
+    expect(html).toContain('開始第 4 關')
     expect(html).toContain('右下角數字改變粒子的組成')
     expect(html).toContain('?subject=science&amp;guest=1')
+  })
+
+  it('第四關先確認化學式，通過後才開啟係數配平', () => {
+    const question = buildStageFourRound(() => 0.999)[0]
+    const initial = renderToStaticMarkup(<StageFourLesson
+      question={question}
+      formulaSelections={initialFormulaSelections(question)}
+      formulaConfirmed={false}
+      coefficients={initialReactionCoefficients(question)}
+      resolved={false}
+      feedback=""
+      feedbackKind="hint"
+      onFormulaChange={() => {}}
+      onFormulaSubmit={() => {}}
+      onCoefficientChange={() => {}}
+      onCoefficientSubmit={() => {}}
+      onNext={() => {}}
+      questionIndex={0}
+      totalQuestions={7}
+    />)
+    const correctFormulas = {
+      reactants: question.reactants.map((term) => term.molecule.formula),
+      products: question.products.map((term) => term.molecule.formula),
+    }
+    const balancing = renderToStaticMarkup(<StageFourLesson
+      question={question}
+      formulaSelections={correctFormulas}
+      formulaConfirmed
+      coefficients={initialReactionCoefficients(question)}
+      resolved={false}
+      feedback=""
+      feedbackKind="success"
+      onFormulaChange={() => {}}
+      onFormulaSubmit={() => {}}
+      onCoefficientChange={() => {}}
+      onCoefficientSubmit={() => {}}
+      onNext={() => {}}
+      questionIndex={0}
+      totalQuestions={7}
+    />)
+
+    expect(initial).toContain('STAGE 4・完整反應式挑戰')
+    expect(initial).toContain('選擇化學式')
+    expect(initial).toContain('檢查化學式')
+    expect(initial).not.toContain('檢查完整反應式')
+    expect(balancing).toContain('化學式已固定')
+    expect(balancing).toContain('檢查完整反應式')
+    expect(balancing).toContain('完整挑戰不提供作答中的原子統計')
   })
 
   it('第三關依題目階段顯示或隱藏原子統計，不再呈現粒子模型', () => {

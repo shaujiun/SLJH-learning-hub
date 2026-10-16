@@ -1,4 +1,11 @@
-import { coefficientConceptQuestions, stageOneMolecules, stageThreeProgression, stageTwoReactions } from '../data/chemicalBalance.js'
+import {
+  coefficientConceptQuestions,
+  formulaChoicesByMoleculeId,
+  stageFourReactionIds,
+  stageOneMolecules,
+  stageThreeProgression,
+  stageTwoReactions,
+} from '../data/chemicalBalance.js'
 
 const subscriptDigits = '₀₁₂₃₄₅₆₇₈₉'
 
@@ -180,6 +187,46 @@ export function buildStageThreeRound() {
     supportLabel: step.supportLabel,
     instruction: step.instruction,
   }))
+}
+
+export function buildStageFourRound(random = Math.random) {
+  return stageFourReactionIds.map((reactionId) => {
+    const reaction = hydrateReaction(reactionIndex.get(reactionId))
+    const addFormulaOptions = (term) => ({
+      ...term,
+      formulaOptions: shuffleBalanceItems([
+        term.molecule.formula,
+        ...(formulaChoicesByMoleculeId[term.moleculeId] || []),
+      ], random),
+    })
+    return {
+      ...reaction,
+      reactants: reaction.reactants.map(addFormulaOptions),
+      products: reaction.products.map(addFormulaOptions),
+    }
+  })
+}
+
+export function initialFormulaSelections(reaction) {
+  return {
+    reactants: reaction.reactants.map(() => ''),
+    products: reaction.products.map(() => ''),
+  }
+}
+
+export function evaluateFormulaSelections(reaction, selections) {
+  const incorrectTerms = []
+  ;['reactants', 'products'].forEach((side) => {
+    reaction[side].forEach((term, index) => {
+      if (selections?.[side]?.[index] !== term.molecule.formula) incorrectTerms.push(term.molecule.name)
+    })
+  })
+  return { correct: incorrectTerms.length === 0, incorrectTerms }
+}
+
+export function describeFormulaSelections(evaluation) {
+  if (evaluation.correct) return '所有物質的化學式都正確，接著只能調整前方係數完成配平。'
+  return `請再檢查：${evaluation.incorrectTerms.join('、')}的化學式尚未正確。`
 }
 
 export function initialReactionCoefficients(reaction) {

@@ -1,17 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import {
   atomCountsMatch,
+  buildStageFourRound,
   buildStageOneRound,
   buildStageThreeRound,
   buildStageTwoRound,
   collapseRepeatedBonds,
   countAtomSymbols,
   describeAtomDifference,
+  describeFormulaSelections,
   describeMoleculeBuild,
   describeFormulaOnlyBalance,
   describeReactionBalance,
   displayMolecularFormula,
+  evaluateFormulaSelections,
   evaluateReactionCoefficients,
+  initialFormulaSelections,
   initialReactionCoefficients,
   moleculeGraphMatches,
   parseMolecularFormula,
@@ -20,7 +24,7 @@ import {
   setMoleculeBond,
   stageOneScore,
 } from './chemicalBalance.js'
-import { stageOneMolecules, stageThreeProgression, stageTwoReactions } from '../data/chemicalBalance.js'
+import { stageFourReactionIds, stageOneMolecules, stageThreeProgression, stageTwoReactions } from '../data/chemicalBalance.js'
 
 describe('化學反應平衡站第一關邏輯', () => {
   it('能解析含雙字母元素與右下角數字的分子式', () => {
@@ -177,5 +181,35 @@ describe('化學反應平衡站第三關邏輯', () => {
     expect(message).toContain('尚未守恆的元素')
     expect(message).toContain('H')
     expect(message).not.toMatch(/\d/)
+  })
+})
+
+describe('化學反應平衡站第四關邏輯', () => {
+  it('建立七題完整反應式，每個物質都有三個不重複的化學式選項', () => {
+    const round = buildStageFourRound(() => 0.999)
+    expect(round).toHaveLength(7)
+    expect(round.map((reaction) => reaction.id)).toEqual(stageFourReactionIds)
+    round.forEach((reaction) => {
+      ;[...reaction.reactants, ...reaction.products].forEach((term) => {
+        expect(term.formulaOptions).toHaveLength(3)
+        expect(new Set(term.formulaOptions).size).toBe(3)
+        expect(term.formulaOptions).toContain(term.molecule.formula)
+      })
+    })
+  })
+
+  it('能分別判斷化學式選擇與係數配平', () => {
+    const reaction = buildStageFourRound(() => 0.999)[0]
+    const blankEvaluation = evaluateFormulaSelections(reaction, initialFormulaSelections(reaction))
+    const correctSelections = {
+      reactants: reaction.reactants.map((term) => term.molecule.formula),
+      products: reaction.products.map((term) => term.molecule.formula),
+    }
+    const formulaEvaluation = evaluateFormulaSelections(reaction, correctSelections)
+
+    expect(blankEvaluation.correct).toBe(false)
+    expect(describeFormulaSelections(blankEvaluation)).toContain('化學式尚未正確')
+    expect(formulaEvaluation).toEqual({ correct: true, incorrectTerms: [] })
+    expect(evaluateReactionCoefficients(reaction, reaction.answer).simplest).toBe(true)
   })
 })
