@@ -31,6 +31,7 @@ import {
   loadWordGridPuzzles,
   saveWordGridPuzzle,
 } from '../services/wordGridPuzzleService.js'
+import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
 import './wordGridPuzzle.css'
 
 const defaultPuzzle = {
@@ -272,6 +273,14 @@ function PlayArea({ puzzle, progressOwnerId }) {
     if (result.status === 'incomplete') setMessage('還有白格尚未填寫。')
     else if (result.status === 'practice-complete') setMessage('字卡已全部填入；本期暫無完整解答，因此不判分。')
     else if (result.correct) {
+      if (!perfectCompletedAt) {
+        trackLearningActivityAttempt({
+          subjectCode: 'puzzle', activityCode: 'word_grid', activityName: '填字圖',
+          modeCode: puzzle.id || puzzle.publishedOn || 'issue', score: 100,
+          correctCount: puzzle.characterBank.length, questionCount: Math.max(1, puzzle.characterBank.length),
+          metadata: { publishedOn: puzzle.publishedOn || null },
+        })
+      }
       setPerfectCompletedAt((current) => current || new Date().toISOString())
       setMessage('全部正確，已解鎖本期解答與解答說明。')
     }

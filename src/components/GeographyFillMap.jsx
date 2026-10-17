@@ -51,6 +51,7 @@ import { getFocusTaskCurriculumScope } from '../lib/focusTaskCurriculum.js'
 import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
 import { isGuestMode, learningHubUrl } from '../lib/guestPractice.js'
 import { loadGeographyContext, recordGeographyAttempt } from '../services/geographyTaskService.js'
+import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
 import './geographyFillMap.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
@@ -1433,6 +1434,14 @@ export default function GeographyFillMap() {
     setTaskSaveError('')
     window.scrollTo({ top: 0, behavior: 'smooth' })
 
+    if (taskContext.student) {
+      trackLearningActivityAttempt({
+        subjectCode: 'geography', activityCode: 'geography_fill_map', activityName: '地理填圖練習',
+        modeCode: `${areaId}_${chapter.id}`, source: focusTaskId ? 'daily_task' : 'free_practice',
+        score: finalScore, correctCount: score, questionCount: round.length,
+        metadata: { topicId, difficulty: difficulty.id },
+      })
+    }
     if (taskLoadError || (!focusTaskId && !taskContext.student)) return
     setSavingTask(true)
     try {

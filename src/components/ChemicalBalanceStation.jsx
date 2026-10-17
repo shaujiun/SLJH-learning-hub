@@ -44,6 +44,7 @@ import {
   stageOneScore,
 } from '../lib/chemicalBalance.js'
 import { learningHubUrl } from '../lib/guestPractice.js'
+import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
 import './chemicalBalanceStation.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
@@ -729,6 +730,10 @@ export default function ChemicalBalanceStation() {
       const nextBest = Math.max(bestScore, score)
       setBestScore(nextBest)
       saveStoredScore(bestScoreKey, nextBest)
+      trackLearningActivityAttempt({
+        subjectCode: 'science', activityCode: 'chemical_balance', activityName: '化學反應式平衡',
+        modeCode: 'stage_1', score, questionCount: questions.length,
+      })
       setView('stage1-result')
       return
     }
@@ -761,6 +766,10 @@ export default function ChemicalBalanceStation() {
       const nextBest = Math.max(stageTwoBestScore, stageTwoScore)
       setStageTwoBestScore(nextBest)
       saveStoredScore(stageTwoBestScoreKey, nextBest)
+      trackLearningActivityAttempt({
+        subjectCode: 'science', activityCode: 'chemical_balance', activityName: '化學反應式平衡',
+        modeCode: 'stage_2', score: stageTwoScore, questionCount: stageTwoQuestions.length,
+      })
       setView('stage2-result')
       return
     }
@@ -798,6 +807,10 @@ export default function ChemicalBalanceStation() {
       const nextBest = Math.max(stageThreeBestScore, stageThreeScore)
       setStageThreeBestScore(nextBest)
       saveStoredScore(stageThreeBestScoreKey, nextBest)
+      trackLearningActivityAttempt({
+        subjectCode: 'science', activityCode: 'chemical_balance', activityName: '化學反應式平衡',
+        modeCode: 'stage_3', score: stageThreeScore, questionCount: stageThreeQuestions.length,
+      })
       setView('stage3-result')
       return
     }
@@ -830,7 +843,7 @@ export default function ChemicalBalanceStation() {
   function changeStageFourCoefficient(side, index, delta) {
     setStageFourCoefficients((current) => ({
       ...current,
-      [side]: current[side].map((value, termIndex) => termIndex === index ? Math.max(1, Math.min(4, value + delta)) : value),
+      [side]: current[side].map((value, termIndex) => termIndex === index ? Math.max(1, Math.min(8, value + delta)) : value),
     }))
     setStageFourFeedback('')
   }
@@ -855,6 +868,10 @@ export default function ChemicalBalanceStation() {
       const nextBest = Math.max(stageFourBestScore, stageFourScore)
       setStageFourBestScore(nextBest)
       saveStoredScore(stageFourBestScoreKey, nextBest)
+      trackLearningActivityAttempt({
+        subjectCode: 'science', activityCode: 'chemical_balance', activityName: '化學反應式平衡',
+        modeCode: 'stage_4', score: stageFourScore, questionCount: stageFourQuestions.length,
+      })
       setView('stage4-result')
       return
     }
