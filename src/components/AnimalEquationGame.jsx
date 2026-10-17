@@ -49,6 +49,7 @@ import { equationTokenLabel, parseEquationTokens } from '../lib/equationTokenPar
 import { functionCardTargets, functionDefenseMap } from '../lib/animalEquationFunctions.js'
 import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
 import { recordAnimalEquationTask } from '../services/animalEquationTaskService.js'
+import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
 import './animalEquationGame.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
@@ -630,9 +631,23 @@ export default function AnimalEquationGame({ onBack, onGuide }) {
 
   useEffect(() => {
     const gameKey = room?.id ? `${room.id}:${room.gameNumber || 1}` : ''
-    if (room?.status !== 'finished' || gameKey === recordedTaskGameKey || Number(room.humanPlayerLimit) !== 1) return
+    if (room?.status !== 'finished' || gameKey === recordedTaskGameKey) return
     const me = room.players?.find((player) => player.id === room.mePlayerId)
     setRecordedTaskGameKey(gameKey)
+    trackLearningActivityAttempt({
+      subjectCode: 'math', activityCode: 'animal_equation', activityName: '根式馬戲團',
+      modeCode: Number(room.humanPlayerLimit) === 1 ? 'solo_ai' : 'multiplayer',
+      source: focusTaskId && Number(room.humanPlayerLimit) === 1 ? 'daily_task' : 'free_practice',
+      score: room.winnerPlayerId === room.mePlayerId ? 100 : 0,
+      completed: true,
+      metadata: {
+        won: room.winnerPlayerId === room.mePlayerId,
+        animalScore: Number(me?.animalScore || 0),
+        validRadicalPlays: Number(me?.validRadicalPlays || 0),
+        humanPlayerLimit: Number(room.humanPlayerLimit || 1),
+      },
+    })
+    if (Number(room.humanPlayerLimit) !== 1) return
     recordAnimalEquationTask({
       focusTaskId,
       finished: true,

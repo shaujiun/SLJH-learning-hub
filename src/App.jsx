@@ -27,6 +27,7 @@ import {
 import PeriodicTableGame from './components/PeriodicTableGame.jsx'
 import MeasurementLabGame from './components/MeasurementLabGame.jsx'
 import ScienceLevelManager from './components/ScienceLevelManager.jsx'
+import LearningProgressPanel from './components/LearningProgressPanel.jsx'
 import LearningSystemOrderButtons from './components/LearningSystemOrderButtons.jsx'
 import { isSupabaseConfigured } from './lib/supabase.js'
 import {
@@ -971,6 +972,8 @@ function LearningHub({ requestedSubject = '' }) {
 
         {role === 'admin' && <LearningSystemManager onSystemsChanged={load} />}
         {role === 'admin' && <ScienceLevelManager />}
+
+        {(role === 'student' || role === 'admin') && <LearningProgressPanel role={role} />}
 
         <FocusTrainingEntrance />
 
