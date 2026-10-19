@@ -3,7 +3,7 @@ import { ArrowLeft, BookOpen, ImagePlus, Volume2 } from 'lucide-react'
 import { canManageLearningContent } from '../services/learningService.js'
 import {
   emptyReadingDraft, normalizeReadingDraft, normalizedReadingRect, parseReadingWords,
-  readingParagraphs, readingSections, readingSentences,
+  readingParagraphs, readingSections, readingSentences, readingWordSpeechText,
 } from '../lib/englishReadingDraft.js'
 import { recognizeReadingRegion } from '../lib/englishReadingPhotoImport.js'
 import { getReadingSpeechRate } from '../lib/englishReadingSpeech.js'
@@ -91,7 +91,7 @@ function ReadingPreview({ draft }) {
         <p className="reading-evidence">{selectedEvidence === null ? '尚未選出原文依據。' : '已標記一句原文作為答案依據。'}</p>
       </div>
       <aside className="reading-sidebar">
-        {words.map(({ label, entries }) => <section key={label}><h3>{label}</h3>{entries.length ? <div className="reading-word-list">{entries.map(({ word, meaning }, index) => <div key={`${word}-${index}`}><button type="button" onClick={() => speak(word)} title={`播放 ${word} 發音`}><Volume2 aria-hidden="true" />{word}</button><span>{meaning}</span><button type="button" className="reading-slow" onClick={() => speak(word, true)} aria-label={`慢速播放 ${word}`}>慢速</button></div>)}</div> : <p>尚未校對單字。</p>}</section>)}
+        {words.map(({ label, entries }) => <section key={label}><h3>{label}</h3>{entries.length ? <div className="reading-word-list">{entries.map(({ word, meaning }, index) => <div key={`${word}-${index}`}><button type="button" onClick={() => speak(readingWordSpeechText(word))} title={`播放 ${word} 發音`}><Volume2 aria-hidden="true" />{word}</button><span>{meaning}</span><button type="button" className="reading-slow" onClick={() => speak(readingWordSpeechText(word), true)} aria-label={`慢速播放 ${word}`}>慢速</button></div>)}</div> : <p>尚未校對單字。</p>}</section>)}
         {speechNotice && <p role="status" className="reading-speech-notice">{speechNotice}</p>}
         {draft.grammar && <section><h3>實用文法</h3><p className="reading-raw-text">{draft.grammar}</p></section>}
         {draft.mindMap && <section><h3>單字心智圖文字草稿</h3><p className="reading-raw-text">{draft.mindMap}</p></section>}

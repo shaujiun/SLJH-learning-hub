@@ -40,9 +40,16 @@ export function readingSentences(paragraph) {
 
 export function parseReadingWords(value) {
   return String(value || '').split(/\r?\n/).map((line) => {
-    const match = line.trim().match(/^([A-Za-z][A-Za-z'-]*(?:\s+[A-Za-z][A-Za-z'-]*)*)\s*(?:[:：－–—-]|\s{2,})?\s*([\u3400-\u9fff].*)?$/)
+    const match = line.trim().match(/^([A-Za-z][A-Za-z'-]*(?:(?:\s+[A-Za-z][A-Za-z'-]*)|(?:\s*\([A-Za-z][A-Za-z'-]*(?:\s+[A-Za-z][A-Za-z'-]*)*\)))*)\s*(?:[:：－–—-]|\s{2,})?\s*([\u3400-\u9fff].*)?$/)
     return match ? { word: match[1].trim(), meaning: (match[2] || '').trim() } : null
   }).filter(Boolean)
+}
+
+export function readingWordSpeechText(word) {
+  return String(word || '')
+    .replace(/\(([^)]+)\)/g, ' $1 ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 export function normalizedReadingRect(first, second) {

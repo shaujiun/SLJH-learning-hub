@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ArrowLeft, BookOpenCheck, Volume2 } from 'lucide-react'
-import { readingParagraphs, readingSentences, parseReadingWords } from '../lib/englishReadingDraft.js'
+import {
+  parseReadingWords, readingParagraphs, readingSentences, readingWordSpeechText,
+} from '../lib/englishReadingDraft.js'
 import { formatReadingCountdown, READING_TRANSLATION_DELAY_SECONDS } from '../lib/englishReadingTimer.js'
 import { assignReadingEvidence, evidencePositionsForSentence, getReadingEvidenceText } from '../lib/englishReadingEvidence.js'
 import { getReadingSpeechRate } from '../lib/englishReadingSpeech.js'
@@ -124,7 +126,7 @@ export default function EnglishReadingPractice() {
         <p className="reading-evidence">{activeEvidenceQuestionId ? `目前正在為第 ${evidenceQuestions.find((question) => question.id === activeEvidenceQuestionId)?.position} 題選擇原文依據。` : '閱讀選擇題載入後，即可分題標記原文依據。'}</p>
       </article><aside className="reading-sidebar">{[
         ['國中 2000 單', lesson.coreWords], ['補充單字', lesson.extraWords],
-      ].map(([label, value]) => <section key={label}><h3>{label}</h3><div className="reading-word-list">{parseReadingWords(value).map(({ word, meaning }, index) => <div key={`${word}-${index}`}><button type="button" onClick={() => speak(word)}><Volume2 aria-hidden="true" />{word}</button><span>{meaning}</span><button type="button" className="reading-slow" onClick={() => speak(word, true)} aria-label={`慢速播放 ${word}`}>慢速</button></div>)}</div></section>)}
+      ].map(([label, value]) => <section key={label}><h3>{label}</h3><div className="reading-word-list">{parseReadingWords(value).map(({ word, meaning }, index) => <div key={`${word}-${index}`}><button type="button" onClick={() => speak(readingWordSpeechText(word))}><Volume2 aria-hidden="true" />{word}</button><span>{meaning}</span><button type="button" className="reading-slow" onClick={() => speak(readingWordSpeechText(word), true)} aria-label={`慢速播放 ${word}`}>慢速</button></div>)}</div></section>)}
         {speechError && <p role="status" className="reading-warning">{speechError}</p>}
         {lesson.grammar && <section><h3>實用文法</h3><p className="reading-raw-text">{lesson.grammar}</p></section>}
         {lesson.mindMap && <section><h3>單字心智圖</h3><p className="reading-raw-text">{lesson.mindMap}</p></section>}
