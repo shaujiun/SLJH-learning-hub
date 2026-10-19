@@ -25,6 +25,7 @@ import {
   loadPythagorasChallengeAccess,
   recordPythagorasChallengeAttempt,
 } from '../services/pythagorasChallengeService.js'
+import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
 import './pythagorasChallenge.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
@@ -234,7 +235,16 @@ export default function PythagorasChallenge() {
     const finalElapsed = Math.floor((Date.now() - startedAt) / 1000)
     setElapsed(finalElapsed)
     setPhase('complete')
-    if (access?.role !== 'student' || !focusTaskId) return
+    if (access?.role !== 'student') return
+
+    trackLearningActivityAttempt({
+      subjectCode: 'math', activityCode: 'pythagoras_challenge', activityName: '畢氏定理挑戰賽（測驗類）',
+      modeCode: `group_${String(group || 'B').toLowerCase()}`,
+      source: focusTaskId ? 'daily_task' : 'free_practice', score: 100,
+      correctCount: challengeTarget, questionCount: challengeTarget, durationSeconds: finalElapsed,
+      metadata: { answerAttempts: attempts },
+    })
+    if (!focusTaskId) return
 
     setTaskSaveState({ status: 'saving', message: '正在儲存每日任務完成紀錄……' })
     try {

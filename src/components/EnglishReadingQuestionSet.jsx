@@ -3,8 +3,9 @@ import {
   gradeAdminReadingAnswer, loadAdminReadingQuestions, loadStudentReadingQuestions,
   submitStudentReadingAnswer,
 } from '../services/englishReadingQuestionService.js'
+import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
 
-export function QuestionCard({ question, group, evidenceText, onRequestEvidence, adminPreview = false }) {
+export function QuestionCard({ question, group, evidenceText, onRequestEvidence, onResult, adminPreview = false }) {
   const [answers, setAnswers] = useState(() => Array(question.blankCount).fill(''))
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
@@ -22,9 +23,11 @@ export function QuestionCard({ question, group, evidenceText, onRequestEvidence,
     setBusy(true)
     setError('')
     try {
-      setResult(adminPreview
+      const nextResult = adminPreview
         ? gradeAdminReadingAnswer(question, answers)
-        : await submitStudentReadingAnswer(question.id, answers, evidenceText))
+        : await submitStudentReadingAnswer(question.id, answers, evidenceText)
+      setResult(nextResult)
+      onResult?.(question.id, nextResult)
     }
     catch (submissionError) { setError(submissionError.message) }
     finally { setBusy(false) }
@@ -51,9 +54,13 @@ export function QuestionCard({ question, group, evidenceText, onRequestEvidence,
 
 export default function EnglishReadingQuestionSet({ lessonId, group, evidenceByQuestion = {}, onEvidenceQuestionsChange, onRequestEvidence, fallback, viewerRole = 'student' }) {
   const [state, setState] = useState({ loading: true, questions: [], error: '' })
+  const [answerResults, setAnswerResults] = useState({})
+  const [completionRecorded, setCompletionRecorded] = useState(false)
   useEffect(() => {
     let active = true
     setState({ loading: true, questions: [], error: '' })
+    setAnswerResults({})
+    setCompletionRecorded(false)
     const loader = viewerRole === 'admin' ? loadAdminReadingQuestions : loadStudentReadingQuestions
     loader(lessonId).then((questions) => {
       if (active) setState({ loading: false, questions, error: '' })
@@ -70,8 +77,20 @@ export default function EnglishReadingQuestionSet({ lessonId, group, evidenceByQ
       .map(({ id, position, prompt }) => ({ id, position, prompt })))
   }, [onEvidenceQuestionsChange, questions])
 
+  useEffect(() => {
+    if (viewerRole !== 'student' || completionRecorded || !questions.length) return
+    if (!questions.every((question) => answerResults[question.id])) return
+    const correctCount = questions.filter((question) => answerResults[question.id]?.correct).length
+    setCompletionRecorded(true)
+    trackLearningActivityAttempt({
+      subjectCode: 'english', activityCode: 'english_reading', activityName: '英語閱讀練習',
+      modeCode: `lesson_${lessonId}`, score: Math.round((correctCount / questions.length) * 100),
+      correctCount, questionCount: questions.length, metadata: { group },
+    })
+  }, [answerResults, completionRecorded, group, lessonId, questions, viewerRole])
+
   if (state.loading) return <p>正在載入題目……</p>
   if (state.error) return <p role="alert" className="reading-warning">{state.error}</p>
   if (!state.questions.length) return <p className="reading-warning">{fallback ? '老師尚未將紙本練習轉成可作答題目，請稍後再試。' : '目前沒有練習題。'}</p>
-  return <div className="reading-question-set">{questions.map((question) => <QuestionCard key={question.id} question={question} group={group} evidenceText={evidenceByQuestion[question.id] || ''} onRequestEvidence={question.kind === 'choice' ? onRequestEvidence : undefined} adminPreview={viewerRole === 'admin'} />)}</div>
+  return <div className="reading-question-set">{questions.map((question) => <QuestionCard key={question.id} question={question} group={group} evidenceText={evidenceByQuestion[question.id] || ''} onRequestEvidence={question.kind === 'choice' ? onRequestEvidence : undefined} onResult={(questionId, result) => setAnswerResults((current) => ({ ...current, [questionId]: result }))} adminPreview={viewerRole === 'admin'} />)}</div>
 }
