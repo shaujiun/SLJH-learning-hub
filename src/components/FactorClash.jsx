@@ -193,7 +193,7 @@ function Tutorial({ onClose }) {
       <section className="factor-tutorial" role="dialog" aria-modal="true" aria-labelledby="factor-tutorial-title">
         <div className="factor-modal-heading"><div><p>PLAY GUIDE</p><h2 id="factor-tutorial-title">先看懂，再開始交鋒</h2></div><button type="button" onClick={close}>關閉</button></div>
         <div className="factor-tutorial-grid">
-          <article><div className="factor-demo-tiles"><span>x²</span><span>x</span><span>1</span></div><h3>天人交戰</h3><p>棋盤是固定上限，不是每格都要填。基礎固定為 (x＋5)(x＋5)，提供 1 個 x²、直立與橫躺 x 各 5 個、1 共 25 個。進階每增加 1 個 x，對應方向的 x 面積板依序增加為 5、10、15、20 個。請從左上角開始，只放題目需要的數量，多放也算錯。</p></article>
+          <article><div className="factor-demo-tiles"><span>x²</span><span>x</span><span>1</span></div><h3>天人交戰</h3><p>依據題目思考判斷，需要多少面積板，用相關數量的面積板在棋盤中排出長方形。</p></article>
           <article><div className="factor-demo-cross"><b>( x ＋ 2 )</b><b>( x ＋ 3 )</b></div><h3>十字交戰</h3><p>把展開式還原成兩個一次因式。<strong>前後交換仍是同一答案</strong>。</p></article>
           <article><div className="factor-demo-score"><b>＋3</b><b>＋1</b><b>0</b></div><h3>兩次機會</h3><p>第一次答對得 3 分，第二次答對得 1 分；兩次都錯或時間到才公布答案。</p></article>
           <article><div className="factor-demo-level"><b>基礎 2:00</b><b>進階 3～4:00</b></div><h3>難度與時間</h3><p>進階題會加入 2x、3x、4x。切換分頁時倒數仍會繼續。</p></article>
