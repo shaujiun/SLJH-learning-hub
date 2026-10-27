@@ -4,7 +4,7 @@ export const factorClashModes = {
   area: {
     code: 'area',
     name: '天人交戰',
-    description: '依照兩個一次因式，用 x²、x、1 面積板拼出完整長方形。',
+    description: '在固定上限棋盤中，自行判斷需要多少 x²、x、1 面積板，從左上角拼出長方形。',
   },
   cross: {
     code: 'cross',
@@ -173,10 +173,12 @@ export function createFactorQuestion({
   }
 }
 
-function segmentsForFactor(factor) {
+const fixedAreaUnitCapacity = 5
+
+function segmentsForFactor(factor, constantCapacity = Math.abs(factor.constant)) {
   return [
     ...Array.from({ length: factor.coefficient }, (_, index) => ({ kind: 'x', key: `x-${index}` })),
-    ...Array.from({ length: Math.abs(factor.constant) }, (_, index) => ({ kind: 'one', key: `one-${index}` })),
+    ...Array.from({ length: constantCapacity }, (_, index) => ({ kind: 'one', key: `one-${index}` })),
   ]
 }
 
@@ -184,8 +186,12 @@ export function areaBoardFor(question) {
   if (question.left.constant < 0 || question.right.constant < 0) {
     throw new Error('面積模式只支援正數常數。')
   }
-  const columns = segmentsForFactor(question.left)
-  const rows = segmentsForFactor(question.right)
+  const frameLeft = { ...question.left, constant: fixedAreaUnitCapacity }
+  const frameRight = { ...question.right, constant: fixedAreaUnitCapacity }
+  const columns = segmentsForFactor(frameLeft, fixedAreaUnitCapacity)
+  const rows = segmentsForFactor(frameRight, fixedAreaUnitCapacity)
+  const requiredColumnCount = question.left.coefficient + question.left.constant
+  const requiredRowCount = question.right.coefficient + question.right.constant
   const slots = rows.flatMap((row, rowIndex) => columns.map((column, columnIndex) => {
     const type = row.kind === 'x' && column.kind === 'x'
       ? 'x2'
@@ -199,9 +205,17 @@ export function areaBoardFor(question) {
       columnKind: column.kind,
       type,
       orientation,
+      required: rowIndex < requiredRowCount && columnIndex < requiredColumnCount,
     }
   }))
-  return { columns, rows, slots }
+  return {
+    columns,
+    rows,
+    slots,
+    frameLeft,
+    frameRight,
+    frameText: formatFactoredExpression(frameLeft, frameRight),
+  }
 }
 
 export function areaPiecesFor(question, random = Math.random) {
@@ -215,6 +229,7 @@ export function areaPiecesFor(question, random = Math.random) {
 export function validateAreaPlacement(question, placement = {}) {
   return areaBoardFor(question).slots.every((slot) => {
     const piece = placement[slot.id]
+    if (!slot.required) return !piece
     return piece?.type === slot.type && (slot.type !== 'x' || piece.orientation === slot.orientation)
   })
 }
