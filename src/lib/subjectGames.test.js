@@ -26,6 +26,7 @@ describe('各科遊戲選擇入口', () => {
       code: 'factor-clash',
       section: 'board',
       name: '因式交鋒：天人 × 十字',
+      availability: '八上第 3 章起適用',
       launchUrl: '?game=factor-clash',
     }))
   })
@@ -68,7 +69,7 @@ describe('各科遊戲選擇入口', () => {
     expect(publicGames).toContainEqual(expect.objectContaining({
       code: 'chemical-balance',
       name: '化學反應平衡站',
-      availability: '第 1 關「分子組裝室」開放',
+      availability: '八下第 1 章起適用',
       launchUrl: '?game=chemical-balance',
     }))
   })
