@@ -28,6 +28,15 @@ export function readingParagraphs(value) {
   return String(value || '').trim().split(/\n\s*\n/).map((part) => part.replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean)
 }
 
+export function readingTranslationParagraphs(value) {
+  return String(value || '')
+    .replace(/\r\n?/g, '\n')
+    .trim()
+    .split(/\n\s*\n/)
+    .map((part) => part.split('\n').map((line) => line.trim()).join('\n').trim())
+    .filter(Boolean)
+}
+
 export function readingSentences(paragraph) {
   const text = String(paragraph || '').trim()
   if (!text) return []

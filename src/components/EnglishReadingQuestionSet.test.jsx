@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { QuestionCard } from './EnglishReadingQuestionSet.jsx'
+import { QuestionCard, QuestionFeedback } from './EnglishReadingQuestionSet.jsx'
 
 describe('英語閱讀學生作答介面', () => {
   it('依分組顯示提示並不在作答前輸出正解', () => {
@@ -46,5 +46,30 @@ describe('英語閱讀學生作答介面', () => {
     }} group="B" evidenceText="Text." adminPreview />)
     expect(html).toContain('檢查答案（不記錄）')
     expect(html).not.toContain('student_required')
+  })
+
+  it('學生答錯時不顯示正解、解析或題目設定的原文依據', () => {
+    const html = renderToStaticMarkup(<QuestionFeedback kind="choice" result={{
+      correct: false,
+      expected: ['B'],
+      explanation: '正解解析不應出現',
+      evidenceSentence: '正解原文不應出現',
+    }} />)
+    expect(html).toContain('尚未答對，請修改後再試一次')
+    expect(html).toContain('系統不會公布正解')
+    expect(html).not.toContain('參考答案')
+    expect(html).not.toContain('正解解析不應出現')
+    expect(html).not.toContain('正解原文不應出現')
+    expect(html).not.toContain('>B<')
+  })
+
+  it('學生答對後才顯示參考答案與解析', () => {
+    const html = renderToStaticMarkup(<QuestionFeedback kind="choice" revealAnswer result={{
+      correct: true, expected: ['B'], explanation: '判斷主旨。', evidenceSentence: 'Source sentence.',
+    }} />)
+    expect(html).toContain('答對了')
+    expect(html).toContain('參考答案：B')
+    expect(html).toContain('AI 解題思路：')
+    expect(html).toContain('Source sentence.')
   })
 })

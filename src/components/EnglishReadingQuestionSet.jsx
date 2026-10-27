@@ -40,13 +40,22 @@ export function QuestionCard({ question, group, evidenceText, onRequestEvidence,
     {question.kind === 'choice' && <div className="reading-question-evidence"><p>{evidenceText ? `本題選擇的原文依據：${evidenceText}` : '本題尚未選擇原文依據。'}</p>{onRequestEvidence && <button type="button" onClick={() => onRequestEvidence(question.id)}>{evidenceText ? '更換本題原文' : '選擇本題原文'}</button>}</div>}
     <button type="submit" className="reading-action" disabled={busy}>{busy ? '判分中……' : adminPreview ? '檢查答案（不記錄）' : '送出答案'}</button>
     {error && <p role="alert" className="reading-warning">{error}</p>}
-    {result && <div role="status" className={result.correct ? 'reading-feedback is-correct' : 'reading-feedback'}>
-      <strong>{result.correct ? '答對了' : '再對照文章看看'}</strong>
-      <p>參考答案：{result.expected?.join('、')}</p>
-      {result.explanation && <p><strong>{question.kind === 'choice' ? 'AI 解題思路：' : '解題思路：'}</strong>{result.explanation}</p>}
-      {result.evidenceSentence && <p>原文依據：{result.evidenceSentence}</p>}
-    </div>}
+    {result && <QuestionFeedback result={result} kind={question.kind} revealAnswer={adminPreview || result.correct} />}
   </form>
+}
+
+export function QuestionFeedback({ result, kind, revealAnswer = false }) {
+  if (!revealAnswer) return <div role="status" className="reading-feedback">
+    <strong>尚未答對，請修改後再試一次</strong>
+    <p>系統不會公布正解；請重新查看提示並回到文章尋找依據。</p>
+  </div>
+
+  return <div role="status" className={result.correct ? 'reading-feedback is-correct' : 'reading-feedback'}>
+    <strong>{result.correct ? '答對了' : '管理者檢查：答案不正確'}</strong>
+    <p>參考答案：{result.expected?.join('、')}</p>
+    {result.explanation && <p><strong>{kind === 'choice' ? 'AI 解題思路：' : '解題思路：'}</strong>{result.explanation}</p>}
+    {result.evidenceSentence && <p>原文依據：{result.evidenceSentence}</p>}
+  </div>
 }
 
 export default function EnglishReadingQuestionSet({ lessonId, group, evidenceByQuestion = {}, onEvidenceQuestionsChange, onRequestEvidence, fallback, viewerRole = 'student' }) {

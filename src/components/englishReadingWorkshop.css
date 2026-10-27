@@ -53,6 +53,7 @@
 .reading-sentence-list > button.is-active-evidence { box-shadow: 0 0 0 2px #2a7180; }
 .reading-evidence-question-tags { display: inline-block; margin-left: 5px; padding: 1px 5px; color: #70440f; background: #ffd98f; border-radius: 999px; font-size: .72rem; font-weight: 800; white-space: nowrap; }
 .reading-paragraph > p { padding: 2px 12px; color: #425766; }
+.reading-paragraph > .reading-translation-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .reading-evidence { font-size: .88rem; color: #745015; }
 .reading-sidebar section, .reading-exercises section { border: 1px solid #e5e7df; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
 .reading-sidebar h3, .reading-exercises h3 { margin: 0 0 10px; font-size: 1rem; }

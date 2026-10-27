@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ArrowLeft, BookOpenCheck, Volume2 } from 'lucide-react'
 import {
-  parseReadingWords, readingParagraphs, readingSentences, readingWordSpeechText,
+  parseReadingWords, readingParagraphs, readingSentences, readingTranslationParagraphs,
+  readingWordSpeechText,
 } from '../lib/englishReadingDraft.js'
 import { formatReadingCountdown, READING_TRANSLATION_DELAY_SECONDS } from '../lib/englishReadingTimer.js'
 import { assignReadingEvidence, evidencePositionsForSentence, getReadingEvidenceText } from '../lib/englishReadingEvidence.js'
@@ -33,7 +34,7 @@ export default function EnglishReadingPractice() {
   const lesson = state.lessons.find((item) => item.id === lessonId) || state.lessons[0]
   const translationLocked = state.viewerRole !== 'admin' && translationSecondsLeft > 0
   const english = readingParagraphs(lesson?.english)
-  const translation = readingParagraphs(lesson?.translation)
+  const translation = readingTranslationParagraphs(lesson?.translation)
   const evidenceTextByQuestion = Object.fromEntries(evidenceQuestions.map((question) => [
     question.id,
     getReadingEvidenceText(english, evidenceKeysByQuestion[question.id]),
@@ -122,7 +123,7 @@ export default function EnglishReadingPractice() {
           const assignedPositions = evidencePositionsForSentence(evidenceQuestions, evidenceKeysByQuestion, key)
           const selectedForActiveQuestion = evidenceKeysByQuestion[activeEvidenceQuestionId] === key
           return <button type="button" key={key} className={`${assignedPositions.length ? 'is-evidence' : ''}${selectedForActiveQuestion ? ' is-active-evidence' : ''}`} aria-pressed={selectedForActiveQuestion} onClick={() => chooseEvidenceSentence(key)}>{sentence}{assignedPositions.length > 0 && <span className="reading-evidence-question-tags">第 {assignedPositions.join('、')} 題</span>}</button>
-        })}</div>{translationOpen && translation[index] && <p lang="zh-Hant">{translation[index]}</p>}</div>)}
+        })}</div>{translationOpen && translation[index] && <p className="reading-translation-text" lang="zh-Hant">{translation[index]}</p>}</div>)}
         <p className="reading-evidence">{activeEvidenceQuestionId ? `目前正在為第 ${evidenceQuestions.find((question) => question.id === activeEvidenceQuestionId)?.position} 題選擇原文依據。` : '閱讀選擇題載入後，即可分題標記原文依據。'}</p>
       </article><aside className="reading-sidebar">{[
         ['國中 2000 單', lesson.coreWords], ['補充單字', lesson.extraWords],
@@ -131,7 +132,7 @@ export default function EnglishReadingPractice() {
         {lesson.grammar && <section><h3>實用文法</h3><p className="reading-raw-text">{lesson.grammar}</p></section>}
         {lesson.mindMap && <section><h3>單字心智圖</h3><p className="reading-raw-text">{lesson.mindMap}</p></section>}
       </aside></div>
-      <div className="reading-exercises"><section><h3>練習題</h3><p>{state.viewerRole === 'admin' ? '管理者可完整試答並查看參考答案、AI 解題思路與原文依據，但不會建立學生作答紀錄。' : '完成後送出，系統會顯示參考答案、AI 解題思路與原文依據；可再次練習。'}</p><EnglishReadingQuestionSet key={lesson.id} lessonId={lesson.id} group={state.group} evidenceByQuestion={evidenceTextByQuestion} onEvidenceQuestionsChange={handleEvidenceQuestionsChange} onRequestEvidence={focusEvidenceQuestion} fallback={Boolean(lesson.cloze || lesson.questions)} viewerRole={state.viewerRole} /></section><section><h3>閱讀提示</h3><p className="reading-raw-text">{(state.group === 'A' ? lesson.groupAHint : lesson.groupBHint) || '這篇文章沒有額外提示。'}</p></section></div>
+      <div className="reading-exercises"><section><h3>練習題</h3><p>{state.viewerRole === 'admin' ? '管理者可完整試答並查看參考答案、AI 解題思路與原文依據，但不會建立學生作答紀錄。' : '答錯時不會公布正解，可以修改後再送出；答對後才會顯示參考答案、解題思路與原文依據。'}</p><EnglishReadingQuestionSet key={lesson.id} lessonId={lesson.id} group={state.group} evidenceByQuestion={evidenceTextByQuestion} onEvidenceQuestionsChange={handleEvidenceQuestionsChange} onRequestEvidence={focusEvidenceQuestion} fallback={Boolean(lesson.cloze || lesson.questions)} viewerRole={state.viewerRole} /></section><section><h3>閱讀提示</h3><p className="reading-raw-text">{(state.group === 'A' ? lesson.groupAHint : lesson.groupBHint) || '這篇文章沒有額外提示。'}</p></section></div>
     </section>}
   </main>
 }
