@@ -18,6 +18,11 @@ import {
 } from '../lib/factorClash.js'
 import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
 import { loadFactorClashAccess, recordFactorClashRound } from '../services/factorClashService.js'
+import {
+  clearFactorClashSeat, createFactorClashRoom, joinFactorClashRoom, leaveFactorClashRoom,
+  loadFactorClashRoom, readFactorClashSeat, releaseFactorClashSeat,
+  reportFactorClashQuestion, startFactorClashRoom,
+} from '../services/factorClashRoomService.js'
 import './factorClash.css'
 
 const tutorialKey = 'sljh.factorClash.hideTutorial.v1'
@@ -198,12 +203,148 @@ function Tutorial({ onClose }) {
   )
 }
 
+function RoomMatch({ seat, snapshot, refresh, onLeave }) {
+  const { room, self, opponent } = snapshot
+  const question = self.questions?.[self.progress]
+  const [placement, setPlacement] = useState({})
+  const [crossAnswer, setCrossAnswer] = useState(emptyCross)
+  const [selected, setSelected] = useState('')
+  const [attempts, setAttempts] = useState(0)
+  const [resolved, setResolved] = useState(false)
+  const [feedback, setFeedback] = useState('')
+  const [earned, setEarned] = useState(0)
+  const [timedOut, setTimedOut] = useState(false)
+  const [remaining, setRemaining] = useState(question?.seconds || 0)
+  const [sending, setSending] = useState(false)
+  const [syncError, setSyncError] = useState('')
+  const startedAtRef = useRef(Date.now())
+  const deadlineRef = useRef(0)
+
+  useEffect(() => {
+    setPlacement({}); setCrossAnswer(emptyCross); setSelected(''); setAttempts(0)
+    setResolved(false); setFeedback(''); setEarned(0); setTimedOut(false); setSyncError('')
+    startedAtRef.current = Date.now()
+    if (question) { deadlineRef.current = Date.now() + question.seconds * 1000; setRemaining(question.seconds) }
+  }, [question?.id])
+
+  useEffect(() => {
+    if (!question || resolved || room.status !== 'playing') return undefined
+    const timer = window.setInterval(() => {
+      const next = Math.max(0, (deadlineRef.current - Date.now()) / 1000)
+      setRemaining(next)
+      if (next <= 0) {
+        window.clearInterval(timer); setTimedOut(true); setResolved(true)
+        setFeedback('時間到，本題不加分。看完解析後繼續下一題。')
+      }
+    }, 250)
+    return () => window.clearInterval(timer)
+  }, [question, resolved, room.status])
+
+  if (room.status === 'playing' && !question) return <section className="factor-room-result"><CheckCircle2 aria-hidden="true" /><p>你的 10 題已完成</p><h2>等待對手完成</h2><div><strong>{self.nickname}　{self.score} 分</strong><strong>{opponent?.nickname || '對手'}　{opponent?.score || 0} 分</strong></div><p>請保留此頁，系統會自動更新最後結果。</p></section>
+  if (room.status === 'finished') {
+    const opponentForfeited = opponent?.status === 'forfeited'
+    const selfForfeited = self.status === 'forfeited'
+    const compare = self.score - (opponent?.score || 0)
+      || self.firstTryCorrect - (opponent?.firstTryCorrect || 0)
+      || (opponent?.totalElapsedMs || 0) - self.totalElapsedMs
+    const result = opponentForfeited ? '對手中離，你獲勝' : selfForfeited ? '你已中離，本局判負'
+      : !opponent ? '對手已離開' : compare > 0 ? '你獲勝' : compare < 0 ? '對手獲勝' : '平手'
+    return <section className="factor-room-result"><Trophy aria-hidden="true" /><p>對戰結束</p><h2>{result}</h2><div><strong>{self.nickname}　{self.score} 分</strong><strong>{opponent?.nickname || '對手'}　{opponent?.score || 0} 分</strong></div><p>同分時依序比較第一次答對題數，再比較總作答時間。</p><button className="factor-primary" type="button" onClick={onLeave}>離開房間</button></section>
+  }
+
+  const submit = () => {
+    const correct = room.mode === 'area' ? validateAreaPlacement(question, placement)
+      : validateCrossAnswer(question, Object.fromEntries(Object.entries(crossAnswer).map(([field, card]) => [field, card?.value])))
+    const attempt = attempts + 1
+    setAttempts(attempt)
+    if (correct) {
+      const score = pointsForSubmission(attempt, true); setEarned(score); setResolved(true)
+      setFeedback(`答對了，本題獲得 ${score} 分。`)
+    } else if (attempt === 1) setFeedback('還有一次機會，倒數不會重新開始。')
+    else { setEarned(0); setResolved(true); setFeedback('兩次都未答對，本題不加分。') }
+  }
+  const advance = async () => {
+    setSending(true)
+    try {
+      await reportFactorClashQuestion(seat, {
+        questionNumber: self.progress + 1, points: earned, firstTry: earned === 3,
+        elapsedMs: Math.max(0, Date.now() - startedAtRef.current), timedOut,
+      })
+      await refresh()
+    } catch (error) { setSyncError(error.message || '無法同步本題進度。') } finally { setSending(false) }
+  }
+  return <section className="factor-room-match">
+    <div className="factor-versus-score"><article className="self"><small>你・第 {Math.min(10, self.progress + 1)}／10 題</small><strong>{self.nickname}　{self.score} 分</strong></article><b>VS</b><article><small>{opponent?.online ? '作答中' : '暫時離線'}・第 {Math.min(10, (opponent?.progress || 0) + 1)}／10 題</small><strong>{opponent?.nickname || '等待對手'}　{opponent?.score || 0} 分</strong></article></div>
+    <div className="factor-statusbar"><span>{factorClashModes[room.mode].name}・{factorClashDifficulties[room.difficulty].name}</span><span className={remaining <= 20 ? 'danger' : remaining <= 60 ? 'warning' : ''}><Clock3 aria-hidden="true" />{formatTime(remaining)}</span></div>
+    <article className="factor-question"><p>{room.mode === 'area' ? '依因式拼出完整長方形' : '將多項式分解成兩個一次因式'}</p><h2>{room.mode === 'area' ? `${question.factoredText} ＝ ${question.expandedText}` : `${question.expandedText} ＝ ？`}</h2></article>
+    {room.mode === 'area' ? <AreaChallenge key={question.id} question={question} placement={placement} setPlacement={setPlacement} selected={selected} setSelected={setSelected} /> : <CrossChallenge key={question.id} question={question} answer={crossAnswer} setAnswer={setCrossAnswer} selected={selected} setSelected={setSelected} />}
+    <div className={`factor-feedback ${resolved ? 'resolved' : ''}`}>{feedback || '對手看不到你的題目與棋盤，只會看到分數和進度。'}{resolved && <div className="factor-explanation"><strong>正確答案：{question.factoredText}</strong><span>{questionExplanation(question)}</span></div>}</div>
+    {syncError && <p className="factor-room-error">{syncError}</p>}
+    <div className="factor-actions">{resolved ? <button className="factor-primary" type="button" disabled={sending} onClick={advance}>{sending ? '同步中……' : self.progress === 9 ? '送出最後一題' : '下一題'}</button> : <button className="factor-primary" type="button" onClick={submit}><CheckCircle2 aria-hidden="true" />確認答案</button>}</div>
+  </section>
+}
+
+function FactorClashRoom({ onBack }) {
+  const [seat, setSeat] = useState(null)
+  const [savedSeat] = useState(() => readFactorClashSeat())
+  const [snapshot, setSnapshot] = useState(null)
+  const [nickname, setNickname] = useState('')
+  const [roomCode, setRoomCode] = useState('')
+  const [joinMode, setJoinMode] = useState('create')
+  const [mode, setMode] = useState('area')
+  const [difficulty, setDifficulty] = useState('basic')
+  const [message, setMessage] = useState('')
+  const [busy, setBusy] = useState(false)
+  const refresh = useCallback(async (activeSeat = seat) => {
+    if (!activeSeat) return
+    const data = await loadFactorClashRoom(activeSeat)
+    setSnapshot(data)
+  }, [seat])
+  useEffect(() => {
+    if (!seat) return undefined
+    refresh(seat).catch((error) => setMessage(error.message))
+    const timer = window.setInterval(() => refresh(seat).catch(() => {}), 2000)
+    return () => window.clearInterval(timer)
+  }, [refresh, seat])
+
+  const enter = async () => {
+    setBusy(true); setMessage('')
+    try {
+      const nextSeat = joinMode === 'create'
+        ? await createFactorClashRoom(nickname)
+        : await joinFactorClashRoom(roomCode, nickname)
+      setSeat(nextSeat)
+    } catch (error) { setMessage(error.message) } finally { setBusy(false) }
+  }
+  const leave = async () => {
+    try { if (seat) await leaveFactorClashRoom(seat) } catch { /* Room may already be closed. */ }
+    clearFactorClashSeat(); setSeat(null); setSnapshot(null); onBack()
+  }
+  if (!seat) return <section className="factor-room-entry">
+    <button className="factor-text-button" type="button" onClick={onBack}><ArrowLeft aria-hidden="true" />返回單人練習</button>
+    <h2>雙人對戰房間</h2><p>不必登入。房主建立 6 位數代碼，另一位同學輸入相同代碼即可加入。</p>
+    {savedSeat && <button type="button" className="factor-reconnect" onClick={() => setSeat(savedSeat)}>重新連回房間 {savedSeat.roomCode}</button>}
+    <div className="factor-room-tabs"><button className={joinMode === 'create' ? 'active' : ''} type="button" onClick={() => setJoinMode('create')}>建立房間</button><button className={joinMode === 'join' ? 'active' : ''} type="button" onClick={() => setJoinMode('join')}>加入房間</button></div>
+    <label>暱稱<input value={nickname} maxLength={10} onChange={(event) => setNickname(event.target.value)} placeholder="例如：小明" /></label>
+    {joinMode === 'join' && <label>6 位數房間代碼<input inputMode="numeric" value={roomCode} maxLength={6} onChange={(event) => setRoomCode(event.target.value.replace(/\D/g, ''))} placeholder="000000" /></label>}
+    {message && <p className="factor-room-error">{message}</p>}
+    <button className="factor-primary" type="button" disabled={busy || !nickname.trim() || (joinMode === 'join' && roomCode.length !== 6)} onClick={enter}>{busy ? '連線中……' : joinMode === 'create' ? '產生房間代碼' : '加入對戰'}</button>
+  </section>
+  if (!snapshot) return <section className="factor-room-entry"><p>正在連接房間 {seat.roomCode}……</p></section>
+  if (snapshot.room.status !== 'waiting') return <RoomMatch seat={seat} snapshot={snapshot} refresh={refresh} onLeave={leave} />
+  return <section className="factor-room-lobby">
+    <button className="factor-text-button" type="button" onClick={leave}>離開房間</button><p>房間代碼</p><h2>{seat.roomCode}</h2><div className="factor-lobby-players"><strong>① {snapshot.self.nickname}（你）</strong><strong>② {snapshot.opponent?.nickname || '等待同學加入……'}</strong></div>
+    {snapshot.isHost ? <><div className="factor-lobby-settings"><label>玩法<select value={mode} onChange={(event) => setMode(event.target.value)}><option value="area">天人交戰</option><option value="cross">十字交戰</option></select></label><label>難度<select value={difficulty} onChange={(event) => setDifficulty(event.target.value)}><option value="basic">基礎</option><option value="advanced">進階</option></select></label></div><button className="factor-primary" type="button" disabled={!snapshot.opponent || busy} onClick={async () => { setBusy(true); try { await startFactorClashRoom(seat, mode, difficulty); await refresh() } catch (error) { setMessage(error.message) } finally { setBusy(false) } }}>{busy ? '準備題目中……' : '開始 10 題對戰'}</button><button className="factor-text-button" type="button" onClick={async () => { try { await releaseFactorClashSeat(seat); await refresh() } catch (error) { setMessage(error.message) } }}>釋放離線超過 3 分鐘的座位</button></> : <p>房主開始後，兩人會收到不同題目。</p>}
+    {message && <p className="factor-room-error">{message}</p>}
+  </section>
+}
+
 export default function FactorClash() {
   const query = useMemo(() => new URLSearchParams(window.location.search), [])
   const focusTaskId = resolveFocusTaskId(query, { subjectCode: 'math', activityCode: 'factor_clash_solo' })
   const guestMode = query.get('guest') === '1'
-  const [showTutorial, setShowTutorial] = useState(() => window.localStorage.getItem(tutorialKey) !== '1')
-  const [screen, setScreen] = useState('setup')
+  const [showTutorial, setShowTutorial] = useState(() => query.get('tutorial') !== '0' && window.localStorage.getItem(tutorialKey) !== '1')
+  const [screen, setScreen] = useState(() => query.get('versus') === '1' ? 'room' : 'setup')
   const [mode, setMode] = useState('area')
   const [difficulty, setDifficulty] = useState('basic')
   const [questions, setQuestions] = useState([])
@@ -379,8 +520,10 @@ export default function FactorClash() {
           {Object.values(factorClashDifficulties).map((item) => <button key={item.code} type="button" disabled={access?.role === 'student'} className={difficulty === item.code ? 'active' : ''} onClick={() => setDifficulty(item.code)}><strong>{item.name}</strong><small>{item.code === 'basic' ? 'x 的係數為 1' : '加入 2x、3x、4x'}</small><span>{mode === 'area' ? item.areaSeconds / 60 : item.crossSeconds / 60} 分鐘／題</span></button>)}
         </div>
         {access?.role === 'student' && <p className="factor-group-note">已依數學 {access.group} 組自動設定為「{factorClashDifficulties[difficulty].name}」。每日任務會直接進入系統指定的玩法。</p>}
-        <div className="factor-start-row"><button className="factor-primary" type="button" onClick={() => startRound()}><Sparkles aria-hidden="true" />開始 5 題單人練習</button><button className="factor-versus-disabled" type="button" disabled><Users aria-hidden="true" />雙人對戰將於下一階段開放</button></div>
+        <div className="factor-start-row"><button className="factor-primary" type="button" onClick={() => startRound()}><Sparkles aria-hidden="true" />開始 5 題單人練習</button><button className="factor-versus" type="button" onClick={() => setScreen('room')}><Users aria-hidden="true" />建立或加入雙人房間</button></div>
       </section>}
+
+      {screen === 'room' && <FactorClashRoom onBack={() => setScreen('setup')} />}
 
       {screen === 'play' && question && <section className="factor-game">
         <div className="factor-statusbar"><span><Target aria-hidden="true" />第 {questionIndex + 1}／{questions.length} 題</span><span>得分 <b>{points}</b>／15</span><span className={timeClass}><Clock3 aria-hidden="true" />{formatTime(remaining)}</span></div>
