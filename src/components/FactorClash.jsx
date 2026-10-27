@@ -73,38 +73,41 @@ function AreaChallenge({ question, placement, setPlacement, selected, setSelecte
 
   return (
     <div className="factor-workspace">
-      <div className="factor-area-shell">
-        <div className="factor-top-labels" style={{ gridTemplateColumns: templateColumns }}>
-          {board.columns.map((segment, index) => <span key={`${segment.key}-${index}`}>{segment.kind === 'x' ? 'x' : '1'}</span>)}
-        </div>
-        <div className="factor-area-body">
-          <div className="factor-side-labels" style={{ gridTemplateRows: templateRows }}>
-            {board.rows.map((segment, index) => <span key={`${segment.key}-${index}`}>{segment.kind === 'x' ? 'x' : '1'}</span>)}
+      <div className="factor-area-panel">
+        <p className="factor-board-capacity">固定棋盤上限：<strong>{board.frameText}</strong></p>
+        <div className="factor-area-shell">
+          <div className="factor-top-labels" style={{ gridTemplateColumns: templateColumns }}>
+            {board.columns.map((segment, index) => <span key={`${segment.key}-${index}`}>{segment.kind === 'x' ? 'x' : '1'}</span>)}
           </div>
-          <div className="factor-area-board" style={{ gridTemplateColumns: templateColumns, gridTemplateRows: templateRows }}>
-            {board.slots.map((slot) => {
-              const piece = placement[slot.id]
-              return (
-                <button
-                  type="button"
-                  key={slot.id}
-                  data-factor-slot={slot.id}
-                  className={`factor-area-slot slot-${slot.type}`}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={(event) => place(slot, event.dataTransfer.getData('text/factor-piece'))}
-                  onClick={() => piece
-                    ? setPlacement((current) => ({ ...current, [slot.id]: undefined }))
-                    : selected && place(slot, selected)}
-                  aria-label={`${slot.type} 放置格${piece ? '，點選可取回' : ''}`}
-                >{piece && <span className={`placed-${piece.type}`}>{piece.type === 'x2' ? 'x²' : piece.type === 'x' ? 'x' : '1'}</span>}</button>
-              )
-            })}
+          <div className="factor-area-body">
+            <div className="factor-side-labels" style={{ gridTemplateRows: templateRows }}>
+              {board.rows.map((segment, index) => <span key={`${segment.key}-${index}`}>{segment.kind === 'x' ? 'x' : '1'}</span>)}
+            </div>
+            <div className="factor-area-board" style={{ gridTemplateColumns: templateColumns, gridTemplateRows: templateRows }}>
+              {board.slots.map((slot) => {
+                const piece = placement[slot.id]
+                return (
+                  <button
+                    type="button"
+                    key={slot.id}
+                    data-factor-slot={slot.id}
+                    className={`factor-area-slot slot-${slot.type}`}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={(event) => place(slot, event.dataTransfer.getData('text/factor-piece'))}
+                    onClick={() => piece
+                      ? setPlacement((current) => ({ ...current, [slot.id]: undefined }))
+                      : selected && place(slot, selected)}
+                    aria-label={`${slot.type} 放置格${piece ? '，點選可取回' : ''}`}
+                  >{piece && <span className={`placed-${piece.type}`}>{piece.type === 'x2' ? 'x²' : piece.type === 'x' ? 'x' : '1'}</span>}</button>
+                )
+              })}
+            </div>
           </div>
         </div>
       </div>
       <section className="factor-tray" aria-label="面積板卡片區">
         <h3>面積板</h3>
-        <p>拖曳到同類格子，或先點卡片再點格子。</p>
+        <p>不是每張都要使用。請自行判斷數量，從棋盤左上角開始拼；右側與下方不需要的格子保持空白。</p>
         <div className="factor-piece-list">
           {available.map((piece) => <Piece key={piece.id} piece={piece} selected={selected === piece.id} onSelect={setSelected} />)}
           {!available.length && <span className="factor-tray-empty">卡片都已放上棋盤</span>}
@@ -190,7 +193,7 @@ function Tutorial({ onClose }) {
       <section className="factor-tutorial" role="dialog" aria-modal="true" aria-labelledby="factor-tutorial-title">
         <div className="factor-modal-heading"><div><p>PLAY GUIDE</p><h2 id="factor-tutorial-title">先看懂，再開始交鋒</h2></div><button type="button" onClick={close}>關閉</button></div>
         <div className="factor-tutorial-grid">
-          <article><div className="factor-demo-tiles"><span>x²</span><span>x</span><span>1</span></div><h3>天人交戰</h3><p>依兩個因式的長與寬，把對應面積板填滿。每種面積板只能放進相同形狀的格子。</p></article>
+          <article><div className="factor-demo-tiles"><span>x²</span><span>x</span><span>1</span></div><h3>天人交戰</h3><p>棋盤是固定上限，不是每格都要填。基礎固定為 (x＋5)(x＋5)，提供 1 個 x²、直立與橫躺 x 各 5 個、1 共 25 個。進階每增加 1 個 x，對應方向的 x 面積板依序增加為 5、10、15、20 個。請從左上角開始，只放題目需要的數量，多放也算錯。</p></article>
           <article><div className="factor-demo-cross"><b>( x ＋ 2 )</b><b>( x ＋ 3 )</b></div><h3>十字交戰</h3><p>把展開式還原成兩個一次因式。<strong>前後交換仍是同一答案</strong>。</p></article>
           <article><div className="factor-demo-score"><b>＋3</b><b>＋1</b><b>0</b></div><h3>兩次機會</h3><p>第一次答對得 3 分，第二次答對得 1 分；兩次都錯或時間到才公布答案。</p></article>
           <article><div className="factor-demo-level"><b>基礎 2:00</b><b>進階 3～4:00</b></div><h3>難度與時間</h3><p>進階題會加入 2x、3x、4x。切換分頁時倒數仍會繼續。</p></article>
@@ -276,7 +279,7 @@ function RoomMatch({ seat, snapshot, refresh, onLeave }) {
   return <section className="factor-room-match">
     <div className="factor-versus-score"><article className="self"><small>你・第 {Math.min(10, self.progress + 1)}／10 題</small><strong>{self.nickname}　{self.score} 分</strong></article><b>VS</b><article><small>{opponent?.online ? '作答中' : '暫時離線'}・第 {Math.min(10, (opponent?.progress || 0) + 1)}／10 題</small><strong>{opponent?.nickname || '等待對手'}　{opponent?.score || 0} 分</strong></article></div>
     <div className="factor-statusbar"><span>{factorClashModes[room.mode].name}・{factorClashDifficulties[room.difficulty].name}</span><span className={remaining <= 20 ? 'danger' : remaining <= 60 ? 'warning' : ''}><Clock3 aria-hidden="true" />{formatTime(remaining)}</span></div>
-    <article className="factor-question"><p>{room.mode === 'area' ? '依因式拼出完整長方形' : '將多項式分解成兩個一次因式'}</p><h2>{room.mode === 'area' ? `${question.factoredText} ＝ ${question.expandedText}` : `${question.expandedText} ＝ ？`}</h2></article>
+    <article className="factor-question"><p>{room.mode === 'area' ? '在固定棋盤中，從左上角拼出題目需要的長方形' : '將多項式分解成兩個一次因式'}</p><h2>{room.mode === 'area' ? `${question.factoredText} ＝ ${question.expandedText}` : `${question.expandedText} ＝ ？`}</h2></article>
     {room.mode === 'area' ? <AreaChallenge key={question.id} question={question} placement={placement} setPlacement={setPlacement} selected={selected} setSelected={setSelected} /> : <CrossChallenge key={question.id} question={question} answer={crossAnswer} setAnswer={setCrossAnswer} selected={selected} setSelected={setSelected} />}
     <div className={`factor-feedback ${resolved ? 'resolved' : ''}`}>{feedback || '對手看不到你的題目與棋盤，只會看到分數和進度。'}{resolved && <div className="factor-explanation"><strong>正確答案：{question.factoredText}</strong><span>{questionExplanation(question)}</span></div>}</div>
     {syncError && <p className="factor-room-error">{syncError}</p>}
@@ -528,14 +531,14 @@ export default function FactorClash() {
       {screen === 'play' && question && <section className="factor-game">
         <div className="factor-statusbar"><span><Target aria-hidden="true" />第 {questionIndex + 1}／{questions.length} 題</span><span>得分 <b>{points}</b>／15</span><span className={timeClass}><Clock3 aria-hidden="true" />{formatTime(remaining)}</span></div>
         <article className="factor-question">
-          <p>{mode === 'area' ? '依因式拼出完整長方形' : '將多項式分解成兩個一次因式'}</p>
+          <p>{mode === 'area' ? '在固定棋盤中，從左上角拼出題目需要的長方形' : '將多項式分解成兩個一次因式'}</p>
           <h2>{mode === 'area' ? `${question.factoredText} ＝ ${question.expandedText}` : `${question.expandedText} ＝ ？`}</h2>
         </article>
         {mode === 'area'
           ? <AreaChallenge key={question.id} question={question} placement={placement} setPlacement={setPlacement} selected={selected} setSelected={setSelected} />
           : <CrossChallenge key={question.id} question={question} answer={crossAnswer} setAnswer={setCrossAnswer} selected={selected} setSelected={setSelected} />}
         <div className={`factor-feedback ${resolved ? 'resolved' : ''}`} aria-live="polite">
-          {feedback || '完成排放後按「確認答案」。第一次答對可得 3 分。'}
+          {feedback || (mode === 'area' ? '只放需要的面積板，其餘格子留白；完成後按「確認答案」。' : '完成排放後按「確認答案」。第一次答對可得 3 分。')}
           {resolved && <div className="factor-explanation"><strong>正確答案：{question.factoredText}</strong><span>{questionExplanation(question)}</span></div>}
         </div>
         <div className="factor-actions"><button type="button" onClick={resetAnswer} disabled={resolved}><RotateCcw aria-hidden="true" />重新排放</button>{resolved ? <button className="factor-primary" type="button" onClick={nextQuestion}>{questionIndex + 1 === questions.length ? '查看本輪結果' : '下一題'}</button> : <button className="factor-primary" type="button" onClick={submit}><CheckCircle2 aria-hidden="true" />確認答案</button>}</div>

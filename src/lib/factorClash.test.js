@@ -43,21 +43,41 @@ describe('因式交鋒數學核心', () => {
     }
   })
 
-  it('面積棋盤依因式動態生成，並驗證每一塊的種類與方向', () => {
+  it('基礎面積棋盤固定為 (x＋5)(x＋5)，學生只使用題目需要的面積板', () => {
+    const question = {
+      id: 'basic', left: { coefficient: 1, constant: 2 }, right: { coefficient: 1, constant: 3 },
+    }
+    const board = areaBoardFor(question)
+    expect(board.frameText).toBe('(x ＋ 5)(x ＋ 5)')
+    expect(board.slots.filter((slot) => slot.type === 'x2')).toHaveLength(1)
+    expect(board.slots.filter((slot) => slot.type === 'x' && slot.orientation === 'vertical')).toHaveLength(5)
+    expect(board.slots.filter((slot) => slot.type === 'x' && slot.orientation === 'horizontal')).toHaveLength(5)
+    expect(board.slots.filter((slot) => slot.type === 'one')).toHaveLength(25)
+    expect(board.slots.filter((slot) => slot.required)).toHaveLength(12)
+    expect(areaPiecesFor(question, () => .5)).toHaveLength(36)
+  })
+
+  it('進階面積棋盤把 x 面積板維持在 5 的倍數階梯', () => {
     const question = {
       id: 'q', left: { coefficient: 2, constant: 1 }, right: { coefficient: 1, constant: 2 },
     }
     const board = areaBoardFor(question)
-    expect(board.columns).toHaveLength(3)
-    expect(board.rows).toHaveLength(3)
+    expect(board.frameText).toBe('(2x ＋ 5)(x ＋ 5)')
+    expect(board.columns).toHaveLength(7)
+    expect(board.rows).toHaveLength(6)
     expect(board.slots.filter((slot) => slot.type === 'x2')).toHaveLength(2)
-    expect(board.slots.filter((slot) => slot.type === 'x')).toHaveLength(5)
-    expect(board.slots.filter((slot) => slot.type === 'one')).toHaveLength(2)
+    expect(board.slots.filter((slot) => slot.type === 'x' && slot.orientation === 'vertical')).toHaveLength(5)
+    expect(board.slots.filter((slot) => slot.type === 'x' && slot.orientation === 'horizontal')).toHaveLength(10)
+    expect(board.slots.filter((slot) => slot.type === 'one')).toHaveLength(25)
     const pieces = areaPiecesFor({ ...question, id: 'q' }, () => .5)
-    const placement = Object.fromEntries(board.slots.map((slot) => [slot.id,
-      pieces.find((piece) => piece.type === slot.type && piece.orientation === slot.orientation)]))
+    const unused = [...pieces]
+    const placement = Object.fromEntries(board.slots.filter((slot) => slot.required).map((slot) => {
+      const pieceIndex = unused.findIndex((piece) => piece.type === slot.type && piece.orientation === slot.orientation)
+      return [slot.id, unused.splice(pieceIndex, 1)[0]]
+    }))
     expect(validateAreaPlacement(question, placement)).toBe(true)
-    expect(validateAreaPlacement(question, { ...placement, [board.slots[0].id]: { type: 'one' } })).toBe(false)
+    const optionalSlot = board.slots.find((slot) => !slot.required)
+    expect(validateAreaPlacement(question, { ...placement, [optionalSlot.id]: { type: optionalSlot.type, orientation: optionalSlot.orientation } })).toBe(false)
   })
 
   it('十字交戰接受交換律，但拒絕未完全分解的形式', () => {
