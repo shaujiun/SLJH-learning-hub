@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   emptyReadingDraft, normalizeReadingDraft, normalizedReadingRect, parseReadingWords,
-  readingParagraphs, readingSentences, readingWordSpeechText,
+  readingParagraphs, readingSentences, readingTranslationParagraphs, readingWordSpeechText,
 } from './englishReadingDraft.js'
 
 describe('英文閱讀照片草稿', () => {
@@ -12,6 +12,10 @@ describe('英文閱讀照片草稿', () => {
   it('保留段落而合併同段的辨識換行', () => {
     expect(readingParagraphs('First line\ncontinues.\n\nSecond paragraph.'))
       .toEqual(['First line continues.', 'Second paragraph.'])
+  })
+  it('中文譯文保留管理者按 Enter 建立的換行', () => {
+    expect(readingTranslationParagraphs('中文標題\n第一行譯文\n第二行譯文\n\n下一段'))
+      .toEqual(['中文標題\n第一行譯文\n第二行譯文', '下一段'])
   })
   it('可把英文段落拆成可點選的句子', () => {
     expect(readingSentences('The Sun can cause trouble. GPS can be affected.'))

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 const migration = readFileSync(new URL('../../supabase/migrations/20260922180000_add_english_reading_lessons.sql', import.meta.url), 'utf8')
 const questionMigration = readFileSync(new URL('../../supabase/migrations/20260922190000_add_english_reading_questions.sql', import.meta.url), 'utf8')
 const gpsDraftMigration = readFileSync(new URL('../../supabase/migrations/20260926120000_seed_english_reading_gps_draft.sql', import.meta.url), 'utf8')
+const feedbackMigration = readFileSync(new URL('../../supabase/migrations/20261027100000_hide_incorrect_english_reading_answers.sql', import.meta.url), 'utf8')
 
 describe('英語閱讀資料庫存取界線', () => {
   it('不給訪客讀取資料表，且資料列權限保持開啟', () => {
@@ -40,5 +41,10 @@ describe('英語閱讀資料庫存取界線', () => {
     expect(gpsDraftMigration).toContain("array['B']")
     expect(gpsDraftMigration).toContain("array['A']")
     expect(gpsDraftMigration).toContain("array['C']")
+  })
+  it('學生答錯時資料庫不回傳正解、解析或教師原文依據', () => {
+    expect(feedbackMigration).toContain("if not correct then\n    return jsonb_build_object('correct', false);")
+    expect(feedbackMigration).toContain("return jsonb_build_object('correct', true, 'expected', key_row.answers")
+    expect(feedbackMigration).toContain('revoke all on function public.submit_english_reading_answer(uuid, text[], text) from public, anon')
   })
 })

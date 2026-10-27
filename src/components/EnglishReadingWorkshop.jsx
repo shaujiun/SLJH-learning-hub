@@ -3,7 +3,8 @@ import { ArrowLeft, BookOpen, ImagePlus, Volume2 } from 'lucide-react'
 import { canManageLearningContent } from '../services/learningService.js'
 import {
   emptyReadingDraft, normalizeReadingDraft, normalizedReadingRect, parseReadingWords,
-  readingParagraphs, readingSections, readingSentences, readingWordSpeechText,
+  readingParagraphs, readingSections, readingSentences, readingTranslationParagraphs,
+  readingWordSpeechText,
 } from '../lib/englishReadingDraft.js'
 import { recognizeReadingRegion } from '../lib/englishReadingPhotoImport.js'
 import { getReadingSpeechRate } from '../lib/englishReadingSpeech.js'
@@ -50,7 +51,7 @@ function ReadingPreview({ draft }) {
   const [selectedEvidence, setSelectedEvidence] = useState(null)
   const [speechNotice, setSpeechNotice] = useState('')
   const english = readingParagraphs(draft.english)
-  const translation = readingParagraphs(draft.translation)
+  const translation = readingTranslationParagraphs(draft.translation)
   const words = [
     { label: '國中 2000 單', entries: parseReadingWords(draft.coreWords) },
     { label: '補充單字', entries: parseReadingWords(draft.extraWords) },
@@ -85,7 +86,7 @@ function ReadingPreview({ draft }) {
             const evidenceKey = `${index}-${sentenceIndex}`
             return <button type="button" key={evidenceKey} className={selectedEvidence === evidenceKey ? 'is-evidence' : ''} onClick={() => setSelectedEvidence(evidenceKey)} aria-pressed={selectedEvidence === evidenceKey}>{sentence}</button>
           })}</div>
-          {showTranslation && translation[index] && <p lang="zh-Hant">{translation[index]}</p>}
+          {showTranslation && translation[index] && <p className="reading-translation-text" lang="zh-Hant">{translation[index]}</p>}
         </div>) : <p className="reading-empty">請先在左側校對英文文章。</p>}
         {showTranslation && translation.length > english.length && <p className="reading-warning">中英文段落數不同，請先校對段落對應。</p>}
         <p className="reading-evidence">{selectedEvidence === null ? '尚未選出原文依據。' : '已標記一句原文作為答案依據。'}</p>
