@@ -67,6 +67,7 @@ const EnglishReadingWorkshop = lazy(() => import('./components/EnglishReadingWor
 const EnglishReadingPractice = lazy(() => import('./components/EnglishReadingPractice.jsx'))
 const LearningMapLibrary = lazy(() => import('./components/LearningMapLibrary.jsx'))
 const PythagorasChallenge = lazy(() => import('./components/PythagorasChallenge.jsx'))
+const FactorClash = lazy(() => import('./components/FactorClash.jsx'))
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
@@ -1013,6 +1014,9 @@ export default function App() {
   }
   if (requestedGame === 'pythagoras-challenge') {
     return <Suspense fallback={<LoadingScreen />}><PythagorasChallenge /></Suspense>
+  }
+  if (requestedGame === 'factor-clash') {
+    return <Suspense fallback={<LoadingScreen />}><FactorClash /></Suspense>
   }
   if (requestedGame === 'schulte-static') {
     return <Suspense fallback={<LoadingScreen />}><SchulteStaticGame /></Suspense>

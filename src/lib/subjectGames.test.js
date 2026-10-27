@@ -21,6 +21,14 @@ describe('各科遊戲選擇入口', () => {
       launchUrl: '?game=pythagoras-challenge',
     }))
   })
+  it('數學科提供因式交鋒線上桌遊入口', () => {
+    expect(subjectGamesFor({ code: 'math', name: '數學科' }, '')).toContainEqual(expect.objectContaining({
+      code: 'factor-clash',
+      section: 'board',
+      name: '因式交鋒：天人 × 十字',
+      launchUrl: '?game=factor-clash',
+    }))
+  })
   it.each([
     ['english', '?subject=english'],
     ['science', '?subject=science'],
@@ -99,7 +107,7 @@ describe('各科遊戲選擇入口', () => {
 
   it('科目頁固定四區，現有活動各只放入一區', () => {
     const examples = [
-      ['math', { basic: ['pythagoras-challenge'], board: ['animal-equation'] }],
+      ['math', { basic: ['pythagoras-challenge'], board: ['animal-equation', 'factor-clash'] }],
       ['english', { basic: ['english-vocabulary'], guided: ['english-grammar', 'english-reading'] }],
       ['science', { basic: ['periodic-table'], guided: ['chemical-formula', 'chemical-balance'] }],
       ['history', { map: ['history-atlas'] }],

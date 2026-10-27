@@ -23,6 +23,14 @@ const subjectGameTemplates = {
       availability: '八上第 2 章起適用',
       launchUrl: '?game=animal-equation',
     },
+    {
+      code: 'factor-clash',
+      section: 'board',
+      name: '因式交鋒：天人 × 十字',
+      description: '用面積板理解乘法公式，再以十字交乘卡完成因式分解；提供單人練習與分組難度。',
+      availability: '八上十字交乘單元適用',
+      launchUrl: '?game=factor-clash',
+    },
   ],
   english: [
     {
