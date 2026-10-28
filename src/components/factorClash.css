@@ -127,6 +127,17 @@
 .factor-versus-score article.self { border-color:#277b73; background:#e7f5f1; }
 .factor-versus-score > b { color:#b55d29; font:900 1.4rem Georgia,serif; }
 .factor-versus-score small { color:#61727c; }
+.factor-skill-panel { display:grid; gap:.7rem; margin:.8rem 0 1rem; padding:.85rem; border:2px solid #e0b35d; border-radius:16px; background:#fff8e7; }
+.factor-skill-panel > div:first-child { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.35rem 1rem; color:#6f4a20; }
+.factor-skill-panel > div:first-child span { font-size:.9rem; }
+.factor-skill-list { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:.45rem; }
+.factor-skill-list button { display:grid; gap:.18rem; min-height:76px; padding:.55rem .35rem; border:1.5px solid #b77a2f; border-radius:11px; color:#5f3b17; background:#fff; cursor:pointer; }
+.factor-skill-list button:hover:not(:disabled) { transform:translateY(-1px); border-color:#1d726c; box-shadow:0 5px 12px #16324a15; }
+.factor-skill-list button:disabled { opacity:.45; cursor:not-allowed; }
+.factor-skill-list small { color:#6b7476; line-height:1.25; }
+.factor-skill-list span { color:#a45a29; font-size:.78rem; font-weight:900; }
+.factor-skill-message { display:grid; gap:.35rem; margin:.8rem 0; padding:.8rem 1rem; border-left:5px solid #3e8a7d; color:#315d5b; background:#eaf7f3; line-height:1.5; }
+.factor-skill-message strong { color:#153e52; }
 .factor-room-result { text-align:center; }
 .factor-room-result > svg { width:64px; height:64px; color:#d57c28; }
 .factor-room-result > div { display:flex; justify-content:center; gap:1rem; margin:1rem; }
@@ -165,6 +176,7 @@
   .factor-statusbar { flex-wrap:wrap; }
   .factor-tutorial-grid,.factor-summary > div:not(.factor-summary-actions) { grid-template-columns:1fr; }
   .factor-lobby-players,.factor-lobby-settings { grid-template-columns:1fr; }
+  .factor-skill-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .factor-versus-score { grid-template-columns:1fr; }.factor-versus-score > b { display:none; }
   .factor-nav { font-size:.9rem; }.factor-nav > * { min-width:0; white-space:nowrap; }
   .factor-room-entry { width:100%; }.factor-room-tabs button { min-width:0; padding-inline:.25rem; }

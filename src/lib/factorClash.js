@@ -1,4 +1,6 @@
 export const FACTOR_CLASH_ROUND_SIZE = 5
+export const FACTOR_CLASH_DUEL_SIZE = 10
+export const FACTOR_CLASH_MAX_TIER = 5
 
 export const factorClashModes = {
   area: {
@@ -21,6 +23,20 @@ export const factorClashDifficulties = {
 export function factorQuestionSeconds(mode, difficulty) {
   const config = factorClashDifficulties[difficulty] || factorClashDifficulties.basic
   return mode === 'area' ? config.areaSeconds : config.crossSeconds
+}
+
+export function factorChallengeTier(value) {
+  return Math.max(1, Math.min(FACTOR_CLASH_MAX_TIER, Math.round(Number(value) || 1)))
+}
+
+export function factorChallengeDifficulty(tier) {
+  return factorChallengeTier(tier) >= 3 ? 'advanced' : 'basic'
+}
+
+export function factorChallengeSeconds(mode, tier) {
+  const level = factorChallengeTier(tier)
+  if (mode === 'area') return level >= 4 ? 240 : level === 3 ? 180 : 120
+  return level >= 4 ? 180 : level === 3 ? 150 : 120
 }
 
 export function gcd(left, right) {
@@ -144,33 +160,100 @@ function createAdvancedFactors(mode, random) {
   ]
 }
 
+function createTierFactors(mode, tier, random) {
+  const level = factorChallengeTier(tier)
+  if (level === 1) {
+    const first = randomInteger(random, 1, 3)
+    const second = randomInteger(random, 1, 3)
+    return [{ coefficient: 1, constant: first }, { coefficient: 1, constant: second }]
+  }
+  if (level === 2) return createBasicFactors(mode, random)
+  if (level === 3) {
+    const signed = mode === 'cross'
+    let firstConstant = primitiveConstant(2, 3, random, signed)
+    let secondConstant = randomInteger(random, 1, 3)
+    if (signed && random() < 0.5) secondConstant *= -1
+    return [{ coefficient: 2, constant: firstConstant }, { coefficient: 1, constant: secondConstant }]
+  }
+  if (level === 4) return createAdvancedFactors(mode, random)
+  const pairs = [[3, 2], [3, 3], [4, 1], [4, 2]]
+  const [firstCoefficient, secondCoefficient] = pick(pairs, random)
+  const signed = mode === 'cross'
+  let firstConstant = primitiveConstant(firstCoefficient, firstCoefficient === 4 ? 3 : 5, random, signed)
+  let secondConstant = primitiveConstant(secondCoefficient, secondCoefficient === 4 ? 3 : 5, random, signed)
+  if (signed && firstConstant > 0 && secondConstant > 0) {
+    if (random() < 0.5) firstConstant *= -1
+    else secondConstant *= -1
+  }
+  return [
+    { coefficient: firstCoefficient, constant: firstConstant },
+    { coefficient: secondCoefficient, constant: secondConstant },
+  ]
+}
+
 export function createFactorQuestion({
-  mode = 'area', difficulty = 'basic', random = Math.random, usedKeys = new Set(),
+  mode = 'area', difficulty = 'basic', challengeTier = null, random = Math.random, usedKeys = new Set(),
 } = {}) {
+  const tier = challengeTier == null ? null : factorChallengeTier(challengeTier)
+  const effectiveDifficulty = tier == null ? difficulty : factorChallengeDifficulty(tier)
   let left
   let right
   let key = ''
   for (let attempt = 0; attempt < 80; attempt += 1) {
-    ;[left, right] = difficulty === 'advanced'
-      ? createAdvancedFactors(mode, random)
-      : createBasicFactors(mode, random)
+    ;[left, right] = tier == null
+      ? (effectiveDifficulty === 'advanced' ? createAdvancedFactors(mode, random) : createBasicFactors(mode, random))
+      : createTierFactors(mode, tier, random)
     const candidate = { left, right, expanded: expandFactors(left, right) }
     key = factorQuestionKey(candidate)
     if (!usedKeys.has(key)) break
   }
   const expanded = expandFactors(left, right)
   return {
-    id: `${mode}-${difficulty}-${key}-${Math.floor(random() * 1e9)}`,
+    id: `${mode}-${effectiveDifficulty}-${tier || 0}-${key}-${Math.floor(random() * 1e9)}`,
     key,
     mode,
-    difficulty,
+    difficulty: effectiveDifficulty,
+    challengeTier: tier,
     left,
     right,
     expanded,
     expandedText: formatExpandedExpression(expanded),
     factoredText: formatFactoredExpression(left, right),
-    seconds: factorQuestionSeconds(mode, difficulty),
+    seconds: tier == null ? factorQuestionSeconds(mode, effectiveDifficulty) : factorChallengeSeconds(mode, tier),
   }
+}
+
+export function createAdaptiveQuestionSet({ mode = 'area', count = FACTOR_CLASH_DUEL_SIZE, random = Math.random } = {}) {
+  const usedByTier = Array.from({ length: FACTOR_CLASH_MAX_TIER }, () => new Set())
+  return Array.from({ length: count }, (_, position) => ({
+    position: position + 1,
+    variants: usedByTier.map((usedKeys, index) => {
+      const question = createFactorQuestion({ mode, challengeTier: index + 1, random, usedKeys })
+      usedKeys.add(question.key)
+      return question
+    }),
+  }))
+}
+
+export function adaptiveQuestionAt(questions = [], progress = 0, tier = 1) {
+  const entry = questions[progress]
+  if (!entry) return null
+  if (!Array.isArray(entry.variants)) return entry
+  return entry.variants[factorChallengeTier(tier) - 1] || entry.variants[0] || null
+}
+
+export function factorClashHint(question) {
+  if (!question) return ''
+  if (question.mode === 'area') {
+    const counts = areaBoardFor(question).slots.filter((slot) => slot.required).reduce((result, slot) => {
+      const key = slot.type === 'x' ? `${slot.orientation}X` : slot.type
+      result[key] = (result[key] || 0) + 1
+      return result
+    }, {})
+    return `這題需要 x² ${counts.x2 || 0} 個、橫躺 x ${counts.horizontalX || 0} 個、直立 x ${counts.verticalX || 0} 個、1 ${counts.one || 0} 個。`
+  }
+  const relation = question.expanded.constant > 0 ? '兩個常數同號' : '兩個常數異號'
+  return `${relation}；兩個常數相乘為 ${question.expanded.constant}，交叉相乘後合併為 ${question.expanded.linear}x。`
 }
 
 const fixedAreaUnitCapacity = 5
