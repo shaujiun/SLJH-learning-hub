@@ -21,6 +21,7 @@ import {
   validateCrossAnswer,
 } from '../lib/factorClash.js'
 import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
+import { calculateFactorClashAwaySeconds, normalizeFactorClashAwaySeconds } from '../lib/factorClashAwayTime.js'
 import { loadFactorClashAccess, recordFactorClashRound } from '../services/factorClashService.js'
 import {
   clearFactorClashSeat, createFactorClashRoom, joinFactorClashRoom, leaveFactorClashRoom,
@@ -469,17 +470,24 @@ export default function FactorClash() {
   }, [finishQuestion, question, resolved, screen])
 
   useEffect(() => {
+    if (screen !== 'play') {
+      hiddenAtRef.current = 0
+      return undefined
+    }
     const trackVisibility = () => {
       if (document.hidden) hiddenAtRef.current = Date.now()
       else if (hiddenAtRef.current) {
-        setAwayCount((value) => value + 1)
-        setAwaySeconds((value) => value + Math.round((Date.now() - hiddenAtRef.current) / 1000))
+        const hiddenAt = hiddenAtRef.current
         hiddenAtRef.current = 0
+        const elapsedSeconds = calculateFactorClashAwaySeconds(hiddenAt, Date.now())
+        setAwayCount((value) => value + 1)
+        setAwaySeconds((value) => normalizeFactorClashAwaySeconds(value + elapsedSeconds))
       }
     }
+    if (document.hidden) hiddenAtRef.current = Date.now()
     document.addEventListener('visibilitychange', trackVisibility)
     return () => document.removeEventListener('visibilitychange', trackVisibility)
-  }, [])
+  }, [screen])
 
   useEffect(() => {
     let active = true
@@ -522,6 +530,7 @@ export default function FactorClash() {
     setSecondTryCorrect(0)
     setAwayCount(0)
     setAwaySeconds(0)
+    hiddenAtRef.current = 0
     setTimeoutCount(0)
     setSaveMessage('')
     savedRoundRef.current = false
