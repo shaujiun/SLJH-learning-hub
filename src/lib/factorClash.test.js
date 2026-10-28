@@ -114,6 +114,30 @@ describe('因式交鋒數學核心', () => {
     expect(validateAreaPlacement(question, answer)).toBe(true)
   })
 
+  it('面積板接受左右因式交換後的橫向與縱向配置', () => {
+    const question = {
+      id: 'commutative',
+      left: { coefficient: 1, constant: 3 },
+      right: { coefficient: 1, constant: 2 },
+    }
+    const board = areaBoardFor(question)
+    const pieces = areaPiecesFor(question, () => .5)
+    const placementFor = (rowCount, columnCount) => {
+      const unused = [...pieces]
+      return Object.fromEntries(board.slots
+        .filter((slot) => slot.row < rowCount && slot.column < columnCount)
+        .map((slot) => {
+          const pieceIndex = unused.findIndex((piece) => piece.type === slot.type
+            && (slot.type !== 'x' || piece.orientation === slot.orientation))
+          return [slot.id, unused.splice(pieceIndex, 1)[0]]
+        }))
+    }
+    const original = placementFor(3, 4)
+    const transposed = placementFor(4, 3)
+    expect(validateAreaPlacement(question, original)).toBe(true)
+    expect(validateAreaPlacement(question, transposed)).toBe(true)
+  })
+
   it('面積題先顯示展開式，再顯示因式分解式', () => {
     expect(formatAreaEquation({
       expandedText: '4x² ＋ 16x ＋ 15',

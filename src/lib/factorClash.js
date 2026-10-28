@@ -324,11 +324,23 @@ export function placeAllAreaPieces(question, pieces = areaPiecesFor(question)) {
 }
 
 export function validateAreaPlacement(question, placement = {}) {
-  return areaBoardFor(question).slots.every((slot) => {
+  const board = areaBoardFor(question)
+  const matchesRectangle = (requiredRowCount, requiredColumnCount) => board.slots.every((slot) => {
     const piece = placement[slot.id]
-    if (!slot.required) return !piece
+    const required = slot.row < requiredRowCount && slot.column < requiredColumnCount
+    if (!required) return !piece
     return piece?.type === slot.type && (slot.type !== 'x' || piece.orientation === slot.orientation)
   })
+  const originalRows = question.right.coefficient + question.right.constant
+  const originalColumns = question.left.coefficient + question.left.constant
+  if (matchesRectangle(originalRows, originalColumns)) return true
+
+  // The fixed board can be transposed when both axes use the same x coefficient.
+  // This accepts (x＋a)(x＋b) and (kx＋a)(kx＋b) in either horizontal/vertical order.
+  if (question.left.coefficient !== question.right.coefficient) return false
+  const transposedRows = question.left.coefficient + question.left.constant
+  const transposedColumns = question.right.coefficient + question.right.constant
+  return matchesRectangle(transposedRows, transposedColumns)
 }
 
 function addRequiredCopies(pool, values) {
