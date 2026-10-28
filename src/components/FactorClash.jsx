@@ -13,6 +13,8 @@ import {
   factorClashDifficulties,
   factorClashHint,
   factorClashModes,
+  formatAreaEquation,
+  placeAllAreaPieces,
   pointsForSubmission,
   questionExplanation,
   validateAreaPlacement,
@@ -56,7 +58,7 @@ function Piece({ piece, selected, onSelect }) {
   )
 }
 
-function AreaChallenge({ question, placement, setPlacement, selected, setSelected }) {
+export function AreaChallenge({ question, placement, setPlacement, selected, setSelected }) {
   const board = useMemo(() => areaBoardFor(question), [question])
   const [pieces] = useState(() => areaPiecesFor(question))
   const usedIds = new Set(Object.values(placement).map((piece) => piece?.id).filter(Boolean))
@@ -68,7 +70,21 @@ function AreaChallenge({ question, placement, setPlacement, selected, setSelecte
       setSelected(pieceId)
       return
     }
-    setPlacement((current) => ({ ...current, [slot.id]: piece }))
+    setPlacement((current) => ({
+      ...Object.fromEntries(Object.entries(current).filter(([, placed]) => placed?.id !== piece.id)),
+      [slot.id]: piece,
+    }))
+    setSelected('')
+  }
+  const returnToTray = (pieceId) => {
+    if (!pieceId) return
+    setPlacement((current) => Object.fromEntries(
+      Object.entries(current).filter(([, piece]) => piece?.id !== pieceId),
+    ))
+    setSelected('')
+  }
+  const placeAll = () => {
+    setPlacement(placeAllAreaPieces(question, pieces))
     setSelected('')
   }
   const templateColumns = board.columns.map((segment) => segment.kind === 'x' ? 'minmax(52px, 2.2fr)' : 'minmax(30px, 1fr)').join(' ')
@@ -95,10 +111,12 @@ function AreaChallenge({ question, placement, setPlacement, selected, setSelecte
                     key={slot.id}
                     data-factor-slot={slot.id}
                     className={`factor-area-slot slot-${slot.type}`}
+                    draggable={Boolean(piece)}
+                    onDragStart={(event) => piece && event.dataTransfer.setData('text/factor-piece', piece.id)}
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={(event) => place(slot, event.dataTransfer.getData('text/factor-piece'))}
                     onClick={() => piece
-                      ? setPlacement((current) => ({ ...current, [slot.id]: undefined }))
+                      ? returnToTray(piece.id)
                       : selected && place(slot, selected)}
                     aria-label={`${slot.type} 放置格${piece ? '，點選可取回' : ''}`}
                   >{piece && <span className={`placed-${piece.type}`}>{piece.type === 'x2' ? 'x²' : piece.type === 'x' ? 'x' : '1'}</span>}</button>
@@ -108,9 +126,14 @@ function AreaChallenge({ question, placement, setPlacement, selected, setSelecte
           </div>
         </div>
       </div>
-      <section className="factor-tray" aria-label="面積板卡片區">
-        <h3>面積板</h3>
-        <p>不是每張都要使用。請自行判斷數量，從棋盤左上角開始拼；右側與下方不需要的格子保持空白。</p>
+      <section
+        className="factor-tray"
+        aria-label="面積板卡片區"
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={(event) => returnToTray(event.dataTransfer.getData('text/factor-piece'))}
+      >
+        <div className="factor-tray-heading"><h3>面積板</h3><button type="button" onClick={placeAll} disabled={!available.length}>全部擺放</button></div>
+        <p>可先按「全部擺放」，再把不需要的面積板逐一點回或拖回此處；也可以自行挑選需要的數量。</p>
         <div className="factor-piece-list">
           {available.map((piece) => <Piece key={piece.id} piece={piece} selected={selected === piece.id} onSelect={setSelected} />)}
           {!available.length && <span className="factor-tray-empty">卡片都已放上棋盤</span>}
@@ -196,7 +219,7 @@ function Tutorial({ onClose }) {
       <section className="factor-tutorial" role="dialog" aria-modal="true" aria-labelledby="factor-tutorial-title">
         <div className="factor-modal-heading"><div><p>PLAY GUIDE</p><h2 id="factor-tutorial-title">先看懂，再開始交鋒</h2></div><button type="button" onClick={close}>關閉</button></div>
         <div className="factor-tutorial-grid">
-          <article><div className="factor-demo-tiles"><span>x²</span><span>x</span><span>1</span></div><h3>天人交戰</h3><p>依據題目思考判斷，需要多少面積板，用相關數量的面積板在棋盤中排出長方形。</p></article>
+          <article><div className="factor-demo-tiles"><span>x²</span><span>x</span><span>1</span></div><h3>天人交戰</h3><p>依據題目判斷需要多少面積板。可自行擺放，也可先按「全部擺放」，再把多餘面積板逐一移回放置區。</p></article>
           <article><div className="factor-demo-cross"><b>( x ＋ 2 )</b><b>( x ＋ 3 )</b></div><h3>十字交戰</h3><p>把展開式還原成兩個一次因式。<strong>前後交換仍是同一答案</strong>。</p></article>
           <article><div className="factor-demo-score"><b>＋3</b><b>＋1</b><b>0</b></div><h3>兩次機會</h3><p>第一次答對得 3 分，第二次答對得 1 分；兩次都錯或時間到才公布答案。</p></article>
           <article><div className="factor-demo-level"><b>基礎 2:00</b><b>進階 3～4:00</b></div><h3>難度與時間</h3><p>進階題會加入 2x、3x、4x。切換分頁時倒數仍會繼續。</p></article>
@@ -328,7 +351,7 @@ function RoomMatch({ seat, snapshot, refresh, onLeave }) {
     <div className="factor-versus-score"><article className="self"><small>你・第 {Math.min(10, self.progress + 1)}／10 題・挑戰 Lv.{self.currentTier || 1}</small><strong>{self.nickname}　{self.score} 分</strong></article><b>VS</b><article><small>{opponent?.online ? '作答中' : '暫時離線'}・第 {Math.min(10, (opponent?.progress || 0) + 1)}／10 題・挑戰 Lv.{opponent?.currentTier || 1}</small><strong>{opponent?.nickname || '等待對手'}　{opponent?.score || 0} 分</strong></article></div>
     <div className="factor-statusbar"><span>{factorClashModes[room.mode].name}・平衡對戰</span><span>個人難度會依最近表現調整</span><span className={remaining <= 20 ? 'danger' : remaining <= 60 ? 'warning' : ''}><Clock3 aria-hidden="true" />{formatTime(remaining)}</span></div>
     <DuelSkills self={{ ...self, lastSkillQuestion: localSkillUsed ? self.progress + 1 : self.lastSkillQuestion }} opponent={opponent} questionNumber={self.progress + 1} disabled={resolved || sending} onUse={useSkill} />
-    <article className="factor-question"><p>{room.mode === 'area' ? '在固定棋盤中，從左上角拼出題目需要的長方形' : '將多項式分解成兩個一次因式'}</p><h2>{room.mode === 'area' ? `${question.factoredText} ＝ ${question.expandedText}` : `${question.expandedText} ＝ ？`}</h2></article>
+    <article className="factor-question"><p>{room.mode === 'area' ? '在固定棋盤中，從左上角拼出題目需要的長方形' : '將多項式分解成兩個一次因式'}</p><h2>{room.mode === 'area' ? formatAreaEquation(question) : `${question.expandedText} ＝ ？`}</h2></article>
     {room.mode === 'area' ? <AreaChallenge key={question.id} question={question} placement={placement} setPlacement={setPlacement} selected={selected} setSelected={setSelected} /> : <CrossChallenge key={question.id} question={question} answer={crossAnswer} setAnswer={setCrossAnswer} selected={selected} setSelected={setSelected} />}
     {(skillMessage || hint) && <div className="factor-skill-message">{skillMessage}{hint && <strong>{hint}</strong>}</div>}
     <div className={`factor-feedback ${resolved ? 'resolved' : ''}`}>{feedback || '對手看不到你的題目與棋盤，只會看到分數、進度與挑戰等級。'}{resolved && <div className="factor-explanation"><strong>正確答案：{question.factoredText}</strong><span>{questionExplanation(question)}</span></div>}</div>
@@ -582,7 +605,7 @@ export default function FactorClash() {
         <div className="factor-statusbar"><span><Target aria-hidden="true" />第 {questionIndex + 1}／{questions.length} 題</span><span>得分 <b>{points}</b>／15</span><span className={timeClass}><Clock3 aria-hidden="true" />{formatTime(remaining)}</span></div>
         <article className="factor-question">
           <p>{mode === 'area' ? '在固定棋盤中，從左上角拼出題目需要的長方形' : '將多項式分解成兩個一次因式'}</p>
-          <h2>{mode === 'area' ? `${question.factoredText} ＝ ${question.expandedText}` : `${question.expandedText} ＝ ？`}</h2>
+          <h2>{mode === 'area' ? formatAreaEquation(question) : `${question.expandedText} ＝ ？`}</h2>
         </article>
         {mode === 'area'
           ? <AreaChallenge key={question.id} question={question} placement={placement} setPlacement={setPlacement} selected={selected} setSelected={setSelected} />

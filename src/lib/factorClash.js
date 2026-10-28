@@ -110,6 +110,10 @@ export function formatFactoredExpression(left, right) {
   return `(${formatLinearFactor(left)})(${formatLinearFactor(right)})`
 }
 
+export function formatAreaEquation(question) {
+  return `${question.expandedText} ＝ ${question.factoredText}`
+}
+
 function appendPolynomialTerm(parts, coefficient, symbol) {
   if (coefficient === 0) return
   const absolute = Math.abs(coefficient)
@@ -307,6 +311,16 @@ export function areaPiecesFor(question, random = Math.random) {
     type: slot.type,
     orientation: slot.orientation,
   })), random)
+}
+
+export function placeAllAreaPieces(question, pieces = areaPiecesFor(question)) {
+  const unused = [...pieces]
+  return Object.fromEntries(areaBoardFor(question).slots.flatMap((slot) => {
+    const pieceIndex = unused.findIndex((piece) => piece.type === slot.type
+      && (slot.type !== 'x' || piece.orientation === slot.orientation))
+    if (pieceIndex < 0) return []
+    return [[slot.id, unused.splice(pieceIndex, 1)[0]]]
+  }))
 }
 
 export function validateAreaPlacement(question, placement = {}) {

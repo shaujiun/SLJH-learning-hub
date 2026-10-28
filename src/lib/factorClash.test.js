@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   adaptiveQuestionAt, areaBoardFor, areaPiecesFor, createAdaptiveQuestionSet, createFactorQuestion, expandFactors,
   factorChallengeDifficulty, factorChallengeSeconds, factorClashHint, factorQuestionSeconds, formatExpandedExpression, formatFactoredExpression,
-  gcd, pointsForSubmission, validateAreaPlacement, validateCrossAnswer,
+  formatAreaEquation, gcd, placeAllAreaPieces, pointsForSubmission, validateAreaPlacement, validateCrossAnswer,
 } from './factorClash.js'
 
 function sequenceRandom(values) {
@@ -98,6 +98,27 @@ describe('因式交鋒數學核心', () => {
     expect(validateAreaPlacement(question, placement)).toBe(true)
     const optionalSlot = board.slots.find((slot) => !slot.required)
     expect(validateAreaPlacement(question, { ...placement, [optionalSlot.id]: { type: optionalSlot.type, orientation: optionalSlot.orientation } })).toBe(false)
+  })
+
+  it('可一次擺滿全部面積板，再逐一移除多餘板塊', () => {
+    const question = {
+      id: 'place-all', left: { coefficient: 1, constant: 2 }, right: { coefficient: 1, constant: 3 },
+    }
+    const board = areaBoardFor(question)
+    const pieces = areaPiecesFor(question, () => .5)
+    const placement = placeAllAreaPieces(question, pieces)
+    expect(Object.keys(placement)).toHaveLength(board.slots.length)
+    expect(new Set(Object.values(placement).map((piece) => piece.id)).size).toBe(pieces.length)
+    expect(validateAreaPlacement(question, placement)).toBe(false)
+    const answer = Object.fromEntries(Object.entries(placement).filter(([slotId]) => board.slots.find((slot) => slot.id === slotId)?.required))
+    expect(validateAreaPlacement(question, answer)).toBe(true)
+  })
+
+  it('面積題先顯示展開式，再顯示因式分解式', () => {
+    expect(formatAreaEquation({
+      expandedText: '4x² ＋ 16x ＋ 15',
+      factoredText: '(2x ＋ 5)(2x ＋ 3)',
+    })).toBe('4x² ＋ 16x ＋ 15 ＝ (2x ＋ 5)(2x ＋ 3)')
   })
 
   it('十字交戰接受交換律，但拒絕未完全分解的形式', () => {

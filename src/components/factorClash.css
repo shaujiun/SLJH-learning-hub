@@ -71,6 +71,9 @@
 .placed-one { background:#bb8ccb; }
 .factor-tray,.factor-card-bank { padding:1rem; border:2px solid #d1d9d5; border-radius:18px; background:#f7f4ec; }
 .factor-tray h3,.factor-card-bank h3 { margin:0; }
+.factor-tray-heading { display:flex; align-items:center; justify-content:space-between; gap:.75rem; }
+.factor-tray-heading button { min-height:38px; padding:.45rem .8rem; border:2px solid #176b73; border-radius:10px; color:#fff; background:#176b73; font-weight:900; cursor:pointer; }
+.factor-tray-heading button:disabled { opacity:.45; cursor:not-allowed; }
 .factor-tray p,.factor-card-bank p { margin:.25rem 0 .85rem; color:#61727c; line-height:1.5; }
 .factor-piece-list,.factor-card-list { display:flex; flex-wrap:wrap; align-items:center; gap:.55rem; min-height:80px; }
 .factor-tile { display:grid; place-items:center; border:2px solid #173f52; border-radius:8px; color:#173f52; font-family:Georgia,serif; font-weight:900; cursor:grab; touch-action:manipulation; }

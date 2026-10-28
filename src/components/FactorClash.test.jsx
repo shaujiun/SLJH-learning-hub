@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { DuelSkills } from './FactorClash.jsx'
+import { AreaChallenge, DuelSkills } from './FactorClash.jsx'
 
 describe('因式交鋒平衡對戰介面', () => {
   it('顯示五種技能、能量與落後者免費提示', () => {
@@ -29,5 +29,17 @@ describe('因式交鋒平衡對戰介面', () => {
       onUse={() => {}}
     />)
     expect((html.match(/disabled=""/g) || [])).toHaveLength(5)
+  })
+
+  it('天人交戰提供全部擺放按鈕與拖回放置區說明', () => {
+    const html = renderToStaticMarkup(<AreaChallenge
+      question={{ id: 'area', left: { coefficient: 1, constant: 2 }, right: { coefficient: 1, constant: 3 } }}
+      placement={{}}
+      setPlacement={() => {}}
+      selected=""
+      setSelected={() => {}}
+    />)
+    expect(html).toContain('全部擺放')
+    expect(html).toContain('逐一點回或拖回此處')
   })
 })
