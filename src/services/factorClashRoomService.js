@@ -1,4 +1,4 @@
-import { createFactorQuestion } from '../lib/factorClash.js'
+import { createAdaptiveQuestionSet } from '../lib/factorClash.js'
 import { requireSupabase } from '../lib/supabase.js'
 
 const roomStorageKey = 'sljh.factorClash.roomSeat.v1'
@@ -14,6 +14,10 @@ const messages = {
   factor_submission_order_invalid: '題目進度不同步，請重新整理房間。',
   factor_settings_invalid: '房間玩法或題目設定不完整。',
   factor_submission_invalid: '本題成績資料不正確，請重新整理後再試。',
+  factor_skill_invalid: '這個技能目前無法使用。',
+  factor_skill_energy_insufficient: '技能能量不足。',
+  factor_skill_already_used: '每題只能使用一次技能。',
+  factor_opponent_unavailable: '對手目前無法接受挑戰技能。',
 }
 
 function translate(error, fallback) {
@@ -25,15 +29,6 @@ async function rpc(name, parameters, fallback, client = requireSupabase()) {
   const { data, error } = await client.rpc(name, parameters)
   if (error) throw translate(error, fallback)
   return data
-}
-
-function makeQuestionSet(mode, difficulty, count = 10) {
-  const usedKeys = new Set()
-  return Array.from({ length: count }, () => {
-    const question = createFactorQuestion({ mode, difficulty, usedKeys })
-    usedKeys.add(question.key)
-    return question
-  })
 }
 
 export function rememberFactorClashSeat(seat) {
@@ -82,12 +77,12 @@ export function startFactorClashRoom(seat, mode, difficulty, client) {
     p_seat_token: seat.seatToken,
     p_mode: mode,
     p_difficulty: difficulty,
-    p_host_questions: makeQuestionSet(mode, difficulty),
-    p_guest_questions: makeQuestionSet(mode, difficulty),
+    p_host_questions: createAdaptiveQuestionSet({ mode }),
+    p_guest_questions: createAdaptiveQuestionSet({ mode }),
   }, '無法開始對戰', client)
 }
 
-export function reportFactorClashQuestion(seat, { questionNumber, points, firstTry, elapsedMs, timedOut }, client) {
+export function reportFactorClashQuestion(seat, { questionNumber, points, firstTry, elapsedMs, timedOut, timeLimitMs }, client) {
   return rpc('factor_clash_report_question', {
     p_room_code: seat.roomCode,
     p_seat_token: seat.seatToken,
@@ -96,7 +91,17 @@ export function reportFactorClashQuestion(seat, { questionNumber, points, firstT
     p_first_try: firstTry,
     p_elapsed_ms: elapsedMs,
     p_timed_out: timedOut,
+    p_time_limit_ms: timeLimitMs,
   }, '無法更新對戰進度', client)
+}
+
+export function useFactorClashSkill(seat, skill, questionNumber, client) {
+  return rpc('factor_clash_use_skill', {
+    p_room_code: seat.roomCode,
+    p_seat_token: seat.seatToken,
+    p_skill: skill,
+    p_question_number: questionNumber,
+  }, '無法使用技能', client)
 }
 
 export function leaveFactorClashRoom(seat, client) {

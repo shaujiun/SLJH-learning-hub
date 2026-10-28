@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  areaBoardFor, areaPiecesFor, createFactorQuestion, expandFactors,
-  factorQuestionSeconds, formatExpandedExpression, formatFactoredExpression,
+  adaptiveQuestionAt, areaBoardFor, areaPiecesFor, createAdaptiveQuestionSet, createFactorQuestion, expandFactors,
+  factorChallengeDifficulty, factorChallengeSeconds, factorClashHint, factorQuestionSeconds, formatExpandedExpression, formatFactoredExpression,
   gcd, pointsForSubmission, validateAreaPlacement, validateCrossAnswer,
 } from './factorClash.js'
 
@@ -30,6 +30,26 @@ describe('因式交鋒數學核心', () => {
     expect(factorQuestionSeconds('area', 'advanced')).toBe(240)
     expect(factorQuestionSeconds('cross', 'advanced')).toBe(180)
     expect(factorQuestionSeconds('cross', 'basic')).toBe(120)
+  })
+
+  it('雙人平衡題庫每題準備 5 個挑戰層級，並依目前層級取題', () => {
+    const questions = createAdaptiveQuestionSet({ mode: 'cross', count: 3 })
+    expect(questions).toHaveLength(3)
+    expect(questions.every((entry) => entry.variants.length === 5)).toBe(true)
+    expect(questions[0].variants.map((question) => question.challengeTier)).toEqual([1, 2, 3, 4, 5])
+    expect(adaptiveQuestionAt(questions, 0, 5).challengeTier).toBe(5)
+    expect(factorChallengeDifficulty(2)).toBe('basic')
+    expect(factorChallengeDifficulty(3)).toBe('advanced')
+    expect(factorChallengeSeconds('area', 5)).toBe(240)
+    expect(factorChallengeSeconds('cross', 3)).toBe(150)
+  })
+
+  it('提示鏡依玩法提供面積板數量或十字交乘方向', () => {
+    const area = createFactorQuestion({ mode: 'area', challengeTier: 1, random: sequenceRandom([0, .5, .2]) })
+    const cross = createFactorQuestion({ mode: 'cross', challengeTier: 2, random: sequenceRandom([0, .2, .7, .3]) })
+    expect(factorClashHint(area)).toContain('這題需要 x²')
+    expect(factorClashHint(area)).toContain('橫躺 x')
+    expect(factorClashHint(cross)).toContain('交叉相乘後合併')
   })
 
   it('進階因式保持完全分解，4x 的常數不超過 3', () => {

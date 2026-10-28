@@ -5,11 +5,13 @@ import {
 } from 'lucide-react'
 import {
   FACTOR_CLASH_ROUND_SIZE,
+  adaptiveQuestionAt,
   areaBoardFor,
   areaPiecesFor,
   createFactorQuestion,
   crossCardsFor,
   factorClashDifficulties,
+  factorClashHint,
   factorClashModes,
   pointsForSubmission,
   questionExplanation,
@@ -22,6 +24,7 @@ import {
   clearFactorClashSeat, createFactorClashRoom, joinFactorClashRoom, leaveFactorClashRoom,
   loadFactorClashRoom, readFactorClashSeat, releaseFactorClashSeat,
   reportFactorClashQuestion, startFactorClashRoom,
+  useFactorClashSkill,
 } from '../services/factorClashRoomService.js'
 import './factorClash.css'
 
@@ -197,6 +200,7 @@ function Tutorial({ onClose }) {
           <article><div className="factor-demo-cross"><b>( x ＋ 2 )</b><b>( x ＋ 3 )</b></div><h3>十字交戰</h3><p>把展開式還原成兩個一次因式。<strong>前後交換仍是同一答案</strong>。</p></article>
           <article><div className="factor-demo-score"><b>＋3</b><b>＋1</b><b>0</b></div><h3>兩次機會</h3><p>第一次答對得 3 分，第二次答對得 1 分；兩次都錯或時間到才公布答案。</p></article>
           <article><div className="factor-demo-level"><b>基礎 2:00</b><b>進階 3～4:00</b></div><h3>難度與時間</h3><p>進階題會加入 2x、3x、4x。切換分頁時倒數仍會繼續。</p></article>
+          <article><div className="factor-demo-level"><b>Lv.1</b><b>Lv.5</b></div><h3>雙人平衡對戰</h3><p>前 2 題用來校準；連續快速且第一次答對會升級，連續第二次才答對、答錯或接近逾時會降級。答對可累積技能能量，落後較多時可取得一次免費提示。</p></article>
         </div>
         <a className="factor-video-link" href={videoUrl} target="_blank" rel="noreferrer"><ExternalLink aria-hidden="true" />觀看三師爸影片教學</a>
         <label className="factor-hide-tutorial"><input type="checkbox" checked={hideNextTime} onChange={(event) => setHideNextTime(event.target.checked)} />下次進入時不再自動顯示（仍可按「玩法說明」開啟）</label>
@@ -206,9 +210,33 @@ function Tutorial({ onClose }) {
   )
 }
 
+export function DuelSkills({ self, opponent, questionNumber, disabled, onUse }) {
+  const used = self.lastSkillQuestion === questionNumber
+  const energy = self.skillEnergy || 0
+  const hintFree = (self.hintTokens || 0) > 0
+  const skills = [
+    { code: 'hint', name: '提示鏡', cost: hintFree ? 0 : 1, note: hintFree ? '落後補助・免費' : '顯示解題方向' },
+    { code: 'extra_time', name: '延長時間', cost: 1, note: '本題增加 15 秒' },
+    { code: 'retry', name: '再想一次', cost: 1, note: '本題增加第 3 次機會' },
+    { code: 'shield', name: '護盾', cost: 1, note: (self.shieldCount || 0) > 0 ? '已啟用' : '抵擋一次挑戰升級' },
+    { code: 'challenge', name: '挑戰升級', cost: 2, note: '對手下一題提高 1 級' },
+  ]
+  return <section className="factor-skill-panel" aria-label="平衡對戰技能">
+    <div><strong>技能能量 {energy}／3</strong><span>每題最多使用 1 次；正確作答可補充能量。</span></div>
+    <div className="factor-skill-list">
+      {skills.map((skill) => <button
+        key={skill.code}
+        type="button"
+        disabled={disabled || used || energy < skill.cost || (skill.code === 'shield' && self.shieldCount > 0) || (skill.code === 'challenge' && !opponent)}
+        onClick={() => onUse(skill.code)}
+      ><strong>{skill.name}</strong><small>{skill.note}</small><span>{skill.cost ? `${skill.cost} 能量` : '免費'}</span></button>)}
+    </div>
+  </section>
+}
+
 function RoomMatch({ seat, snapshot, refresh, onLeave }) {
   const { room, self, opponent } = snapshot
-  const question = self.questions?.[self.progress]
+  const question = adaptiveQuestionAt(self.questions, self.progress, self.currentTier || (room.difficulty === 'advanced' ? 4 : 2))
   const [placement, setPlacement] = useState({})
   const [crossAnswer, setCrossAnswer] = useState(emptyCross)
   const [selected, setSelected] = useState('')
@@ -220,12 +248,17 @@ function RoomMatch({ seat, snapshot, refresh, onLeave }) {
   const [remaining, setRemaining] = useState(question?.seconds || 0)
   const [sending, setSending] = useState(false)
   const [syncError, setSyncError] = useState('')
+  const [skillMessage, setSkillMessage] = useState('')
+  const [hint, setHint] = useState('')
+  const [bonusRetry, setBonusRetry] = useState(false)
+  const [localSkillUsed, setLocalSkillUsed] = useState(false)
   const startedAtRef = useRef(Date.now())
   const deadlineRef = useRef(0)
 
   useEffect(() => {
     setPlacement({}); setCrossAnswer(emptyCross); setSelected(''); setAttempts(0)
     setResolved(false); setFeedback(''); setEarned(0); setTimedOut(false); setSyncError('')
+    setSkillMessage(''); setHint(''); setBonusRetry(false); setLocalSkillUsed(false)
     startedAtRef.current = Date.now()
     if (question) { deadlineRef.current = Date.now() + question.seconds * 1000; setRemaining(question.seconds) }
   }, [question?.id])
@@ -264,7 +297,21 @@ function RoomMatch({ seat, snapshot, refresh, onLeave }) {
       const score = pointsForSubmission(attempt, true); setEarned(score); setResolved(true)
       setFeedback(`答對了，本題獲得 ${score} 分。`)
     } else if (attempt === 1) setFeedback('還有一次機會，倒數不會重新開始。')
-    else { setEarned(0); setResolved(true); setFeedback('兩次都未答對，本題不加分。') }
+    else if (attempt === 2 && bonusRetry) setFeedback('「再想一次」生效，還有最後一次機會。')
+    else { setEarned(0); setResolved(true); setFeedback(`${bonusRetry ? '三次' : '兩次'}都未答對，本題不加分。`) }
+  }
+  const useSkill = async (skill) => {
+    setSending(true); setSyncError('')
+    try {
+      const result = await useFactorClashSkill(seat, skill, self.progress + 1)
+      setLocalSkillUsed(true)
+      if (skill === 'hint') { setHint(factorClashHint(question)); setSkillMessage('提示鏡已開啟。') }
+      if (skill === 'extra_time') { deadlineRef.current += 15000; setRemaining((value) => value + 15); setSkillMessage('本題時間增加 15 秒。') }
+      if (skill === 'retry') { setBonusRetry(true); setSkillMessage('本題答錯時可多嘗試 1 次。') }
+      if (skill === 'shield') setSkillMessage('護盾已啟用，會抵擋下一次挑戰升級。')
+      if (skill === 'challenge') setSkillMessage(result?.blocked ? '對手的護盾擋下了挑戰升級。' : '已讓對手下一題提高 1 個挑戰等級；若對方第一次答對，會獲得額外能量。')
+      await refresh()
+    } catch (error) { setSyncError(error.message || '無法使用技能。') } finally { setSending(false) }
   }
   const advance = async () => {
     setSending(true)
@@ -272,18 +319,21 @@ function RoomMatch({ seat, snapshot, refresh, onLeave }) {
       await reportFactorClashQuestion(seat, {
         questionNumber: self.progress + 1, points: earned, firstTry: earned === 3,
         elapsedMs: Math.max(0, Date.now() - startedAtRef.current), timedOut,
+        timeLimitMs: question.seconds * 1000,
       })
       await refresh()
     } catch (error) { setSyncError(error.message || '無法同步本題進度。') } finally { setSending(false) }
   }
   return <section className="factor-room-match">
-    <div className="factor-versus-score"><article className="self"><small>你・第 {Math.min(10, self.progress + 1)}／10 題</small><strong>{self.nickname}　{self.score} 分</strong></article><b>VS</b><article><small>{opponent?.online ? '作答中' : '暫時離線'}・第 {Math.min(10, (opponent?.progress || 0) + 1)}／10 題</small><strong>{opponent?.nickname || '等待對手'}　{opponent?.score || 0} 分</strong></article></div>
-    <div className="factor-statusbar"><span>{factorClashModes[room.mode].name}・{factorClashDifficulties[room.difficulty].name}</span><span className={remaining <= 20 ? 'danger' : remaining <= 60 ? 'warning' : ''}><Clock3 aria-hidden="true" />{formatTime(remaining)}</span></div>
+    <div className="factor-versus-score"><article className="self"><small>你・第 {Math.min(10, self.progress + 1)}／10 題・挑戰 Lv.{self.currentTier || 1}</small><strong>{self.nickname}　{self.score} 分</strong></article><b>VS</b><article><small>{opponent?.online ? '作答中' : '暫時離線'}・第 {Math.min(10, (opponent?.progress || 0) + 1)}／10 題・挑戰 Lv.{opponent?.currentTier || 1}</small><strong>{opponent?.nickname || '等待對手'}　{opponent?.score || 0} 分</strong></article></div>
+    <div className="factor-statusbar"><span>{factorClashModes[room.mode].name}・平衡對戰</span><span>個人難度會依最近表現調整</span><span className={remaining <= 20 ? 'danger' : remaining <= 60 ? 'warning' : ''}><Clock3 aria-hidden="true" />{formatTime(remaining)}</span></div>
+    <DuelSkills self={{ ...self, lastSkillQuestion: localSkillUsed ? self.progress + 1 : self.lastSkillQuestion }} opponent={opponent} questionNumber={self.progress + 1} disabled={resolved || sending} onUse={useSkill} />
     <article className="factor-question"><p>{room.mode === 'area' ? '在固定棋盤中，從左上角拼出題目需要的長方形' : '將多項式分解成兩個一次因式'}</p><h2>{room.mode === 'area' ? `${question.factoredText} ＝ ${question.expandedText}` : `${question.expandedText} ＝ ？`}</h2></article>
     {room.mode === 'area' ? <AreaChallenge key={question.id} question={question} placement={placement} setPlacement={setPlacement} selected={selected} setSelected={setSelected} /> : <CrossChallenge key={question.id} question={question} answer={crossAnswer} setAnswer={setCrossAnswer} selected={selected} setSelected={setSelected} />}
-    <div className={`factor-feedback ${resolved ? 'resolved' : ''}`}>{feedback || '對手看不到你的題目與棋盤，只會看到分數和進度。'}{resolved && <div className="factor-explanation"><strong>正確答案：{question.factoredText}</strong><span>{questionExplanation(question)}</span></div>}</div>
+    {(skillMessage || hint) && <div className="factor-skill-message">{skillMessage}{hint && <strong>{hint}</strong>}</div>}
+    <div className={`factor-feedback ${resolved ? 'resolved' : ''}`}>{feedback || '對手看不到你的題目與棋盤，只會看到分數、進度與挑戰等級。'}{resolved && <div className="factor-explanation"><strong>正確答案：{question.factoredText}</strong><span>{questionExplanation(question)}</span></div>}</div>
     {syncError && <p className="factor-room-error">{syncError}</p>}
-    <div className="factor-actions">{resolved ? <button className="factor-primary" type="button" disabled={sending} onClick={advance}>{sending ? '同步中……' : self.progress === 9 ? '送出最後一題' : '下一題'}</button> : <button className="factor-primary" type="button" onClick={submit}><CheckCircle2 aria-hidden="true" />確認答案</button>}</div>
+    <div className="factor-actions">{resolved ? <button className="factor-primary" type="button" disabled={sending} onClick={advance}>{sending ? '同步中……' : self.progress === 9 ? '送出最後一題' : '下一題'}</button> : <button className="factor-primary" type="button" disabled={sending} onClick={submit}><CheckCircle2 aria-hidden="true" />{sending ? '同步中……' : '確認答案'}</button>}</div>
   </section>
 }
 
@@ -325,7 +375,7 @@ function FactorClashRoom({ onBack }) {
   }
   if (!seat) return <section className="factor-room-entry">
     <button className="factor-text-button" type="button" onClick={onBack}><ArrowLeft aria-hidden="true" />返回單人練習</button>
-    <h2>雙人對戰房間</h2><p>不必登入。房主建立 6 位數代碼，另一位同學輸入相同代碼即可加入。</p>
+    <h2>雙人平衡對戰房間</h2><p>不必登入。房主建立 6 位數代碼，另一位同學輸入相同代碼即可加入；系統會依兩人各自表現調整下一題難度。</p>
     {savedSeat && <button type="button" className="factor-reconnect" onClick={() => setSeat(savedSeat)}>重新連回房間 {savedSeat.roomCode}</button>}
     <div className="factor-room-tabs"><button className={joinMode === 'create' ? 'active' : ''} type="button" onClick={() => setJoinMode('create')}>建立房間</button><button className={joinMode === 'join' ? 'active' : ''} type="button" onClick={() => setJoinMode('join')}>加入房間</button></div>
     <label>暱稱<input value={nickname} maxLength={10} onChange={(event) => setNickname(event.target.value)} placeholder="例如：小明" /></label>
@@ -337,7 +387,7 @@ function FactorClashRoom({ onBack }) {
   if (snapshot.room.status !== 'waiting') return <RoomMatch seat={seat} snapshot={snapshot} refresh={refresh} onLeave={leave} />
   return <section className="factor-room-lobby">
     <button className="factor-text-button" type="button" onClick={leave}>離開房間</button><p>房間代碼</p><h2>{seat.roomCode}</h2><div className="factor-lobby-players"><strong>① {snapshot.self.nickname}（你）</strong><strong>② {snapshot.opponent?.nickname || '等待同學加入……'}</strong></div>
-    {snapshot.isHost ? <><div className="factor-lobby-settings"><label>玩法<select value={mode} onChange={(event) => setMode(event.target.value)}><option value="area">天人交戰</option><option value="cross">十字交戰</option></select></label><label>難度<select value={difficulty} onChange={(event) => setDifficulty(event.target.value)}><option value="basic">基礎</option><option value="advanced">進階</option></select></label></div><button className="factor-primary" type="button" disabled={!snapshot.opponent || busy} onClick={async () => { setBusy(true); try { await startFactorClashRoom(seat, mode, difficulty); await refresh() } catch (error) { setMessage(error.message) } finally { setBusy(false) } }}>{busy ? '準備題目中……' : '開始 10 題對戰'}</button><button className="factor-text-button" type="button" onClick={async () => { try { await releaseFactorClashSeat(seat); await refresh() } catch (error) { setMessage(error.message) } }}>釋放離線超過 3 分鐘的座位</button></> : <p>房主開始後，兩人會收到不同題目。</p>}
+    {snapshot.isHost ? <><div className="factor-lobby-settings"><label>玩法<select value={mode} onChange={(event) => setMode(event.target.value)}><option value="area">天人交戰</option><option value="cross">十字交戰</option></select></label><label>起始難度<select value={difficulty} onChange={(event) => setDifficulty(event.target.value)}><option value="basic">基礎・從 Lv.2 開始</option><option value="advanced">進階・從 Lv.4 開始</option></select></label></div><p>開始後，每位玩家的難度會依最近表現分別升降；分數仍維持第一次答對 3 分、第二次答對 1 分。</p><button className="factor-primary" type="button" disabled={!snapshot.opponent || busy} onClick={async () => { setBusy(true); try { await startFactorClashRoom(seat, mode, difficulty); await refresh() } catch (error) { setMessage(error.message) } finally { setBusy(false) } }}>{busy ? '準備題目中……' : '開始 10 題平衡對戰'}</button><button className="factor-text-button" type="button" onClick={async () => { try { await releaseFactorClashSeat(seat); await refresh() } catch (error) { setMessage(error.message) } }}>釋放離線超過 3 分鐘的座位</button></> : <p>房主開始後，兩人會收到不同題目；系統會分別調整兩人的挑戰等級。</p>}
     {message && <p className="factor-room-error">{message}</p>}
   </section>
 }
