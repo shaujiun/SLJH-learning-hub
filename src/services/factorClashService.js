@@ -1,4 +1,5 @@
 import { clearRememberedFocusTask } from '../lib/focusTaskLaunch.js'
+import { normalizeFactorClashAwaySeconds } from '../lib/factorClashAwayTime.js'
 import { isSupabaseConfigured, requireSupabase } from '../lib/supabase.js'
 
 function taipeiToday(date = new Date()) {
@@ -76,7 +77,7 @@ export async function recordFactorClashRound({
     second_try_correct: secondTryCorrect,
     timeout_count: timeoutCount,
     away_count: awayCount,
-    away_seconds: awaySeconds,
+    away_seconds: normalizeFactorClashAwaySeconds(awaySeconds),
   })
   if (sessionError) throw new Error(`無法儲存因式交鋒練習紀錄：${sessionError.message}`)
 
