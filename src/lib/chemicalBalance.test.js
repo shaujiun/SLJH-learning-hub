@@ -9,15 +9,18 @@ import {
   countAtomSymbols,
   describeAtomDifference,
   describeFormulaSelections,
+  describeMissingCompoundAnswer,
   describeMoleculeBuild,
   describeFormulaOnlyBalance,
   describeReactionBalance,
   displayMolecularFormula,
   evaluateFormulaSelections,
+  evaluateMissingCompoundAnswer,
   evaluateReactionCoefficients,
   initialFormulaSelections,
   initialReactionCoefficients,
   moleculeGraphMatches,
+  normalizeMolecularFormulaInput,
   parseMolecularFormula,
   pointsForAttempt,
   removeMoleculeAtom,
@@ -26,6 +29,8 @@ import {
 } from './chemicalBalance.js'
 import {
   formulaChoicesByMoleculeId,
+  stageFourMissingCompoundBank,
+  stageFourMissingCompoundQuestionCount,
   stageFourMolecules,
   stageFourQuestionMix,
   stageFourReactionBank,
@@ -201,15 +206,19 @@ describe('化學反應平衡站第三關邏輯', () => {
 })
 
 describe('化學反應平衡站第四關邏輯', () => {
-  it('從大型題庫依難度比例抽出十題，且不同輪次會更換題目', () => {
+  it('從大型題庫抽出十題完整反應式與三題缺項推理，且不同輪次會更換題目', () => {
     const firstRound = buildStageFourRound(seededRandom(7))
     const secondRound = buildStageFourRound(seededRandom(97))
+    const fullQuestions = firstRound.filter((reaction) => reaction.mode === 'full-equation')
+    const missingQuestions = firstRound.filter((reaction) => reaction.mode === 'missing-product')
 
     expect(stageFourReactionBank.length).toBeGreaterThanOrEqual(20)
-    expect(firstRound).toHaveLength(10)
-    expect(firstRound.filter((reaction) => reaction.difficulty === 'foundation')).toHaveLength(stageFourQuestionMix.foundation)
-    expect(firstRound.filter((reaction) => reaction.difficulty === 'core')).toHaveLength(stageFourQuestionMix.core)
-    expect(firstRound.filter((reaction) => reaction.difficulty === 'challenge')).toHaveLength(stageFourQuestionMix.challenge)
+    expect(firstRound).toHaveLength(10 + stageFourMissingCompoundQuestionCount)
+    expect(fullQuestions).toHaveLength(10)
+    expect(missingQuestions).toHaveLength(stageFourMissingCompoundQuestionCount)
+    expect(fullQuestions.filter((reaction) => reaction.difficulty === 'foundation')).toHaveLength(stageFourQuestionMix.foundation)
+    expect(fullQuestions.filter((reaction) => reaction.difficulty === 'core')).toHaveLength(stageFourQuestionMix.core)
+    expect(fullQuestions.filter((reaction) => reaction.difficulty === 'challenge')).toHaveLength(stageFourQuestionMix.challenge)
     expect(firstRound.map((reaction) => reaction.id)).not.toEqual(secondRound.map((reaction) => reaction.id))
   })
 
@@ -221,7 +230,7 @@ describe('化學反應平衡站第四關邏輯', () => {
       expect(formulaChoicesByMoleculeId[moleculeId], moleculeId).toHaveLength(2)
     })
 
-    const round = buildStageFourRound(seededRandom(19))
+    const round = buildStageFourRound(seededRandom(19)).filter((reaction) => reaction.mode === 'full-equation')
     round.forEach((reaction) => {
       ;[...reaction.reactants, ...reaction.products].forEach((term) => {
         expect(term.formulaOptions).toHaveLength(3)
@@ -238,7 +247,9 @@ describe('化學反應平衡站第四關邏輯', () => {
 
     const checkedReactionIds = new Set()
     for (let seed = 1; seed <= 1000; seed += 1) {
-      buildStageFourRound(seededRandom(seed)).forEach((reaction) => {
+      buildStageFourRound(seededRandom(seed))
+        .filter((reaction) => reaction.mode === 'full-equation')
+        .forEach((reaction) => {
         checkedReactionIds.add(reaction.id)
         expect(evaluateReactionCoefficients(reaction, reaction.answer).simplest, reaction.id).toBe(true)
         expect(
@@ -246,13 +257,13 @@ describe('化學反應平衡站第四關邏輯', () => {
             .every((coefficient) => coefficient >= 1 && coefficient <= 8),
           reaction.id,
         ).toBe(true)
-      })
+        })
     }
     expect(checkedReactionIds.size).toBe(stageFourReactionBank.length)
   })
 
   it('能分別判斷化學式選擇與係數配平', () => {
-    const reaction = buildStageFourRound(() => 0.999)[0]
+    const reaction = buildStageFourRound(() => 0.999).find((question) => question.mode === 'full-equation')
     const blankEvaluation = evaluateFormulaSelections(reaction, initialFormulaSelections(reaction))
     const correctSelections = {
       reactants: reaction.reactants.map((term) => term.molecule.formula),
@@ -264,5 +275,48 @@ describe('化學反應平衡站第四關邏輯', () => {
     expect(describeFormulaSelections(blankEvaluation)).toContain('化學式尚未正確')
     expect(formulaEvaluation).toEqual({ correct: true, incorrectTerms: [] })
     expect(evaluateReactionCoefficients(reaction, reaction.answer).simplest).toBe(true)
+  })
+
+  it('缺項題只挖空生成物，並保留已配平的固定係數', () => {
+    expect(stageFourMissingCompoundBank.length).toBeGreaterThanOrEqual(10)
+    for (let seed = 1; seed <= 200; seed += 1) {
+      const missingQuestions = buildStageFourRound(seededRandom(seed))
+        .filter((question) => question.mode === 'missing-product')
+      expect(missingQuestions).toHaveLength(stageFourMissingCompoundQuestionCount)
+      missingQuestions.forEach((question) => {
+        expect(question.missingProductIndex).toBeGreaterThanOrEqual(0)
+        expect(question.missingProductIndex).toBeLessThan(question.products.length)
+        expect(question.products[question.missingProductIndex].molecule.formula).toBe(question.missingFormula)
+        expect(evaluateReactionCoefficients(question, question.answer).simplest, question.id).toBe(true)
+      })
+    }
+  })
+
+  it('碳酸鈣與鹽酸題依指定順序呈現，空格答案為二氧化碳', () => {
+    let example
+    for (let seed = 1; seed <= 100 && !example; seed += 1) {
+      example = buildStageFourRound(seededRandom(seed))
+        .find((question) => question.id === 'missing-carbon-dioxide-acid-carbonate')
+    }
+
+    expect(example).toBeTruthy()
+    expect(example.reactants.map((term) => term.molecule.formula)).toEqual(['CaCO3', 'HCl'])
+    expect(example.answer.reactants).toEqual([1, 2])
+    expect(example.products.map((term) => term.molecule.formula)).toEqual(['CaCl2', 'CO2', 'H2O'])
+    expect(example.missingProductIndex).toBe(1)
+    expect(example.missingFormula).toBe('CO2')
+  })
+
+  it('缺項題接受一般數字、右下角與全形數字，但不把錯誤元素大小寫視為正確', () => {
+    const question = buildStageFourRound(seededRandom(13))
+      .find((item) => item.mode === 'missing-product' && item.missingFormula.includes('2'))
+      || { missingFormula: 'CO2' }
+
+    expect(normalizeMolecularFormulaInput(' CO₂ ')).toBe('CO2')
+    expect(normalizeMolecularFormulaInput('ＣＯ２')).toBe('CO2')
+    expect(evaluateMissingCompoundAnswer(question, displayMolecularFormula(question.missingFormula)).correct).toBe(true)
+    expect(evaluateMissingCompoundAnswer(question, question.missingFormula).correct).toBe(true)
+    expect(evaluateMissingCompoundAnswer({ missingFormula: 'CO2' }, 'co2')).toMatchObject({ correct: false, reason: 'invalid' })
+    expect(describeMissingCompoundAnswer(evaluateMissingCompoundAnswer({ missingFormula: 'CO2' }, 'CO'))).toContain('原子個數不符')
   })
 })

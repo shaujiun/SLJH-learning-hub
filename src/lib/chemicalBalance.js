@@ -1,6 +1,8 @@
 import {
   coefficientConceptQuestions,
   formulaChoicesByMoleculeId,
+  stageFourMissingCompoundBank,
+  stageFourMissingCompoundQuestionCount,
   stageFourMolecules,
   stageFourQuestionMix,
   stageFourReactionBank,
@@ -10,6 +12,7 @@ import {
 } from '../data/chemicalBalance.js'
 
 const subscriptDigits = '₀₁₂₃₄₅₆₇₈₉'
+const regularDigitsBySubscript = Object.fromEntries([...subscriptDigits].map((digit, index) => [digit, String(index)]))
 
 export function displayMolecularFormula(formula) {
   return String(formula).replace(/\d/g, (digit) => subscriptDigits[Number(digit)])
@@ -28,6 +31,14 @@ export function parseMolecularFormula(formula) {
     match = expression.exec(source)
   }
   return consumed === source ? counts : null
+}
+
+export function normalizeMolecularFormulaInput(formula) {
+  return String(formula || '')
+    .trim()
+    .replace(/[₀₁₂₃₄₅₆₇₈₉]/g, (digit) => regularDigitsBySubscript[digit])
+    .replace(/[！-～]/g, (character) => String.fromCharCode(character.charCodeAt(0) - 0xFEE0))
+    .replace(/\s+/g, '')
 }
 
 export function countAtomSymbols(symbols) {
@@ -199,7 +210,7 @@ export function buildStageFourRound(random = Math.random) {
     ).slice(0, count)
   ))
 
-  return shuffleBalanceItems(selectedReactions, random).map((selectedReaction) => {
+  const fullEquationQuestions = shuffleBalanceItems(selectedReactions, random).map((selectedReaction) => {
     const reaction = hydrateReaction(selectedReaction)
     const addFormulaOptions = (term) => ({
       ...term,
@@ -210,10 +221,58 @@ export function buildStageFourRound(random = Math.random) {
     })
     return {
       ...reaction,
+      mode: 'full-equation',
       reactants: reaction.reactants.map(addFormulaOptions),
       products: reaction.products.map(addFormulaOptions),
     }
   })
+
+  const missingCompoundQuestions = shuffleBalanceItems(stageFourMissingCompoundBank, random)
+    .slice(0, stageFourMissingCompoundQuestionCount)
+    .map((question) => {
+      const sourceReaction = hydrateReaction(reactionIndex.get(question.reactionId))
+      const reorder = (items, order) => order ? order.map((index) => items[index]) : items
+      const reactants = reorder(sourceReaction.reactants, question.reactantOrder)
+      const products = reorder(sourceReaction.products, question.productOrder)
+      const coefficients = {
+        reactants: reorder(sourceReaction.answer.reactants, question.reactantOrder),
+        products: reorder(sourceReaction.answer.products, question.productOrder),
+      }
+      const missingTerm = products[question.missingProductIndex]
+      return {
+        ...sourceReaction,
+        ...question,
+        mode: 'missing-product',
+        reactants,
+        products,
+        answer: coefficients,
+        missingFormula: missingTerm.molecule.formula,
+        missingMoleculeName: missingTerm.molecule.name,
+      }
+    })
+
+  return shuffleBalanceItems([...fullEquationQuestions, ...missingCompoundQuestions], random)
+}
+
+export function evaluateMissingCompoundAnswer(question, answer) {
+  const normalizedAnswer = normalizeMolecularFormulaInput(answer)
+  const normalizedExpected = normalizeMolecularFormulaInput(question?.missingFormula)
+  if (!normalizedAnswer) return { correct: false, reason: 'blank', normalizedAnswer, atoms: null }
+  const atoms = parseMolecularFormula(normalizedAnswer)
+  if (!atoms) return { correct: false, reason: 'invalid', normalizedAnswer, atoms: null }
+  return {
+    correct: normalizedAnswer === normalizedExpected,
+    reason: normalizedAnswer === normalizedExpected ? 'correct' : 'mismatch',
+    normalizedAnswer,
+    atoms,
+  }
+}
+
+export function describeMissingCompoundAnswer(evaluation) {
+  if (evaluation.correct) return '化學式正確！反應式左右兩側的每一種原子都守恆。'
+  if (evaluation.reason === 'blank') return '請先在空格輸入缺少的生成物化學式。'
+  if (evaluation.reason === 'invalid') return '這還不是完整的化學式。請留意元素符號的大小寫與右下角數字。'
+  return '目前輸入的元素種類或原子個數不符。請先算反應物的原子總數，再扣除其他已知生成物。'
 }
 
 export function initialFormulaSelections(reaction) {

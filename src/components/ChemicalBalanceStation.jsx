@@ -28,12 +28,14 @@ import {
   buildStageThreeRound,
   buildStageTwoRound,
   collapseRepeatedBonds,
+  describeMissingCompoundAnswer,
   describeMoleculeBuild,
   describeFormulaSelections,
   displayMolecularFormula,
   describeFormulaOnlyBalance,
   describeReactionBalance,
   evaluateFormulaSelections,
+  evaluateMissingCompoundAnswer,
   evaluateReactionCoefficients,
   initialFormulaSelections,
   initialReactionCoefficients,
@@ -431,6 +433,73 @@ function FormulaSelectionSide({ terms, selections, side, onChange }) {
   )
 }
 
+function FixedCompoundTerm({ term, coefficient, isMissing, value, disabled, onChange }) {
+  return (
+    <div className={`balance-missing-compound-term ${isMissing ? 'is-missing' : ''}`}>
+      {coefficient > 1 && <b>{coefficient}</b>}
+      {isMissing ? (
+        <label>
+          <span className="balance-visually-hidden">輸入缺少的生成物化學式</span>
+          <input
+            type="text"
+            value={value}
+            disabled={disabled}
+            autoCapitalize="none"
+            autoComplete="off"
+            spellCheck="false"
+            placeholder="化學式"
+            aria-label="缺少的生成物化學式"
+            onChange={(event) => onChange(event.target.value)}
+          />
+        </label>
+      ) : <strong>{displayMolecularFormula(term.molecule.formula)}</strong>}
+    </div>
+  )
+}
+
+function MissingCompoundSide({ terms, coefficients, missingIndex = -1, answer, disabled, onChange }) {
+  return (
+    <div className="balance-missing-compound-side">
+      {terms.map((term, index) => (
+        <div className="balance-missing-compound-unit" key={`${term.moleculeId}-${index}`}>
+          {index > 0 && <span aria-hidden="true">＋</span>}
+          <FixedCompoundTerm
+            term={term}
+            coefficient={coefficients[index]}
+            isMissing={index === missingIndex}
+            value={index === missingIndex ? answer : ''}
+            disabled={disabled}
+            onChange={onChange}
+          />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function MissingCompoundEquation({ question, answer, resolved, onChange }) {
+  return (
+    <div className="balance-missing-compound-equation" aria-label="依原子守恆填入缺少的生成物">
+      <MissingCompoundSide
+        terms={question.reactants}
+        coefficients={question.answer.reactants}
+        answer=""
+        disabled={resolved}
+        onChange={onChange}
+      />
+      <ArrowRight className="balance-formula-arrow" aria-label="生成" />
+      <MissingCompoundSide
+        terms={question.products}
+        coefficients={question.answer.products}
+        missingIndex={question.missingProductIndex}
+        answer={answer}
+        disabled={resolved}
+        onChange={onChange}
+      />
+    </div>
+  )
+}
+
 export function StageFourLesson({
   question,
   formulaSelections,
@@ -439,6 +508,9 @@ export function StageFourLesson({
   resolved,
   feedback,
   feedbackKind,
+  missingAnswer,
+  onMissingAnswerChange,
+  onMissingAnswerSubmit,
   onFormulaChange,
   onFormulaSubmit,
   onCoefficientChange,
@@ -447,42 +519,52 @@ export function StageFourLesson({
   questionIndex = 0,
   totalQuestions = 1,
 }) {
+  const isMissingCompound = question.mode === 'missing-product'
   const evaluation = evaluateReactionCoefficients(question, coefficients)
   return (
     <section className="balance-lesson balance-stage-four">
       <header>
-        <div><p>STAGE 4・完整反應式挑戰</p><h1>{question.prompt}</h1></div>
+        <div><p>STAGE 4・{isMissingCompound ? '缺項推理題' : '完整反應式挑戰'}</p><h1>{question.prompt}</h1></div>
         <strong>{questionIndex + 1}<small>／{totalQuestions}</small></strong>
       </header>
       <div className="balance-progress" aria-label={`第 ${questionIndex + 1} 題，共 ${totalQuestions} 題`}><i style={{ width: `${((questionIndex + 1) / totalQuestions) * 100}%` }} /></div>
-      <div className="balance-stage-four-steps" aria-label="本題作答步驟">
-        <span className={formulaConfirmed ? 'is-complete' : 'is-current'}><b>1</b>確認化學式</span>
-        <ArrowRight aria-hidden="true" />
-        <span className={formulaConfirmed ? 'is-current' : ''}><b>2</b>配平係數</span>
-      </div>
-
-      {!formulaConfirmed ? (
+      {isMissingCompound ? (
         <>
-          <p className="balance-stage-four-instruction">先依照物質名稱完成化學式，這一步不處理係數。</p>
-          <div className="balance-formula-equation is-selection" aria-label="選擇反應物與生成物的化學式">
-            <FormulaSelectionSide terms={question.reactants} selections={formulaSelections.reactants} side="reactants" onChange={onFormulaChange} />
-            <ArrowRight className="balance-formula-arrow" aria-label="生成" />
-            <FormulaSelectionSide terms={question.products} selections={formulaSelections.products} side="products" onChange={onFormulaChange} />
-          </div>
-          <button type="button" className="balance-primary" onClick={onFormulaSubmit}><CheckCircle2 aria-hidden="true" />檢查化學式</button>
+          <aside className="balance-missing-compound-guide"><Lightbulb aria-hidden="true" /><span>係數已固定，係數為 1 時照慣例省略。先算左側原子總數，再扣除右側已知物質，推回空格中的化學式。</span></aside>
+          <MissingCompoundEquation question={question} answer={missingAnswer} resolved={resolved} onChange={onMissingAnswerChange} />
+          {!resolved && <button type="button" className="balance-primary" onClick={onMissingAnswerSubmit}><CheckCircle2 aria-hidden="true" />檢查缺少的化學式</button>}
         </>
       ) : (
         <>
-          <p className="balance-stage-four-instruction">化學式已固定。只能調整前方係數，並化成最簡整數比；本關係數可調整為 1～8。</p>
-          <div className="balance-formula-equation" aria-label="完整化學反應式配平">
-            <FormulaSide terms={question.reactants} coefficients={coefficients.reactants} side="reactants" disabled={resolved} onChange={onCoefficientChange} maxCoefficient={8} />
-            <ArrowRight className="balance-formula-arrow" aria-label="生成" />
-            <FormulaSide terms={question.products} coefficients={coefficients.products} side="products" disabled={resolved} onChange={onCoefficientChange} maxCoefficient={8} />
+          <div className="balance-stage-four-steps" aria-label="本題作答步驟">
+            <span className={formulaConfirmed ? 'is-complete' : 'is-current'}><b>1</b>確認化學式</span>
+            <ArrowRight aria-hidden="true" />
+            <span className={formulaConfirmed ? 'is-current' : ''}><b>2</b>配平係數</span>
           </div>
-          {resolved
-            ? <AtomLedger evaluation={evaluation} title="完整反應式核對" />
-            : <p className="balance-ledger-placeholder">完整挑戰不提供作答中的原子統計；請自行逐項計算。</p>}
-          {!resolved && <button type="button" className="balance-primary" onClick={onCoefficientSubmit}><CheckCircle2 aria-hidden="true" />檢查完整反應式</button>}
+          {!formulaConfirmed ? (
+            <>
+              <p className="balance-stage-four-instruction">先依照物質名稱完成化學式，這一步不處理係數。</p>
+              <div className="balance-formula-equation is-selection" aria-label="選擇反應物與生成物的化學式">
+                <FormulaSelectionSide terms={question.reactants} selections={formulaSelections.reactants} side="reactants" onChange={onFormulaChange} />
+                <ArrowRight className="balance-formula-arrow" aria-label="生成" />
+                <FormulaSelectionSide terms={question.products} selections={formulaSelections.products} side="products" onChange={onFormulaChange} />
+              </div>
+              <button type="button" className="balance-primary" onClick={onFormulaSubmit}><CheckCircle2 aria-hidden="true" />檢查化學式</button>
+            </>
+          ) : (
+            <>
+              <p className="balance-stage-four-instruction">化學式已固定。只能調整前方係數，並化成最簡整數比；本關係數可調整為 1～8。</p>
+              <div className="balance-formula-equation" aria-label="完整化學反應式配平">
+                <FormulaSide terms={question.reactants} coefficients={coefficients.reactants} side="reactants" disabled={resolved} onChange={onCoefficientChange} maxCoefficient={8} />
+                <ArrowRight className="balance-formula-arrow" aria-label="生成" />
+                <FormulaSide terms={question.products} coefficients={coefficients.products} side="products" disabled={resolved} onChange={onCoefficientChange} maxCoefficient={8} />
+              </div>
+              {resolved
+                ? <AtomLedger evaluation={evaluation} title="完整反應式核對" />
+                : <p className="balance-ledger-placeholder">完整挑戰不提供作答中的原子統計；請自行逐項計算。</p>}
+              {!resolved && <button type="button" className="balance-primary" onClick={onCoefficientSubmit}><CheckCircle2 aria-hidden="true" />檢查完整反應式</button>}
+            </>
+          )}
         </>
       )}
 
@@ -499,7 +581,7 @@ function ResultPanel({ stage, score, bestScore, onRestart, onBack }) {
       ? (score >= 80 ? '你已能利用粒子與原子統計完成基礎配平，可以準備進入只看化學式的訓練。' : '建議再練一次，調整係數後逐項核對左右兩側的原子數。')
       : stage === 3
         ? (score >= 80 ? '你已能逐步撤除統計提示並直接配平反應式，可以準備挑戰完整反應式。' : '建議再練一次，先處理較容易判斷的元素，最後再檢查所有係數是否為最簡整數比。')
-        : (score >= 80 ? '你已能從物質名稱建立完整化學反應式，並以最簡整數係數完成配平。' : '建議再練一次，先確認每一個化學式，再逐項計算反應前後的原子數。')
+        : (score >= 80 ? '你已能依原子守恆推回缺少的生成物，建立完整反應式，並以最簡整數係數完成配平。' : '建議再練一次，先確認每一個化學式，再逐項計算反應前後的原子數。')
   return (
     <section className="balance-result">
       <Trophy aria-hidden="true" />
@@ -564,6 +646,7 @@ export default function ChemicalBalanceStation() {
   const [stageFourResolved, setStageFourResolved] = useState(false)
   const [stageFourFeedback, setStageFourFeedback] = useState('')
   const [stageFourFeedbackKind, setStageFourFeedbackKind] = useState('hint')
+  const [stageFourMissingAnswer, setStageFourMissingAnswer] = useState('')
   const [stageFourPoints, setStageFourPoints] = useState(0)
   const [stageFourBestScore, setStageFourBestScore] = useState(() => readStoredScore(stageFourBestScoreKey))
   const stageFourScore = stageOneScore(stageFourPoints, stageFourQuestions.length)
@@ -633,6 +716,7 @@ export default function ChemicalBalanceStation() {
     setStageFourResolved(false)
     setStageFourFeedback('')
     setStageFourFeedbackKind('hint')
+    setStageFourMissingAnswer('')
   }
 
   function startStageFour() {
@@ -827,6 +911,25 @@ export default function ChemicalBalanceStation() {
     setStageFourFeedback(describeFormulaSelections(evaluation))
   }
 
+  function changeStageFourMissingAnswer(value) {
+    setStageFourMissingAnswer(value)
+    setStageFourFeedback('')
+  }
+
+  function submitStageFourMissingAnswer() {
+    const evaluation = evaluateMissingCompoundAnswer(stageFourQuestion, stageFourMissingAnswer)
+    if (evaluation.correct) {
+      setStageFourResolved(true)
+      setStageFourPoints((value) => value + pointsForAttempt(stageFourMistakes))
+      setStageFourFeedbackKind('success')
+      setStageFourFeedback(describeMissingCompoundAnswer(evaluation))
+      return
+    }
+    setStageFourMistakes((value) => value + 1)
+    setStageFourFeedbackKind('hint')
+    setStageFourFeedback(describeMissingCompoundAnswer(evaluation))
+  }
+
   function changeStageFourCoefficient(side, index, delta) {
     setStageFourCoefficients((current) => ({
       ...current,
@@ -950,6 +1053,9 @@ export default function ChemicalBalanceStation() {
           resolved={stageFourResolved}
           feedback={stageFourFeedback}
           feedbackKind={stageFourFeedbackKind}
+          missingAnswer={stageFourMissingAnswer}
+          onMissingAnswerChange={changeStageFourMissingAnswer}
+          onMissingAnswerSubmit={submitStageFourMissingAnswer}
           onFormulaChange={changeStageFourFormula}
           onFormulaSubmit={submitStageFourFormulas}
           onCoefficientChange={changeStageFourCoefficient}
