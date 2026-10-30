@@ -210,12 +210,14 @@ describe('化學反應平衡站第四關邏輯', () => {
     const firstRound = buildStageFourRound(seededRandom(7))
     const secondRound = buildStageFourRound(seededRandom(97))
     const fullQuestions = firstRound.filter((reaction) => reaction.mode === 'full-equation')
-    const missingQuestions = firstRound.filter((reaction) => reaction.mode === 'missing-product')
+    const missingQuestions = firstRound.filter((reaction) => reaction.mode === 'missing-compound')
 
     expect(stageFourReactionBank.length).toBeGreaterThanOrEqual(20)
     expect(firstRound).toHaveLength(10 + stageFourMissingCompoundQuestionCount)
     expect(fullQuestions).toHaveLength(10)
     expect(missingQuestions).toHaveLength(stageFourMissingCompoundQuestionCount)
+    expect(missingQuestions.some((question) => question.missingSide === 'reactants')).toBe(true)
+    expect(missingQuestions.some((question) => question.missingSide === 'products')).toBe(true)
     expect(fullQuestions.filter((reaction) => reaction.difficulty === 'foundation')).toHaveLength(stageFourQuestionMix.foundation)
     expect(fullQuestions.filter((reaction) => reaction.difficulty === 'core')).toHaveLength(stageFourQuestionMix.core)
     expect(fullQuestions.filter((reaction) => reaction.difficulty === 'challenge')).toHaveLength(stageFourQuestionMix.challenge)
@@ -278,15 +280,18 @@ describe('化學反應平衡站第四關邏輯', () => {
   })
 
   it('缺項題只挖空生成物，並保留已配平的固定係數', () => {
-    expect(stageFourMissingCompoundBank.length).toBeGreaterThanOrEqual(10)
+    expect(stageFourMissingCompoundBank.length).toBeGreaterThanOrEqual(20)
     for (let seed = 1; seed <= 200; seed += 1) {
       const missingQuestions = buildStageFourRound(seededRandom(seed))
-        .filter((question) => question.mode === 'missing-product')
+        .filter((question) => question.mode === 'missing-compound')
       expect(missingQuestions).toHaveLength(stageFourMissingCompoundQuestionCount)
+      expect(missingQuestions.some((question) => question.missingSide === 'reactants')).toBe(true)
+      expect(missingQuestions.some((question) => question.missingSide === 'products')).toBe(true)
       missingQuestions.forEach((question) => {
-        expect(question.missingProductIndex).toBeGreaterThanOrEqual(0)
-        expect(question.missingProductIndex).toBeLessThan(question.products.length)
-        expect(question.products[question.missingProductIndex].molecule.formula).toBe(question.missingFormula)
+        const missingTerms = question[question.missingSide]
+        expect(question.missingIndex).toBeGreaterThanOrEqual(0)
+        expect(question.missingIndex).toBeLessThan(missingTerms.length)
+        expect(missingTerms[question.missingIndex].molecule.formula).toBe(question.missingFormula)
         expect(evaluateReactionCoefficients(question, question.answer).simplest, question.id).toBe(true)
       })
     }
@@ -303,13 +308,31 @@ describe('化學反應平衡站第四關邏輯', () => {
     expect(example.reactants.map((term) => term.molecule.formula)).toEqual(['CaCO3', 'HCl'])
     expect(example.answer.reactants).toEqual([1, 2])
     expect(example.products.map((term) => term.molecule.formula)).toEqual(['CaCl2', 'CO2', 'H2O'])
-    expect(example.missingProductIndex).toBe(1)
+    expect(example.missingSide).toBe('products')
+    expect(example.missingIndex).toBe(1)
     expect(example.missingFormula).toBe('CO2')
+  })
+
+  it('可以由生成物與其他已知反應物回推缺少的反應物', () => {
+    let example
+    for (let seed = 1; seed <= 100 && !example; seed += 1) {
+      example = buildStageFourRound(seededRandom(seed))
+        .find((question) => question.id === 'missing-sulfuric-acid-reactant')
+    }
+
+    expect(example).toBeTruthy()
+    expect(example.missingSide).toBe('reactants')
+    expect(example.reactants[example.missingIndex].molecule.formula).toBe('H2SO4')
+    expect(evaluateMissingCompoundAnswer(example, 'H₂SO₄').correct).toBe(true)
+    expect(describeMissingCompoundAnswer(
+      evaluateMissingCompoundAnswer(example, 'HCl'),
+      example,
+    )).toContain('先算生成物的原子總數')
   })
 
   it('缺項題接受一般數字、右下角與全形數字，但不把錯誤元素大小寫視為正確', () => {
     const question = buildStageFourRound(seededRandom(13))
-      .find((item) => item.mode === 'missing-product' && item.missingFormula.includes('2'))
+      .find((item) => item.mode === 'missing-compound' && item.missingFormula.includes('2'))
       || { missingFormula: 'CO2' }
 
     expect(normalizeMolecularFormulaInput(' CO₂ ')).toBe('CO2')

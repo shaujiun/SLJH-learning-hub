@@ -463,7 +463,7 @@ export const stageFourReactionIds = stageFourReactionBank.map((reaction) => reac
 export const stageFourQuestionMix = { foundation: 3, core: 4, challenge: 3 }
 
 // 缺項推理題共用第四關的反應式資料，但固定給出最簡整數係數，
-// 並只挖空一個生成物。order 可調整顯示順序，讓題目更接近課本寫法。
+// 並只挖空一個反應物或生成物。order 可調整顯示順序，讓題目更接近課本寫法。
 export const stageFourMissingCompoundBank = [
   {
     id: 'missing-carbon-dioxide-acid-carbonate',
@@ -471,73 +471,145 @@ export const stageFourMissingCompoundBank = [
     prompt: '依原子守恆，推回缺少的生成物。',
     reactantOrder: [1, 0],
     productOrder: [0, 2, 1],
-    missingProductIndex: 1,
+    missingSide: 'products', missingIndex: 1,
   },
   {
     id: 'missing-oxygen-peroxide',
     reactionId: 'hydrogen-peroxide-decomposition',
     prompt: '過氧化氫分解時，另一個生成物是什麼？',
-    missingProductIndex: 1,
+    missingSide: 'products', missingIndex: 1,
   },
   {
     id: 'missing-oxygen-chlorate',
     reactionId: 'potassium-chlorate-decomposition',
     prompt: '氯酸鉀受熱分解時，另一個生成物是什麼？',
-    missingProductIndex: 1,
+    missingSide: 'products', missingIndex: 1,
   },
   {
     id: 'missing-carbon-dioxide-propane',
     reactionId: 'propane-combustion',
     prompt: '丙烷完全燃燒時，缺少的生成物是什麼？',
-    missingProductIndex: 0,
+    missingSide: 'products', missingIndex: 0,
   },
   {
     id: 'missing-sodium-sulfate',
     reactionId: 'sulfuric-acid-neutralization',
     prompt: '硫酸與氫氧化鈉反應時，缺少的生成物是什麼？',
-    missingProductIndex: 0,
+    missingSide: 'products', missingIndex: 0,
   },
   {
     id: 'missing-sodium-carbonate',
     reactionId: 'sodium-bicarbonate-decomposition',
     prompt: '碳酸氫鈉受熱分解時，缺少的生成物是什麼？',
-    missingProductIndex: 0,
+    missingSide: 'products', missingIndex: 0,
   },
   {
     id: 'missing-water-ammonium-bicarbonate',
     reactionId: 'ammonium-bicarbonate-decomposition',
     prompt: '碳酸氫銨受熱分解時，缺少的生成物是什麼？',
-    missingProductIndex: 1,
+    missingSide: 'products', missingIndex: 1,
   },
   {
     id: 'missing-glucose',
     reactionId: 'photosynthesis',
     prompt: '光合作用中，依原子守恆推回缺少的生成物。',
-    missingProductIndex: 0,
+    missingSide: 'products', missingIndex: 0,
   },
   {
     id: 'missing-water-hydrogen-sulfide',
     reactionId: 'hydrogen-sulfide-combustion',
     prompt: '硫化氫燃燒時，缺少的生成物是什麼？',
-    missingProductIndex: 1,
+    missingSide: 'products', missingIndex: 1,
   },
   {
     id: 'missing-sulfur-trioxide',
     reactionId: 'sulfur-trioxide-formation',
     prompt: '二氧化硫與氧氣反應時，缺少的生成物是什麼？',
-    missingProductIndex: 0,
+    missingSide: 'products', missingIndex: 0,
   },
   {
     id: 'missing-water-ethane',
     reactionId: 'ethane-combustion',
     prompt: '乙烷完全燃燒時，缺少的生成物是什麼？',
-    missingProductIndex: 1,
+    missingSide: 'products', missingIndex: 1,
   },
   {
     id: 'missing-iron-oxide',
     reactionId: 'iron-oxide-formation',
     prompt: '鐵與氧氣反應時，缺少的生成物是什麼？',
-    missingProductIndex: 0,
+    missingSide: 'products', missingIndex: 0,
+  },
+  {
+    id: 'missing-magnesium-reactant',
+    reactionId: 'magnesium-oxide-formation',
+    prompt: '只看生成物與固定係數，回推缺少的反應物。',
+    missingSide: 'reactants', missingIndex: 0,
+  },
+  {
+    id: 'missing-sodium-reactant',
+    reactionId: 'sodium-chloride-formation',
+    prompt: '要生成氯化鈉，缺少的反應物是什麼？',
+    missingSide: 'reactants', missingIndex: 0,
+  },
+  {
+    id: 'missing-carbon-monoxide-reactant',
+    reactionId: 'carbon-monoxide-combustion',
+    prompt: '依生成物的原子組成，回推缺少的反應物。',
+    missingSide: 'reactants', missingIndex: 0,
+  },
+  {
+    id: 'missing-iron-reactant',
+    reactionId: 'iron-oxide-formation',
+    prompt: '要生成氧化鐵，缺少的反應物是什麼？',
+    missingSide: 'reactants', missingIndex: 0,
+  },
+  {
+    id: 'missing-calcium-carbonate-reactant',
+    reactionId: 'calcium-carbonate-decomposition',
+    prompt: '依兩種生成物回推受熱分解前的反應物。',
+    missingSide: 'reactants', missingIndex: 0,
+  },
+  {
+    id: 'missing-sulfur-reactant',
+    reactionId: 'sulfur-dioxide-formation',
+    prompt: '要生成二氧化硫，缺少的反應物是什麼？',
+    missingSide: 'reactants', missingIndex: 0,
+  },
+  {
+    id: 'missing-hydrochloric-acid-reactant',
+    reactionId: 'hydrochloric-acid-neutralization',
+    prompt: '依中和反應的生成物回推缺少的反應物。',
+    missingSide: 'reactants', missingIndex: 0,
+  },
+  {
+    id: 'missing-sulfuric-acid-reactant',
+    reactionId: 'sulfuric-acid-neutralization',
+    prompt: '依硫酸鈉與水回推缺少的反應物。',
+    missingSide: 'reactants', missingIndex: 0,
+  },
+  {
+    id: 'missing-sodium-bicarbonate-reactant',
+    reactionId: 'sodium-bicarbonate-decomposition',
+    prompt: '依三種生成物回推受熱分解前的反應物。',
+    missingSide: 'reactants', missingIndex: 0,
+  },
+  {
+    id: 'missing-water-reactant-photosynthesis',
+    reactionId: 'photosynthesis',
+    prompt: '依光合作用的生成物回推缺少的反應物。',
+    missingSide: 'reactants', missingIndex: 1,
+  },
+  {
+    id: 'missing-ethane-reactant',
+    reactionId: 'ethane-combustion',
+    prompt: '依燃燒生成物與固定係數回推缺少的燃料。',
+    missingSide: 'reactants', missingIndex: 0,
+  },
+  {
+    id: 'missing-propane-reactant',
+    reactionId: 'propane-combustion',
+    prompt: '依燃燒生成物與固定係數回推缺少的燃料。',
+    missingSide: 'reactants', missingIndex: 0,
   },
 ]
 
@@ -547,5 +619,5 @@ export const chemicalBalanceRoadmap = [
   { stage: 1, title: '分子組裝室', description: '化學式與粒子模型雙向判讀。', status: 'open' },
   { stage: 2, title: '原子守恆天平', description: '用粒子模型讓反應前後原子數相同。', status: 'open' },
   { stage: 3, title: '係數平衡訓練', description: '從統計表逐步過渡到只看反應式。', status: 'open' },
-  { stage: 4, title: '完整反應式挑戰', description: '由原子守恆推回缺少的生成物，再完成化學式與最簡整數係數。', status: 'open' },
+  { stage: 4, title: '完整反應式挑戰', description: '由原子守恆雙向推回缺少的反應物或生成物，再完成化學式與最簡整數係數。', status: 'open' },
 ]
