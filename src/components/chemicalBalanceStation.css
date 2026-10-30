@@ -165,6 +165,8 @@
 .balance-formula-selection-term select { width: 100%; min-height: 45px; border: 2px solid #607781; border-radius: 10px; padding: 0.5rem 2rem 0.5rem 0.65rem; background: #fff; color: #20364c; font: 900 1rem/1.2 inherit; cursor: pointer; }
 .balance-missing-compound-guide { display: flex; align-items: flex-start; gap: 0.55rem; margin: 0.2rem 0 0.85rem; border: 2px dashed #b56a2c; border-radius: 14px; padding: 0.75rem; background: #fff5df; color: #6c4b2c; font-weight: 900; line-height: 1.55; }
 .balance-missing-compound-guide svg { width: 21px; flex: 0 0 auto; color: #a75c24; }
+.balance-extended-context { display: flex; align-items: center; gap: 0.65rem; margin: 0.2rem 0 0.75rem; border: 2px solid #6575a8; border-radius: 14px; padding: 0.65rem 0.75rem; background: #eef1ff; color: #3f4e7f; font-weight: 900; line-height: 1.45; }
+.balance-extended-context b { flex: 0 0 auto; border-radius: 999px; padding: 0.3rem 0.55rem; background: #596a9f; color: #fff; font-size: 0.82rem; }
 .balance-missing-compound-equation { display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); align-items: center; gap: 0.55rem; border: 3px solid #45636c; border-radius: 19px; padding: clamp(0.8rem, 2.4vw, 1.3rem); background: linear-gradient(135deg, #eefaf6, #fff4dd); }
 .balance-missing-compound-side { display: flex; min-width: 0; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.5rem; }
 .balance-missing-compound-unit { display: inline-flex; min-width: 0; align-items: center; gap: 0.5rem; }
@@ -242,6 +244,7 @@
   .balance-formula-selection-term { width: min(100%, 280px); }
   .balance-missing-compound-side { width: 100%; }
   .balance-missing-compound-term { min-height: 52px; padding: 0.45rem 0.58rem; }
+  .balance-extended-context { align-items: flex-start; flex-direction: column; }
   .balance-stage-four-steps { align-items: stretch; }
   .balance-stage-four-steps span { flex: 1 1 0; justify-content: center; border-radius: 14px; padding-inline: 0.45rem; text-align: center; }
 }

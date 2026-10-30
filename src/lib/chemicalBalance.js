@@ -1,6 +1,7 @@
 import {
   coefficientConceptQuestions,
   formulaChoicesByMoleculeId,
+  stageFourExtendedReactionBank,
   stageFourMissingCompoundBank,
   stageFourMissingCompoundQuestionCount,
   stageFourMolecules,
@@ -179,7 +180,11 @@ export function buildStageOneRound(random = Math.random) {
 }
 
 const moleculeIndex = new Map([...stageOneMolecules, ...stageFourMolecules].map((molecule) => [molecule.id, molecule]))
-const reactionIndex = new Map([...stageTwoReactions, ...stageFourReactionBank].map((reaction) => [reaction.id, reaction]))
+const reactionIndex = new Map([
+  ...stageTwoReactions,
+  ...stageFourReactionBank,
+  ...stageFourExtendedReactionBank,
+].map((reaction) => [reaction.id, reaction]))
 
 function hydrateReaction(reaction) {
   return {
@@ -229,16 +234,26 @@ export function buildStageFourRound(random = Math.random) {
 
   const productDefinitions = stageFourMissingCompoundBank.filter((question) => question.missingSide === 'products')
   const reactantDefinitions = stageFourMissingCompoundBank.filter((question) => question.missingSide === 'reactants')
-  const requiredDirections = [
+  const selectedDefinitions = [
     shuffleBalanceItems(productDefinitions, random)[0],
     shuffleBalanceItems(reactantDefinitions, random)[0],
   ]
-  const requiredIds = new Set(requiredDirections.map((question) => question.id))
+  if (
+    selectedDefinitions.length < stageFourMissingCompoundQuestionCount
+    && !selectedDefinitions.some((question) => question.extendedContext)
+  ) {
+    const selectedIds = new Set(selectedDefinitions.map((question) => question.id))
+    selectedDefinitions.push(shuffleBalanceItems(
+      stageFourMissingCompoundBank.filter((question) => question.extendedContext && !selectedIds.has(question.id)),
+      random,
+    )[0])
+  }
+  const requiredIds = new Set(selectedDefinitions.map((question) => question.id))
   const additionalDefinitions = shuffleBalanceItems(
     stageFourMissingCompoundBank.filter((question) => !requiredIds.has(question.id)),
     random,
-  ).slice(0, Math.max(0, stageFourMissingCompoundQuestionCount - requiredDirections.length))
-  const missingCompoundQuestions = shuffleBalanceItems([...requiredDirections, ...additionalDefinitions], random)
+  ).slice(0, Math.max(0, stageFourMissingCompoundQuestionCount - selectedDefinitions.length))
+  const missingCompoundQuestions = shuffleBalanceItems([...selectedDefinitions, ...additionalDefinitions], random)
     .map((question) => {
       const sourceReaction = hydrateReaction(reactionIndex.get(question.reactionId))
       const reorder = (items, order) => order ? order.map((index) => items[index]) : items
@@ -271,16 +286,24 @@ export function evaluateMissingCompoundAnswer(question, answer) {
   if (!normalizedAnswer) return { correct: false, reason: 'blank', normalizedAnswer, atoms: null }
   const atoms = parseMolecularFormula(normalizedAnswer)
   if (!atoms) return { correct: false, reason: 'invalid', normalizedAnswer, atoms: null }
+  const acceptedFormulas = [question?.missingFormula, ...(question?.acceptedFormulas || [])]
+    .map(normalizeMolecularFormulaInput)
+  const correct = acceptedFormulas.includes(normalizedAnswer)
   return {
-    correct: normalizedAnswer === normalizedExpected,
-    reason: normalizedAnswer === normalizedExpected ? 'correct' : 'mismatch',
+    correct,
+    reason: correct ? 'correct' : 'mismatch',
     normalizedAnswer,
+    normalizedExpected,
+    usedAlternative: correct && normalizedAnswer !== normalizedExpected,
     atoms,
   }
 }
 
 export function describeMissingCompoundAnswer(evaluation, question) {
   const missingNoun = question?.missingSide === 'reactants' ? '反應物' : '生成物'
+  if (evaluation.correct && evaluation.usedAlternative) {
+    return `原子組成正確！本題常用的結構簡式寫作 ${displayMolecularFormula(evaluation.normalizedExpected)}。`
+  }
   if (evaluation.correct) return '化學式正確！反應式左右兩側的每一種原子都守恆。'
   if (evaluation.reason === 'blank') return `請先在空格輸入缺少的${missingNoun}化學式。`
   if (evaluation.reason === 'invalid') return '這還不是完整的化學式。請留意元素符號的大小寫與右下角數字。'

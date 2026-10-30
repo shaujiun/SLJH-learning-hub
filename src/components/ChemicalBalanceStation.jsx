@@ -536,6 +536,7 @@ export function StageFourLesson({
       <div className="balance-progress" aria-label={`第 ${questionIndex + 1} 題，共 ${totalQuestions} 題`}><i style={{ width: `${((questionIndex + 1) / totalQuestions) * 100}%` }} /></div>
       {isMissingCompound ? (
         <>
+          {question.extendedContext && <div className="balance-extended-context"><b>{question.contextLabel || '延伸情境'}</b><span>不必背誦這個反應；題目已給足資訊，只需用原子守恆推理。</span></div>}
           <aside className="balance-missing-compound-guide"><Lightbulb aria-hidden="true" /><span>係數已固定，係數為 1 時照慣例省略。{question.missingSide === 'reactants' ? '先算右側生成物的原子總數，再扣除左側其他已知反應物，回推空格中的化學式。' : '先算左側反應物的原子總數，再扣除右側其他已知生成物，回推空格中的化學式。'}</span></aside>
           <MissingCompoundEquation question={question} answer={missingAnswer} resolved={resolved} onChange={onMissingAnswerChange} />
           {!resolved && <button type="button" className="balance-primary" onClick={onMissingAnswerSubmit}><CheckCircle2 aria-hidden="true" />檢查缺少的{missingNoun}化學式</button>}

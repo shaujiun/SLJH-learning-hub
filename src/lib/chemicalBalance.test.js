@@ -29,6 +29,7 @@ import {
 } from './chemicalBalance.js'
 import {
   formulaChoicesByMoleculeId,
+  stageFourExtendedReactionBank,
   stageFourMissingCompoundBank,
   stageFourMissingCompoundQuestionCount,
   stageFourMolecules,
@@ -218,6 +219,7 @@ describe('化學反應平衡站第四關邏輯', () => {
     expect(missingQuestions).toHaveLength(stageFourMissingCompoundQuestionCount)
     expect(missingQuestions.some((question) => question.missingSide === 'reactants')).toBe(true)
     expect(missingQuestions.some((question) => question.missingSide === 'products')).toBe(true)
+    expect(missingQuestions.some((question) => question.extendedContext)).toBe(true)
     expect(fullQuestions.filter((reaction) => reaction.difficulty === 'foundation')).toHaveLength(stageFourQuestionMix.foundation)
     expect(fullQuestions.filter((reaction) => reaction.difficulty === 'core')).toHaveLength(stageFourQuestionMix.core)
     expect(fullQuestions.filter((reaction) => reaction.difficulty === 'challenge')).toHaveLength(stageFourQuestionMix.challenge)
@@ -280,21 +282,39 @@ describe('化學反應平衡站第四關邏輯', () => {
   })
 
   it('缺項題只挖空生成物，並保留已配平的固定係數', () => {
-    expect(stageFourMissingCompoundBank.length).toBeGreaterThanOrEqual(20)
+    expect(stageFourMissingCompoundBank.length).toBeGreaterThanOrEqual(40)
+    const seenExtendedReactionIds = new Set()
     for (let seed = 1; seed <= 200; seed += 1) {
       const missingQuestions = buildStageFourRound(seededRandom(seed))
         .filter((question) => question.mode === 'missing-compound')
       expect(missingQuestions).toHaveLength(stageFourMissingCompoundQuestionCount)
       expect(missingQuestions.some((question) => question.missingSide === 'reactants')).toBe(true)
       expect(missingQuestions.some((question) => question.missingSide === 'products')).toBe(true)
+      expect(missingQuestions.some((question) => question.extendedContext)).toBe(true)
       missingQuestions.forEach((question) => {
         const missingTerms = question[question.missingSide]
         expect(question.missingIndex).toBeGreaterThanOrEqual(0)
         expect(question.missingIndex).toBeLessThan(missingTerms.length)
         expect(missingTerms[question.missingIndex].molecule.formula).toBe(question.missingFormula)
         expect(evaluateReactionCoefficients(question, question.answer).simplest, question.id).toBe(true)
+        if (question.extendedContext) seenExtendedReactionIds.add(question.reactionId)
       })
     }
+    expect(seenExtendedReactionIds.size).toBe(stageFourExtendedReactionBank.length)
+  })
+
+  it('高中與有機延伸反應皆有缺項題，且只使用可解析的化學式與 1～8 係數', () => {
+    const extendedReactionIds = new Set(stageFourExtendedReactionBank.map((reaction) => reaction.id))
+    const referencedReactionIds = new Set(stageFourMissingCompoundBank
+      .filter((question) => question.extendedContext)
+      .map((question) => question.reactionId))
+
+    expect(stageFourExtendedReactionBank).toHaveLength(20)
+    expect(referencedReactionIds).toEqual(extendedReactionIds)
+    stageFourExtendedReactionBank.forEach((reaction) => {
+      expect([...reaction.answer.reactants, ...reaction.answer.products]
+        .every((coefficient) => coefficient >= 1 && coefficient <= 8), reaction.id).toBe(true)
+    })
   })
 
   it('碳酸鈣與鹽酸題依指定順序呈現，空格答案為二氧化碳', () => {
@@ -341,5 +361,19 @@ describe('化學反應平衡站第四關邏輯', () => {
     expect(evaluateMissingCompoundAnswer(question, question.missingFormula).correct).toBe(true)
     expect(evaluateMissingCompoundAnswer({ missingFormula: 'CO2' }, 'co2')).toMatchObject({ correct: false, reason: 'invalid' })
     expect(describeMissingCompoundAnswer(evaluateMissingCompoundAnswer({ missingFormula: 'CO2' }, 'CO'))).toContain('原子個數不符')
+  })
+
+  it('有機物接受分子式與常用結構簡式，答對後補充常用寫法', () => {
+    let esterification
+    for (let seed = 1; seed <= 500 && !esterification; seed += 1) {
+      esterification = buildStageFourRound(seededRandom(seed))
+        .find((question) => question.id === 'extended-esterification')
+    }
+    expect(esterification).toBeTruthy()
+    const molecularFormula = evaluateMissingCompoundAnswer(esterification, 'C4H8O2')
+    const structuralFormula = evaluateMissingCompoundAnswer(esterification, 'CH3COOC2H5')
+    expect(molecularFormula).toMatchObject({ correct: true, usedAlternative: true })
+    expect(structuralFormula).toMatchObject({ correct: true, usedAlternative: false })
+    expect(describeMissingCompoundAnswer(molecularFormula, esterification)).toContain('CH₃COOC₂H₅')
   })
 })

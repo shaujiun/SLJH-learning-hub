@@ -111,6 +111,34 @@ describe('化學反應平衡站', () => {
     expect((html.match(/<input/g) || [])).toHaveLength(1)
   })
 
+  it('高中與有機延伸題明確說明不必背誦反應式', () => {
+    const question = buildStageFourRound(() => 0.271)
+      .find((item) => item.mode === 'missing-compound' && item.extendedContext)
+    const html = renderToStaticMarkup(<StageFourLesson
+      question={question}
+      formulaSelections={initialFormulaSelections(question)}
+      formulaConfirmed={false}
+      coefficients={initialReactionCoefficients(question)}
+      resolved={false}
+      feedback=""
+      feedbackKind="hint"
+      missingAnswer=""
+      onMissingAnswerChange={() => {}}
+      onMissingAnswerSubmit={() => {}}
+      onFormulaChange={() => {}}
+      onFormulaSubmit={() => {}}
+      onCoefficientChange={() => {}}
+      onCoefficientSubmit={() => {}}
+      onNext={() => {}}
+      questionIndex={0}
+      totalQuestions={13}
+    />)
+
+    expect(html).toContain(question.contextLabel)
+    expect(html).toContain('不必背誦這個反應')
+    expect(html).toContain('只需用原子守恆推理')
+  })
+
   it('第三關依題目階段顯示或隱藏原子統計，不再呈現粒子模型', () => {
     const questions = buildStageThreeRound()
     const assisted = renderToStaticMarkup(<StageThreeLesson
