@@ -227,8 +227,18 @@ export function buildStageFourRound(random = Math.random) {
     }
   })
 
-  const missingCompoundQuestions = shuffleBalanceItems(stageFourMissingCompoundBank, random)
-    .slice(0, stageFourMissingCompoundQuestionCount)
+  const productDefinitions = stageFourMissingCompoundBank.filter((question) => question.missingSide === 'products')
+  const reactantDefinitions = stageFourMissingCompoundBank.filter((question) => question.missingSide === 'reactants')
+  const requiredDirections = [
+    shuffleBalanceItems(productDefinitions, random)[0],
+    shuffleBalanceItems(reactantDefinitions, random)[0],
+  ]
+  const requiredIds = new Set(requiredDirections.map((question) => question.id))
+  const additionalDefinitions = shuffleBalanceItems(
+    stageFourMissingCompoundBank.filter((question) => !requiredIds.has(question.id)),
+    random,
+  ).slice(0, Math.max(0, stageFourMissingCompoundQuestionCount - requiredDirections.length))
+  const missingCompoundQuestions = shuffleBalanceItems([...requiredDirections, ...additionalDefinitions], random)
     .map((question) => {
       const sourceReaction = hydrateReaction(reactionIndex.get(question.reactionId))
       const reorder = (items, order) => order ? order.map((index) => items[index]) : items
@@ -238,11 +248,12 @@ export function buildStageFourRound(random = Math.random) {
         reactants: reorder(sourceReaction.answer.reactants, question.reactantOrder),
         products: reorder(sourceReaction.answer.products, question.productOrder),
       }
-      const missingTerm = products[question.missingProductIndex]
+      const missingTerms = question.missingSide === 'reactants' ? reactants : products
+      const missingTerm = missingTerms[question.missingIndex]
       return {
         ...sourceReaction,
         ...question,
-        mode: 'missing-product',
+        mode: 'missing-compound',
         reactants,
         products,
         answer: coefficients,
@@ -268,10 +279,14 @@ export function evaluateMissingCompoundAnswer(question, answer) {
   }
 }
 
-export function describeMissingCompoundAnswer(evaluation) {
+export function describeMissingCompoundAnswer(evaluation, question) {
+  const missingNoun = question?.missingSide === 'reactants' ? '反應物' : '生成物'
   if (evaluation.correct) return '化學式正確！反應式左右兩側的每一種原子都守恆。'
-  if (evaluation.reason === 'blank') return '請先在空格輸入缺少的生成物化學式。'
+  if (evaluation.reason === 'blank') return `請先在空格輸入缺少的${missingNoun}化學式。`
   if (evaluation.reason === 'invalid') return '這還不是完整的化學式。請留意元素符號的大小寫與右下角數字。'
+  if (question?.missingSide === 'reactants') {
+    return '目前輸入的元素種類或原子個數不符。請先算生成物的原子總數，再扣除其他已知反應物。'
+  }
   return '目前輸入的元素種類或原子個數不符。請先算反應物的原子總數，再扣除其他已知生成物。'
 }
 

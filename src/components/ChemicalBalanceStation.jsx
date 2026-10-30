@@ -433,13 +433,13 @@ function FormulaSelectionSide({ terms, selections, side, onChange }) {
   )
 }
 
-function FixedCompoundTerm({ term, coefficient, isMissing, value, disabled, onChange }) {
+function FixedCompoundTerm({ term, coefficient, isMissing, missingNoun, value, disabled, onChange }) {
   return (
     <div className={`balance-missing-compound-term ${isMissing ? 'is-missing' : ''}`}>
       {coefficient > 1 && <b>{coefficient}</b>}
       {isMissing ? (
         <label>
-          <span className="balance-visually-hidden">輸入缺少的生成物化學式</span>
+          <span className="balance-visually-hidden">輸入缺少的{missingNoun}化學式</span>
           <input
             type="text"
             value={value}
@@ -448,7 +448,7 @@ function FixedCompoundTerm({ term, coefficient, isMissing, value, disabled, onCh
             autoComplete="off"
             spellCheck="false"
             placeholder="化學式"
-            aria-label="缺少的生成物化學式"
+            aria-label={`缺少的${missingNoun}化學式`}
             onChange={(event) => onChange(event.target.value)}
           />
         </label>
@@ -457,7 +457,7 @@ function FixedCompoundTerm({ term, coefficient, isMissing, value, disabled, onCh
   )
 }
 
-function MissingCompoundSide({ terms, coefficients, missingIndex = -1, answer, disabled, onChange }) {
+function MissingCompoundSide({ terms, coefficients, missingIndex = -1, missingNoun, answer, disabled, onChange }) {
   return (
     <div className="balance-missing-compound-side">
       {terms.map((term, index) => (
@@ -467,6 +467,7 @@ function MissingCompoundSide({ terms, coefficients, missingIndex = -1, answer, d
             term={term}
             coefficient={coefficients[index]}
             isMissing={index === missingIndex}
+            missingNoun={missingNoun}
             value={index === missingIndex ? answer : ''}
             disabled={disabled}
             onChange={onChange}
@@ -478,12 +479,15 @@ function MissingCompoundSide({ terms, coefficients, missingIndex = -1, answer, d
 }
 
 function MissingCompoundEquation({ question, answer, resolved, onChange }) {
+  const missingNoun = question.missingSide === 'reactants' ? '反應物' : '生成物'
   return (
-    <div className="balance-missing-compound-equation" aria-label="依原子守恆填入缺少的生成物">
+    <div className="balance-missing-compound-equation" aria-label={`依原子守恆填入缺少的${missingNoun}`}>
       <MissingCompoundSide
         terms={question.reactants}
         coefficients={question.answer.reactants}
-        answer=""
+        missingIndex={question.missingSide === 'reactants' ? question.missingIndex : -1}
+        missingNoun={missingNoun}
+        answer={answer}
         disabled={resolved}
         onChange={onChange}
       />
@@ -491,7 +495,8 @@ function MissingCompoundEquation({ question, answer, resolved, onChange }) {
       <MissingCompoundSide
         terms={question.products}
         coefficients={question.answer.products}
-        missingIndex={question.missingProductIndex}
+        missingIndex={question.missingSide === 'products' ? question.missingIndex : -1}
+        missingNoun={missingNoun}
         answer={answer}
         disabled={resolved}
         onChange={onChange}
@@ -519,7 +524,8 @@ export function StageFourLesson({
   questionIndex = 0,
   totalQuestions = 1,
 }) {
-  const isMissingCompound = question.mode === 'missing-product'
+  const isMissingCompound = question.mode === 'missing-compound'
+  const missingNoun = question.missingSide === 'reactants' ? '反應物' : '生成物'
   const evaluation = evaluateReactionCoefficients(question, coefficients)
   return (
     <section className="balance-lesson balance-stage-four">
@@ -530,9 +536,9 @@ export function StageFourLesson({
       <div className="balance-progress" aria-label={`第 ${questionIndex + 1} 題，共 ${totalQuestions} 題`}><i style={{ width: `${((questionIndex + 1) / totalQuestions) * 100}%` }} /></div>
       {isMissingCompound ? (
         <>
-          <aside className="balance-missing-compound-guide"><Lightbulb aria-hidden="true" /><span>係數已固定，係數為 1 時照慣例省略。先算左側原子總數，再扣除右側已知物質，推回空格中的化學式。</span></aside>
+          <aside className="balance-missing-compound-guide"><Lightbulb aria-hidden="true" /><span>係數已固定，係數為 1 時照慣例省略。{question.missingSide === 'reactants' ? '先算右側生成物的原子總數，再扣除左側其他已知反應物，回推空格中的化學式。' : '先算左側反應物的原子總數，再扣除右側其他已知生成物，回推空格中的化學式。'}</span></aside>
           <MissingCompoundEquation question={question} answer={missingAnswer} resolved={resolved} onChange={onMissingAnswerChange} />
-          {!resolved && <button type="button" className="balance-primary" onClick={onMissingAnswerSubmit}><CheckCircle2 aria-hidden="true" />檢查缺少的化學式</button>}
+          {!resolved && <button type="button" className="balance-primary" onClick={onMissingAnswerSubmit}><CheckCircle2 aria-hidden="true" />檢查缺少的{missingNoun}化學式</button>}
         </>
       ) : (
         <>
@@ -581,7 +587,7 @@ function ResultPanel({ stage, score, bestScore, onRestart, onBack }) {
       ? (score >= 80 ? '你已能利用粒子與原子統計完成基礎配平，可以準備進入只看化學式的訓練。' : '建議再練一次，調整係數後逐項核對左右兩側的原子數。')
       : stage === 3
         ? (score >= 80 ? '你已能逐步撤除統計提示並直接配平反應式，可以準備挑戰完整反應式。' : '建議再練一次，先處理較容易判斷的元素，最後再檢查所有係數是否為最簡整數比。')
-        : (score >= 80 ? '你已能依原子守恆推回缺少的生成物，建立完整反應式，並以最簡整數係數完成配平。' : '建議再練一次，先確認每一個化學式，再逐項計算反應前後的原子數。')
+        : (score >= 80 ? '你已能依原子守恆雙向推回缺少的反應物或生成物，建立完整反應式，並以最簡整數係數完成配平。' : '建議再練一次，先確認每一個化學式，再逐項計算反應前後的原子數。')
   return (
     <section className="balance-result">
       <Trophy aria-hidden="true" />
@@ -922,12 +928,12 @@ export default function ChemicalBalanceStation() {
       setStageFourResolved(true)
       setStageFourPoints((value) => value + pointsForAttempt(stageFourMistakes))
       setStageFourFeedbackKind('success')
-      setStageFourFeedback(describeMissingCompoundAnswer(evaluation))
+      setStageFourFeedback(describeMissingCompoundAnswer(evaluation, stageFourQuestion))
       return
     }
     setStageFourMistakes((value) => value + 1)
     setStageFourFeedbackKind('hint')
-    setStageFourFeedback(describeMissingCompoundAnswer(evaluation))
+    setStageFourFeedback(describeMissingCompoundAnswer(evaluation, stageFourQuestion))
   }
 
   function changeStageFourCoefficient(side, index, delta) {

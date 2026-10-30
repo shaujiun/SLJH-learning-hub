@@ -79,9 +79,9 @@ describe('化學反應平衡站', () => {
     expect(balancing).toContain('完整挑戰不提供作答中的原子統計')
   })
 
-  it('第四關缺項推理題保留固定係數，只讓學生輸入一個生成物', () => {
+  it('第四關缺項推理題可由生成物回推反應物，且只呈現一個輸入格', () => {
     const question = buildStageFourRound(() => 0.413)
-      .find((item) => item.mode === 'missing-product')
+      .find((item) => item.mode === 'missing-compound' && item.missingSide === 'reactants')
     const html = renderToStaticMarkup(<StageFourLesson
       question={question}
       formulaSelections={initialFormulaSelections(question)}
@@ -104,8 +104,9 @@ describe('化學反應平衡站', () => {
 
     expect(html).toContain('STAGE 4・缺項推理題')
     expect(html).toContain('係數已固定')
-    expect(html).toContain('aria-label="缺少的生成物化學式"')
-    expect(html).toContain('檢查缺少的化學式')
+    expect(html).toContain('先算右側生成物的原子總數')
+    expect(html).toContain('aria-label="缺少的反應物化學式"')
+    expect(html).toContain('檢查缺少的反應物化學式')
     expect(html).not.toContain('選擇化學式')
     expect((html.match(/<input/g) || [])).toHaveLength(1)
   })
