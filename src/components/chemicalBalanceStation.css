@@ -162,7 +162,8 @@
 .balance-formula-selection-term { display: grid; min-width: 165px; justify-items: center; gap: 0.55rem; border: 2px solid #817b9b; border-radius: 14px; padding: 0.8rem 0.65rem; background: rgba(255, 255, 255, 0.94); }
 .balance-formula-selection-term > strong { color: #334b57; font-size: 1rem; }
 .balance-formula-selection-term label { width: 100%; }
-.balance-formula-selection-term select { width: 100%; min-height: 45px; border: 2px solid #607781; border-radius: 10px; padding: 0.5rem 2rem 0.5rem 0.65rem; background: #fff; color: #20364c; font: 900 1rem/1.2 inherit; cursor: pointer; }
+.balance-formula-selection-term select { width: 100%; min-height: 54px; border: 2px solid #607781; border-radius: 10px; padding: 0.62rem 2.2rem 0.62rem 0.75rem; background: #fff; color: #20364c; font: 900 1.2rem/1.35 inherit; cursor: pointer; }
+.balance-formula-selection-term option { font-size: 1.15rem; font-weight: 800; }
 .balance-missing-compound-guide { display: flex; align-items: flex-start; gap: 0.55rem; margin: 0.2rem 0 0.85rem; border: 2px dashed #b56a2c; border-radius: 14px; padding: 0.75rem; background: #fff5df; color: #6c4b2c; font-weight: 900; line-height: 1.55; }
 .balance-missing-compound-guide svg { width: 21px; flex: 0 0 auto; color: #a75c24; }
 .balance-extended-context { display: flex; align-items: center; gap: 0.65rem; margin: 0.2rem 0 0.75rem; border: 2px solid #6575a8; border-radius: 14px; padding: 0.65rem 0.75rem; background: #eef1ff; color: #3f4e7f; font-weight: 900; line-height: 1.45; }
