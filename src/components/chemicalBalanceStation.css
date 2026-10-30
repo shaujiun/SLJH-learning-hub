@@ -163,6 +163,20 @@
 .balance-formula-selection-term > strong { color: #334b57; font-size: 1rem; }
 .balance-formula-selection-term label { width: 100%; }
 .balance-formula-selection-term select { width: 100%; min-height: 45px; border: 2px solid #607781; border-radius: 10px; padding: 0.5rem 2rem 0.5rem 0.65rem; background: #fff; color: #20364c; font: 900 1rem/1.2 inherit; cursor: pointer; }
+.balance-missing-compound-guide { display: flex; align-items: flex-start; gap: 0.55rem; margin: 0.2rem 0 0.85rem; border: 2px dashed #b56a2c; border-radius: 14px; padding: 0.75rem; background: #fff5df; color: #6c4b2c; font-weight: 900; line-height: 1.55; }
+.balance-missing-compound-guide svg { width: 21px; flex: 0 0 auto; color: #a75c24; }
+.balance-missing-compound-equation { display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); align-items: center; gap: 0.55rem; border: 3px solid #45636c; border-radius: 19px; padding: clamp(0.8rem, 2.4vw, 1.3rem); background: linear-gradient(135deg, #eefaf6, #fff4dd); }
+.balance-missing-compound-side { display: flex; min-width: 0; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.5rem; }
+.balance-missing-compound-unit { display: inline-flex; min-width: 0; align-items: center; gap: 0.5rem; }
+.balance-missing-compound-unit > span { color: #8f6032; font: 900 1.5rem/1 system-ui; }
+.balance-missing-compound-term { display: inline-flex; min-height: 58px; align-items: center; justify-content: center; gap: 0.14rem; border: 2px solid #789198; border-radius: 13px; padding: 0.58rem 0.72rem; background: rgba(255, 255, 255, 0.94); color: #20364c; }
+.balance-missing-compound-term > b { color: #b55d2b; font: 900 1.6rem/1 system-ui; }
+.balance-missing-compound-term > strong { font: 900 clamp(1.65rem, 4vw, 2.25rem)/1 system-ui; white-space: nowrap; }
+.balance-missing-compound-term.is-missing { border-color: #b35e32; background: #fff9ee; box-shadow: 0 0 0 4px rgba(211, 126, 65, 0.13); }
+.balance-missing-compound-term label { display: block; }
+.balance-missing-compound-term input { width: clamp(105px, 15vw, 150px); min-height: 46px; border: 2px solid #8b654d; border-radius: 9px; padding: 0.45rem 0.55rem; background: #fff; color: #20364c; font: 900 1.35rem/1 system-ui; text-align: center; text-transform: none; }
+.balance-missing-compound-term input::placeholder { color: #879295; font-size: 0.92rem; }
+.balance-missing-compound-term input:disabled { background: #eef8f5; color: #245e56; opacity: 1; }
 .balance-choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem; }
 .balance-choice-grid button { display: flex; min-height: 65px; align-items: center; gap: 0.65rem; border: 2px solid #708894; border-radius: 14px; padding: 0.7rem; background: #fff; color: #20364c; font: 900 1rem/1.35 inherit; text-align: left; cursor: pointer; }
 .balance-choice-grid button b { display: grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border-radius: 9px; background: #dfeae9; font: 900 0.9rem/1 system-ui; }
@@ -198,6 +212,7 @@
   .balance-reaction-board { grid-template-columns: 1fr; }
   .balance-reaction-arrow { transform: rotate(90deg); }
   .balance-formula-equation { grid-template-columns: 1fr; }
+  .balance-missing-compound-equation { grid-template-columns: 1fr; }
   .balance-formula-arrow { transform: rotate(90deg); }
 }
 
@@ -225,6 +240,8 @@
   .balance-formula-plus { width: 100%; text-align: center; }
   .balance-formula-term { width: min(100%, 280px); }
   .balance-formula-selection-term { width: min(100%, 280px); }
+  .balance-missing-compound-side { width: 100%; }
+  .balance-missing-compound-term { min-height: 52px; padding: 0.45rem 0.58rem; }
   .balance-stage-four-steps { align-items: stretch; }
   .balance-stage-four-steps span { flex: 1 1 0; justify-content: center; border-radius: 14px; padding-inline: 0.45rem; text-align: center; }
 }
