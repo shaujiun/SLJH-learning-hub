@@ -140,6 +140,14 @@ export const stageFourMolecules = [
   { id: 'sodium-carbonate', name: '碳酸鈉', formula: 'Na2CO3', atoms: { Na: 2, C: 1, O: 3 } },
   { id: 'ammonium-bicarbonate', name: '碳酸氫銨', formula: 'NH4HCO3', atoms: { N: 1, H: 5, C: 1, O: 3 } },
   { id: 'glucose', name: '葡萄糖', formula: 'C6H12O6', atoms: { C: 6, H: 12, O: 6 } },
+  { id: 'nitric-oxide', name: '一氧化氮', formula: 'NO', atoms: { N: 1, O: 1 } },
+  { id: 'nitrogen-dioxide', name: '二氧化氮', formula: 'NO2', atoms: { N: 1, O: 2 } },
+  { id: 'sodium-azide', name: '疊氮化鈉', formula: 'NaN3', atoms: { Na: 1, N: 3 } },
+  { id: 'aluminium-chloride', name: '氯化鋁', formula: 'AlCl3', atoms: { Al: 1, Cl: 3 } },
+  { id: 'carbon', name: '碳', formula: 'C', atoms: { C: 1 } },
+  { id: 'ethanol', name: '乙醇', formula: 'C2H5OH', atoms: { C: 2, H: 6, O: 1 } },
+  { id: 'acetic-acid', name: '乙酸', formula: 'CH3COOH', atoms: { C: 2, H: 4, O: 2 } },
+  { id: 'ethyl-acetate', name: '乙酸乙酯', formula: 'CH3COOC2H5', atoms: { C: 4, H: 8, O: 2 } },
 ]
 
 export const coefficientConceptQuestions = [
@@ -462,6 +470,131 @@ export const stageFourReactionBank = [
 export const stageFourReactionIds = stageFourReactionBank.map((reaction) => reaction.id)
 export const stageFourQuestionMix = { foundation: 3, core: 4, challenge: 3 }
 
+// 高中、工業與有機化學情境僅用於缺項推理。題目會給足化學式與係數，
+// 學生不必背誦反應，只需以國中程度的原子守恆回推空格。
+export const stageFourExtendedReactionBank = [
+  {
+    id: 'blast-furnace-reduction',
+    reactants: [{ moleculeId: 'iron-iii-oxide' }, { moleculeId: 'carbon-monoxide' }],
+    products: [{ moleculeId: 'iron' }, { moleculeId: 'carbon-dioxide' }],
+    answer: { reactants: [1, 3], products: [2, 3] },
+  },
+  {
+    id: 'water-gas-shift',
+    reactants: [{ moleculeId: 'carbon-monoxide' }, { moleculeId: 'water' }],
+    products: [{ moleculeId: 'carbon-dioxide' }, { moleculeId: 'hydrogen' }],
+    answer: { reactants: [1, 1], products: [1, 1] },
+  },
+  {
+    id: 'sabatier-reaction',
+    reactants: [{ moleculeId: 'carbon-dioxide' }, { moleculeId: 'hydrogen' }],
+    products: [{ moleculeId: 'methane' }, { moleculeId: 'water' }],
+    answer: { reactants: [1, 4], products: [1, 2] },
+  },
+  {
+    id: 'ostwald-ammonia-oxidation',
+    reactants: [{ moleculeId: 'ammonia' }, { moleculeId: 'oxygen' }],
+    products: [{ moleculeId: 'nitric-oxide' }, { moleculeId: 'water' }],
+    answer: { reactants: [4, 5], products: [4, 6] },
+  },
+  {
+    id: 'nitrogen-dioxide-formation',
+    reactants: [{ moleculeId: 'nitric-oxide' }, { moleculeId: 'oxygen' }],
+    products: [{ moleculeId: 'nitrogen-dioxide' }],
+    answer: { reactants: [2, 1], products: [2] },
+  },
+  {
+    id: 'airbag-sodium-azide',
+    reactants: [{ moleculeId: 'sodium-azide' }],
+    products: [{ moleculeId: 'sodium' }, { moleculeId: 'nitrogen' }],
+    answer: { reactants: [2], products: [2, 3] },
+  },
+  {
+    id: 'thermite-reaction',
+    reactants: [{ moleculeId: 'aluminium' }, { moleculeId: 'iron-iii-oxide' }],
+    products: [{ moleculeId: 'aluminium-oxide' }, { moleculeId: 'iron' }],
+    answer: { reactants: [2, 1], products: [1, 2] },
+  },
+  {
+    id: 'aluminium-hydrochloric-acid',
+    reactants: [{ moleculeId: 'aluminium' }, { moleculeId: 'hydrochloric-acid' }],
+    products: [{ moleculeId: 'aluminium-chloride' }, { moleculeId: 'hydrogen' }],
+    answer: { reactants: [2, 6], products: [2, 3] },
+  },
+  {
+    id: 'magnesium-carbon-dioxide',
+    reactants: [{ moleculeId: 'magnesium' }, { moleculeId: 'carbon-dioxide' }],
+    products: [{ moleculeId: 'magnesium-oxide' }, { moleculeId: 'carbon' }],
+    answer: { reactants: [2, 1], products: [2, 1] },
+  },
+  {
+    id: 'sodium-water-reaction',
+    reactants: [{ moleculeId: 'sodium' }, { moleculeId: 'water' }],
+    products: [{ moleculeId: 'sodium-hydroxide' }, { moleculeId: 'hydrogen' }],
+    answer: { reactants: [2, 2], products: [2, 1] },
+  },
+  {
+    id: 'claus-reaction',
+    reactants: [{ moleculeId: 'hydrogen-sulfide' }, { moleculeId: 'sulfur-dioxide' }],
+    products: [{ moleculeId: 'sulfur' }, { moleculeId: 'water' }],
+    answer: { reactants: [2, 1], products: [3, 2] },
+  },
+  {
+    id: 'ethanol-combustion',
+    reactants: [{ moleculeId: 'ethanol' }, { moleculeId: 'oxygen' }],
+    products: [{ moleculeId: 'carbon-dioxide' }, { moleculeId: 'water' }],
+    answer: { reactants: [1, 3], products: [2, 3] },
+  },
+  {
+    id: 'glucose-fermentation',
+    reactants: [{ moleculeId: 'glucose' }],
+    products: [{ moleculeId: 'ethanol' }, { moleculeId: 'carbon-dioxide' }],
+    answer: { reactants: [1], products: [2, 2] },
+  },
+  {
+    id: 'methanol-combustion',
+    reactants: [{ moleculeId: 'methanol' }, { moleculeId: 'oxygen' }],
+    products: [{ moleculeId: 'carbon-dioxide' }, { moleculeId: 'water' }],
+    answer: { reactants: [2, 3], products: [2, 4] },
+  },
+  {
+    id: 'ethene-hydrogenation',
+    reactants: [{ moleculeId: 'ethene' }, { moleculeId: 'hydrogen' }],
+    products: [{ moleculeId: 'ethane' }],
+    answer: { reactants: [1, 1], products: [1] },
+  },
+  {
+    id: 'ethyne-hydrogenation',
+    reactants: [{ moleculeId: 'ethyne' }, { moleculeId: 'hydrogen' }],
+    products: [{ moleculeId: 'ethane' }],
+    answer: { reactants: [1, 2], products: [1] },
+  },
+  {
+    id: 'methane-chlorination',
+    reactants: [{ moleculeId: 'methane' }, { moleculeId: 'chlorine' }],
+    products: [{ moleculeId: 'chloromethane' }, { moleculeId: 'hydrogen-chloride' }],
+    answer: { reactants: [1, 1], products: [1, 1] },
+  },
+  {
+    id: 'ethene-hydration',
+    reactants: [{ moleculeId: 'ethene' }, { moleculeId: 'water' }],
+    products: [{ moleculeId: 'ethanol' }],
+    answer: { reactants: [1, 1], products: [1] },
+  },
+  {
+    id: 'ethanol-oxidation',
+    reactants: [{ moleculeId: 'ethanol' }, { moleculeId: 'oxygen' }],
+    products: [{ moleculeId: 'acetic-acid' }, { moleculeId: 'water' }],
+    answer: { reactants: [1, 1], products: [1, 1] },
+  },
+  {
+    id: 'ethyl-acetate-formation',
+    reactants: [{ moleculeId: 'acetic-acid' }, { moleculeId: 'ethanol' }],
+    products: [{ moleculeId: 'ethyl-acetate' }, { moleculeId: 'water' }],
+    answer: { reactants: [1, 1], products: [1, 1] },
+  },
+]
+
 // 缺項推理題共用第四關的反應式資料，但固定給出最簡整數係數，
 // 並只挖空一個反應物或生成物。order 可調整顯示順序，讓題目更接近課本寫法。
 export const stageFourMissingCompoundBank = [
@@ -611,6 +744,132 @@ export const stageFourMissingCompoundBank = [
     prompt: '依燃燒生成物與固定係數回推缺少的燃料。',
     missingSide: 'reactants', missingIndex: 0,
   },
+  {
+    id: 'extended-blast-furnace-iron-oxide',
+    reactionId: 'blast-furnace-reduction',
+    prompt: '煉鐵高爐中，一氧化碳將氧化鐵還原。依生成物回推缺少的反應物。',
+    missingSide: 'reactants', missingIndex: 0, extendedContext: true, contextLabel: '高中・工業製程',
+  },
+  {
+    id: 'extended-water-gas-hydrogen',
+    reactionId: 'water-gas-shift',
+    prompt: '水煤氣變換反應可製造氫氣。依原子守恆推回缺少的生成物。',
+    missingSide: 'products', missingIndex: 1, extendedContext: true, contextLabel: '高中・能源化學',
+  },
+  {
+    id: 'extended-sabatier-methane',
+    reactionId: 'sabatier-reaction',
+    prompt: '薩巴捷反應可將二氧化碳轉成甲烷。推回空格中的生成物。',
+    missingSide: 'products', missingIndex: 0, extendedContext: true, contextLabel: '高中・太空與能源',
+  },
+  {
+    id: 'extended-ostwald-nitric-oxide',
+    reactionId: 'ostwald-ammonia-oxidation',
+    prompt: '奧士華法先讓氨氧化。依固定係數推回缺少的生成物。',
+    missingSide: 'products', missingIndex: 0, extendedContext: true, contextLabel: '高中・工業製程',
+  },
+  {
+    id: 'extended-nitrogen-dioxide',
+    reactionId: 'nitrogen-dioxide-formation',
+    prompt: '一氧化氮接觸氧氣後形成另一種氮氧化物。推回其化學式。',
+    missingSide: 'products', missingIndex: 0, extendedContext: true, contextLabel: '高中・環境化學',
+  },
+  {
+    id: 'extended-airbag-sodium-azide',
+    reactionId: 'airbag-sodium-azide',
+    prompt: '傳統安全氣囊利用疊氮化鈉分解產生氮氣。由生成物回推反應物。',
+    missingSide: 'reactants', missingIndex: 0, extendedContext: true, contextLabel: '高中・生活科技',
+  },
+  {
+    id: 'extended-thermite-aluminium-oxide',
+    reactionId: 'thermite-reaction',
+    prompt: '鋁熱反應會生成熔融的鐵。依守恆推回另一個生成物。',
+    missingSide: 'products', missingIndex: 0, extendedContext: true, contextLabel: '高中・金屬冶煉',
+  },
+  {
+    id: 'extended-aluminium-chloride',
+    reactionId: 'aluminium-hydrochloric-acid',
+    prompt: '鋁與鹽酸反應放出氫氣。依原子守恆推回缺少的鹽類。',
+    missingSide: 'products', missingIndex: 0, extendedContext: true, contextLabel: '高中・金屬反應',
+  },
+  {
+    id: 'extended-magnesium-carbon',
+    reactionId: 'magnesium-carbon-dioxide',
+    prompt: '燃燒中的鎂可在二氧化碳中繼續反應。推回另一個生成物。',
+    missingSide: 'products', missingIndex: 1, extendedContext: true, contextLabel: '高中・特殊燃燒',
+  },
+  {
+    id: 'extended-sodium-hydroxide',
+    reactionId: 'sodium-water-reaction',
+    prompt: '鈉與水反應會放出氫氣。依守恆推回另一個生成物。',
+    missingSide: 'products', missingIndex: 0, extendedContext: true, contextLabel: '高中・金屬反應',
+  },
+  {
+    id: 'extended-claus-sulfur',
+    reactionId: 'claus-reaction',
+    prompt: '克勞斯法可從含硫氣體回收硫。依係數推回缺少的生成物。',
+    missingSide: 'products', missingIndex: 0, extendedContext: true, contextLabel: '高中・環境化學',
+  },
+  {
+    id: 'extended-ethanol-combustion',
+    reactionId: 'ethanol-combustion',
+    prompt: '乙醇完全燃燒。由二氧化碳與水的數量回推燃料化學式。',
+    missingSide: 'reactants', missingIndex: 0, extendedContext: true, contextLabel: '高中・有機化學',
+    acceptedFormulas: ['C2H6O'],
+  },
+  {
+    id: 'extended-fermentation-ethanol',
+    reactionId: 'glucose-fermentation',
+    prompt: '葡萄糖發酵產生二氧化碳與另一種有機物。推回其化學式。',
+    missingSide: 'products', missingIndex: 0, extendedContext: true, contextLabel: '高中・有機化學',
+    acceptedFormulas: ['C2H6O'],
+  },
+  {
+    id: 'extended-methanol-combustion',
+    reactionId: 'methanol-combustion',
+    prompt: '甲醇完全燃燒。依生成物與固定係數回推燃料化學式。',
+    missingSide: 'reactants', missingIndex: 0, extendedContext: true, contextLabel: '高中・有機化學',
+    acceptedFormulas: ['CH4O'],
+  },
+  {
+    id: 'extended-ethene-hydrogenation',
+    reactionId: 'ethene-hydrogenation',
+    prompt: '加成反應生成乙烷。由生成物回推缺少的不飽和烴。',
+    missingSide: 'reactants', missingIndex: 0, extendedContext: true, contextLabel: '高中・有機化學',
+  },
+  {
+    id: 'extended-ethyne-hydrogenation',
+    reactionId: 'ethyne-hydrogenation',
+    prompt: '另一個加成反應也會生成乙烷。依氫氣係數回推不飽和烴。',
+    missingSide: 'reactants', missingIndex: 0, extendedContext: true, contextLabel: '高中・有機化學',
+  },
+  {
+    id: 'extended-methane-chlorination',
+    reactionId: 'methane-chlorination',
+    prompt: '甲烷與氯氣進行取代反應。依原子守恆推回含氯生成物。',
+    missingSide: 'products', missingIndex: 0, extendedContext: true, contextLabel: '高中・有機化學',
+  },
+  {
+    id: 'extended-ethene-hydration',
+    reactionId: 'ethene-hydration',
+    prompt: '乙烯與水進行加成反應。依原子守恆推回生成的有機物。',
+    missingSide: 'products', missingIndex: 0, extendedContext: true, contextLabel: '高中・有機化學',
+    acceptedFormulas: ['C2H6O'],
+  },
+  {
+    id: 'extended-ethanol-oxidation',
+    reactionId: 'ethanol-oxidation',
+    prompt: '乙醇氧化後形成乙酸與水。依守恆推回酸的化學式。',
+    missingSide: 'products', missingIndex: 0, extendedContext: true, contextLabel: '高中・有機化學',
+    acceptedFormulas: ['C2H4O2'],
+  },
+  {
+    id: 'extended-esterification',
+    reactionId: 'ethyl-acetate-formation',
+    prompt: '乙酸與乙醇進行酯化反應。扣除水後，推回酯的化學式。',
+    missingSide: 'products', missingIndex: 0, extendedContext: true, contextLabel: '高中・有機化學',
+    acceptedFormulas: ['C4H8O2'],
+  },
 ]
 
 export const stageFourMissingCompoundQuestionCount = 3
@@ -619,5 +878,5 @@ export const chemicalBalanceRoadmap = [
   { stage: 1, title: '分子組裝室', description: '化學式與粒子模型雙向判讀。', status: 'open' },
   { stage: 2, title: '原子守恆天平', description: '用粒子模型讓反應前後原子數相同。', status: 'open' },
   { stage: 3, title: '係數平衡訓練', description: '從統計表逐步過渡到只看反應式。', status: 'open' },
-  { stage: 4, title: '完整反應式挑戰', description: '由原子守恆雙向推回缺少的反應物或生成物，再完成化學式與最簡整數係數。', status: 'open' },
+  { stage: 4, title: '完整反應式挑戰', description: '以原子守恆挑戰國中、高中與有機化學情境，雙向推回缺少的物質。', status: 'open' },
 ]
