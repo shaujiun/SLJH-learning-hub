@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest'
 
 const migrationUrl = new URL('../../supabase/migrations/20261031150000_add_idiom_word_grid.sql', import.meta.url)
 const seedUrl = new URL('../../supabase/migrations/20261031151000_seed_idiom_word_grid.sql', import.meta.url)
+const publicReadUrl = new URL('../../supabase/migrations/20261031152000_fix_idiom_word_grid_public_read.sql', import.meta.url)
 const sql = readFileSync(migrationUrl, 'utf8')
 const seedSql = readFileSync(seedUrl, 'utf8')
+const publicReadSql = readFileSync(publicReadUrl, 'utf8')
 
 describe('成語填字圖 migration', () => {
   it('建立題庫、能量、提示與通關資料並套用 RLS', () => {
@@ -29,6 +31,7 @@ describe('成語填字圖 migration', () => {
     expect(sql).toContain("'chinese', '國文'")
     expect(sql).toContain('weekly_minimum = 1')
     expect(sql).toContain('weekly_maximum = 1')
+    expect(sql).toContain("15, 1, 1, 'common', true")
     expect(sql).toContain("'idiom_word_grid', '成語填字圖'")
   })
 
@@ -37,5 +40,12 @@ describe('成語填字圖 migration', () => {
     expect(seedSql.match(/insert into public\.idiom_word_grid_puzzles/g)).toHaveLength(4)
     expect(seedSql).toContain("values ('一心一意', '同心同意。")
     expect(seedSql).toContain("'challenge'")
+  })
+
+  it('匿名讀取政策不呼叫管理者專用函式', () => {
+    expect(publicReadSql).toContain('create policy idiom_entries_active_read')
+    expect(publicReadSql).toContain('create policy idiom_puzzles_published_read')
+    expect(publicReadSql).toContain("using (status = 'published')")
+    expect(publicReadSql).not.toContain('grant execute on function public.can_manage_word_grid_puzzles() to anon')
   })
 })
