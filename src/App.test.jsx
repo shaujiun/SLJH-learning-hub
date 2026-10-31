@@ -34,9 +34,9 @@ describe('guest practice routes', () => {
     useUrl('https://example.test/hub/?guest=1')
     const html = renderToStaticMarkup(<App />)
 
-    expect(html).toContain('不列入每日任務與教師報表')
+    expect(html).toContain('成語填字圖每週至少安排一題登入任務')
     expect(html).toContain('href="?puzzle=word-grid&amp;guest=1"')
-    expect(html).toContain('來源：聯合報好讀周報・設計者：遲驖川老師')
+    expect(html).toContain('包含報紙填字圖與教育部《成語典》成語填字圖')
     expect(html).toContain('href="?puzzle=number-grid&amp;guest=1"')
     expect(html).toContain('來源：聯合報好讀周報・設計者：狄運來老師')
     expect(html).toContain('href="https://andrewkotw.github.io/card-puzzle/#4CLUE"')

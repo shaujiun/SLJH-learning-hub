@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "history:questions:sync": "node scripts/generate-history-official-questions.mjs"
+    "history:questions:sync": "node scripts/generate-history-official-questions.mjs",
+    "idioms:sync": "node scripts/sync-idiom-word-grid-data.mjs",
+    "idioms:seed": "node scripts/generate-idiom-word-grid-seed.mjs"
   },
   "dependencies": {
     "@fontsource/iansui": "^5.2.5",
