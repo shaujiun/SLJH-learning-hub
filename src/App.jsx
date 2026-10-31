@@ -62,6 +62,7 @@ const ChemicalFormulaOutpost = lazy(() => import('./components/ChemicalFormulaOu
 const ChemicalBalanceStation = lazy(() => import('./components/ChemicalBalanceStation.jsx'))
 const AnimalEquationExperience = lazy(() => import('./components/AnimalEquationExperience.jsx'))
 const WordGridPuzzle = lazy(() => import('./components/WordGridPuzzle.jsx'))
+const IdiomWordGrid = lazy(() => import('./components/IdiomWordGrid.jsx'))
 const NumberGridChallenge = lazy(() => import('./components/NumberGridChallenge.jsx'))
 const EnglishReadingWorkshop = lazy(() => import('./components/EnglishReadingWorkshop.jsx'))
 const EnglishReadingPractice = lazy(() => import('./components/EnglishReadingPractice.jsx'))
@@ -330,7 +331,7 @@ function PuzzleGames({ guestMode = false }) {
   const games = [
     {
       name: '填字圖',
-      detail: '來源：聯合報好讀周報・設計者：遲驖川老師',
+      detail: '包含報紙填字圖與教育部《成語典》成語填字圖',
       url: guestMode ? '?puzzle=word-grid&guest=1' : '?puzzle=word-grid',
       external: false,
     },
@@ -351,7 +352,7 @@ function PuzzleGames({ guestMode = false }) {
         <div>
           <p className="eyebrow">PUZZLE GAMES</p>
           <h2 id="external-puzzle-title">益智遊戲</h2>
-          <p>自由選擇文字或數字挑戰，不列入每日任務與教師報表</p>
+          <p>自由選擇文字或數字挑戰；成語填字圖每週至少安排一題登入任務</p>
         </div>
       </div>
       <div className="external-puzzle-links">
@@ -1047,6 +1048,9 @@ export default function App() {
     return <Suspense fallback={<LoadingScreen />}><GeographyDetective /></Suspense>
   }
   if (searchParams.get('puzzle') === 'word-grid') {
+    if (searchParams.get('mode') === 'idiom') {
+      return <Suspense fallback={<LoadingScreen />}><IdiomWordGrid guestMode={guestMode} /></Suspense>
+    }
     return <Suspense fallback={<LoadingScreen />}><WordGridPuzzle guestMode={guestMode} /></Suspense>
   }
   if (searchParams.get('puzzle') === 'number-grid') {

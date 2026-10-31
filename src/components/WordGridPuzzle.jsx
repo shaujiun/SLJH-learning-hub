@@ -597,6 +597,10 @@ export default function WordGridPuzzle({ guestMode = false }) {
         <div><p>文字益智遊戲</p><h1>填字圖</h1></div>
         {state.canManage ? <button type="button" onClick={() => setEditing(defaultPuzzle)}><Plus aria-hidden="true" />建立新題</button> : <span />}
       </header>
+      <nav className="word-grid-mode-tabs" aria-label="填字圖類型">
+        <a className="is-active" href={`?puzzle=word-grid${guestMode ? '&guest=1' : ''}`}>報紙填字圖</a>
+        <a href={`?puzzle=word-grid&mode=idiom${guestMode ? '&guest=1' : ''}`}>成語填字圖</a>
+      </nav>
       <main className="word-grid-main">
         <section className="word-grid-intro">
           <div>
