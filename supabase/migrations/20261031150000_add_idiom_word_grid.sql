@@ -263,7 +263,7 @@ insert into public.learning_systems (
 ) values (
   'chinese', '國文', '從成語填字圖練習字形、語意、典源與成語運用。',
   'https://shaujiun.github.io/SLJH-learning-hub/?puzzle=word-grid&mode=idiom',
-  15, 1, 1, 'all', true
+  15, 1, 1, 'common', true
 )
 on conflict (subject_code) do update set
   subject_name = excluded.subject_name,
