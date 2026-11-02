@@ -110,7 +110,7 @@ describe('各科遊戲選擇入口', () => {
     const examples = [
       ['math', { basic: ['pythagoras-challenge'], board: ['animal-equation', 'factor-clash'] }],
       ['english', { basic: ['english-vocabulary'], guided: ['english-grammar', 'english-reading'] }],
-      ['science', { basic: ['periodic-table'], guided: ['chemical-formula', 'chemical-balance'] }],
+      ['science', { map: ['science-learning-maps'], basic: ['periodic-table'], guided: ['chemical-formula', 'chemical-balance'] }],
       ['history', { map: ['history-atlas'] }],
       ['geography', { map: ['geography-learning-maps'], guided: ['geography-fill-map', 'geography-detective'] }],
     ]
@@ -150,6 +150,18 @@ describe('各科遊戲選擇入口', () => {
   it('地理學習地圖不出現在訪客版', () => {
     expect(subjectGamesFor({ code: 'geography', name: '地理' }, '', { guestMode: true }).map((game) => game.code))
       .not.toContain('geography-learning-maps')
+  })
+
+  it('自然科學習地圖只提供登入帳號並標示已開放章節', () => {
+    const system = { code: 'science', name: '自然' }
+    expect(subjectGamesFor(system, '')).toContainEqual(expect.objectContaining({
+      code: 'science-learning-maps',
+      section: 'map',
+      launchUrl: '?learning-maps=science',
+      availability: '第 3 冊第 3～4 章已開放',
+    }))
+    expect(subjectGamesFor(system, '', { guestMode: true }).map((game) => game.code))
+      .not.toContain('science-learning-maps')
   })
 
   it('歷史科先提供八年級歷史時光地圖', () => {

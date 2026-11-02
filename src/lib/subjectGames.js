@@ -69,6 +69,15 @@ const subjectGameTemplates = {
   ],
   science: [
     {
+      code: 'science-learning-maps',
+      section: 'map',
+      name: '自然科學習地圖',
+      description: '依冊別、章別與節次閱讀自然科心智圖，建立波動、聲音與光學的概念架構。',
+      availability: '第 3 冊第 3～4 章已開放',
+      requiresLogin: true,
+      launchUrl: '?learning-maps=science',
+    },
+    {
       code: 'measurement-lab',
       section: 'guided',
       name: '量測實驗室',

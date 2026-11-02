@@ -45,4 +45,12 @@ describe('learningMapService', () => {
     expect(result.canManage).toBe(true)
     expect(api.query.eq).not.toHaveBeenCalledWith('status', 'published')
   })
+
+  it('自然科登入學生可讀取六張內建心智圖', async () => {
+    const api = client()
+    const result = await loadLearningMaps('science', api)
+    expect(result.maps).toHaveLength(6)
+    expect(result.maps.every((item) => item.isBundled && item.volumeNo === 3)).toBe(true)
+    expect(result.maps.find((item) => item.title === '聲波的反射與超聲波')).toEqual(expect.objectContaining({ chapterNo: 3, sectionNo: 3 }))
+  })
 })
