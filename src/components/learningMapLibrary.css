@@ -10,9 +10,11 @@
 .learning-map-section-title h2 { margin: 4px 0; }
 .learning-map-section-title p { margin: 0; color: #647585; }
 .learning-map-section-title > button, .learning-map-admin button, .learning-map-open { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 0; border-radius: 10px; padding: 10px 14px; color: #fff; background: #1f6674; cursor: pointer; font-weight: 700; }
-.learning-map-filters { display: flex; gap: 10px; }
+.learning-map-filters { display: flex; flex-wrap: wrap; gap: 10px; }
 .learning-map-filters label { display: grid; gap: 4px; font-size: .78rem; font-weight: 800; }
 .learning-map-filters select, .learning-map-admin-form input, .learning-map-admin-form select, .learning-map-admin-form textarea { width: 100%; border: 1px solid #b8c9cc; border-radius: 9px; padding: 9px 10px; color: #173650; background: #fff; font: inherit; box-sizing: border-box; }
+.learning-map-filters select { min-width: 130px; font-size: 1rem; }
+.learning-map-filters select:disabled { color: #79898d; background: #edf1f1; cursor: not-allowed; }
 .learning-map-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px; }
 .learning-map-grid > article { display: grid; grid-template-rows: 170px 1fr auto; overflow: hidden; border: 1px solid #d2dfdc; border-radius: 18px; background: #fff; box-shadow: 0 12px 30px #24485414; }
 .learning-map-thumbnail { overflow: hidden; border: 0; background: #e8f0ed; cursor: pointer; }

@@ -5,10 +5,11 @@ import {
 } from 'lucide-react'
 import {
   blankLearningMap,
+  filterLearningMaps,
+  learningMapFilterOptions,
   learningMapLevelLabel,
   learningMapStatuses,
   learningMapSubjects,
-  semesterLabel,
   subjectLabel,
 } from '../lib/learningMaps.js'
 import { loadLearningMaps, saveLearningMap } from '../services/learningMapService.js'
@@ -58,7 +59,7 @@ function LearningMapViewer({ item, onClose }) {
       </div>
       <footer>
         <div><b>製作：</b>{item.creatorName}<span>・</span><b>來源：</b>{item.sourceName || item.creatorName}</div>
-        <a href={item.sourceUrl} target="_blank" rel="noreferrer"><ExternalLink aria-hidden="true" />查看原始來源</a>
+        {item.sourceUrl && <a href={item.sourceUrl} target="_blank" rel="noreferrer"><ExternalLink aria-hidden="true" />查看原始來源</a>}
       </footer>
     </section>
   </div>
@@ -108,10 +109,10 @@ function LearningMapManager({ subjectCode, maps, onSaved, onPreview }) {
       <div className="learning-map-admin-list">
         {maps.length === 0 ? <p>尚未建立任何學習地圖。</p> : maps.map((item) => <article key={item.id}>
           <div><small>{learningMapLevelLabel(item)}</small><strong>{item.title}</strong><span className={`is-${item.status}`}>{learningMapStatuses.find((entry) => entry.value === item.status)?.label}</span></div>
-          <p>{item.storagePath ? item.originalFileName || '已上傳檔案' : '尚未上傳檔案'}</p>
+          <p>{item.isBundled ? `系統內建：${item.originalFileName}` : item.storagePath ? item.originalFileName || '已上傳檔案' : '尚未上傳檔案'}</p>
           <div className="learning-map-admin-actions">
             {item.signedUrl && <button type="button" onClick={() => onPreview(item)}><FileImage />預覽</button>}
-            <button type="button" onClick={() => edit(item)}><Edit3 />編輯</button>
+            {!item.isBundled && <button type="button" onClick={() => edit(item)}><Edit3 />編輯</button>}
           </div>
         </article>)}
       </div>
@@ -122,7 +123,9 @@ function LearningMapManager({ subjectCode, maps, onSaved, onPreview }) {
           <label>科目<select value={form.subjectCode} onChange={(event) => update('subjectCode', event.target.value)}>{learningMapSubjects.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
           <label>年級<select value={form.gradeLevel} onChange={(event) => update('gradeLevel', event.target.value)}>{[7, 8, 9].map((grade) => <option key={grade} value={grade}>{grade} 年級</option>)}</select></label>
           <label>學期<select value={form.semester} onChange={(event) => update('semester', event.target.value)}><option value="1">上學期</option><option value="2">下學期</option></select></label>
-          <label>章節<input type="number" min="1" max="30" value={form.chapterNo} onChange={(event) => update('chapterNo', event.target.value)} /></label>
+          <label>第幾冊<input type="number" min="1" max="6" value={form.volumeNo} onChange={(event) => update('volumeNo', event.target.value)} /></label>
+          <label>第幾章<input type="number" min="1" max="30" value={form.chapterNo} onChange={(event) => update('chapterNo', event.target.value)} /></label>
+          <label>第幾節<input type="number" min="1" max="30" value={form.sectionNo || ''} onChange={(event) => update('sectionNo', event.target.value)} /></label>
         </div>
         <label>標題<input value={form.title} onChange={(event) => update('title', event.target.value)} required /></label>
         <label>簡介<textarea rows="2" value={form.description} onChange={(event) => update('description', event.target.value)} /></label>
@@ -146,8 +149,9 @@ function LearningMapManager({ subjectCode, maps, onSaved, onPreview }) {
 
 export default function LearningMapLibrary({ subjectCode = 'geography' }) {
   const [state, setState] = useState({ loading: true, access: '', canManage: false, maps: [], error: '' })
-  const [grade, setGrade] = useState('all')
-  const [semester, setSemester] = useState('all')
+  const [volume, setVolume] = useState('all')
+  const [chapter, setChapter] = useState('all')
+  const [section, setSection] = useState('all')
   const [viewer, setViewer] = useState(null)
 
   async function load() {
@@ -160,13 +164,16 @@ export default function LearningMapLibrary({ subjectCode = 'geography' }) {
     }
   }
 
-  useEffect(() => { load() }, [subjectCode])
+  useEffect(() => {
+    setVolume('all')
+    setChapter('all')
+    setSection('all')
+    load()
+  }, [subjectCode])
 
   const publishedMaps = useMemo(() => state.maps.filter((item) => item.status === 'published' && item.signedUrl), [state.maps])
-  const visibleMaps = useMemo(() => publishedMaps.filter((item) => (
-    (grade === 'all' || String(item.gradeLevel) === grade)
-    && (semester === 'all' || String(item.semester) === semester)
-  )), [publishedMaps, grade, semester])
+  const filterOptions = useMemo(() => learningMapFilterOptions(publishedMaps, { volume, chapter }), [publishedMaps, volume, chapter])
+  const visibleMaps = useMemo(() => filterLearningMaps(publishedMaps, { volume, chapter, section }), [publishedMaps, volume, chapter, section])
 
   if (state.loading) return <main className="learning-map-gate"><FileImage aria-hidden="true" /><h1>正在整理學習地圖……</h1></main>
   if (state.access !== 'allowed' || state.error) return <AccessMessage access={state.access} error={state.error} />
@@ -174,7 +181,7 @@ export default function LearningMapLibrary({ subjectCode = 'geography' }) {
   return <div className="learning-map-shell">
     <header className="learning-map-header">
       <a href={`?subject=${subjectCode}`}><ArrowLeft />返回{subjectLabel(subjectCode)}科</a>
-      <div><small>SOCIAL STUDIES MAPS</small><h1>{subjectLabel(subjectCode)}學習地圖</h1><p>依年級、冊別與章節閱讀教師整理的學習地圖。</p></div>
+      <div><small>{subjectCode === 'science' ? 'SCIENCE LEARNING MAPS' : 'LEARNING MAPS'}</small><h1>{subjectLabel(subjectCode)}科學習地圖</h1><p>依冊別、章別與節次閱讀教師整理的心智圖與學習地圖。</p></div>
     </header>
 
     {state.canManage && <LearningMapManager subjectCode={subjectCode} maps={state.maps} onSaved={load} onPreview={setViewer} />}
@@ -183,8 +190,9 @@ export default function LearningMapLibrary({ subjectCode = 'geography' }) {
       <div className="learning-map-section-title">
         <div><small>STUDENT LIBRARY</small><h2>已發布的學習地圖</h2><p>點選章節後可放大、縮小或全螢幕閱讀。</p></div>
         <div className="learning-map-filters">
-          <label>年級<select value={grade} onChange={(event) => setGrade(event.target.value)}><option value="all">全部</option>{[7, 8, 9].map((item) => <option key={item} value={item}>{item} 年級</option>)}</select></label>
-          <label>學期<select value={semester} onChange={(event) => setSemester(event.target.value)}><option value="all">全部</option><option value="1">上學期</option><option value="2">下學期</option></select></label>
+          <label>第幾冊<select value={volume} onChange={(event) => { setVolume(event.target.value); setChapter('all'); setSection('all') }}><option value="all">全部冊別</option>{filterOptions.volumes.map((item) => <option key={item} value={item}>第 {item} 冊</option>)}</select></label>
+          <label>第幾章<select value={chapter} onChange={(event) => { setChapter(event.target.value); setSection('all') }}><option value="all">全部章別</option>{filterOptions.chapters.map((item) => <option key={item} value={item}>第 {item} 章</option>)}</select></label>
+          <label>第幾節<select value={section} onChange={(event) => setSection(event.target.value)} disabled={filterOptions.sections.length === 0}><option value="all">全部節次</option>{filterOptions.sections.map((item) => <option key={item} value={item}>第 {item} 節</option>)}</select></label>
         </div>
       </div>
 
@@ -193,7 +201,7 @@ export default function LearningMapLibrary({ subjectCode = 'geography' }) {
           <button className="learning-map-thumbnail" type="button" onClick={() => setViewer(item)} aria-label={`開啟${item.title}`}>
             {item.mimeType === 'application/pdf' ? <FileImage /> : <img src={item.signedUrl} alt="" loading="lazy" />}
           </button>
-          <div><small>{item.gradeLevel} 年級{semesterLabel(item.semester)}・CH{item.chapterNo}</small><h3>{item.title}</h3><p>{item.description}</p><span>製作：{item.creatorName}</span></div>
+          <div><small>{learningMapLevelLabel(item)}</small><h3>{item.title}</h3><p>{item.description}</p><span>製作：{item.creatorName}</span></div>
           <button type="button" className="learning-map-open" onClick={() => setViewer(item)}>開啟學習地圖</button>
         </article>)}
       </div>}
