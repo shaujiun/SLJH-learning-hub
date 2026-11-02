@@ -8,21 +8,28 @@ import {
   ExternalLink,
   Image as ImageIcon,
   Lightbulb,
+  Pencil,
   Plus,
   RotateCcw,
   Save,
   Sparkles,
+  X,
 } from 'lucide-react'
 import {
   assessIdiomAssignments,
   buildIdiomPuzzle,
+  buildManualIdiomPuzzle,
   chooseHintCell,
+  createIdiomEditorGrid,
   createIdiomBankTiles,
+  editorGridFromPuzzle,
+  IDIOM_EDITOR_CELL_TYPES,
   IDIOM_DIFFICULTIES,
 } from '../lib/idiomWordGrid.js'
 import {
   completeIdiomPuzzle,
   loadIdiomWordGridContext,
+  saveIdiomEntry,
   saveIdiomPuzzle,
   spendIdiomHint,
 } from '../services/idiomWordGridService.js'
@@ -33,6 +40,12 @@ import {
 import './idiomWordGrid.css'
 
 const difficultyOrder = ['beginner', 'basic', 'advanced', 'challenge']
+const stageLabels = {
+  elementary: '國小階段',
+  junior: '國中階段',
+  senior: '高中延伸',
+  all: '跨階段／自訂',
+}
 
 function formatDate(value) {
   if (!value) return '自由練習'
@@ -75,7 +88,7 @@ export function IdiomBoard({ puzzle, assignments, selectedCellKey, revealedKeys,
         const column = index % puzzle.board.width
         const key = `${row}:${column}`
         const cell = cellMap.get(key)
-        if (!cell) return <span className="idiom-grid-void" key={key} aria-hidden="true" />
+        if (!cell) return <span className={`idiom-grid-void ${puzzle.board.showBlocks ? 'is-block' : ''}`} key={key} aria-hidden="true" />
         const tile = tiles[assignments[key]]
         const fixed = given.has(key) || revealed.has(key)
         const value = fixed ? cell.solution : tile?.character || ''
@@ -318,63 +331,218 @@ export function PlayIdiomPuzzle({ puzzle, context, focusTaskId, onEnergyChange }
   )
 }
 
-function IdiomPuzzleEditor({ catalog, onSaved }) {
-  const [title, setTitle] = useState('成語填字圖')
-  const [difficulty, setDifficulty] = useState('beginner')
-  const [stage, setStage] = useState('elementary')
-  const [selectedIds, setSelectedIds] = useState([])
-  const [preview, setPreview] = useState(null)
-  const [status, setStatus] = useState('draft')
-  const [message, setMessage] = useState('')
-  const available = catalog.filter((entry) => entry.stage === stage || stage === 'all')
+function todayDateValue() {
+  const now = new Date()
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10)
+}
 
-  const toggle = (id) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])
-  const generate = () => {
-    const puzzle = buildIdiomPuzzle(catalog.filter((entry) => selectedIds.includes(entry.id)), difficulty)
-    if (puzzle.board.placements.length < 4) {
-      setMessage('目前選取的成語無法形成至少 4 條交錯，請增加具有共同文字的成語。')
+function resizeIdiomEditorGrid(grid, nextWidth, nextHeight) {
+  const resized = createIdiomEditorGrid(nextWidth, nextHeight)
+  for (let row = 0; row < Math.min(grid.height, resized.height); row += 1) {
+    for (let column = 0; column < Math.min(grid.width, resized.width); column += 1) {
+      resized.cells[row * resized.width + column] = grid.cells[row * grid.width + column]
+    }
+  }
+  return resized
+}
+
+function IdiomEditorBoard({ grid, tab, tool, onChange }) {
+  const updateCell = (index, value) => {
+    const cells = grid.cells.map((cell, cellIndex) => cellIndex === index ? value : cell)
+    onChange({ ...grid, cells })
+  }
+  const applyTool = (index) => {
+    const current = grid.cells[index]
+    if (tool === IDIOM_EDITOR_CELL_TYPES.block) {
+      updateCell(index, { type: IDIOM_EDITOR_CELL_TYPES.block, value: '' })
       return
     }
-    setPreview(puzzle)
-    setMessage(`已排入 ${puzzle.idioms.length} 個成語；${puzzle.board.omitted.length ? `另有 ${puzzle.board.omitted.length} 個無法交錯。` : '全部成功交錯。'}`)
-  }
-  const save = async () => {
-    if (!preview) return
-    try {
-      await saveIdiomPuzzle({
-        ...preview, title, status, publishedOn: new Date().toISOString().slice(0, 10),
-        sourceVersion: IDIOM_DICTIONARY_VERSION, isDailyEligible: true,
-      })
-      setMessage(status === 'published' ? '題目已發布。' : '草稿已儲存。')
-      await onSaved()
-    } catch (error) { setMessage(error.message) }
+    if (tool === IDIOM_EDITOR_CELL_TYPES.empty) {
+      updateCell(index, { type: IDIOM_EDITOR_CELL_TYPES.empty, value: current.value || '' })
+      return
+    }
+    const value = window.prompt('請輸入這一格的提示字', current.value || '')
+    if (value == null) return
+    updateCell(index, { type: IDIOM_EDITOR_CELL_TYPES.given, value: Array.from(value.trim())[0] || '' })
   }
   return (
-    <details className="idiom-admin-editor">
-      <summary><Plus aria-hidden="true" />建立成語填字圖</summary>
+    <div
+      className="idiom-editor-grid"
+      style={{ '--idiom-editor-columns': grid.width }}
+      role="grid"
+      aria-label={tab === 'solution' ? '成語填字圖完整答案' : '成語填字圖題目版面'}
+    >
+      {grid.cells.map((cell, index) => {
+        const row = Math.floor(index / grid.width)
+        const column = index % grid.width
+        if (tab === 'solution') {
+          if (cell.type === IDIOM_EDITOR_CELL_TYPES.block) return <span key={index} className="idiom-editor-cell is-block" aria-label={`第 ${row + 1} 列第 ${column + 1} 格，黑格`} />
+          return (
+            <input
+              key={index}
+              className={`idiom-editor-cell is-${cell.type}`}
+              value={cell.value}
+              maxLength={1}
+              aria-label={`第 ${row + 1} 列第 ${column + 1} 格答案`}
+              onChange={(event) => updateCell(index, { ...cell, value: Array.from(event.target.value)[0] || '' })}
+            />
+          )
+        }
+        return (
+          <button
+            key={index}
+            type="button"
+            className={`idiom-editor-cell is-${cell.type}`}
+            aria-label={`第 ${row + 1} 列第 ${column + 1} 格，${cell.type === IDIOM_EDITOR_CELL_TYPES.block ? '黑格' : cell.type === IDIOM_EDITOR_CELL_TYPES.given ? `提示字 ${cell.value || '未輸入'}` : '白格'}`}
+            onClick={() => applyTool(index)}
+          >
+            {cell.type === IDIOM_EDITOR_CELL_TYPES.given ? cell.value : ''}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, onCatalogAdded }) {
+  const [title, setTitle] = useState(puzzle?.title || '成語填字圖')
+  const [publishedOn, setPublishedOn] = useState(puzzle?.publishedOn || todayDateValue())
+  const [difficulty, setDifficulty] = useState(puzzle?.difficulty || 'beginner')
+  const [stage, setStage] = useState(puzzle?.stage || 'junior')
+  const [selectedIds, setSelectedIds] = useState((puzzle?.idioms || []).map((entry) => entry.id))
+  const [editorGrid, setEditorGrid] = useState(() => puzzle ? editorGridFromPuzzle(puzzle) : createIdiomEditorGrid(8, 8))
+  const [preview, setPreview] = useState(null)
+  const [status, setStatus] = useState(puzzle?.status || 'draft')
+  const [isDailyEligible, setIsDailyEligible] = useState(puzzle?.isDailyEligible !== false)
+  const [tab, setTab] = useState('puzzle')
+  const [tool, setTool] = useState(IDIOM_EDITOR_CELL_TYPES.block)
+  const [saving, setSaving] = useState(false)
+  const [messages, setMessages] = useState([])
+  const [entryForm, setEntryForm] = useState({ phrase: '', stage: 'junior', definition: '', source: '', sourceUrl: '' })
+  const [entrySaving, setEntrySaving] = useState(false)
+  const available = catalog.filter((entry) => stage === 'all' || entry.stage === stage || selectedIds.includes(entry.id))
+  const selectedEntries = catalog.filter((entry) => selectedIds.includes(entry.id))
+
+  const toggle = (id) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])
+  const addEntry = async () => {
+    setEntrySaving(true)
+    try {
+      const entry = await saveIdiomEntry({ ...entryForm, sourceVersion: IDIOM_DICTIONARY_VERSION })
+      onCatalogAdded(entry)
+      setSelectedIds((current) => [...new Set([...current, entry.id])])
+      setEntryForm({ phrase: '', stage: 'junior', definition: '', source: '', sourceUrl: '' })
+      setMessages([`已新增「${entry.phrase}」，並加入本題。`])
+    } catch (error) {
+      setMessages([error.message])
+    } finally {
+      setEntrySaving(false)
+    }
+  }
+  const validate = () => {
+    const result = buildManualIdiomPuzzle({ editorGrid, idioms: selectedEntries, difficulty, stage })
+    setMessages(result.errors.length ? result.errors : ['版面與完整答案檢查通過，可以儲存或發布。'])
+    setPreview(result.errors.length ? null : result.puzzle)
+    return result
+  }
+  const generate = () => {
+    const generated = buildIdiomPuzzle(selectedEntries, difficulty)
+    if (generated.board.placements.length < 4) {
+      setMessages(['目前選取的成語無法形成至少 4 條交錯，請增加具有共同文字的成語。'])
+      return
+    }
+    setSelectedIds(generated.idioms.map((entry) => entry.id))
+    setEditorGrid(editorGridFromPuzzle(generated))
+    setPreview(null)
+    setMessages([`已自動排入 ${generated.idioms.length} 個成語；可繼續調整黑格、白格與提示字。`])
+  }
+  const save = async () => {
+    const result = validate()
+    if (result.errors.length) return
+    setSaving(true)
+    try {
+      await saveIdiomPuzzle({
+        ...result.puzzle,
+        id: puzzle?.id,
+        title,
+        publishedOn,
+        difficulty,
+        stage,
+        status,
+        sourceVersion: IDIOM_DICTIONARY_VERSION,
+        isDailyEligible,
+      })
+      setMessages([status === 'published' ? '題目已發布。' : '草稿已儲存。'])
+      await onSaved()
+    } catch (error) {
+      setMessages([error.message])
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <section className="idiom-admin-editor" aria-labelledby="idiom-editor-title">
+      <div className="idiom-admin-heading">
+        <div><p className="eyebrow">ADMIN EDITOR</p><h2 id="idiom-editor-title">{puzzle?.id ? '編輯成語填字圖' : '建立成語填字圖'}</h2></div>
+        <button type="button" className="icon-button" onClick={onCancel}><X aria-hidden="true" />關閉</button>
+      </div>
       <div className="idiom-admin-fields">
         <label>題目名稱<input value={title} onChange={(event) => setTitle(event.target.value)} /></label>
-        <label>適用階段<select value={stage} onChange={(event) => setStage(event.target.value)}><option value="elementary">國小常見</option><option value="junior">國中常見</option><option value="senior">高中延伸</option><option value="all">全部</option></select></label>
+        <label>發布日期<input type="date" value={publishedOn} onChange={(event) => setPublishedOn(event.target.value)} /></label>
+        <label>適合等級<select value={stage} onChange={(event) => setStage(event.target.value)}>{Object.entries(stageLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         <label>難度<select value={difficulty} onChange={(event) => setDifficulty(event.target.value)}>{difficultyOrder.map((value) => <option key={value} value={value}>{IDIOM_DIFFICULTIES[value].label}</option>)}</select></label>
-        <label>發布狀態<select value={status} onChange={(event) => setStatus(event.target.value)}><option value="draft">草稿</option><option value="published">立即發布</option></select></label>
+        <label>列數<input type="number" min="4" max="18" value={editorGrid.height} onChange={(event) => setEditorGrid((current) => resizeIdiomEditorGrid(current, current.width, Number(event.target.value)))} /></label>
+        <label>欄數<input type="number" min="4" max="18" value={editorGrid.width} onChange={(event) => setEditorGrid((current) => resizeIdiomEditorGrid(current, Number(event.target.value), current.height))} /></label>
+        <label>發布狀態<select value={status} onChange={(event) => setStatus(event.target.value)}><option value="draft">草稿</option><option value="published">正式發布</option><option value="archived">封存</option></select></label>
+        <label className="idiom-admin-checkbox"><input type="checkbox" checked={isDailyEligible} onChange={(event) => setIsDailyEligible(event.target.checked)} />可列入每日任務</label>
       </div>
-      <p>選擇至少 4 個具有共同文字的成語，系統會自動安排橫向與直向交錯。發布前請確認圖片與成語內容相符。</p>
+
+      <div className="idiom-admin-section-heading"><div><h3>① 選擇本題成語</h3><p>至少 4 個；完成後學生才會解鎖這些成語的釋義與出處。</p></div><strong>{selectedIds.length} 個</strong></div>
       <div className="idiom-admin-catalog">
-        {available.map((entry) => <label key={entry.id}><input type="checkbox" checked={selectedIds.includes(entry.id)} onChange={() => toggle(entry.id)} /><span>{entry.phrase}</span></label>)}
+        {available.map((entry) => <label key={entry.id}><input type="checkbox" checked={selectedIds.includes(entry.id)} onChange={() => toggle(entry.id)} /><span>{entry.phrase}</span><small>{stageLabels[entry.stage]}</small></label>)}
       </div>
+      <details className="idiom-entry-editor">
+        <summary><Plus aria-hidden="true" />成語不在清單中？新增成語資料</summary>
+        <p>請依教育部《成語典》輸入；新增後會自動加入本題。</p>
+        <div className="idiom-entry-editor-fields">
+          <label>成語<input value={entryForm.phrase} onChange={(event) => setEntryForm((current) => ({ ...current, phrase: event.target.value }))} /></label>
+          <label>適合等級<select value={entryForm.stage} onChange={(event) => setEntryForm((current) => ({ ...current, stage: event.target.value }))}><option value="elementary">國小階段</option><option value="junior">國中階段</option><option value="senior">高中延伸</option></select></label>
+          <label className="is-wide">釋義<textarea rows="3" value={entryForm.definition} onChange={(event) => setEntryForm((current) => ({ ...current, definition: event.target.value }))} /></label>
+          <label className="is-wide">典源或出處<textarea rows="3" value={entryForm.source} onChange={(event) => setEntryForm((current) => ({ ...current, source: event.target.value }))} /></label>
+          <label className="is-wide">教育部成語典網址<input type="url" value={entryForm.sourceUrl} onChange={(event) => setEntryForm((current) => ({ ...current, sourceUrl: event.target.value }))} /></label>
+        </div>
+        <button type="button" disabled={entrySaving} onClick={addEntry}><Save aria-hidden="true" />{entrySaving ? '儲存中……' : '新增並加入本題'}</button>
+      </details>
+      <button type="button" className="idiom-auto-layout-button" onClick={generate}><Sparkles aria-hidden="true" />依所選成語自動排版</button>
+
+      <div className="idiom-admin-section-heading"><div><h3>② 建立題目與完整答案</h3><p>題目格設定黑格、白格與提示字；完整答案逐格輸入正確文字。</p></div></div>
+      <div className="idiom-editor-tabs">
+        <button type="button" className={tab === 'puzzle' ? 'is-active' : ''} onClick={() => setTab('puzzle')}>題目格</button>
+        <button type="button" className={tab === 'solution' ? 'is-active' : ''} onClick={() => setTab('solution')}>完整答案</button>
+      </div>
+      {tab === 'puzzle' && (
+        <div className="idiom-editor-tools" aria-label="格子工具">
+          <button type="button" className={tool === IDIOM_EDITOR_CELL_TYPES.block ? 'is-active' : ''} onClick={() => setTool(IDIOM_EDITOR_CELL_TYPES.block)}>黑格</button>
+          <button type="button" className={tool === IDIOM_EDITOR_CELL_TYPES.empty ? 'is-active' : ''} onClick={() => setTool(IDIOM_EDITOR_CELL_TYPES.empty)}>白格</button>
+          <button type="button" className={tool === IDIOM_EDITOR_CELL_TYPES.given ? 'is-active' : ''} onClick={() => setTool(IDIOM_EDITOR_CELL_TYPES.given)}>提示字</button>
+        </div>
+      )}
+      <div className="idiom-editor-board-wrap"><IdiomEditorBoard grid={editorGrid} tab={tab} tool={tool} onChange={(grid) => { setEditorGrid(grid); setPreview(null) }} /></div>
+
       <div className="idiom-admin-actions">
-        <button type="button" onClick={generate}><Sparkles aria-hidden="true" />自動產生版面</button>
-        <button type="button" disabled={!preview} onClick={save}><Save aria-hidden="true" />儲存題目</button>
+        <button type="button" className="secondary-button" onClick={validate}>檢查並預覽</button>
+        <button type="button" className="primary-button" disabled={saving} onClick={save}><Save aria-hidden="true" />{saving ? '儲存中……' : status === 'published' ? '儲存並發布' : '儲存題目'}</button>
       </div>
-      {preview && <div className="idiom-editor-preview"><IdiomBoard puzzle={preview} assignments={{}} revealedKeys={[]} onCellClick={() => {}} /></div>}
-      {message && <p role="status">{message}</p>}
-    </details>
+      {messages.length > 0 && <ul className={`idiom-editor-messages ${preview ? 'is-success' : ''}`} role="status">{messages.map((message) => <li key={message}>{message}</li>)}</ul>}
+      {preview && <div className="idiom-editor-preview"><h3>學生端預覽</h3><IdiomBoard puzzle={preview} assignments={{}} revealedKeys={[]} onCellClick={() => {}} /></div>}
+    </section>
   )
 }
 
 export default function IdiomWordGrid({ guestMode = false }) {
   const [state, setState] = useState({ loading: true, error: '', puzzles: [], catalog: [], energy: 0, studentId: '', canManage: false, remoteEnabled: false })
   const [selectedId, setSelectedId] = useState('')
+  const [editing, setEditing] = useState(null)
   const focusTaskId = typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('focusTask') || ''
   const returnUrl = guestMode ? './?guest=1' : './'
   const load = async () => {
@@ -396,16 +564,36 @@ export default function IdiomWordGrid({ guestMode = false }) {
       <header className="idiom-page-header">
         <a className="idiom-back-link" href={returnUrl}><ArrowLeft aria-hidden="true" />返回學習系統</a>
         <div><p>文字益智遊戲</p><h1>填字圖</h1><span>在交錯文字中認識成語，通關後閱讀教育部釋義與典源。</span></div>
+        {state.canManage && !editing && <button type="button" className="idiom-create-button" onClick={() => setEditing({})}><Plus aria-hidden="true" />建立新題</button>}
       </header>
       <PuzzleTabs guestMode={guestMode} />
       {guestMode && <p className="idiom-guest-note">訪客可以自由遊玩；能量與通關紀錄不會跨裝置保存。登入學生後才會記錄每日任務與帳號能量。</p>}
-      {state.canManage && <IdiomPuzzleEditor catalog={state.catalog} onSaved={load} />}
-      {state.puzzles.length > 1 && (
-        <label className="idiom-puzzle-picker">選擇關卡<select value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>{state.puzzles.map((item) => <option key={item.id} value={item.id}>{formatDate(item.publishedOn)}・{item.title}・{IDIOM_DIFFICULTIES[item.difficulty]?.label}</option>)}</select></label>
+      {editing ? (
+        <IdiomPuzzleEditor
+          key={editing.id || 'new'}
+          catalog={state.catalog}
+          puzzle={editing.id ? editing : null}
+          onCancel={() => setEditing(null)}
+          onSaved={async () => { await load(); setEditing(null) }}
+          onCatalogAdded={(entry) => setState((current) => ({
+            ...current,
+            catalog: [...current.catalog.filter((item) => item.id !== entry.id), entry]
+              .sort((left, right) => left.phrase.localeCompare(right.phrase, 'zh-TW')),
+          }))}
+        />
+      ) : (
+        <>
+          {state.puzzles.length > 0 && (
+            <div className="idiom-puzzle-toolbar">
+              <label className="idiom-puzzle-picker">選擇關卡<select value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>{state.puzzles.map((item) => <option key={item.id} value={item.id}>{formatDate(item.publishedOn)}・{item.title}・{stageLabels[item.stage] || '自訂'}・{IDIOM_DIFFICULTIES[item.difficulty]?.label}</option>)}</select></label>
+              {state.canManage && puzzle && <button type="button" onClick={() => setEditing(puzzle)}><Pencil aria-hidden="true" />編輯這一題</button>}
+            </div>
+          )}
+          {puzzle
+            ? <PlayIdiomPuzzle key={puzzle.id} puzzle={puzzle} context={state} focusTaskId={focusTaskId} onEnergyChange={(energy) => setState((current) => ({ ...current, energy }))} />
+            : <section className="idiom-empty-state"><h2>尚無已發布題目</h2><p>管理者建立並發布題目後，學生即可開始作答。</p>{state.canManage && <button type="button" className="primary-button" onClick={() => setEditing({})}><Plus aria-hidden="true" />建立第一題</button>}</section>}
+        </>
       )}
-      {puzzle
-        ? <PlayIdiomPuzzle key={puzzle.id} puzzle={puzzle} context={state} focusTaskId={focusTaskId} onEnergyChange={(energy) => setState((current) => ({ ...current, energy }))} />
-        : <section className="idiom-empty-state"><h2>尚無已發布題目</h2><p>管理者建立並發布題目後，學生即可開始作答。</p></section>}
     </main>
   )
 }

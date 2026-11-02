@@ -3,8 +3,10 @@ import {
   assessIdiomAssignments,
   buildIdiomBoard,
   buildIdiomPuzzle,
+  buildManualIdiomPuzzle,
   chooseHintCell,
   createIdiomBankTiles,
+  editorGridFromPuzzle,
 } from './idiomWordGrid.js'
 
 const entries = [
@@ -48,5 +50,33 @@ describe('成語填字圖核心', () => {
     const puzzle = buildIdiomPuzzle(entries, 'challenge')
     const cell = chooseHintCell(puzzle, {}, [], 'cross')
     expect(cell?.isIntersection).toBe(true)
+  })
+
+  it('可將教師手動編輯的黑格、白格、提示字與答案建成題目', () => {
+    const generated = buildIdiomPuzzle(entries, 'beginner')
+    const editorGrid = editorGridFromPuzzle(generated)
+    const result = buildManualIdiomPuzzle({
+      editorGrid,
+      idioms: entries,
+      difficulty: 'advanced',
+      stage: 'junior',
+    })
+
+    expect(result.errors).toEqual([])
+    expect(result.puzzle.board.placements).toHaveLength(4)
+    expect(result.puzzle.board.showBlocks).toBe(true)
+    expect(result.puzzle.editorGrid.cells).toHaveLength(editorGrid.width * editorGrid.height)
+    expect(result.puzzle.stage).toBe('junior')
+  })
+
+  it('完整答案留白或成語未放入版面時不允許發布', () => {
+    const generated = buildIdiomPuzzle(entries, 'basic')
+    const editorGrid = editorGridFromPuzzle(generated)
+    const firstAnswer = editorGrid.cells.find((cell) => cell.type !== 'block')
+    firstAnswer.value = ''
+    const result = buildManualIdiomPuzzle({ editorGrid, idioms: entries })
+
+    expect(result.errors).toContain('完整答案尚有空白，請逐格填入答案。')
+    expect(result.errors.some((message) => message.includes('答案版面找不到'))).toBe(true)
   })
 })
