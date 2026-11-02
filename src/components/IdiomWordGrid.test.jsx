@@ -2,7 +2,7 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { buildIdiomPuzzle } from '../lib/idiomWordGrid.js'
-import { IdiomBoard, IdiomLearningPanel, PlayIdiomPuzzle } from './IdiomWordGrid.jsx'
+import { IdiomBoard, IdiomLearningPanel, IdiomPuzzleEditor, PlayIdiomPuzzle } from './IdiomWordGrid.jsx'
 
 const puzzle = {
   id: 'test-puzzle', title: '成語挑戰', publishedOn: '2026-10-31', sourceVersion: 'dict_idioms_2020_20260929',
@@ -36,5 +36,23 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('錯字檢查')
     expect(html).toContain('1 能量')
     expect(html).toContain('2 能量')
+  })
+
+  it('管理者可設定黑格、白格、提示字、完整答案、等級與發布狀態', () => {
+    const html = renderToStaticMarkup(
+      <IdiomPuzzleEditor
+        catalog={puzzle.idioms.map((entry) => ({ ...entry, stage: 'junior' }))}
+        onSaved={() => {}}
+        onCancel={() => {}}
+        onCatalogAdded={() => {}}
+      />,
+    )
+    expect(html).toContain('黑格')
+    expect(html).toContain('白格')
+    expect(html).toContain('提示字')
+    expect(html).toContain('完整答案')
+    expect(html).toContain('適合等級')
+    expect(html).toContain('正式發布')
+    expect(html).toContain('新增成語資料')
   })
 })

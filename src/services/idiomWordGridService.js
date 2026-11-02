@@ -9,6 +9,20 @@ const PUZZLE_SELECT = 'id,title,published_on,difficulty,puzzle_data,source_versi
 function isMissingRelation(error) {
   return ['42P01', 'PGRST205', 'PGRST202'].includes(error?.code)
 }
+
+export function mapIdiomEntry(entry) {
+  return {
+    id: entry.id,
+    phrase: entry.phrase,
+    definition: entry.definition,
+    source: entry.source_text,
+    story: entry.story,
+    sourceUrl: entry.source_url,
+    illustrationUrl: entry.illustration_url,
+    stage: entry.stage,
+  }
+}
+
 export function mapIdiomPuzzle(row) {
   const data = row?.puzzle_data || {}
   return {
@@ -19,6 +33,8 @@ export function mapIdiomPuzzle(row) {
     board: data.board || { width: 0, height: 0, cells: [], placements: [] },
     idioms: Array.isArray(data.idioms) ? data.idioms : [],
     givenCellKeys: Array.isArray(data.givenCellKeys) ? data.givenCellKeys : [],
+    editorGrid: data.editorGrid || null,
+    stage: data.stage || 'junior',
     sourceVersion: row?.source_version || '',
     illustrationUrl: row?.illustration_url || '',
     isDailyEligible: row?.is_daily_eligible !== false,
@@ -65,16 +81,7 @@ export async function loadIdiomWordGridContext({ guestMode = false } = {}, clien
     puzzles: getStarterIdiomPuzzles(), catalog: STARTER_IDIOM_ENTRIES, energy: 0,
     studentId: account.studentId, canManage: account.canManage, remoteEnabled: false,
   }
-  const catalog = catalogResult.error ? STARTER_IDIOM_ENTRIES : (catalogResult.data || []).map((entry) => ({
-    id: entry.id,
-    phrase: entry.phrase,
-    definition: entry.definition,
-    source: entry.source_text,
-    story: entry.story,
-    sourceUrl: entry.source_url,
-    illustrationUrl: entry.illustration_url,
-    stage: entry.stage,
-  }))
+  const catalog = catalogResult.error ? STARTER_IDIOM_ENTRIES : (catalogResult.data || []).map(mapIdiomEntry)
   return {
     puzzles: (puzzleResult.data || []).map(mapIdiomPuzzle),
     catalog,
@@ -83,6 +90,32 @@ export async function loadIdiomWordGridContext({ guestMode = false } = {}, clien
     canManage: account.canManage,
     remoteEnabled: true,
   }
+}
+
+export async function saveIdiomEntry(input, client = requireSupabase()) {
+  const phrase = Array.from(String(input.phrase || '').replace(/\s/g, '')).join('')
+  const definition = String(input.definition || '').trim()
+  if (phrase.length < 4) throw new Error('成語至少需要 4 個字。')
+  if (!definition) throw new Error('請輸入教育部成語典的釋義。')
+  const payload = {
+    phrase,
+    definition,
+    source_text: String(input.source || '').trim(),
+    story: String(input.story || '').trim(),
+    source_url: String(input.sourceUrl || '').trim(),
+    illustration_url: String(input.illustrationUrl || '').trim(),
+    stage: ['elementary', 'junior', 'senior'].includes(input.stage) ? input.stage : 'junior',
+    license_version: input.sourceVersion || 'dict_idioms_2020_20260929',
+    is_active: true,
+    updated_at: new Date().toISOString(),
+  }
+  const { data, error } = await client
+    .from('idiom_entries')
+    .upsert(payload, { onConflict: 'phrase' })
+    .select('id,phrase,definition,source_text,story,source_url,illustration_url,stage')
+    .single()
+  if (error) throw new Error(`無法儲存成語資料：${error.message}`)
+  return mapIdiomEntry(data)
 }
 
 export async function spendIdiomHint({ puzzleId, kind, cellKey }, client = requireSupabase()) {
@@ -123,6 +156,8 @@ export async function saveIdiomPuzzle(input, client = requireSupabase()) {
       board: puzzle.board,
       idioms: puzzle.idioms,
       givenCellKeys: puzzle.givenCellKeys,
+      editorGrid: puzzle.editorGrid || null,
+      stage: input.stage || puzzle.stage || 'junior',
     },
     source_version: input.sourceVersion || 'dict_idioms_2020_20260929',
     illustration_url: String(input.illustrationUrl || '').trim(),

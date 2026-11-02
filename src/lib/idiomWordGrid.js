@@ -9,6 +9,12 @@ export const IDIOM_DIFFICULTIES = {
   challenge: { label: '挑戰', minWords: 9, givenRatio: 0.14 },
 }
 
+export const IDIOM_EDITOR_CELL_TYPES = {
+  block: 'block',
+  empty: 'empty',
+  given: 'given',
+}
+
 function idiomCharacters(value) {
   return Array.from(String(value || '').replace(/[\s，、；；。．！!？?「」『』（）()]/g, ''))
 }
@@ -235,6 +241,174 @@ export function buildIdiomPuzzle(rawEntries, difficulty = 'basic', options = {})
     board,
     idioms: usedIdioms,
     givenCellKeys: selectGivenCellKeys(board, difficulty),
+  }
+}
+
+function normalizedEditorSize(value, fallback = 8) {
+  const number = Number(value)
+  return Number.isInteger(number) && number >= 4 && number <= 18 ? number : fallback
+}
+
+function normalizedEditorCell(cell = {}) {
+  const type = Object.values(IDIOM_EDITOR_CELL_TYPES).includes(cell.type)
+    ? cell.type
+    : IDIOM_EDITOR_CELL_TYPES.block
+  return {
+    type,
+    value: type === IDIOM_EDITOR_CELL_TYPES.block
+      ? ''
+      : idiomCharacters(cell.value)[0] || '',
+  }
+}
+
+export function createIdiomEditorGrid(width = 8, height = 8, source = null) {
+  const normalizedWidth = normalizedEditorSize(width)
+  const normalizedHeight = normalizedEditorSize(height)
+  const existing = Array.isArray(source?.cells) ? source.cells : []
+  return {
+    width: normalizedWidth,
+    height: normalizedHeight,
+    cells: Array.from({ length: normalizedWidth * normalizedHeight }, (_, index) => (
+      normalizedEditorCell(existing[index])
+    )),
+  }
+}
+
+export function editorGridFromPuzzle(puzzle) {
+  const width = normalizedEditorSize(puzzle?.editorGrid?.width || puzzle?.board?.width)
+  const height = normalizedEditorSize(puzzle?.editorGrid?.height || puzzle?.board?.height)
+  if (Array.isArray(puzzle?.editorGrid?.cells)) {
+    return createIdiomEditorGrid(width, height, puzzle.editorGrid)
+  }
+  const cellsByKey = new Map((puzzle?.board?.cells || []).map((cell) => [cell.key, cell]))
+  const given = new Set(puzzle?.givenCellKeys || [])
+  return {
+    width,
+    height,
+    cells: Array.from({ length: width * height }, (_, index) => {
+      const row = Math.floor(index / width)
+      const column = index % width
+      const cell = cellsByKey.get(coordinateKey(row, column))
+      if (!cell) return { type: IDIOM_EDITOR_CELL_TYPES.block, value: '' }
+      return {
+        type: given.has(cell.key) ? IDIOM_EDITOR_CELL_TYPES.given : IDIOM_EDITOR_CELL_TYPES.empty,
+        value: cell.solution,
+      }
+    }),
+  }
+}
+
+function editorCellAt(grid, row, column) {
+  if (row < 0 || column < 0 || row >= grid.height || column >= grid.width) return null
+  return grid.cells[row * grid.width + column]
+}
+
+function findManualPlacement(grid, entry, direction) {
+  const step = DIRECTIONS[direction]
+  const characters = idiomCharacters(entry.phrase)
+  const placements = []
+  for (let row = 0; row < grid.height; row += 1) {
+    for (let column = 0; column < grid.width; column += 1) {
+      const before = editorCellAt(grid, row - step.row, column - step.column)
+      if (before && before.type !== IDIOM_EDITOR_CELL_TYPES.block) continue
+      const matches = characters.every((character, index) => {
+        const cell = editorCellAt(grid, row + step.row * index, column + step.column * index)
+        return cell && cell.type !== IDIOM_EDITOR_CELL_TYPES.block && cell.value === character
+      })
+      if (!matches) continue
+      const after = editorCellAt(
+        grid,
+        row + step.row * characters.length,
+        column + step.column * characters.length,
+      )
+      if (after && after.type !== IDIOM_EDITOR_CELL_TYPES.block) continue
+      placements.push({ phrase: entry.phrase, row, column, direction, idiomId: entry.id })
+    }
+  }
+  return placements
+}
+
+export function buildManualIdiomPuzzle({ editorGrid, idioms, difficulty = 'basic', stage = 'junior' } = {}) {
+  const grid = createIdiomEditorGrid(editorGrid?.width, editorGrid?.height, editorGrid)
+  const entries = (idioms || []).map(normalizeIdiomEntry).filter((entry) => entry.phrase.length >= 4)
+  const errors = []
+  if (entries.length < 4) errors.push('至少選擇 4 個成語。')
+
+  const activeIndexes = grid.cells
+    .map((cell, index) => ({ cell, index }))
+    .filter(({ cell }) => cell.type !== IDIOM_EDITOR_CELL_TYPES.block)
+  if (!activeIndexes.length) errors.push('題目版面尚未建立白格或提示字。')
+  if (activeIndexes.some(({ cell }) => !cell.value)) errors.push('完整答案尚有空白，請逐格填入答案。')
+
+  const placements = []
+  entries.forEach((entry) => {
+    const found = [
+      ...findManualPlacement(grid, entry, 'across'),
+      ...findManualPlacement(grid, entry, 'down'),
+    ]
+    if (found.length === 0) errors.push(`答案版面找不到「${entry.phrase}」。`)
+    if (found.length > 1) errors.push(`「${entry.phrase}」在版面出現超過一次，請調整格子。`)
+    if (found.length === 1) placements.push(found[0])
+  })
+
+  const memberships = new Map()
+  placements.forEach((placement) => {
+    cellsForPlacement(
+      placement.phrase,
+      placement.row,
+      placement.column,
+      placement.direction,
+    ).forEach((cell) => {
+      const key = coordinateKey(cell.row, cell.column)
+      const current = memberships.get(key) || new Set()
+      current.add(placement.idiomId)
+      memberships.set(key, current)
+    })
+  })
+  const uncovered = activeIndexes.filter(({ index }) => {
+    const row = Math.floor(index / grid.width)
+    const column = index % grid.width
+    return !memberships.has(coordinateKey(row, column))
+  })
+  if (uncovered.length) errors.push(`有 ${uncovered.length} 個白格未屬於所選成語。`)
+  if (placements.length >= 2 && ![...memberships.values()].some((ids) => ids.size > 1)) {
+    errors.push('成語之間尚未形成交錯字。')
+  }
+
+  const boardCells = activeIndexes.map(({ cell, index }) => {
+    const row = Math.floor(index / grid.width)
+    const column = index % grid.width
+    const key = coordinateKey(row, column)
+    const idiomIds = [...(memberships.get(key) || [])]
+    return {
+      key,
+      row,
+      column,
+      solution: cell.value,
+      idiomIds,
+      isIntersection: idiomIds.length > 1,
+    }
+  })
+
+  return {
+    puzzle: {
+      difficulty,
+      stage,
+      board: {
+        width: grid.width,
+        height: grid.height,
+        cells: boardCells,
+        placements,
+        omitted: [],
+        showBlocks: true,
+      },
+      idioms: entries,
+      givenCellKeys: activeIndexes
+        .filter(({ cell }) => cell.type === IDIOM_EDITOR_CELL_TYPES.given)
+        .map(({ index }) => coordinateKey(Math.floor(index / grid.width), index % grid.width)),
+      editorGrid: grid,
+    },
+    errors: [...new Set(errors)],
   }
 }
 
