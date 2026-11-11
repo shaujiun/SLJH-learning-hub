@@ -24,7 +24,9 @@ import {
   createEmptyNewsCrosswordGrid,
   newsCrosswordCellTypes,
   newsCrosswordDirections,
+  newsCrosswordFruitOptions,
   normalizeNewsCrosswordClues,
+  normalizeNewsCrosswordBlockFruits,
   normalizeNewsCrosswordGrid,
   restoreNewsCrosswordProgress,
   syncNewsCrosswordSolution,
@@ -38,7 +40,11 @@ import {
 import './wordGridPuzzle.css'
 import './newsCrossword.css'
 
-const fruitSymbols = ['🥝', '🍊', '🍉', '🍓']
+const fruitById = new Map(newsCrosswordFruitOptions.map((fruit) => [fruit.id, fruit]))
+
+function fruitForCell(puzzle, index) {
+  return fruitById.get(puzzle.blockFruits?.[index]) || newsCrosswordFruitOptions[index % newsCrosswordFruitOptions.length]
+}
 
 function todayDateValue() {
   const now = new Date()
@@ -56,6 +62,7 @@ const defaultPuzzle = {
   acrossClues: createEmptyNewsCrosswordClues(newsCrosswordDirections.across),
   downClues: createEmptyNewsCrosswordClues(newsCrosswordDirections.down),
   blockStyle: 'fruit',
+  blockFruits: {},
   status: 'draft',
 }
 
@@ -136,7 +143,7 @@ function CrosswordBoard({ puzzle, answers = {}, onAnswer, answerMode = false, ac
         if (isBlock) {
           return (
             <div className="news-crossword-cell is-block" role="gridcell" key={index} aria-label="阻隔格">
-              {puzzle.blockStyle !== 'solid' && <span aria-hidden="true">{fruitSymbols[index % fruitSymbols.length]}</span>}
+              {puzzle.blockStyle !== 'solid' && <span className="news-crossword-fruit" aria-hidden="true">{fruitForCell(puzzle, index).symbol}</span>}
             </div>
           )
         }
@@ -273,7 +280,7 @@ function PlayArea({ puzzle, progressOwnerId }) {
   )
 }
 
-function GridEditor({ puzzle, grid, mode, onChange }) {
+function GridEditor({ puzzle, grid, mode, selectedFruit, onChange, onBlockFruitsChange }) {
   const labels = startLabelsFor(puzzle)
   const updateValue = (index, value) => {
     const next = [...grid]
@@ -286,6 +293,12 @@ function GridEditor({ puzzle, grid, mode, onChange }) {
     const next = [...grid]
     next[index] = { type: mode, value: '' }
     onChange(next)
+    if (onBlockFruitsChange) {
+      const nextFruits = { ...puzzle.blockFruits }
+      if (mode === newsCrosswordCellTypes.block) nextFruits[index] = selectedFruit
+      else delete nextFruits[index]
+      onBlockFruitsChange(nextFruits)
+    }
   }
   return (
     <div className={`news-crossword-board is-editor is-${puzzle.blockStyle}`} role="grid" aria-label="新聞縱橫填字編輯方格">
@@ -300,7 +313,9 @@ function GridEditor({ puzzle, grid, mode, onChange }) {
             {mode === 'given' || mode === 'answer' ? (
               <input value={cell.value || ''} maxLength={1} onChange={(event) => updateValue(index, event.target.value)} disabled={isBlock} />
             ) : (
-              <button type="button" onClick={() => updateCell(index)}>{isBlock && puzzle.blockStyle === 'fruit' ? fruitSymbols[index % fruitSymbols.length] : cell.value}</button>
+              <button type="button" onClick={() => updateCell(index)} aria-label={isBlock ? `阻隔格：${fruitForCell(puzzle, index).label}` : undefined}>
+                {isBlock && puzzle.blockStyle === 'fruit' ? <span className="news-crossword-fruit" aria-hidden="true">{fruitForCell(puzzle, index).symbol}</span> : cell.value}
+              </button>
             )}
           </label>
         )
@@ -335,11 +350,13 @@ function PuzzleEditor({ puzzle, onSaved, onCancel }) {
     ...puzzle,
     publishedOn: puzzle?.publishedOn || todayDateValue(),
     grid: normalizeNewsCrosswordGrid(puzzle?.grid || defaultPuzzle.grid),
+    blockFruits: normalizeNewsCrosswordBlockFruits(puzzle?.blockFruits, puzzle?.grid || defaultPuzzle.grid),
     acrossClues: normalizeNewsCrosswordClues(puzzle?.acrossClues, newsCrosswordDirections.across),
     downClues: normalizeNewsCrosswordClues(puzzle?.downClues, newsCrosswordDirections.down),
   }))
   const [tab, setTab] = useState('grid')
   const [mode, setMode] = useState(newsCrosswordCellTypes.block)
+  const [selectedFruit, setSelectedFruit] = useState(newsCrosswordFruitOptions[0].id)
   const [referenceUrl, setReferenceUrl] = useState('')
   const [referenceType, setReferenceType] = useState('')
   const [status, setStatus] = useState({ saving: false, message: '' })
@@ -400,12 +417,17 @@ function PuzzleEditor({ puzzle, onSaved, onCancel }) {
           <button type="button" className={mode === 'empty' ? 'is-active' : ''} onClick={() => setMode('empty')}>白格</button>
           <button type="button" className={mode === 'given' ? 'is-active' : ''} onClick={() => setMode('given')}>提示字</button>
         </div>
-        <GridEditor puzzle={form} grid={form.grid} mode={mode} onChange={updateGrid} />
+        {mode === 'block' && form.blockStyle === 'fruit' && <div className="news-crossword-fruit-picker" role="group" aria-label="選擇阻隔格水果">
+          <span>選擇水果後，再點棋盤中的阻隔格：</span>
+          {newsCrosswordFruitOptions.map((fruit) => <button type="button" key={fruit.id} className={selectedFruit === fruit.id ? 'is-active' : ''} aria-pressed={selectedFruit === fruit.id} title={fruit.label} onClick={() => setSelectedFruit(fruit.id)}><span aria-hidden="true">{fruit.symbol}</span><small>{fruit.label}</small></button>)}
+          <small className="news-crossword-fruit-note">此設定只供管理者編題，學生端只能看到發布後的水果圖案。</small>
+        </div>}
+        <GridEditor puzzle={form} grid={form.grid} mode={mode} selectedFruit={selectedFruit} onChange={updateGrid} onBlockFruitsChange={(blockFruits) => setForm((current) => ({ ...current, blockFruits, status: current.status === 'published' ? 'draft' : current.status }))} />
       </>}
       {tab === 'solution' && <>
         <label className="word-grid-answer-toggle"><input type="checkbox" checked={Boolean(form.solutionGrid)} onChange={(event) => setForm({ ...form, solutionGrid: event.target.checked ? syncNewsCrosswordSolution(form.grid) : null, status: 'draft' })} />建立完整答案</label>
         {form.solutionGrid
-          ? <GridEditor puzzle={form} grid={form.solutionGrid} mode="answer" onChange={(solutionGrid) => setForm({ ...form, solutionGrid })} />
+          ? <GridEditor puzzle={form} grid={form.solutionGrid} mode="answer" selectedFruit={selectedFruit} onChange={(solutionGrid) => setForm({ ...form, solutionGrid })} />
           : <p className="word-grid-editor-empty">勾選後即可輸入答案；答案未完成前不能發布。</p>}
       </>}
       {tab === 'across' && <ClueEditor title="橫式提示（一～八）" clues={form.acrossClues} direction={newsCrosswordDirections.across} onChange={(acrossClues) => setForm({ ...form, acrossClues })} />}

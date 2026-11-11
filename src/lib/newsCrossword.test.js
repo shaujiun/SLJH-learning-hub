@@ -6,6 +6,7 @@ import {
   createEmptyNewsCrosswordGrid,
   newsCrosswordCellTypes,
   newsCrosswordDirections,
+  normalizeNewsCrosswordBlockFruits,
   validateNewsCrosswordPuzzle,
 } from './newsCrossword.js'
 
@@ -23,6 +24,16 @@ function createPuzzle() {
 }
 
 describe('新聞縱橫填字規則', () => {
+  it('只為阻隔格保留管理者選定的水果，未設定時提供固定預設值', () => {
+    const grid = createEmptyNewsCrosswordGrid()
+    grid[2] = { type: newsCrosswordCellTypes.block, value: '' }
+    grid[5] = { type: newsCrosswordCellTypes.block, value: '' }
+    expect(normalizeNewsCrosswordBlockFruits({ 2: 'pineapple', 5: 'unknown', 8: 'apple' }, grid)).toEqual({
+      2: 'pineapple',
+      5: 'strawberry',
+    })
+  })
+
   it('橫式使用國字題號，直式使用阿拉伯數字', () => {
     expect(chineseClueNumbers).toEqual(['一', '二', '三', '四', '五', '六', '七', '八'])
   })

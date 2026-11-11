@@ -2,6 +2,7 @@ import { requireSupabase } from '../lib/supabase.js'
 import {
   newsCrosswordGridToRows,
   newsCrosswordRowsToGrid,
+  normalizeNewsCrosswordBlockFruits,
   normalizeNewsCrosswordClues,
   normalizeNewsCrosswordGrid,
   newsCrosswordDirections,
@@ -19,6 +20,7 @@ const puzzleSelect = `
   across_clues,
   down_clues,
   block_style,
+  block_fruits,
   status,
   published_at,
   updated_at
@@ -36,6 +38,7 @@ export function mapNewsCrosswordPuzzle(row) {
     acrossClues: normalizeNewsCrosswordClues(row.across_clues, newsCrosswordDirections.across),
     downClues: normalizeNewsCrosswordClues(row.down_clues, newsCrosswordDirections.down),
     blockStyle: row.block_style === 'solid' ? 'solid' : 'fruit',
+    blockFruits: normalizeNewsCrosswordBlockFruits(row.block_fruits, newsCrosswordRowsToGrid(row.grid_rows)),
     status: row.status,
     publishedAt: row.published_at,
     updatedAt: row.updated_at,
@@ -82,6 +85,7 @@ export async function saveNewsCrosswordPuzzle(input, client = requireSupabase())
     across_clues: normalized.acrossClues,
     down_clues: normalized.downClues,
     block_style: input.blockStyle === 'solid' ? 'solid' : 'fruit',
+    block_fruits: normalized.blockFruits,
     status: ['draft', 'published', 'archived'].includes(input.status) ? input.status : 'draft',
     published_at: input.status === 'published' ? now : null,
     updated_by: userId,

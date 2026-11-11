@@ -15,6 +15,23 @@ export const newsCrosswordDirections = {
 
 export const chineseClueNumbers = ['一', '二', '三', '四', '五', '六', '七', '八']
 
+export const newsCrosswordFruitOptions = [
+  { id: 'apple', symbol: '🍎', label: '蘋果' },
+  { id: 'orange', symbol: '🍊', label: '橘子' },
+  { id: 'lemon', symbol: '🍋', label: '檸檬' },
+  { id: 'watermelon', symbol: '🍉', label: '西瓜' },
+  { id: 'grapes', symbol: '🍇', label: '葡萄' },
+  { id: 'strawberry', symbol: '🍓', label: '草莓' },
+  { id: 'kiwi', symbol: '🥝', label: '奇異果' },
+  { id: 'pineapple', symbol: '🍍', label: '鳳梨' },
+]
+
+const newsCrosswordFruitIds = new Set(newsCrosswordFruitOptions.map((fruit) => fruit.id))
+
+export function defaultNewsCrosswordFruitId(index) {
+  return newsCrosswordFruitOptions[Number(index) % newsCrosswordFruitOptions.length].id
+}
+
 export function createEmptyNewsCrosswordGrid() {
   return Array.from({ length: NEWS_CROSSWORD_CELL_COUNT }, () => ({ type: newsCrosswordCellTypes.empty, value: '' }))
 }
@@ -37,6 +54,16 @@ export function normalizeNewsCrosswordGrid(grid) {
     { length: NEWS_CROSSWORD_CELL_COUNT },
     (_, index) => normalizeNewsCrosswordCell(grid?.[index]),
   )
+}
+
+export function normalizeNewsCrosswordBlockFruits(value, grid) {
+  const source = value && typeof value === 'object' && !Array.isArray(value) ? value : {}
+  return normalizeNewsCrosswordGrid(grid).reduce((result, cell, index) => {
+    if (cell.type !== newsCrosswordCellTypes.block) return result
+    const fruitId = String(source[index] || '')
+    result[index] = newsCrosswordFruitIds.has(fruitId) ? fruitId : defaultNewsCrosswordFruitId(index)
+    return result
+  }, {})
 }
 
 export function createEmptyNewsCrosswordClues(direction) {
@@ -147,6 +174,7 @@ function validateClues(clues, grid, direction, requireComplete) {
 
 export function validateNewsCrosswordPuzzle(input) {
   const grid = normalizeNewsCrosswordGrid(input?.grid)
+  const blockFruits = normalizeNewsCrosswordBlockFruits(input?.blockFruits, grid)
   const solutionGrid = input?.solutionGrid ? syncNewsCrosswordSolution(grid, input.solutionGrid) : null
   const requireComplete = input?.status === 'published'
   const errors = []
@@ -172,6 +200,7 @@ export function validateNewsCrosswordPuzzle(input) {
 
   return {
     grid,
+    blockFruits,
     solutionGrid,
     acrossClues: acrossResult.clues,
     downClues: downResult.clues,
