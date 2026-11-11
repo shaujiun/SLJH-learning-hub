@@ -66,6 +66,7 @@ function PuzzleTabs({ guestMode }) {
   return (
     <nav className="word-grid-mode-tabs" aria-label="填字圖類型">
       <a href={`?puzzle=word-grid${guest}`}>報紙填字圖</a>
+      <a href={`?puzzle=word-grid&mode=news${guest}`}>新聞縱橫填字</a>
       <a className="is-active" href={`?puzzle=word-grid&mode=idiom${guest}`}>成語填字圖</a>
     </nav>
   )
