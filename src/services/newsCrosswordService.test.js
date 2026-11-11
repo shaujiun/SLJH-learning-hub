@@ -21,6 +21,7 @@ function row() {
     down_clues: createEmptyNewsCrosswordClues(newsCrosswordDirections.down)
       .map((clue, index) => ({ ...clue, col: index, text: `直 ${index + 1}` })),
     block_style: 'fruit',
+    block_fruits: { 63: 'pineapple' },
     status: 'published',
   }
 }
@@ -32,6 +33,7 @@ describe('新聞縱橫填字資料服務', () => {
     expect(mapped.grid[63].type).toBe(newsCrosswordCellTypes.block)
     expect(mapped.acrossClues).toHaveLength(8)
     expect(mapped.downClues).toHaveLength(8)
+    expect(mapped.blockFruits[63]).toBe('pineapple')
   })
 
   it('儲存時保留橫式與直式提示及水果外觀', async () => {
@@ -52,5 +54,6 @@ describe('新聞縱橫填字資料服務', () => {
     expect(inserted[0].across_clues).toHaveLength(8)
     expect(inserted[0].down_clues).toHaveLength(8)
     expect(inserted[0].block_style).toBe('fruit')
+    expect(inserted[0].block_fruits).toEqual({ 63: 'pineapple' })
   })
 })
