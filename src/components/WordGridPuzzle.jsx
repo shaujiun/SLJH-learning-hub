@@ -599,6 +599,7 @@ export default function WordGridPuzzle({ guestMode = false }) {
       </header>
       <nav className="word-grid-mode-tabs" aria-label="填字圖類型">
         <a className="is-active" href={`?puzzle=word-grid${guestMode ? '&guest=1' : ''}`}>報紙填字圖</a>
+        <a href={`?puzzle=word-grid&mode=news${guestMode ? '&guest=1' : ''}`}>新聞縱橫填字</a>
         <a href={`?puzzle=word-grid&mode=idiom${guestMode ? '&guest=1' : ''}`}>成語填字圖</a>
       </nav>
       <main className="word-grid-main">

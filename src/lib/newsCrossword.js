@@ -1,0 +1,221 @@
+export const NEWS_CROSSWORD_SIZE = 8
+export const NEWS_CROSSWORD_CELL_COUNT = NEWS_CROSSWORD_SIZE * NEWS_CROSSWORD_SIZE
+export const NEWS_CROSSWORD_CLUE_COUNT = 8
+
+export const newsCrosswordCellTypes = {
+  empty: 'empty',
+  block: 'block',
+  given: 'given',
+}
+
+export const newsCrosswordDirections = {
+  across: 'across',
+  down: 'down',
+}
+
+export const chineseClueNumbers = ['一', '二', '三', '四', '五', '六', '七', '八']
+
+export function createEmptyNewsCrosswordGrid() {
+  return Array.from({ length: NEWS_CROSSWORD_CELL_COUNT }, () => ({ type: newsCrosswordCellTypes.empty, value: '' }))
+}
+
+export function normalizeNewsCrosswordCell(cell) {
+  const type = Object.values(newsCrosswordCellTypes).includes(cell?.type)
+    ? cell.type
+    : newsCrosswordCellTypes.empty
+  const value = type === newsCrosswordCellTypes.given
+    ? Array.from(String(cell?.value || '').trim()).slice(0, 1).join('')
+    : ''
+  return {
+    type: type === newsCrosswordCellTypes.given && !value ? newsCrosswordCellTypes.empty : type,
+    value,
+  }
+}
+
+export function normalizeNewsCrosswordGrid(grid) {
+  return Array.from(
+    { length: NEWS_CROSSWORD_CELL_COUNT },
+    (_, index) => normalizeNewsCrosswordCell(grid?.[index]),
+  )
+}
+
+export function createEmptyNewsCrosswordClues(direction) {
+  return Array.from({ length: NEWS_CROSSWORD_CLUE_COUNT }, (_, index) => ({
+    number: index + 1,
+    row: 0,
+    col: 0,
+    text: '',
+    direction,
+  }))
+}
+
+export function normalizeNewsCrosswordClues(value, direction) {
+  const byNumber = new Map((Array.isArray(value) ? value : []).map((clue) => [Number(clue?.number), clue]))
+  return createEmptyNewsCrosswordClues(direction).map((fallback) => {
+    const clue = byNumber.get(fallback.number) || fallback
+    return {
+      number: fallback.number,
+      row: Math.min(NEWS_CROSSWORD_SIZE - 1, Math.max(0, Number(clue.row) || 0)),
+      col: Math.min(NEWS_CROSSWORD_SIZE - 1, Math.max(0, Number(clue.col) || 0)),
+      text: String(clue.text || '').trim(),
+      direction,
+    }
+  })
+}
+
+export function clueDisplayNumber(clue) {
+  return clue?.direction === newsCrosswordDirections.across
+    ? chineseClueNumbers[Number(clue.number) - 1] || ''
+    : String(clue?.number || '')
+}
+
+export function clueStartIndex(clue) {
+  return Number(clue.row) * NEWS_CROSSWORD_SIZE + Number(clue.col)
+}
+
+export function cellsForClue(grid, clue) {
+  const normalized = normalizeNewsCrosswordGrid(grid)
+  const indexes = []
+  let row = Number(clue?.row)
+  let col = Number(clue?.col)
+  const rowStep = clue?.direction === newsCrosswordDirections.down ? 1 : 0
+  const colStep = clue?.direction === newsCrosswordDirections.across ? 1 : 0
+  while (row >= 0 && row < NEWS_CROSSWORD_SIZE && col >= 0 && col < NEWS_CROSSWORD_SIZE) {
+    const index = row * NEWS_CROSSWORD_SIZE + col
+    if (normalized[index].type === newsCrosswordCellTypes.block) break
+    indexes.push(index)
+    row += rowStep
+    col += colStep
+  }
+  return indexes
+}
+
+export function syncNewsCrosswordSolution(grid, previousSolution = null) {
+  const normalizedGrid = normalizeNewsCrosswordGrid(grid)
+  const normalizedSolution = previousSolution ? normalizeNewsCrosswordGrid(previousSolution) : createEmptyNewsCrosswordGrid()
+  return normalizedGrid.map((cell, index) => {
+    if (cell.type === newsCrosswordCellTypes.block) return { type: newsCrosswordCellTypes.block, value: '' }
+    if (cell.type === newsCrosswordCellTypes.given) return { type: newsCrosswordCellTypes.given, value: cell.value }
+    const previousValue = normalizedSolution[index]?.value || ''
+    return previousValue
+      ? { type: newsCrosswordCellTypes.given, value: previousValue }
+      : { type: newsCrosswordCellTypes.empty, value: '' }
+  })
+}
+
+export function newsCrosswordGridToRows(grid) {
+  const normalized = normalizeNewsCrosswordGrid(grid)
+  return Array.from({ length: NEWS_CROSSWORD_SIZE }, (_, rowIndex) => normalized
+    .slice(rowIndex * NEWS_CROSSWORD_SIZE, (rowIndex + 1) * NEWS_CROSSWORD_SIZE)
+    .map((cell) => {
+      if (cell.type === newsCrosswordCellTypes.block) return '#'
+      if (cell.type === newsCrosswordCellTypes.given) return cell.value
+      return '.'
+    })
+    .join(''))
+}
+
+export function newsCrosswordRowsToGrid(rows) {
+  if (!Array.isArray(rows) || rows.length !== NEWS_CROSSWORD_SIZE) throw new Error('題目必須有 8 列。')
+  return rows.flatMap((row) => {
+    const cells = Array.from(String(row))
+    if (cells.length !== NEWS_CROSSWORD_SIZE) throw new Error('每列必須有 8 格。')
+    return cells.map((value) => {
+      if (value === '#') return { type: newsCrosswordCellTypes.block, value: '' }
+      if (value === '.') return { type: newsCrosswordCellTypes.empty, value: '' }
+      return { type: newsCrosswordCellTypes.given, value }
+    })
+  })
+}
+
+function validateClues(clues, grid, direction, requireComplete) {
+  const errors = []
+  const normalized = normalizeNewsCrosswordClues(clues, direction)
+  const starts = new Set()
+  normalized.forEach((clue) => {
+    const label = `${direction === newsCrosswordDirections.across ? '橫式' : '直式'} ${clueDisplayNumber(clue)}`
+    if (!requireComplete && !clue.text) return
+    const start = clueStartIndex(clue)
+    if (starts.has(start)) errors.push(`${label} 與同方向其他題目使用了相同起始格。`)
+    starts.add(start)
+    if (grid[start]?.type === newsCrosswordCellTypes.block) errors.push(`${label} 的起始格不能是阻隔格。`)
+    if (requireComplete && !clue.text) errors.push(`${label} 尚未填寫提示。`)
+    if (requireComplete && cellsForClue(grid, clue).length < 2) errors.push(`${label} 從起始格起至少需要 2 個白格。`)
+  })
+  return { clues: normalized, errors }
+}
+
+export function validateNewsCrosswordPuzzle(input) {
+  const grid = normalizeNewsCrosswordGrid(input?.grid)
+  const solutionGrid = input?.solutionGrid ? syncNewsCrosswordSolution(grid, input.solutionGrid) : null
+  const requireComplete = input?.status === 'published'
+  const errors = []
+  if (!String(input?.publishedOn || '').trim()) errors.push('請設定題目日期。')
+  if (grid.every((cell) => cell.type === newsCrosswordCellTypes.empty)) errors.push('請設定阻隔格或提示字。')
+  if (grid.every((cell) => cell.type === newsCrosswordCellTypes.block)) errors.push('題目至少需要 1 個白格。')
+
+  const acrossResult = validateClues(input?.acrossClues, grid, newsCrosswordDirections.across, requireComplete)
+  const downResult = validateClues(input?.downClues, grid, newsCrosswordDirections.down, requireComplete)
+  errors.push(...acrossResult.errors, ...downResult.errors)
+
+  if (requireComplete && !solutionGrid) errors.push('建立完整答案後才能發布題目。')
+  if (solutionGrid) {
+    grid.forEach((cell, index) => {
+      if (cell.type !== newsCrosswordCellTypes.block && !solutionGrid[index]?.value) {
+        errors.push('完整答案仍有空白格。')
+      }
+      if (cell.type === newsCrosswordCellTypes.given && solutionGrid[index]?.value !== cell.value) {
+        errors.push('題目提示字與完整答案不一致。')
+      }
+    })
+  }
+
+  return {
+    grid,
+    solutionGrid,
+    acrossClues: acrossResult.clues,
+    downClues: downResult.clues,
+    errors: [...new Set(errors)],
+  }
+}
+
+export function assessNewsCrosswordAnswer(puzzle, answers = {}) {
+  const grid = normalizeNewsCrosswordGrid(puzzle?.grid)
+  const playableIndexes = grid
+    .map((cell, index) => (cell.type === newsCrosswordCellTypes.block ? -1 : index))
+    .filter((index) => index >= 0)
+  const complete = playableIndexes.every((index) => {
+    const value = grid[index].type === newsCrosswordCellTypes.given ? grid[index].value : answers[index]
+    return Boolean(String(value || '').trim())
+  })
+  if (!complete) return { status: 'incomplete', complete: false, correct: false, incorrectIndexes: [] }
+  if (!puzzle?.solutionGrid) return { status: 'practice-complete', complete: true, correct: null, incorrectIndexes: [] }
+  const solution = normalizeNewsCrosswordGrid(puzzle.solutionGrid)
+  const incorrectIndexes = playableIndexes.filter((index) => {
+    const value = grid[index].type === newsCrosswordCellTypes.given ? grid[index].value : answers[index]
+    return String(value || '').trim() !== solution[index]?.value
+  })
+  return {
+    status: incorrectIndexes.length ? 'incorrect' : 'correct',
+    complete: true,
+    correct: incorrectIndexes.length === 0,
+    incorrectIndexes,
+  }
+}
+
+export function restoreNewsCrosswordProgress(value, grid) {
+  const normalizedGrid = normalizeNewsCrosswordGrid(grid)
+  const rawAnswers = value?.answers && typeof value.answers === 'object' ? value.answers : {}
+  const answers = {}
+  Object.entries(rawAnswers).forEach(([rawIndex, rawValue]) => {
+    const index = Number(rawIndex)
+    if (!Number.isInteger(index) || normalizedGrid[index]?.type !== newsCrosswordCellTypes.empty) return
+    const character = Array.from(String(rawValue || '').trim()).slice(0, 1).join('')
+    if (character) answers[index] = character
+  })
+  return {
+    answers,
+    perfectCompletedAt: typeof value?.perfectCompletedAt === 'string' ? value.perfectCompletedAt : '',
+  }
+}
+

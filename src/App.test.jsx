@@ -36,7 +36,7 @@ describe('guest practice routes', () => {
 
     expect(html).toContain('成語填字圖每週至少安排一題登入任務')
     expect(html).toContain('href="?puzzle=word-grid&amp;guest=1"')
-    expect(html).toContain('包含報紙填字圖與教育部《成語典》成語填字圖')
+    expect(html).toContain('包含報紙填字圖、新聞縱橫填字與教育部《成語典》成語填字圖')
     expect(html).toContain('href="?puzzle=number-grid&amp;guest=1"')
     expect(html).toContain('來源：聯合報好讀周報・設計者：狄運來老師')
     expect(html).toContain('href="https://andrewkotw.github.io/card-puzzle/#4CLUE"')

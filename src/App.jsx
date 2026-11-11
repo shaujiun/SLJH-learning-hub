@@ -63,6 +63,7 @@ const ChemicalBalanceStation = lazy(() => import('./components/ChemicalBalanceSt
 const AnimalEquationExperience = lazy(() => import('./components/AnimalEquationExperience.jsx'))
 const WordGridPuzzle = lazy(() => import('./components/WordGridPuzzle.jsx'))
 const IdiomWordGrid = lazy(() => import('./components/IdiomWordGrid.jsx'))
+const NewsCrossword = lazy(() => import('./components/NewsCrossword.jsx'))
 const NumberGridChallenge = lazy(() => import('./components/NumberGridChallenge.jsx'))
 const EnglishReadingWorkshop = lazy(() => import('./components/EnglishReadingWorkshop.jsx'))
 const EnglishReadingPractice = lazy(() => import('./components/EnglishReadingPractice.jsx'))
@@ -331,7 +332,7 @@ function PuzzleGames({ guestMode = false }) {
   const games = [
     {
       name: '填字圖',
-      detail: '包含報紙填字圖與教育部《成語典》成語填字圖',
+      detail: '包含報紙填字圖、新聞縱橫填字與教育部《成語典》成語填字圖',
       url: guestMode ? '?puzzle=word-grid&guest=1' : '?puzzle=word-grid',
       external: false,
     },
@@ -1050,6 +1051,9 @@ export default function App() {
   if (searchParams.get('puzzle') === 'word-grid') {
     if (searchParams.get('mode') === 'idiom') {
       return <Suspense fallback={<LoadingScreen />}><IdiomWordGrid guestMode={guestMode} /></Suspense>
+    }
+    if (searchParams.get('mode') === 'news') {
+      return <Suspense fallback={<LoadingScreen />}><NewsCrossword guestMode={guestMode} /></Suspense>
     }
     return <Suspense fallback={<LoadingScreen />}><WordGridPuzzle guestMode={guestMode} /></Suspense>
   }
