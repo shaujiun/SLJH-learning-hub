@@ -58,17 +58,19 @@
 .news-crossword-cell.is-block {
   color: #fff;
   background: var(--news-blue);
-  font-size: clamp(1rem, 5.8vw, 2.35rem);
 }
 
 .news-crossword-fruit {
   display: grid;
-  width: 76%;
-  height: 76%;
+  width: 100%;
+  height: 100%;
   margin: auto;
   place-items: center;
   overflow: hidden;
+  font-size: clamp(1.65rem, 10vw, 4.9rem);
   line-height: 1;
+  transform: scale(1.08);
+  transform-origin: center;
 }
 
 .news-crossword-board.is-solid .news-crossword-cell.is-block {
@@ -187,7 +189,7 @@
 
 .news-crossword-board.is-editor { width: min(100%, 620px); }
 .news-crossword-board.is-editor .news-crossword-cell > button { cursor: pointer; }
-.news-crossword-board.is-editor .news-crossword-cell.is-block > button { font-size: clamp(1rem, 3vw, 2rem); }
+.news-crossword-board.is-editor .news-crossword-cell.is-block > button { font-size: inherit; }
 
 .news-crossword-fruit-picker {
   display: flex;
