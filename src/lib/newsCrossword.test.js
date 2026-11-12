@@ -63,4 +63,59 @@ describe('新聞縱橫填字規則', () => {
     expect(result.incorrectIndexes).toEqual([10])
     expect(result).not.toHaveProperty('solution')
   })
+
+  it('交叉方向都接受替代答案時判定正確', () => {
+    const puzzle = createPuzzle()
+    puzzle.acrossClues[0].acceptedAnswers = ['乙甲甲甲甲甲甲甲']
+    puzzle.downClues[0].acceptedAnswers = ['乙甲甲甲甲甲甲甲']
+    const answers = Object.fromEntries(
+      puzzle.grid.map((cell, index) => [index, cell.type === newsCrosswordCellTypes.block ? '' : '甲']),
+    )
+    answers[0] = '乙'
+    const result = assessNewsCrosswordAnswer(puzzle, answers)
+    expect(result.correct).toBe(true)
+    expect(result.incorrectIndexes).toEqual([])
+  })
+
+  it('只有單一方向接受替代答案時仍回報交叉格衝突', () => {
+    const puzzle = createPuzzle()
+    puzzle.acrossClues[0].acceptedAnswers = ['乙甲甲甲甲甲甲甲']
+    const answers = Object.fromEntries(
+      puzzle.grid.map((cell, index) => [index, cell.type === newsCrosswordCellTypes.block ? '' : '甲']),
+    )
+    answers[0] = '乙'
+    const result = assessNewsCrosswordAnswer(puzzle, answers)
+    expect(result.correct).toBe(false)
+    expect(result.incorrectIndexes).toEqual([0])
+  })
+
+  it('命中老師設定的常見誤答時只提供自訂提示', () => {
+    const puzzle = createPuzzle()
+    puzzle.acrossClues[0].commonMistakes = [{
+      answer: '乙甲甲甲甲甲甲甲',
+      hint: '請檢查第一個字的正式寫法。',
+    }]
+    const answers = Object.fromEntries(
+      puzzle.grid.map((cell, index) => [index, cell.type === newsCrosswordCellTypes.block ? '' : '甲']),
+    )
+    answers[0] = '乙'
+    const result = assessNewsCrosswordAnswer(puzzle, answers)
+    expect(result.correct).toBe(false)
+    expect(result.mistakeFeedback).toEqual([{
+      direction: newsCrosswordDirections.across,
+      number: 1,
+      label: '橫式 一',
+      hint: '請檢查第一個字的正式寫法。',
+    }])
+    expect(result).not.toHaveProperty('solution')
+  })
+
+  it('發布時檢查替代答案字數與常見誤答提示', () => {
+    const puzzle = createPuzzle()
+    puzzle.acrossClues[0].acceptedAnswers = ['太短']
+    puzzle.acrossClues[0].commonMistakes = [{ answer: '乙甲甲甲甲甲甲甲', hint: '' }]
+    const result = validateNewsCrosswordPuzzle(puzzle)
+    expect(result.errors).toContain('橫式 一 的可接受答案「太短」字數必須是 8 字。')
+    expect(result.errors).toContain('橫式 一 的常見誤答「乙甲甲甲甲甲甲甲」尚未填寫提示。')
+  })
 })

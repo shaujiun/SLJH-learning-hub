@@ -16,6 +16,7 @@ import { isSupabaseConfigured } from '../lib/supabase.js'
 import { accountPuzzleProgressKey } from '../lib/puzzleProgress.js'
 import {
   NEWS_CROSSWORD_SIZE,
+  answerForClue,
   assessNewsCrosswordAnswer,
   cellsForClue,
   chineseClueNumbers,
@@ -224,6 +225,7 @@ function PlayArea({ puzzle, progressOwnerId }) {
   const [perfectCompletedAt, setPerfectCompletedAt] = useState(initial.perfectCompletedAt)
   const [activeClue, setActiveClue] = useState(null)
   const [message, setMessage] = useState('')
+  const [mistakeFeedback, setMistakeFeedback] = useState([])
   const storageKey = useMemo(() => accountPuzzleProgressKey('news-crossword', progressOwnerId, puzzle.id), [progressOwnerId, puzzle.id])
   const activeIndexes = activeClue ? cellsForClue(puzzle.grid, activeClue) : []
 
@@ -240,9 +242,11 @@ function PlayArea({ puzzle, progressOwnerId }) {
       return next
     })
     setMessage('')
+    setMistakeFeedback([])
   }
   const check = () => {
     const result = assessNewsCrosswordAnswer(puzzle, answers)
+    setMistakeFeedback(result.mistakeFeedback || [])
     if (result.status === 'incomplete') setMessage('仍有白格尚未填寫。')
     else if (result.status === 'practice-complete') setMessage('已填完；本題尚未收錄答案，暫時無法核對。')
     else if (result.correct) {
@@ -254,6 +258,7 @@ function PlayArea({ puzzle, progressOwnerId }) {
   }
   const clear = () => {
     setAnswers({})
+    setMistakeFeedback([])
     setMessage('已清除本題輸入。')
   }
   return (
@@ -268,6 +273,12 @@ function PlayArea({ puzzle, progressOwnerId }) {
               <button type="button" className="primary-button" onClick={check}><Check aria-hidden="true" />核對答案</button>
             </div>
             {message && <p className="word-grid-message" role="status">{message}</p>}
+            {mistakeFeedback.length > 0 && (
+              <div className="news-crossword-mistake-feedback" role="status">
+                <strong>常見誤答提示</strong>
+                <ul>{mistakeFeedback.map((item) => <li key={`${item.direction}-${item.number}`}><span>{item.label}</span>{item.hint}</li>)}</ul>
+              </div>
+            )}
           </div>
           <div className="news-crossword-clues">
             <ClueList title="橫式（一～八）" clues={puzzle.acrossClues} onSelect={setActiveClue} activeClue={activeClue} />
@@ -324,10 +335,40 @@ function GridEditor({ puzzle, grid, mode, selectedFruit, onChange, onBlockFruits
   )
 }
 
-function ClueEditor({ title, clues, direction, onChange }) {
+function ClueEditor({ title, clues, direction, grid, solutionGrid, onChange }) {
   const update = (index, key, value) => {
     const next = clues.map((clue, clueIndex) => clueIndex === index ? { ...clue, [key]: key === 'text' ? value : Number(value) } : clue)
     onChange(next)
+  }
+  const updateAcceptedAnswer = (clueIndex, answerIndex, value) => {
+    const acceptedAnswers = [...(clues[clueIndex].acceptedAnswers || [])]
+    acceptedAnswers[answerIndex] = value
+    onChange(clues.map((clue, index) => index === clueIndex ? { ...clue, acceptedAnswers } : clue))
+  }
+  const addAcceptedAnswer = (clueIndex) => {
+    onChange(clues.map((clue, index) => index === clueIndex
+      ? { ...clue, acceptedAnswers: [...(clue.acceptedAnswers || []), ''] }
+      : clue))
+  }
+  const removeAcceptedAnswer = (clueIndex, answerIndex) => {
+    onChange(clues.map((clue, index) => index === clueIndex
+      ? { ...clue, acceptedAnswers: (clue.acceptedAnswers || []).filter((_, itemIndex) => itemIndex !== answerIndex) }
+      : clue))
+  }
+  const updateCommonMistake = (clueIndex, mistakeIndex, key, value) => {
+    const commonMistakes = [...(clues[clueIndex].commonMistakes || [])]
+    commonMistakes[mistakeIndex] = { ...commonMistakes[mistakeIndex], [key]: value }
+    onChange(clues.map((clue, index) => index === clueIndex ? { ...clue, commonMistakes } : clue))
+  }
+  const addCommonMistake = (clueIndex) => {
+    onChange(clues.map((clue, index) => index === clueIndex
+      ? { ...clue, commonMistakes: [...(clue.commonMistakes || []), { answer: '', hint: '' }] }
+      : clue))
+  }
+  const removeCommonMistake = (clueIndex, mistakeIndex) => {
+    onChange(clues.map((clue, index) => index === clueIndex
+      ? { ...clue, commonMistakes: (clue.commonMistakes || []).filter((_, itemIndex) => itemIndex !== mistakeIndex) }
+      : clue))
   }
   return (
     <section className="news-crossword-clue-editor">
@@ -338,6 +379,31 @@ function ClueEditor({ title, clues, direction, onChange }) {
           <label>列<select value={clue.row} onChange={(event) => update(index, 'row', event.target.value)}>{Array.from({ length: 8 }, (_, value) => <option value={value} key={value}>{value + 1}</option>)}</select></label>
           <label>欄<select value={clue.col} onChange={(event) => update(index, 'col', event.target.value)}>{Array.from({ length: 8 }, (_, value) => <option value={value} key={value}>{value + 1}</option>)}</select></label>
           <label className="is-clue-text">提示<input value={clue.text} onChange={(event) => update(index, 'text', event.target.value)} placeholder="輸入題目提示" /></label>
+          <details className="news-crossword-clue-answer-settings">
+            <summary>答案判定設定<span>標準答案：{answerForClue(grid, solutionGrid, clue) || '請先建立完整答案'}</span></summary>
+            <div className="news-crossword-answer-setting-group">
+              <div className="news-crossword-answer-setting-heading"><strong>可接受答案</strong><button type="button" onClick={() => addAcceptedAnswer(index)}><Plus aria-hidden="true" />新增</button></div>
+              {(clue.acceptedAnswers || []).length === 0 && <small>沒有替代答案時不必設定。</small>}
+              {(clue.acceptedAnswers || []).map((answer, answerIndex) => (
+                <div className="news-crossword-answer-setting-row" key={`accepted-${answerIndex}`}>
+                  <label>答案<input value={answer} onChange={(event) => updateAcceptedAnswer(index, answerIndex, event.target.value)} placeholder="輸入完整替代答案" /></label>
+                  <button type="button" className="icon-button" aria-label="刪除這個可接受答案" onClick={() => removeAcceptedAnswer(index, answerIndex)}><X aria-hidden="true" /></button>
+                </div>
+              ))}
+            </div>
+            <div className="news-crossword-answer-setting-group">
+              <div className="news-crossword-answer-setting-heading"><strong>常見誤答與提示</strong><button type="button" onClick={() => addCommonMistake(index)}><Plus aria-hidden="true" />新增</button></div>
+              {(clue.commonMistakes || []).length === 0 && <small>設定後，學生輸入該答案時只會看到提示，不會直接看到完整答案。</small>}
+              {(clue.commonMistakes || []).map((mistake, mistakeIndex) => (
+                <div className="news-crossword-mistake-setting-row" key={`mistake-${mistakeIndex}`}>
+                  <label>常見誤答<input value={mistake.answer} onChange={(event) => updateCommonMistake(index, mistakeIndex, 'answer', event.target.value)} placeholder="例如：舌燦蓮花" /></label>
+                  <label>給學生的提示<input value={mistake.hint} onChange={(event) => updateCommonMistake(index, mistakeIndex, 'hint', event.target.value)} placeholder="例如：教育部辭典採用「粲」字，請修正第二字。" /></label>
+                  <button type="button" className="icon-button" aria-label="刪除這個常見誤答" onClick={() => removeCommonMistake(index, mistakeIndex)}><X aria-hidden="true" /></button>
+                </div>
+              ))}
+            </div>
+            <p className="news-crossword-crossing-note">若替代答案更動交叉格，另一方向也必須設定相容答案，否則學生仍無法全對。</p>
+          </details>
         </div>
       ))}
     </section>
@@ -430,8 +496,8 @@ function PuzzleEditor({ puzzle, onSaved, onCancel }) {
           ? <GridEditor puzzle={form} grid={form.solutionGrid} mode="answer" selectedFruit={selectedFruit} onChange={(solutionGrid) => setForm({ ...form, solutionGrid })} />
           : <p className="word-grid-editor-empty">勾選後即可輸入答案；答案未完成前不能發布。</p>}
       </>}
-      {tab === 'across' && <ClueEditor title="橫式提示（一～八）" clues={form.acrossClues} direction={newsCrosswordDirections.across} onChange={(acrossClues) => setForm({ ...form, acrossClues })} />}
-      {tab === 'down' && <ClueEditor title="直式提示（1～8）" clues={form.downClues} direction={newsCrosswordDirections.down} onChange={(downClues) => setForm({ ...form, downClues })} />}
+      {tab === 'across' && <ClueEditor title="橫式提示（一～八）" clues={form.acrossClues} direction={newsCrosswordDirections.across} grid={form.grid} solutionGrid={form.solutionGrid} onChange={(acrossClues) => setForm({ ...form, acrossClues })} />}
+      {tab === 'down' && <ClueEditor title="直式提示（1～8）" clues={form.downClues} direction={newsCrosswordDirections.down} grid={form.grid} solutionGrid={form.solutionGrid} onChange={(downClues) => setForm({ ...form, downClues })} />}
       <div className="word-grid-editor-actions"><button type="button" className="primary-button" disabled={status.saving} onClick={save}><Save aria-hidden="true" />{status.saving ? '儲存中' : '儲存題目'}</button>{status.message && <p role="status">{status.message}</p>}</div>
     </section>
   )

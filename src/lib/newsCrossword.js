@@ -73,7 +73,28 @@ export function createEmptyNewsCrosswordClues(direction) {
     col: 0,
     text: '',
     direction,
+    acceptedAnswers: [],
+    commonMistakes: [],
   }))
+}
+
+function normalizeAnswerList(value) {
+  const source = Array.isArray(value) ? value : []
+  return [...new Set(source.map((answer) => String(answer || '').trim()).filter(Boolean))]
+}
+
+function normalizeCommonMistakes(value) {
+  const source = Array.isArray(value) ? value : []
+  const byAnswer = new Map()
+  source.forEach((item) => {
+    const answer = String(item?.answer || '').trim()
+    if (!answer) return
+    byAnswer.set(answer, {
+      answer,
+      hint: String(item?.hint || '').trim(),
+    })
+  })
+  return [...byAnswer.values()]
 }
 
 export function normalizeNewsCrosswordClues(value, direction) {
@@ -86,6 +107,8 @@ export function normalizeNewsCrosswordClues(value, direction) {
       col: Math.min(NEWS_CROSSWORD_SIZE - 1, Math.max(0, Number(clue.col) || 0)),
       text: String(clue.text || '').trim(),
       direction,
+      acceptedAnswers: normalizeAnswerList(clue.acceptedAnswers),
+      commonMistakes: normalizeCommonMistakes(clue.commonMistakes),
     }
   })
 }
@@ -115,6 +138,12 @@ export function cellsForClue(grid, clue) {
     col += colStep
   }
   return indexes
+}
+
+export function answerForClue(grid, solutionGrid, clue) {
+  if (!solutionGrid) return ''
+  const solution = normalizeNewsCrosswordGrid(solutionGrid)
+  return cellsForClue(grid, clue).map((index) => solution[index]?.value || '').join('')
 }
 
 export function syncNewsCrosswordSolution(grid, previousSolution = null) {
@@ -155,7 +184,7 @@ export function newsCrosswordRowsToGrid(rows) {
   })
 }
 
-function validateClues(clues, grid, direction, requireComplete) {
+function validateClues(clues, grid, direction, requireComplete, solutionGrid) {
   const errors = []
   const normalized = normalizeNewsCrosswordClues(clues, direction)
   const starts = new Set()
@@ -167,7 +196,26 @@ function validateClues(clues, grid, direction, requireComplete) {
     starts.add(start)
     if (grid[start]?.type === newsCrosswordCellTypes.block) errors.push(`${label} 的起始格不能是阻隔格。`)
     if (requireComplete && !clue.text) errors.push(`${label} 尚未填寫提示。`)
-    if (requireComplete && cellsForClue(grid, clue).length < 2) errors.push(`${label} 從起始格起至少需要 2 個白格。`)
+    const clueIndexes = cellsForClue(grid, clue)
+    if (requireComplete && clueIndexes.length < 2) errors.push(`${label} 從起始格起至少需要 2 個白格。`)
+    if (!solutionGrid || !clue.text) return
+    const standardAnswer = answerForClue(grid, solutionGrid, clue)
+    clue.acceptedAnswers = clue.acceptedAnswers.filter((answer) => answer !== standardAnswer)
+    clue.acceptedAnswers.forEach((answer) => {
+      if (Array.from(answer).length !== clueIndexes.length) errors.push(`${label} 的可接受答案「${answer}」字數必須是 ${clueIndexes.length} 字。`)
+      clueIndexes.forEach((cellIndex, answerIndex) => {
+        if (grid[cellIndex]?.type === newsCrosswordCellTypes.given && Array.from(answer)[answerIndex] !== grid[cellIndex].value) {
+          errors.push(`${label} 的可接受答案「${answer}」與題目提示字衝突。`)
+        }
+      })
+    })
+    clue.commonMistakes.forEach((mistake) => {
+      if (mistake.answer === standardAnswer || clue.acceptedAnswers.includes(mistake.answer)) {
+        errors.push(`${label} 的常見誤答「${mistake.answer}」不能同時是正確答案。`)
+      }
+      if (Array.from(mistake.answer).length !== clueIndexes.length) errors.push(`${label} 的常見誤答「${mistake.answer}」字數必須是 ${clueIndexes.length} 字。`)
+      if (requireComplete && !mistake.hint) errors.push(`${label} 的常見誤答「${mistake.answer}」尚未填寫提示。`)
+    })
   })
   return { clues: normalized, errors }
 }
@@ -182,8 +230,8 @@ export function validateNewsCrosswordPuzzle(input) {
   if (grid.every((cell) => cell.type === newsCrosswordCellTypes.empty)) errors.push('請設定阻隔格或提示字。')
   if (grid.every((cell) => cell.type === newsCrosswordCellTypes.block)) errors.push('題目至少需要 1 個白格。')
 
-  const acrossResult = validateClues(input?.acrossClues, grid, newsCrosswordDirections.across, requireComplete)
-  const downResult = validateClues(input?.downClues, grid, newsCrosswordDirections.down, requireComplete)
+  const acrossResult = validateClues(input?.acrossClues, grid, newsCrosswordDirections.across, requireComplete, solutionGrid)
+  const downResult = validateClues(input?.downClues, grid, newsCrosswordDirections.down, requireComplete, solutionGrid)
   errors.push(...acrossResult.errors, ...downResult.errors)
 
   if (requireComplete && !solutionGrid) errors.push('建立完整答案後才能發布題目。')
@@ -220,15 +268,48 @@ export function assessNewsCrosswordAnswer(puzzle, answers = {}) {
   if (!complete) return { status: 'incomplete', complete: false, correct: false, incorrectIndexes: [] }
   if (!puzzle?.solutionGrid) return { status: 'practice-complete', complete: true, correct: null, incorrectIndexes: [] }
   const solution = normalizeNewsCrosswordGrid(puzzle.solutionGrid)
-  const incorrectIndexes = playableIndexes.filter((index) => {
-    const value = grid[index].type === newsCrosswordCellTypes.given ? grid[index].value : answers[index]
-    return String(value || '').trim() !== solution[index]?.value
+  const answerAt = (index) => String(grid[index].type === newsCrosswordCellTypes.given ? grid[index].value : answers[index] || '').trim()
+  const incorrectIndexes = new Set()
+  const assessedIndexes = new Set()
+  const mistakeFeedback = []
+  const clues = [
+    ...normalizeNewsCrosswordClues(puzzle?.acrossClues, newsCrosswordDirections.across),
+    ...normalizeNewsCrosswordClues(puzzle?.downClues, newsCrosswordDirections.down),
+  ].filter((clue) => clue.text)
+  let allCluesCorrect = true
+  clues.forEach((clue) => {
+    const indexes = cellsForClue(grid, clue)
+    indexes.forEach((index) => assessedIndexes.add(index))
+    const enteredAnswer = indexes.map(answerAt).join('')
+    const standardAnswer = indexes.map((index) => solution[index]?.value || '').join('')
+    const acceptedAnswers = [standardAnswer, ...clue.acceptedAnswers]
+    const valid = acceptedAnswers.includes(enteredAnswer)
+    if (valid) return
+    allCluesCorrect = false
+    indexes.forEach((index, answerIndex) => {
+      if (answerAt(index) !== Array.from(standardAnswer)[answerIndex]) incorrectIndexes.add(index)
+    })
+    const mistake = clue.commonMistakes.find((item) => item.answer === enteredAnswer)
+    if (mistake?.hint) {
+      mistakeFeedback.push({
+        direction: clue.direction,
+        number: clue.number,
+        label: `${clue.direction === newsCrosswordDirections.across ? '橫式' : '直式'} ${clueDisplayNumber(clue)}`,
+        hint: mistake.hint,
+      })
+    }
   })
+  playableIndexes.forEach((index) => {
+    if (!assessedIndexes.has(index) && answerAt(index) !== solution[index]?.value) incorrectIndexes.add(index)
+  })
+  const sortedIncorrectIndexes = [...incorrectIndexes].sort((a, b) => a - b)
+  const correct = allCluesCorrect && sortedIncorrectIndexes.length === 0
   return {
-    status: incorrectIndexes.length ? 'incorrect' : 'correct',
+    status: correct ? 'correct' : 'incorrect',
     complete: true,
-    correct: incorrectIndexes.length === 0,
-    incorrectIndexes,
+    correct,
+    incorrectIndexes: sortedIncorrectIndexes,
+    mistakeFeedback,
   }
 }
 
