@@ -13,6 +13,10 @@ import {
 } from '../lib/newsCrossword.js'
 
 function row() {
+  const acrossClues = createEmptyNewsCrosswordClues(newsCrosswordDirections.across)
+    .map((clue, index) => ({ ...clue, row: index, text: `橫 ${index + 1}` }))
+  acrossClues[0].acceptedAnswers = ['乙甲甲甲甲甲甲甲']
+  acrossClues[0].commonMistakes = [{ answer: '丙甲甲甲甲甲甲甲', hint: '請檢查第一個字。' }]
   return {
     id: 'puzzle-1',
     published_on: '2026-11-11',
@@ -21,8 +25,7 @@ function row() {
     designer_name: '',
     grid_rows: ['........', '........', '........', '........', '........', '........', '........', '.......#'],
     solution_rows: [...Array.from({ length: 7 }, () => '甲甲甲甲甲甲甲甲'), '甲甲甲甲甲甲甲#'],
-    across_clues: createEmptyNewsCrosswordClues(newsCrosswordDirections.across)
-      .map((clue, index) => ({ ...clue, row: index, text: `橫 ${index + 1}` })),
+    across_clues: acrossClues,
     down_clues: createEmptyNewsCrosswordClues(newsCrosswordDirections.down)
       .map((clue, index) => ({ ...clue, col: index, text: `直 ${index + 1}` })),
     block_style: 'fruit',
@@ -64,6 +67,8 @@ describe('新聞縱橫填字資料服務', () => {
     expect(mapped.acrossClues).toHaveLength(8)
     expect(mapped.downClues).toHaveLength(8)
     expect(mapped.blockFruits[63]).toBe('pineapple')
+    expect(mapped.acrossClues[0].acceptedAnswers).toEqual(['乙甲甲甲甲甲甲甲'])
+    expect(mapped.acrossClues[0].commonMistakes).toEqual([{ answer: '丙甲甲甲甲甲甲甲', hint: '請檢查第一個字。' }])
   })
 
   it('儲存時保留橫式與直式提示及水果外觀', async () => {
@@ -85,5 +90,7 @@ describe('新聞縱橫填字資料服務', () => {
     expect(inserted[0].down_clues).toHaveLength(8)
     expect(inserted[0].block_style).toBe('fruit')
     expect(inserted[0].block_fruits).toEqual({ 63: 'pineapple' })
+    expect(inserted[0].across_clues[0].acceptedAnswers).toEqual(['乙甲甲甲甲甲甲甲'])
+    expect(inserted[0].across_clues[0].commonMistakes).toEqual([{ answer: '丙甲甲甲甲甲甲甲', hint: '請檢查第一個字。' }])
   })
 })
