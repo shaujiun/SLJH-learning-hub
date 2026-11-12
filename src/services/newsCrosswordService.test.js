@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { mapNewsCrosswordPuzzle, saveNewsCrosswordPuzzle } from './newsCrosswordService.js'
+import {
+  loadNewsCrosswordPuzzles,
+  mapNewsCrosswordPuzzle,
+  saveNewsCrosswordPuzzle,
+  taipeiDateValue,
+} from './newsCrosswordService.js'
 import {
   createEmptyNewsCrosswordClues,
   createEmptyNewsCrosswordGrid,
@@ -27,6 +32,31 @@ function row() {
 }
 
 describe('新聞縱橫填字資料服務', () => {
+  it('以臺灣日期判斷學生可見題目', () => {
+    expect(taipeiDateValue(new Date('2026-11-15T16:30:00.000Z'))).toBe('2026-11-16')
+  })
+
+  it('學生只查詢已到公開日期的已發布題目', async () => {
+    const filters = []
+    const query = {
+      select: () => query,
+      order: () => query,
+      eq: (...args) => { filters.push(['eq', ...args]); return query },
+      lte: (...args) => { filters.push(['lte', ...args]); return query },
+      then: (resolve) => Promise.resolve({ data: [], error: null }).then(resolve),
+    }
+    const client = {
+      rpc: async () => ({ data: false, error: null }),
+      auth: { getSession: async () => ({ data: { session: { user: { id: 'student-1' } } }, error: null }) },
+      from: () => query,
+    }
+    await loadNewsCrosswordPuzzles({ today: '2026-11-12' }, client)
+    expect(filters).toEqual([
+      ['eq', 'status', 'published'],
+      ['lte', 'published_on', '2026-11-12'],
+    ])
+  })
+
   it('將資料列轉為 8 × 8 題目', () => {
     const mapped = mapNewsCrosswordPuzzle(row())
     expect(mapped.grid).toHaveLength(64)

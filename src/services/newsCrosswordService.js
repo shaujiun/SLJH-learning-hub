@@ -26,6 +26,17 @@ const puzzleSelect = `
   updated_at
 `
 
+export function taipeiDateValue(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Taipei',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+  return `${values.year}-${values.month}-${values.day}`
+}
+
 export function mapNewsCrosswordPuzzle(row) {
   return {
     id: row.id,
@@ -45,7 +56,7 @@ export function mapNewsCrosswordPuzzle(row) {
   }
 }
 
-export async function loadNewsCrosswordPuzzles({ guestMode = false } = {}, client = requireSupabase()) {
+export async function loadNewsCrosswordPuzzles({ guestMode = false, today = taipeiDateValue() } = {}, client = requireSupabase()) {
   const permissionPromise = guestMode
     ? Promise.resolve({ data: false, error: null })
     : client.rpc('can_manage_word_grid_puzzles')
@@ -56,7 +67,7 @@ export async function loadNewsCrosswordPuzzles({ guestMode = false } = {}, clien
   const canManage = !permissionResult.error && Boolean(permissionResult.data)
   const progressOwnerId = sessionResult.error ? '' : sessionResult.data.session?.user?.id || ''
   let query = client.from('news_crossword_puzzles').select(puzzleSelect).order('published_on', { ascending: false })
-  if (!canManage) query = query.eq('status', 'published')
+  if (!canManage) query = query.eq('status', 'published').lte('published_on', today)
   const { data, error } = await query
   if (error) throw new Error(`無法讀取新聞縱橫填字：${error.message}`)
   return { puzzles: (data || []).map(mapNewsCrosswordPuzzle), canManage, progressOwnerId }
