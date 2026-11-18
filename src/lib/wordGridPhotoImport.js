@@ -1,5 +1,13 @@
 import { WORD_GRID_SIZE, wordGridCellTypes } from './wordGridPuzzle.js'
 
+export function normalizedPhotoPoint(clientX, clientY, bounds) {
+  if (!bounds || bounds.width <= 0 || bounds.height <= 0) return null
+  return {
+    x: Math.max(0, Math.min(1, (Number(clientX) - bounds.left) / bounds.width)),
+    y: Math.max(0, Math.min(1, (Number(clientY) - bounds.top) / bounds.height)),
+  }
+}
+
 export function normalizedPhotoRect(first, second) {
   if (!first || !second) return null
   const left = Math.max(0, Math.min(first.x, second.x))

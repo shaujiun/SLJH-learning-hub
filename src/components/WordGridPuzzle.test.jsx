@@ -39,6 +39,8 @@ describe('填字圖照片編題', () => {
     const html = renderToStaticMarkup(<PhotoImportPanel imageUrl="blob:local-photo" />)
     expect(html).toContain('框選題目 10×10 格')
     expect(html).toContain('框選上方字庫')
+    expect(html).toContain('按住照片並拖曳框選')
+    expect(html).toContain('拖曳框選題目 10×10 格範圍')
     expect(html).toContain('讀取題目格與提示字')
     expect(html).toContain('讀取字庫文字')
   })
