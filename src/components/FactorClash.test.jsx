@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { AreaChallenge, DuelSkills } from './FactorClash.jsx'
+import { AreaChallenge, DuelSkills, areaBoardAspectRatio } from './FactorClash.jsx'
+import { areaBoardFor } from '../lib/factorClash.js'
 
 describe('因式交鋒平衡對戰介面', () => {
   it('顯示五種技能、能量與落後者免費提示', () => {
@@ -41,5 +42,20 @@ describe('因式交鋒平衡對戰介面', () => {
     />)
     expect(html).toContain('全部擺放')
     expect(html).toContain('逐一點回或拖回此處')
+    expect(html).toContain('aspect-ratio:1')
+  })
+
+  it('依棋盤兩軸單位維持 x² 與 1 的正方形比例', () => {
+    const squareBoard = areaBoardFor({
+      left: { coefficient: 1, constant: 2 },
+      right: { coefficient: 1, constant: 3 },
+    })
+    const wideBoard = areaBoardFor({
+      left: { coefficient: 4, constant: 3 },
+      right: { coefficient: 1, constant: 5 },
+    })
+
+    expect(areaBoardAspectRatio(squareBoard)).toBe(1)
+    expect(areaBoardAspectRatio(wideBoard)).toBeCloseTo((4 * 2.2 + 5) / (2.2 + 5))
   })
 })

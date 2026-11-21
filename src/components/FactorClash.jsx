@@ -42,6 +42,21 @@ const emptyCross = {
   secondConstant: null,
 }
 
+const areaSegmentRatio = {
+  x: 2.2,
+  one: 1,
+}
+
+export function areaBoardAspectRatio(board) {
+  const totalUnits = (segments = []) => segments.reduce(
+    (sum, segment) => sum + (areaSegmentRatio[segment.kind] || 1),
+    0,
+  )
+  const widthUnits = totalUnits(board?.columns)
+  const heightUnits = totalUnits(board?.rows)
+  return widthUnits > 0 && heightUnits > 0 ? widthUnits / heightUnits : 1
+}
+
 function formatTime(seconds) {
   const safe = Math.max(0, Math.ceil(seconds))
   return `${String(Math.floor(safe / 60)).padStart(2, '0')}:${String(safe % 60).padStart(2, '0')}`
@@ -92,6 +107,7 @@ export function AreaChallenge({ question, placement, setPlacement, selected, set
   }
   const templateColumns = board.columns.map((segment) => segment.kind === 'x' ? 'minmax(52px, 2.2fr)' : 'minmax(30px, 1fr)').join(' ')
   const templateRows = board.rows.map((segment) => segment.kind === 'x' ? 'minmax(52px, 2.2fr)' : 'minmax(30px, 1fr)').join(' ')
+  const boardAspectRatio = areaBoardAspectRatio(board)
 
   return (
     <div className="factor-workspace">
@@ -105,7 +121,11 @@ export function AreaChallenge({ question, placement, setPlacement, selected, set
             <div className="factor-side-labels" style={{ gridTemplateRows: templateRows }}>
               {board.rows.map((segment, index) => <span key={`${segment.key}-${index}`}>{segment.kind === 'x' ? 'x' : '1'}</span>)}
             </div>
-            <div className="factor-area-board" style={{ gridTemplateColumns: templateColumns, gridTemplateRows: templateRows }}>
+            <div className="factor-area-board" style={{
+              gridTemplateColumns: templateColumns,
+              gridTemplateRows: templateRows,
+              aspectRatio: boardAspectRatio,
+            }}>
               {board.slots.map((slot) => {
                 const piece = placement[slot.id]
                 return (
