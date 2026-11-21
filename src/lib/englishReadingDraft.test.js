@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
-  emptyReadingDraft, normalizeReadingDraft, normalizedReadingRect, parseReadingWords,
+  emptyReadingDraft, emptyReadingMindMap, normalizeReadingDraft, normalizedReadingRect,
+  parseReadingMindMap, parseReadingWords,
   readingParagraphs, readingSentences, readingTranslationParagraphs, readingWordSpeechText,
+  serializeReadingMindMap,
 } from './englishReadingDraft.js'
 
 describe('英文閱讀照片草稿', () => {
@@ -34,5 +36,37 @@ describe('英文閱讀照片草稿', () => {
     expect(normalizedReadingRect({ x: .8, y: .7 }, { x: .2, y: .1 }))
       .toEqual({ left: .2, top: .1, width: .6000000000000001, height: .6 })
     expect(normalizedReadingRect({ x: .2, y: .1 }, { x: .21, y: .12 })).toBeNull()
+  })
+
+  it('空白心智圖會以文章標題建立四個可編輯分支', () => {
+    expect(emptyReadingMindMap('A Stormy Day')).toEqual({
+      center: 'A Stormy Day',
+      branches: [
+        { title: '關鍵概念', keywords: [] },
+        { title: '事件發展', keywords: [] },
+        { title: '影響結果', keywords: [] },
+        { title: '延伸思考', keywords: [] },
+      ],
+    })
+  })
+
+  it('舊的純文字心智圖可轉為分支與多個關鍵字', () => {
+    const mindMap = parseReadingMindMap('Technology：GPS、satellite\nProblem → solar storm，damage', 'A Stormy Day')
+    expect(mindMap.center).toBe('A Stormy Day')
+    expect(mindMap.branches[0]).toEqual({ title: 'Technology', keywords: ['GPS', 'satellite'] })
+    expect(mindMap.branches[1]).toEqual({ title: 'Problem', keywords: ['solar storm', 'damage'] })
+  })
+
+  it('結構化心智圖可儲存並重新讀取，單一分支最多五個關鍵字', () => {
+    const serialized = serializeReadingMindMap({
+      center: 'Solar Storm',
+      branches: [{ title: 'Effects', keywords: ['GPS', 'cars', 'tractors', 'signals', 'satellites', 'extra'] }],
+    })
+    const restored = parseReadingMindMap(serialized)
+    expect(restored.center).toBe('Solar Storm')
+    expect(restored.branches[0]).toEqual({
+      title: 'Effects',
+      keywords: ['GPS', 'cars', 'tractors', 'signals', 'satellites'],
+    })
   })
 })
