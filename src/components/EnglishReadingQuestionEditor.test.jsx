@@ -28,4 +28,13 @@ describe('英語閱讀辨識題目設定區', () => {
     expect(html).toContain('依文章產生提示與依據草稿')
     expect(html).toContain('不會呼叫付費 AI')
   })
+
+  it('文章存成資料庫草稿後可檢查題量並建立安全補題', () => {
+    const html = renderToStaticMarkup(<EnglishReadingQuestionEditor
+      lessonId="lesson-1"
+      articleText="First paragraph. Second paragraph."
+    />)
+    expect(html).toContain('檢查題量並建立補充題')
+    expect(html).toContain('不安全的主旨或推論題不會自動產生')
+  })
 })
