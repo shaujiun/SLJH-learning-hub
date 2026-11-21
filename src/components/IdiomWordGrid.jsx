@@ -156,6 +156,14 @@ export function IdiomLearningPanel({ puzzle }) {
   )
 }
 
+export function buildIdiomCompletionProgress({ puzzle, focusTaskId = '', hintUses = 0 }) {
+  const givenKeys = new Set(puzzle?.givenCellKeys || [])
+  const answerCellCount = (puzzle?.board?.cells || []).filter((cell) => !givenKeys.has(cell.key)).length
+  return buildIdiomWordGridProgress({
+    puzzle, focusTaskId, answerCellCount, hintsUsed: hintUses,
+  })
+}
+
 export function PlayIdiomPuzzle({ puzzle, context, focusTaskId, onEnergyChange, onPuzzleCompleted = () => {} }) {
   const initial = useMemo(() => restoreProgress(context.studentId, puzzle.id), [context.studentId, puzzle.id])
   const [assignments, setAssignments] = useState(initial.assignments || {})
@@ -290,11 +298,7 @@ export function PlayIdiomPuzzle({ puzzle, context, focusTaskId, onEnergyChange, 
     setBusy(true)
     try {
       const saved = await completeIdiomPuzzle({ puzzleId: puzzle.id, hintsUsed: hintUses, focusTaskId })
-      const givenKeys = new Set(puzzle.givenCellKeys || [])
-      const answerCellCount = (puzzle.board?.cells || []).filter((cell) => !givenKeys.has(cell.key)).length
-      await trackLearningActivityAttempt(buildIdiomWordGridProgress({
-        puzzle, focusTaskId, answerCellCount, hintsUsed,
-      }))
+      await trackLearningActivityAttempt(buildIdiomCompletionProgress({ puzzle, focusTaskId, hintUses }))
       setCompleted(true)
       onPuzzleCompleted(puzzle.id)
       onEnergyChange(saved.energy)
