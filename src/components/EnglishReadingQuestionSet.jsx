@@ -56,7 +56,7 @@ export function QuestionFeedback({ result, kind, revealAnswer = false }) {
   return <div role="status" className={result.correct ? 'reading-feedback is-correct' : 'reading-feedback'}>
     <strong>{result.correct ? '答對了' : '管理者檢查：答案不正確'}</strong>
     <p>參考答案：{result.expected?.join('、')}</p>
-    {result.explanation && <p><strong>{kind === 'choice' ? 'AI 解題思路：' : '解題思路：'}</strong>{result.explanation}</p>}
+    {result.explanation && <p><strong>解題思路：</strong>{result.explanation}</p>}
     {result.evidenceSentence && <p>原文依據：{result.evidenceSentence}</p>}
   </div>
 }

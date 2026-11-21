@@ -19,4 +19,13 @@ describe('英語閱讀辨識題目設定區', () => {
     const html = renderToStaticMarkup(<EnglishReadingQuestionEditor lessonId="lesson-1" />)
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*>將辨識文字轉入題目設定<\/button>/)
   })
+
+  it('有英文文章時提供免費規則提示草稿功能', () => {
+    const html = renderToStaticMarkup(<EnglishReadingQuestionEditor
+      lessonId="lesson-1"
+      articleText="Millions of people depend on GPS."
+    />)
+    expect(html).toContain('依文章產生提示與依據草稿')
+    expect(html).toContain('不會呼叫付費 AI')
+  })
 })
