@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { classifyPhotoCell, normalizedPhotoRect } from './wordGridPhotoImport.js'
+import { classifyPhotoCell, normalizedPhotoPoint, normalizedPhotoRect } from './wordGridPhotoImport.js'
 
 function pixels(drawDark) {
   const width = 100
@@ -16,6 +16,13 @@ function pixels(drawDark) {
 }
 
 describe('photo-to-word-grid preparation', () => {
+  it('converts pointer coordinates to clamped image-relative coordinates', () => {
+    const bounds = { left: 100, top: 50, width: 400, height: 200 }
+    expect(normalizedPhotoPoint(300, 150, bounds)).toEqual({ x: 0.5, y: 0.5 })
+    expect(normalizedPhotoPoint(50, 300, bounds)).toEqual({ x: 0, y: 1 })
+    expect(normalizedPhotoPoint(100, 50, { ...bounds, width: 0 })).toBeNull()
+  })
+
   it('normalizes crop corners in either order', () => {
     expect(normalizedPhotoRect({ x: 0.8, y: 0.9 }, { x: 0.2, y: 0.1 }))
       .toEqual({ left: 0.2, top: 0.1, width: 0.6000000000000001, height: 0.8 })

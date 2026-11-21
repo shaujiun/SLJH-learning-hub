@@ -4,6 +4,7 @@ import {
   normalizeLearningMapInput,
   validateLearningMapFile,
 } from '../lib/learningMaps.js'
+import { bundledLearningMapsFor } from '../data/scienceLearningMaps.js'
 
 const bucketName = 'learning-map-assets'
 const learningMapSelect = `
@@ -12,7 +13,9 @@ const learningMapSelect = `
   subject_code,
   grade_level,
   semester,
+  volume_no,
   chapter_no,
+  section_no,
   title,
   description,
   creator_name,
@@ -63,9 +66,9 @@ export async function loadLearningMaps(subjectCode = 'geography', client = requi
     .from('learning_maps')
     .select(learningMapSelect)
     .eq('subject_code', subjectCode)
-    .order('grade_level')
-    .order('semester')
+    .order('volume_no')
     .order('chapter_no')
+    .order('section_no')
     .order('display_order')
   if (!canManage) query = query.eq('status', 'published')
   const { data, error } = await query
@@ -73,18 +76,28 @@ export async function loadLearningMaps(subjectCode = 'geography', client = requi
 
   const rows = data || []
   const signedUrls = await signedUrlByPath(rows, client)
+  const databaseMaps = rows.map((row) => mapLearningMapRow({ ...row, signedUrl: signedUrls.get(row.storage_path) || '' }))
+  const databaseCodes = new Set(databaseMaps.map((item) => item.mapCode))
+  const bundledMaps = bundledLearningMapsFor(subjectCode).filter((item) => !databaseCodes.has(item.mapCode))
   return {
     access: 'allowed',
     canManage,
-    maps: rows.map((row) => mapLearningMapRow({ ...row, signedUrl: signedUrls.get(row.storage_path) || '' })),
+    maps: [...databaseMaps, ...bundledMaps].sort((left, right) => (
+      left.volumeNo - right.volumeNo
+      || left.chapterNo - right.chapterNo
+      || (left.sectionNo || 0) - (right.sectionNo || 0)
+      || left.displayOrder - right.displayOrder
+    )),
   }
 }
 
 function storagePathFor(input, file, userId) {
   const extension = file.name.split('.').pop()?.toLowerCase() || (file.type === 'application/pdf' ? 'pdf' : 'jpg')
   const chapter = String(Number(input.chapterNo) || 1).padStart(2, '0')
+  const section = String(Number(input.sectionNo) || 1).padStart(2, '0')
+  const volume = String(Number(input.volumeNo) || 1).padStart(2, '0')
   const stamp = `${Date.now()}-${crypto.getRandomValues(new Uint32Array(1))[0]}`
-  return `${safeSegment(input.subjectCode)}/${input.gradeLevel}-${input.semester}/ch${chapter}/${userId}/${stamp}.${extension}`
+  return `${safeSegment(input.subjectCode)}/book${volume}/ch${chapter}/sec${section}/${userId}/${stamp}.${extension}`
 }
 
 export async function saveLearningMap(input, file, client = requireSupabase()) {
@@ -124,7 +137,7 @@ export async function saveLearningMap(input, file, client = requireSupabase()) {
     published_at: payload.status === 'published' ? (input.publishedAt || now) : null,
   }
   if (!input.id) {
-    writePayload.map_code = input.mapCode || `${safeSegment(payload.subject_code)}-${payload.grade_level}-${payload.semester}-ch${String(payload.chapter_no).padStart(2, '0')}-${Date.now()}`
+    writePayload.map_code = input.mapCode || `${safeSegment(payload.subject_code)}-book${String(payload.volume_no).padStart(2, '0')}-ch${String(payload.chapter_no).padStart(2, '0')}-sec${String(payload.section_no).padStart(2, '0')}-${Date.now()}`
     writePayload.created_by = userId
   }
 

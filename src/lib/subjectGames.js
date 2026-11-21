@@ -23,6 +23,14 @@ const subjectGameTemplates = {
       availability: '八上第 2 章起適用',
       launchUrl: '?game=animal-equation',
     },
+    {
+      code: 'factor-clash',
+      section: 'board',
+      name: '因式交鋒：天人 × 十字',
+      description: '用面積板理解乘法公式，再以十字交乘卡完成因式分解；提供單人練習與分組難度。',
+      availability: '八上第 3 章起適用',
+      launchUrl: '?game=factor-clash',
+    },
   ],
   english: [
     {
@@ -61,6 +69,15 @@ const subjectGameTemplates = {
   ],
   science: [
     {
+      code: 'science-learning-maps',
+      section: 'map',
+      name: '自然科學習地圖',
+      description: '依冊別、章別與節次閱讀自然科心智圖，建立波動、聲音與光學的概念架構。',
+      availability: '第 3 冊第 3～4 章已開放',
+      requiresLogin: true,
+      launchUrl: '?learning-maps=science',
+    },
+    {
       code: 'measurement-lab',
       section: 'guided',
       name: '量測實驗室',
@@ -90,7 +107,7 @@ const subjectGameTemplates = {
       section: 'guided',
       name: '化學反應平衡站',
       description: '從化學式與粒子模型開始，逐步理解原子守恆，再學會平衡化學反應式。',
-      availability: '第 1 關「分子組裝室」開放',
+      availability: '八下第 1 章起適用',
       launchUrl: '?game=chemical-balance',
     },
   ],

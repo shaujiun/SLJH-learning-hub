@@ -31,7 +31,7 @@ describe('化學反應平衡站', () => {
   })
 
   it('第四關先確認化學式，通過後才開啟係數配平', () => {
-    const question = buildStageFourRound(() => 0.999)[0]
+    const question = buildStageFourRound(() => 0.999).find((item) => item.mode === 'full-equation')
     const initial = renderToStaticMarkup(<StageFourLesson
       question={question}
       formulaSelections={initialFormulaSelections(question)}
@@ -46,7 +46,7 @@ describe('化學反應平衡站', () => {
       onCoefficientSubmit={() => {}}
       onNext={() => {}}
       questionIndex={0}
-      totalQuestions={10}
+      totalQuestions={13}
     />)
     const correctFormulas = {
       reactants: question.reactants.map((term) => term.molecule.formula),
@@ -66,7 +66,7 @@ describe('化學反應平衡站', () => {
       onCoefficientSubmit={() => {}}
       onNext={() => {}}
       questionIndex={0}
-      totalQuestions={10}
+      totalQuestions={13}
     />)
 
     expect(initial).toContain('STAGE 4・完整反應式挑戰')
@@ -77,6 +77,66 @@ describe('化學反應平衡站', () => {
     expect(balancing).toContain('本關係數可調整為 1～8')
     expect(balancing).toContain('檢查完整反應式')
     expect(balancing).toContain('完整挑戰不提供作答中的原子統計')
+  })
+
+  it('第四關缺項推理題可由生成物回推反應物，且只呈現一個輸入格', () => {
+    const question = buildStageFourRound(() => 0.413)
+      .find((item) => item.mode === 'missing-compound' && item.missingSide === 'reactants')
+    const html = renderToStaticMarkup(<StageFourLesson
+      question={question}
+      formulaSelections={initialFormulaSelections(question)}
+      formulaConfirmed={false}
+      coefficients={initialReactionCoefficients(question)}
+      resolved={false}
+      feedback=""
+      feedbackKind="hint"
+      missingAnswer=""
+      onMissingAnswerChange={() => {}}
+      onMissingAnswerSubmit={() => {}}
+      onFormulaChange={() => {}}
+      onFormulaSubmit={() => {}}
+      onCoefficientChange={() => {}}
+      onCoefficientSubmit={() => {}}
+      onNext={() => {}}
+      questionIndex={0}
+      totalQuestions={13}
+    />)
+
+    expect(html).toContain('STAGE 4・缺項推理題')
+    expect(html).toContain('係數已固定')
+    expect(html).toContain('先算右側生成物的原子總數')
+    expect(html).toContain('aria-label="缺少的反應物化學式"')
+    expect(html).toContain('檢查缺少的反應物化學式')
+    expect(html).not.toContain('選擇化學式')
+    expect((html.match(/<input/g) || [])).toHaveLength(1)
+  })
+
+  it('高中與有機延伸題明確說明不必背誦反應式', () => {
+    const question = buildStageFourRound(() => 0.271)
+      .find((item) => item.mode === 'missing-compound' && item.extendedContext)
+    const html = renderToStaticMarkup(<StageFourLesson
+      question={question}
+      formulaSelections={initialFormulaSelections(question)}
+      formulaConfirmed={false}
+      coefficients={initialReactionCoefficients(question)}
+      resolved={false}
+      feedback=""
+      feedbackKind="hint"
+      missingAnswer=""
+      onMissingAnswerChange={() => {}}
+      onMissingAnswerSubmit={() => {}}
+      onFormulaChange={() => {}}
+      onFormulaSubmit={() => {}}
+      onCoefficientChange={() => {}}
+      onCoefficientSubmit={() => {}}
+      onNext={() => {}}
+      questionIndex={0}
+      totalQuestions={13}
+    />)
+
+    expect(html).toContain(question.contextLabel)
+    expect(html).toContain('不必背誦這個反應')
+    expect(html).toContain('只需用原子守恆推理')
   })
 
   it('第三關依題目階段顯示或隱藏原子統計，不再呈現粒子模型', () => {

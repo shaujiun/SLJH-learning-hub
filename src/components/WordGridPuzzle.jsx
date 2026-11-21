@@ -25,7 +25,12 @@ import {
 } from '../lib/wordGridPuzzle.js'
 import { isSupabaseConfigured } from '../lib/supabase.js'
 import { accountPuzzleProgressKey } from '../lib/puzzleProgress.js'
-import { importWordBankFromPhoto, importWordGridFromPhoto, normalizedPhotoRect } from '../lib/wordGridPhotoImport.js'
+import {
+  importWordBankFromPhoto,
+  importWordGridFromPhoto,
+  normalizedPhotoPoint,
+  normalizedPhotoRect,
+} from '../lib/wordGridPhotoImport.js'
 import {
   archiveWordGridPuzzle,
   loadWordGridPuzzles,
@@ -381,37 +386,73 @@ function GridEditor({ value, mode, onChange }) {
 
 export function PhotoImportPanel({ imageUrl, onImportGrid, onImportBank }) {
   const imageRef = useRef(null)
+  const dragStartRef = useRef(null)
   const [target, setTarget] = useState('grid')
-  const [firstCorner, setFirstCorner] = useState(null)
+  const [draftRegion, setDraftRegion] = useState(null)
   const [regions, setRegions] = useState({ grid: null, bank: null })
   const [progress, setProgress] = useState('')
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
-    setFirstCorner(null)
+    dragStartRef.current = null
+    setDraftRegion(null)
     setRegions({ grid: null, bank: null })
     setProgress('')
   }, [imageUrl])
 
-  const markCorner = (event) => {
-    const bounds = event.currentTarget.getBoundingClientRect()
-    const point = {
-      x: (event.clientX - bounds.left) / bounds.width,
-      y: (event.clientY - bounds.top) / bounds.height,
-    }
-    if (!firstCorner) {
-      setFirstCorner(point)
-      setProgress(`已選取${target === 'grid' ? '題目' : '字庫'}第一角；請點對角。`)
-      return
-    }
-    const rect = normalizedPhotoRect(firstCorner, point)
-    setFirstCorner(null)
+  const pointFromEvent = (event) => normalizedPhotoPoint(
+    event.clientX,
+    event.clientY,
+    imageRef.current?.getBoundingClientRect(),
+  )
+
+  const beginSelection = (event) => {
+    if (busy || event.button > 0) return
+    const point = pointFromEvent(event)
+    if (!point) return
+    event.preventDefault()
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+    dragStartRef.current = point
+    setDraftRegion(null)
+    setProgress(`正在框選${target === 'grid' ? '題目' : '字庫'}範圍……`)
+  }
+
+  const updateSelection = (event) => {
+    if (!dragStartRef.current) return
+    const point = pointFromEvent(event)
+    if (!point) return
+    event.preventDefault()
+    setDraftRegion(normalizedPhotoRect(dragStartRef.current, point))
+  }
+
+  const finishSelection = (event) => {
+    const start = dragStartRef.current
+    if (!start) return
+    const point = pointFromEvent(event)
+    event.preventDefault()
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+    dragStartRef.current = null
+    const rect = normalizedPhotoRect(start, point)
+    setDraftRegion(null)
     if (!rect) {
-      setProgress('框選範圍太小，請重新選取。')
+      setProgress('框選範圍太小；請按住照片後拖曳出完整範圍。')
       return
     }
     setRegions((current) => ({ ...current, [target]: rect }))
     setProgress(`已框選${target === 'grid' ? '題目' : '字庫'}範圍；可開始辨識。`)
+  }
+
+  const cancelSelection = (event) => {
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+    dragStartRef.current = null
+    setDraftRegion(null)
+  }
+
+  const chooseTarget = (nextTarget) => {
+    dragStartRef.current = null
+    setDraftRegion(null)
+    setTarget(nextTarget)
+    setProgress(`請按住照片並拖曳框選${nextTarget === 'grid' ? '題目 10×10 格' : '上方字庫'}。`)
   }
 
   const recognize = async (kind) => {
@@ -442,15 +483,24 @@ export function PhotoImportPanel({ imageUrl, onImportGrid, onImportBank }) {
   return (
     <div className="word-grid-photo-panel">
       <div className="word-grid-photo-tools">
-        <button type="button" className={target === 'grid' ? 'is-active' : ''} onClick={() => { setTarget('grid'); setFirstCorner(null) }}>框選題目 10×10 格</button>
-        <button type="button" className={target === 'bank' ? 'is-active' : ''} onClick={() => { setTarget('bank'); setFirstCorner(null) }}>框選上方字庫</button>
+        <button type="button" className={target === 'grid' ? 'is-active' : ''} onClick={() => chooseTarget('grid')}>框選題目 10×10 格</button>
+        <button type="button" className={target === 'bank' ? 'is-active' : ''} onClick={() => chooseTarget('bank')}>框選上方字庫</button>
       </div>
-      <p>先選範圍，再依序點照片的左上角、右下角。字庫請完整框住 4×10 字格；辨識結果可修改，且不會直接發布。</p>
-      <div className="word-grid-photo-image" onClick={markCorner}>
-        <img ref={imageRef} src={imageUrl} alt="待辨識的報紙照片" />
+      <p>先選擇「題目」或「字庫」，再按住照片並拖曳框選。可由任一角開始；字庫請完整框住 4×10 字格。辨識結果仍可修改，且不會直接發布。</p>
+      <div
+        className={`word-grid-photo-image is-selecting-${target}`}
+        onPointerDown={beginSelection}
+        onPointerMove={updateSelection}
+        onPointerUp={finishSelection}
+        onPointerCancel={cancelSelection}
+        role="application"
+        aria-label={`拖曳框選${target === 'grid' ? '題目 10×10 格' : '上方字庫'}範圍`}
+      >
+        <img ref={imageRef} src={imageUrl} alt="待辨識的報紙照片" draggable="false" />
         {Object.entries(regions).map(([key, rect]) => rect && (
           <span key={key} className={`word-grid-photo-region is-${key}`} style={{ left: `${rect.left * 100}%`, top: `${rect.top * 100}%`, width: `${rect.width * 100}%`, height: `${rect.height * 100}%` }}>{key === 'grid' ? '題目' : '字庫'}</span>
         ))}
+        {draftRegion && <span className={`word-grid-photo-region is-${target} is-preview`} style={{ left: `${draftRegion.left * 100}%`, top: `${draftRegion.top * 100}%`, width: `${draftRegion.width * 100}%`, height: `${draftRegion.height * 100}%` }}>框選中</span>}
       </div>
       <div className="word-grid-photo-tools">
         <button type="button" disabled={busy || !regions.grid} onClick={() => recognize('grid')}>讀取題目格與提示字</button>
@@ -606,6 +656,11 @@ export default function WordGridPuzzle({ guestMode = false }) {
         <div><p>文字益智遊戲</p><h1>填字圖</h1></div>
         {state.canManage ? <button type="button" onClick={() => setEditing(defaultPuzzle)}><Plus aria-hidden="true" />建立新題</button> : <span />}
       </header>
+      <nav className="word-grid-mode-tabs" aria-label="填字圖類型">
+        <a className="is-active" href={`?puzzle=word-grid${guestMode ? '&guest=1' : ''}`}>報紙填字圖</a>
+        <a href={`?puzzle=word-grid&mode=news${guestMode ? '&guest=1' : ''}`}>新聞縱橫填字</a>
+        <a href={`?puzzle=word-grid&mode=idiom${guestMode ? '&guest=1' : ''}`}>成語填字圖</a>
+      </nav>
       <main className="word-grid-main">
         <section className="word-grid-intro">
           <div>

@@ -21,6 +21,15 @@ describe('各科遊戲選擇入口', () => {
       launchUrl: '?game=pythagoras-challenge',
     }))
   })
+  it('數學科提供因式交鋒線上桌遊入口', () => {
+    expect(subjectGamesFor({ code: 'math', name: '數學科' }, '')).toContainEqual(expect.objectContaining({
+      code: 'factor-clash',
+      section: 'board',
+      name: '因式交鋒：天人 × 十字',
+      availability: '八上第 3 章起適用',
+      launchUrl: '?game=factor-clash',
+    }))
+  })
   it.each([
     ['english', '?subject=english'],
     ['science', '?subject=science'],
@@ -60,7 +69,7 @@ describe('各科遊戲選擇入口', () => {
     expect(publicGames).toContainEqual(expect.objectContaining({
       code: 'chemical-balance',
       name: '化學反應平衡站',
-      availability: '第 1 關「分子組裝室」開放',
+      availability: '八下第 1 章起適用',
       launchUrl: '?game=chemical-balance',
     }))
   })
@@ -99,9 +108,9 @@ describe('各科遊戲選擇入口', () => {
 
   it('科目頁固定四區，現有活動各只放入一區', () => {
     const examples = [
-      ['math', { basic: ['pythagoras-challenge'], board: ['animal-equation'] }],
+      ['math', { basic: ['pythagoras-challenge'], board: ['animal-equation', 'factor-clash'] }],
       ['english', { basic: ['english-vocabulary'], guided: ['english-grammar', 'english-reading'] }],
-      ['science', { basic: ['periodic-table'], guided: ['chemical-formula', 'chemical-balance'] }],
+      ['science', { map: ['science-learning-maps'], basic: ['periodic-table'], guided: ['chemical-formula', 'chemical-balance'] }],
       ['history', { map: ['history-atlas'] }],
       ['geography', { map: ['geography-learning-maps'], guided: ['geography-fill-map', 'geography-detective'] }],
     ]
@@ -141,6 +150,18 @@ describe('各科遊戲選擇入口', () => {
   it('地理學習地圖不出現在訪客版', () => {
     expect(subjectGamesFor({ code: 'geography', name: '地理' }, '', { guestMode: true }).map((game) => game.code))
       .not.toContain('geography-learning-maps')
+  })
+
+  it('自然科學習地圖只提供登入帳號並標示已開放章節', () => {
+    const system = { code: 'science', name: '自然' }
+    expect(subjectGamesFor(system, '')).toContainEqual(expect.objectContaining({
+      code: 'science-learning-maps',
+      section: 'map',
+      launchUrl: '?learning-maps=science',
+      availability: '第 3 冊第 3～4 章已開放',
+    }))
+    expect(subjectGamesFor(system, '', { guestMode: true }).map((game) => game.code))
+      .not.toContain('science-learning-maps')
   })
 
   it('歷史科先提供八年級歷史時光地圖', () => {
