@@ -2,7 +2,13 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { buildIdiomPuzzle } from '../lib/idiomWordGrid.js'
-import { IdiomBoard, IdiomLearningPanel, IdiomPuzzleEditor, PlayIdiomPuzzle } from './IdiomWordGrid.jsx'
+import {
+  buildIdiomCompletionProgress,
+  IdiomBoard,
+  IdiomLearningPanel,
+  IdiomPuzzleEditor,
+  PlayIdiomPuzzle,
+} from './IdiomWordGrid.jsx'
 
 const puzzle = {
   id: 'test-puzzle', title: '成語挑戰', publishedOn: '2026-10-31', sourceVersion: 'dict_idioms_2020_20260929',
@@ -49,6 +55,16 @@ describe('成語填字圖畫面', () => {
     )
     expect(html).toContain('本關成語學習')
     expect(html).toContain('一心一意')
+  })
+
+  it('重玩同一關通關時會用目前提示次數建立同步紀錄', () => {
+    const progress = buildIdiomCompletionProgress({ puzzle, focusTaskId: 'task-1', hintUses: 2 })
+    expect(progress).toMatchObject({
+      activityCode: 'idiom_word_grid',
+      source: 'daily_task',
+      metadata: { hintsUsed: 2 },
+    })
+    expect(progress.questionCount).toBeGreaterThan(0)
   })
 
   it('管理者可設定黑格、白格、提示字、完整答案、等級與發布狀態', () => {
