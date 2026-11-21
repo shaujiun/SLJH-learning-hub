@@ -9,6 +9,7 @@ import {
 import { recognizeReadingRegion } from '../lib/englishReadingPhotoImport.js'
 import { getReadingSpeechRate } from '../lib/englishReadingSpeech.js'
 import { loadAdminReadingLessons, saveAdminReadingLesson } from '../services/englishReadingService.js'
+import { EnglishReadingMindMap, EnglishReadingMindMapEditor } from './EnglishReadingMindMap.jsx'
 import EnglishReadingQuestionEditor from './EnglishReadingQuestionEditor.jsx'
 import './englishReadingWorkshop.css'
 
@@ -95,7 +96,7 @@ function ReadingPreview({ draft }) {
         {words.map(({ label, entries }) => <section key={label}><h3>{label}</h3>{entries.length ? <div className="reading-word-list">{entries.map(({ word, meaning }, index) => <div key={`${word}-${index}`}><button type="button" onClick={() => speak(readingWordSpeechText(word))} title={`播放 ${word} 發音`}><Volume2 aria-hidden="true" />{word}</button><span>{meaning}</span><button type="button" className="reading-slow" onClick={() => speak(readingWordSpeechText(word), true)} aria-label={`慢速播放 ${word}`}>慢速</button></div>)}</div> : <p>尚未校對單字。</p>}</section>)}
         {speechNotice && <p role="status" className="reading-speech-notice">{speechNotice}</p>}
         {draft.grammar && <section><h3>實用文法</h3><p className="reading-raw-text">{draft.grammar}</p></section>}
-        {draft.mindMap && <section><h3>單字心智圖文字草稿</h3><p className="reading-raw-text">{draft.mindMap}</p></section>}
+        {draft.mindMap && <EnglishReadingMindMap value={draft.mindMap} title={draft.title} />}
       </aside>
     </div>
     <div className="reading-exercises">
@@ -252,7 +253,8 @@ export default function EnglishReadingWorkshop() {
         <button type="button" className="reading-action" disabled={busy || !selectedRect} onClick={recognize}>{busy ? '辨識中……' : '辨識選取範圍'}</button>
         <p className="reading-status" role="status">{status}</p>
         <div className="reading-meta"><label>文章標題<input value={draft.title} onChange={(event) => updateField('title', event.target.value)} /></label><label>作者<input value={draft.author} onChange={(event) => updateField('author', event.target.value)} /></label><label>報紙日期<input type="date" value={draft.issueDate} onChange={(event) => updateField('issueDate', event.target.value)} /></label><label>來源<input value={draft.source} onChange={(event) => updateField('source', event.target.value)} /></label></div>
-        {readingSections.map((section) => <label className="reading-text-field" key={section.code}>{section.label}<textarea value={draft[section.code]} onChange={(event) => updateField(section.code, event.target.value)} rows={section.code === 'english' || section.code === 'translation' ? 8 : 4} placeholder={section.code.endsWith('Words') ? '一行一個，例如：serious 嚴重的' : '辨識後請逐字對照照片校對。'} /></label>)}
+        {readingSections.filter((section) => section.code !== 'mindMap').map((section) => <label className="reading-text-field" key={section.code}>{section.label}<textarea value={draft[section.code]} onChange={(event) => updateField(section.code, event.target.value)} rows={section.code === 'english' || section.code === 'translation' ? 8 : 4} placeholder={section.code.endsWith('Words') ? '一行一個，例如：serious 嚴重的' : '辨識後請逐字對照照片校對。'} /></label>)}
+        <EnglishReadingMindMapEditor value={draft.mindMap} title={draft.title} onChange={(value) => updateField('mindMap', value)} />
         {['A', 'B'].map((group) => <label className="reading-text-field" key={group}>{group} 組提示<textarea value={draft[`group${group}Hint`]} onChange={(event) => updateField(`group${group}Hint`, event.target.value)} rows={2} /></label>)}
         <div className="reading-meta"><label>學生開放日期<input type="date" value={availableFrom} onChange={(event) => setAvailableFrom(event.target.value)} /></label><label>學生截止日期<input type="date" value={availableUntil} onChange={(event) => setAvailableUntil(event.target.value)} /></label></div>
         <label className="reading-text-field">教學使用依據或授權範圍<textarea value={usageNote} onChange={(event) => setUsageNote(event.target.value)} rows={2} placeholder="請記錄適用課程、使用對象與期間，或授權資訊。" /></label>

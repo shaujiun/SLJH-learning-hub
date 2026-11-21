@@ -8,6 +8,7 @@ import { formatReadingCountdown, READING_TRANSLATION_DELAY_SECONDS } from '../li
 import { assignReadingEvidence, evidencePositionsForSentence, getReadingEvidenceText } from '../lib/englishReadingEvidence.js'
 import { getReadingSpeechRate } from '../lib/englishReadingSpeech.js'
 import { loadStudentReadingLessons } from '../services/englishReadingService.js'
+import { EnglishReadingMindMap } from './EnglishReadingMindMap.jsx'
 import EnglishReadingQuestionSet from './EnglishReadingQuestionSet.jsx'
 import './englishReadingWorkshop.css'
 
@@ -130,7 +131,7 @@ export default function EnglishReadingPractice() {
       ].map(([label, value]) => <section key={label}><h3>{label}</h3><div className="reading-word-list">{parseReadingWords(value).map(({ word, meaning }, index) => <div key={`${word}-${index}`}><button type="button" onClick={() => speak(readingWordSpeechText(word))}><Volume2 aria-hidden="true" />{word}</button><span>{meaning}</span><button type="button" className="reading-slow" onClick={() => speak(readingWordSpeechText(word), true)} aria-label={`慢速播放 ${word}`}>慢速</button></div>)}</div></section>)}
         {speechError && <p role="status" className="reading-warning">{speechError}</p>}
         {lesson.grammar && <section><h3>實用文法</h3><p className="reading-raw-text">{lesson.grammar}</p></section>}
-        {lesson.mindMap && <section><h3>單字心智圖</h3><p className="reading-raw-text">{lesson.mindMap}</p></section>}
+        {lesson.mindMap && <EnglishReadingMindMap value={lesson.mindMap} title={lesson.title} />}
       </aside></div>
       <div className="reading-exercises"><section><h3>練習題</h3><p>{state.viewerRole === 'admin' ? '管理者可完整試答並查看參考答案、AI 解題思路與原文依據，但不會建立學生作答紀錄。' : '答錯時不會公布正解，可以修改後再送出；答對後才會顯示參考答案、解題思路與原文依據。'}</p><EnglishReadingQuestionSet key={lesson.id} lessonId={lesson.id} group={state.group} evidenceByQuestion={evidenceTextByQuestion} onEvidenceQuestionsChange={handleEvidenceQuestionsChange} onRequestEvidence={focusEvidenceQuestion} fallback={Boolean(lesson.cloze || lesson.questions)} viewerRole={state.viewerRole} /></section><section><h3>閱讀提示</h3><p className="reading-raw-text">{(state.group === 'A' ? lesson.groupAHint : lesson.groupBHint) || '這篇文章沒有額外提示。'}</p></section></div>
     </section>}
