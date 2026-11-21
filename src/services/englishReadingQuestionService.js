@@ -43,15 +43,20 @@ export function readingQuestionPayload(question, lessonId) {
   const prompt = String(question.prompt || '').trim()
   const options = kind === 'choice' ? (question.options || []).map((item) => String(item).trim()) : []
   while (options.length && !options.at(-1)) options.pop()
+  const clozeAnswers = (question.answers || []).map((item) => String(item).trim())
+  while (clozeAnswers.length > 1 && !clozeAnswers.at(-1)) clozeAnswers.pop()
   const answers = kind === 'choice'
     ? [String(question.answers?.[0] || '').trim().toUpperCase()]
-    : (question.answers || []).map((item) => String(item).trim()).filter(Boolean)
+    : clozeAnswers
   if (!prompt) throw new Error('請輸入題目。')
   if (kind === 'choice' && (options.length < 2 || options.length > 4 || options.some((item) => !item) || !'ABCD'.slice(0, options.length).includes(answers[0]))) {
     throw new Error('選擇題需要 2 至 4 個選項，並指定有效的正解代號。')
   }
-  if (kind === 'cloze' && (answers.length < 1 || answers.length > 6)) {
-    throw new Error('填空題需要 1 至 6 個答案；每行對應一個空格。')
+  const promptBlankCount = kind === 'cloze' ? (prompt.match(/[＿_]{2,}/g) || []).length : 0
+  const expectedBlankCount = promptBlankCount || Number(question.blankCount) || answers.length
+  if (kind === 'cloze' && (expectedBlankCount < 1 || expectedBlankCount > 6
+    || answers.length !== expectedBlankCount || answers.some((answer) => !answer))) {
+    throw new Error(`填空題共有 ${expectedBlankCount || 1} 個空格，請依序輸入相同數量的答案；每行對應一個空格。`)
   }
   return {
     p_lesson_id: lessonId, p_question_id: question.id || null,
