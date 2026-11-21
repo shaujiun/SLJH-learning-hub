@@ -83,7 +83,10 @@ function supplementalChoiceQuestions(articleText, count, startPosition, existing
   if (paragraphs.length < 2 || count < 1) return []
   const candidates = sentenceRecords(articleText)
     .filter(({ sentence }) => sentence.length >= 35 && sentence.length <= 220)
-    .filter(({ sentence }) => !existingPrompts.has(normalizedPrompt(sentence)))
+    .filter(({ sentence }) => {
+      const normalizedSentence = normalizedPrompt(sentence)
+      return ![...existingPrompts].some((prompt) => prompt.includes(normalizedSentence))
+    })
     .sort((left, right) => left.paragraph - right.paragraph || right.sentence.length - left.sentence.length)
   const usedParagraphs = new Set()
   const selected = []
