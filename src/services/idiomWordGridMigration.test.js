@@ -4,9 +4,11 @@ import { describe, expect, it } from 'vitest'
 const migrationUrl = new URL('../../supabase/migrations/20261031150000_add_idiom_word_grid.sql', import.meta.url)
 const seedUrl = new URL('../../supabase/migrations/20261031151000_seed_idiom_word_grid.sql', import.meta.url)
 const publicReadUrl = new URL('../../supabase/migrations/20261031152000_fix_idiom_word_grid_public_read.sql', import.meta.url)
+const taskLaunchFixUrl = new URL('../../supabase/migrations/20261121170000_fix_idiom_word_grid_task_launch.sql', import.meta.url)
 const sql = readFileSync(migrationUrl, 'utf8')
 const seedSql = readFileSync(seedUrl, 'utf8')
 const publicReadSql = readFileSync(publicReadUrl, 'utf8')
+const taskLaunchFixSql = readFileSync(taskLaunchFixUrl, 'utf8')
 
 describe('成語填字圖 migration', () => {
   it('建立題庫、能量、提示與通關資料並套用 RLS', () => {
@@ -47,5 +49,13 @@ describe('成語填字圖 migration', () => {
     expect(publicReadSql).toContain('create policy idiom_puzzles_published_read')
     expect(publicReadSql).toContain("using (status = 'published')")
     expect(publicReadSql).not.toContain('grant execute on function public.can_manage_word_grid_puzzles() to anon')
+  })
+
+  it('任務網址只保留一組成語模式參數，並修復既有未完成任務', () => {
+    expect(taskLaunchFixSql).toContain("launch_path = ''")
+    expect(taskLaunchFixSql).toContain("activity_code_snapshot::text) = 'idiom_word_grid'")
+    expect(taskLaunchFixSql).toContain("status in ('pending', 'expired')")
+    expect(taskLaunchFixSql).toContain("?puzzle=word-grid&mode=idiom")
+    expect(taskLaunchFixSql).not.toContain("mode=idiom?puzzle")
   })
 })

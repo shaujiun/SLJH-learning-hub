@@ -33,6 +33,28 @@ describe('成語填字圖服務', () => {
     expect(context.puzzles.length).toBeGreaterThanOrEqual(4)
   })
 
+  it('登入學生載入帳號的遠端通關題目，供跨裝置顯示', async () => {
+    const client = {
+      auth: { getSession: vi.fn(async () => ({ data: { session: { user: { id: 'profile-1' } } }, error: null })) },
+      from: vi.fn((table) => {
+        if (table === 'students') return result({ id: 'student-1' })
+        if (table === 'idiom_word_grid_puzzles') return result([{
+          id: 'puzzle-1', title: '測試', published_on: '2026-11-21', difficulty: 'basic',
+          puzzle_data: { board: { width: 1, height: 1, cells: [] }, idioms: [], givenCellKeys: [] },
+          status: 'published', is_daily_eligible: true,
+        }])
+        if (table === 'idiom_word_grid_completions') return result([{ puzzle_id: 'puzzle-1' }])
+        if (table === 'idiom_word_grid_wallets') return result({ energy: 7 })
+        return result([])
+      }),
+      rpc: vi.fn(async () => ({ data: false, error: null })),
+    }
+
+    await expect(loadIdiomWordGridContext({}, client)).resolves.toMatchObject({
+      studentId: 'student-1', completedPuzzleIds: ['puzzle-1'], energy: 7, remoteEnabled: true,
+    })
+  })
+
   it('提示與通關交由資料庫原子性扣除及增加能量', async () => {
     const client = { rpc: vi.fn(async (name) => ({ data: name === 'spend_idiom_word_grid_hint' ? { energy: 4 } : { energy: 8, energyEarned: 4, firstCompletion: true }, error: null })) }
     await expect(spendIdiomHint({ puzzleId: 'p1', kind: 'cross', cellKey: '1:2' }, client)).resolves.toEqual({ energy: 4 })
