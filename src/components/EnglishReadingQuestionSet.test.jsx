@@ -69,7 +69,7 @@ describe('英語閱讀學生作答介面', () => {
     }} />)
     expect(html).toContain('答對了')
     expect(html).toContain('參考答案：B')
-    expect(html).toContain('AI 解題思路：')
+    expect(html).toContain('解題思路：')
     expect(html).toContain('Source sentence.')
   })
 })

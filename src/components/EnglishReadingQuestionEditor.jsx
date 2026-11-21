@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { buildReadingGuidanceDraft } from '../lib/englishReadingGuidance.js'
 import { parseRecognizedReadingQuestions } from '../lib/englishReadingQuestionImport.js'
 import { deleteAdminReadingQuestion, loadAdminReadingQuestions, saveAdminReadingQuestion } from '../services/englishReadingQuestionService.js'
 
@@ -7,7 +8,7 @@ function blankQuestion(position = 1) {
     answers: ['A'], explanation: '', evidenceSentence: '', hintA: '', hintB: '' }
 }
 
-export default function EnglishReadingQuestionEditor({ lessonId, recognizedCloze = '', recognizedQuestions = '' }) {
+export default function EnglishReadingQuestionEditor({ lessonId, articleText = '', recognizedCloze = '', recognizedQuestions = '' }) {
   const [questions, setQuestions] = useState([])
   const [form, setForm] = useState(blankQuestion)
   const [importQueue, setImportQueue] = useState([])
@@ -25,6 +26,20 @@ export default function EnglishReadingQuestionEditor({ lessonId, recognizedCloze
   }, [lessonId])
 
   function update(key, value) { setForm((current) => ({ ...current, [key]: value })) }
+
+  function generateGuidanceDraft() {
+    if (!String(articleText).trim() || !String(form.prompt).trim()) {
+      setStatus('請先輸入英文文章與本題題目，再產生提示草稿。')
+      return
+    }
+    const existing = [form.explanation, form.evidenceSentence, form.hintA, form.hintB].some((value) => String(value || '').trim())
+    if (existing && !window.confirm('目前已有解析、原文依據或提示；重新產生會取代這四個欄位，確定繼續？')) return
+    const guidance = buildReadingGuidanceDraft(articleText, form)
+    setForm((current) => ({ ...current, ...guidance }))
+    setStatus(guidance.evidenceSentence
+      ? `已依文章定位原文並產生提示草稿（${guidance.match ? `第 ${guidance.match.paragraph} 段第 ${guidance.match.sentence} 句` : ''}）。這是免費規則比對，不是 AI 判讀；請校對後再儲存。`
+      : '已產生一般解題提示，但無法可靠定位原文。請先校對文章與題幹，並手動填入原文依據。')
+  }
 
   function importRecognizedText() {
     const imported = parseRecognizedReadingQuestions({
@@ -124,6 +139,10 @@ export default function EnglishReadingQuestionEditor({ lessonId, recognizedCloze
       {form.kind === 'choice' ? <><label>選項（每行一個，依序為 A、B、C、D）<textarea rows="4" value={form.options.join('\n')} onChange={(event) => update('options', event.target.value.split('\n'))} /></label>
         <label>正解代號<select value={form.answers[0] || ''} onChange={(event) => update('answers', [event.target.value])}><option value="">請選擇正解</option>{['A', 'B', 'C', 'D'].map((choice) => <option key={choice} value={choice}>{choice}</option>)}</select></label></>
         : <label>正解（每個空格一行；同格可用 | 分隔可接受的寫法）<textarea rows="3" value={form.answers.join('\n')} onChange={(event) => update('answers', event.target.value.split('\n'))} /></label>}
+      <div className="reading-guidance-action">
+        <button type="button" className="reading-action" disabled={!articleText.trim() || !form.prompt.trim()} onClick={generateGuidanceDraft}>依文章產生提示與依據草稿</button>
+        <small>免費規則比對：協助定位原文及建立 A／B 組提示，不會呼叫付費 AI，也不保證語意判斷正確。</small>
+      </div>
       <label>答題解析<textarea rows="2" value={form.explanation} onChange={(event) => update('explanation', event.target.value)} /></label>
       <label>對應原文句子<textarea rows="2" value={form.evidenceSentence} onChange={(event) => update('evidenceSentence', event.target.value)} /></label>
       <div className="reading-meta"><label>A 組提示<textarea rows="2" value={form.hintA} onChange={(event) => update('hintA', event.target.value)} /></label>

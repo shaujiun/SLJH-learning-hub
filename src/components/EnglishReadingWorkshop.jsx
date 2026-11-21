@@ -259,7 +259,7 @@ export default function EnglishReadingWorkshop() {
         <div className="reading-storage-help"><p><strong>此裝置備份：</strong>只保存在目前瀏覽器，適合暫存尚未完成的文字與辨識後待校對內容，不會同步到其他裝置。</p><p><strong>資料庫草稿：</strong>文章與已按「儲存新題」的題目會跨登入保留，但學生看不到；發布後才會依開放日期顯示。</p></div>
         <div className="reading-save-actions"><button type="button" className="reading-action" onClick={saveLocalDraft}>備份到此裝置</button><button type="button" className="reading-action" disabled={busy} onClick={() => saveDatabase('draft')}>存入資料庫草稿／暫停發布</button><button type="button" className="reading-action reading-publish" disabled={busy || !lessonId} onClick={() => saveDatabase('published')}>發布閱讀版</button></div>
         <p>發布前請先儲存文章草稿，再建立至少一題有正解的練習題。</p>
-        <EnglishReadingQuestionEditor lessonId={lessonId} recognizedCloze={draft.cloze} recognizedQuestions={draft.questions} />
+        <EnglishReadingQuestionEditor lessonId={lessonId} articleText={draft.english} recognizedCloze={draft.cloze} recognizedQuestions={draft.questions} />
         <p className="reading-warning">原圖不儲存；資料庫只保存校對後的文字。發布前請校對文章及每題答案。</p>
       </section>
       <ReadingPreview draft={draft} />

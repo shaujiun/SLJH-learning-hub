@@ -104,6 +104,8 @@
 .reading-import-progress > div span { color: #665c4e; font-size: .86rem; }
 .reading-import-progress > span { color: #7c4d12; font-weight: 750; white-space: nowrap; }
 .reading-import-progress button { padding: 6px 9px; border: 1px solid #b4915f; border-radius: 8px; color: #65430f; background: #fff; cursor: pointer; }
+.reading-guidance-action { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 11px 12px; border-left: 4px solid #4f8d83; background: #f1f8f6; }
+.reading-guidance-action small { flex: 1 1 280px; color: #49635f; font-size: .88rem; line-height: 1.55; }
 .reading-question-list { display: grid; gap: 6px; margin-bottom: 10px; }
 .reading-saved-question-count { color: #315f4a; font-weight: 750; }
 .reading-question-list button { text-align: left; }
