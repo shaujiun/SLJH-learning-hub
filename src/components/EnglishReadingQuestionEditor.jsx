@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { buildReadingGuidanceDraft } from '../lib/englishReadingGuidance.js'
 import { parseRecognizedReadingQuestions } from '../lib/englishReadingQuestionImport.js'
+import { buildSupplementalReadingQuestions } from '../lib/englishReadingQuestionCoverage.js'
 import { deleteAdminReadingQuestion, loadAdminReadingQuestions, saveAdminReadingQuestion } from '../services/englishReadingQuestionService.js'
 
 function blankQuestion(position = 1) {
@@ -8,7 +9,9 @@ function blankQuestion(position = 1) {
     answers: ['A'], explanation: '', evidenceSentence: '', hintA: '', hintB: '' }
 }
 
-export default function EnglishReadingQuestionEditor({ lessonId, articleText = '', recognizedCloze = '', recognizedQuestions = '' }) {
+export default function EnglishReadingQuestionEditor({
+  lessonId, articleText = '', coreWordsText = '', extraWordsText = '', recognizedCloze = '', recognizedQuestions = '',
+}) {
   const [questions, setQuestions] = useState([])
   const [form, setForm] = useState(blankQuestion)
   const [importQueue, setImportQueue] = useState([])
@@ -54,6 +57,38 @@ export default function EnglishReadingQuestionEditor({ lessonId, articleText = '
     setImportQueue(imported)
     setForm(imported[0])
     setStatus(`已將 ${imported.length} 題直接帶入題目設定。請逐題校對並指定正解；系統不會猜測答案。`)
+  }
+
+  function checkQuestionCoverage() {
+    if (!lessonId || !String(articleText).trim()) {
+      setStatus('請先輸入英文文章並存入資料庫草稿，再檢查題量。')
+      return
+    }
+    const pendingQuestions = importQueue.length
+      ? importQueue
+      : (!form.id && String(form.prompt || '').trim() ? [form] : [])
+    const coverageQuestions = [...questions, ...pendingQuestions]
+    const result = buildSupplementalReadingQuestions({
+      articleText, coreWordsText, extraWordsText, questions: coverageQuestions,
+    })
+    const { requirements, counts } = result.assessment
+    const summary = `文章共 ${requirements.sentenceCount} 句；建議每組至少 ${requirements.choice} 題閱讀選擇及 ${requirements.cloze} 題填空，目前兩組皆可使用的最低題量為 ${counts.choice} 題選擇及 ${counts.cloze} 題填空。`
+    if (result.assessment.sufficient) {
+      setStatus(`題目足夠，不必再生成新題目。${summary}`)
+      return
+    }
+    if (!result.questions.length) {
+      setStatus(`題目仍不足，但系統找不到能由原文明確驗證的安全補題。${summary}請由老師手動新增。`)
+      return
+    }
+    let queue
+    if (importQueue.length) queue = [...importQueue, ...result.questions]
+    else if (form.id || String(form.prompt || '').trim()) queue = [form, ...result.questions]
+    else queue = result.questions
+    setImportQueue(queue)
+    setForm(queue[0])
+    const unresolved = result.unresolved.choice + result.unresolved.cloze
+    setStatus(`題目不足，已建立 ${result.questions.length} 題可校對的安全補充題草稿。${summary}${unresolved ? `另有 ${unresolved} 題無法安全自動建立，請手動補充。` : ''}這些不是 AI 生成，儲存前請逐題校對。`)
   }
 
   function skipImportedQuestion() {
@@ -120,9 +155,11 @@ export default function EnglishReadingQuestionEditor({ lessonId, articleText = '
     <div className="reading-import-controls">
       <button type="button" className="reading-action" disabled={!lessonId || (!recognizedCloze.trim() && !recognizedQuestions.trim())} onClick={importRecognizedText}>將辨識文字轉入題目設定</button>
       <small>支援題號、A.～D. 選項及底線填空；匯入後仍須逐題校對。</small>
+      <button type="button" className="reading-action" disabled={!lessonId || !articleText.trim()} onClick={checkQuestionCoverage}>檢查題量並建立補充題</button>
+      <small>不足時只建立段落定位題與原文字詞填空；不安全的主旨或推論題不會自動產生。</small>
     </div>
     {importQueue.length > 0 && <div className="reading-import-progress" role="status">
-      <div><strong>正在校對辨識題目</strong><span>目前題型：{form.kind === 'choice' ? '閱讀選擇題' : `小試身手填空題（${form.blankCount || form.answers.length} 格）`}；本題儲存後會自動載入下一題。</span></div>
+      <div><strong>正在校對待儲存題目</strong><span>目前題型：{form.kind === 'choice' ? '閱讀選擇題' : `小試身手填空題（${form.blankCount || form.answers.length} 格）`}；本題儲存後會自動載入下一題。</span></div>
       <span>剩餘 {importQueue.length} 題</span>
       <button type="button" onClick={skipImportedQuestion}>略過本題</button>
       <button type="button" onClick={cancelImport}>清除本批</button>
