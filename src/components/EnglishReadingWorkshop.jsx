@@ -100,11 +100,9 @@ function ReadingPreview({ draft }) {
       </aside>
     </div>
     <div className="reading-exercises">
-      <section><h3>小試身手</h3><p className="reading-raw-text">{draft.cloze || '題目待校對。'}</p></section>
-      <section><h3>閱讀能力測驗</h3><p className="reading-raw-text">{draft.questions || '題目待校對。'}</p></section>
       <section><h3>{group} 組閱讀提示</h3><p className="reading-raw-text">{(group === 'A' ? draft.groupAHint : draft.groupBHint) || '尚未設定提示。'}</p></section>
     </div>
-    <p className="reading-warning">此處預覽文章排版及找句子操作；實際作答題目請在編題區另外建立。</p>
+    <p className="reading-warning">此處只預覽學生會看到的文章與閱讀提示；辨識出的練習文字請在左側題目設定區直接轉入並校對。</p>
   </section>
 }
 
@@ -258,10 +256,10 @@ export default function EnglishReadingWorkshop() {
         {['A', 'B'].map((group) => <label className="reading-text-field" key={group}>{group} 組提示<textarea value={draft[`group${group}Hint`]} onChange={(event) => updateField(`group${group}Hint`, event.target.value)} rows={2} /></label>)}
         <div className="reading-meta"><label>學生開放日期<input type="date" value={availableFrom} onChange={(event) => setAvailableFrom(event.target.value)} /></label><label>學生截止日期<input type="date" value={availableUntil} onChange={(event) => setAvailableUntil(event.target.value)} /></label></div>
         <label className="reading-text-field">教學使用依據或授權範圍<textarea value={usageNote} onChange={(event) => setUsageNote(event.target.value)} rows={2} placeholder="請記錄適用課程、使用對象與期間，或授權資訊。" /></label>
-        <div className="reading-storage-help"><p><strong>此裝置備份：</strong>只保存在目前瀏覽器，適合暫存尚未完成的文字與 AI 待確認題目，不會同步到其他裝置。</p><p><strong>資料庫草稿：</strong>文章與已按「儲存新題」的題目會跨登入保留，但學生看不到；發布後才會依開放日期顯示。</p></div>
+        <div className="reading-storage-help"><p><strong>此裝置備份：</strong>只保存在目前瀏覽器，適合暫存尚未完成的文字與辨識後待校對內容，不會同步到其他裝置。</p><p><strong>資料庫草稿：</strong>文章與已按「儲存新題」的題目會跨登入保留，但學生看不到；發布後才會依開放日期顯示。</p></div>
         <div className="reading-save-actions"><button type="button" className="reading-action" onClick={saveLocalDraft}>備份到此裝置</button><button type="button" className="reading-action" disabled={busy} onClick={() => saveDatabase('draft')}>存入資料庫草稿／暫停發布</button><button type="button" className="reading-action reading-publish" disabled={busy || !lessonId} onClick={() => saveDatabase('published')}>發布閱讀版</button></div>
         <p>發布前請先儲存文章草稿，再建立至少一題有正解的練習題。</p>
-        <EnglishReadingQuestionEditor lessonId={lessonId} />
+        <EnglishReadingQuestionEditor lessonId={lessonId} recognizedCloze={draft.cloze} recognizedQuestions={draft.questions} />
         <p className="reading-warning">原圖不儲存；資料庫只保存校對後的文字。發布前請校對文章及每題答案。</p>
       </section>
       <ReadingPreview draft={draft} />

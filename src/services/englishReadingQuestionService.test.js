@@ -17,6 +17,10 @@ describe('英語閱讀互動題目', () => {
   it('填空題每行答案對應一個空格', () => {
     expect(readingQuestionPayload({ kind: 'cloze', prompt: '___ from ___', answers: ['stop', 'crying|cryin'] }, 'lesson-1'))
       .toEqual(expect.objectContaining({ p_answers: ['stop', 'crying|cryin'], p_options: [] }))
+    expect(() => readingQuestionPayload({ kind: 'cloze', prompt: '___ from ___', answers: ['stop'] }, 'lesson-1'))
+      .toThrow('共有 2 個空格')
+    expect(() => readingQuestionPayload({ kind: 'cloze', prompt: '___ from ___', answers: ['stop', ''] }, 'lesson-1'))
+      .toThrow('相同數量的答案')
   })
 
   it('學生查詢不要求或載入答案欄位', async () => {
