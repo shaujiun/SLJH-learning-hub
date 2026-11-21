@@ -63,23 +63,29 @@ export async function loadIdiomWordGridContext({ guestMode = false } = {}, clien
   }
   if (!client) return {
     puzzles: getStarterIdiomPuzzles(), catalog: STARTER_IDIOM_ENTRIES, energy: 0,
-    studentId: '', canManage: false, remoteEnabled: false,
+    studentId: '', completedPuzzleIds: [], canManage: false, remoteEnabled: false,
   }
 
   const account = guestMode ? { userId: '', studentId: '', canManage: false } : await sessionContext(client)
   let query = client.from('idiom_word_grid_puzzles').select(PUZZLE_SELECT).order('published_on', { ascending: false })
   if (!account.canManage) query = query.eq('status', 'published')
-  const [puzzleResult, catalogResult, walletResult] = await Promise.all([
+  const [puzzleResult, catalogResult, walletResult, completionResult] = await Promise.all([
     query,
     client.from('idiom_entries').select('id,phrase,definition,source_text,story,source_url,illustration_url,stage').eq('is_active', true).order('phrase'),
     account.studentId
       ? client.from('idiom_word_grid_wallets').select('energy').eq('student_id', account.studentId).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
+    account.studentId
+      ? client.from('idiom_word_grid_completions').select('puzzle_id').eq('student_id', account.studentId)
+      : Promise.resolve({ data: [], error: null }),
   ])
   if (puzzleResult.error && !isMissingRelation(puzzleResult.error)) throw new Error(`無法讀取成語填字圖：${puzzleResult.error.message}`)
   if (puzzleResult.error) return {
     puzzles: getStarterIdiomPuzzles(), catalog: STARTER_IDIOM_ENTRIES, energy: 0,
-    studentId: account.studentId, canManage: account.canManage, remoteEnabled: false,
+    studentId: account.studentId, completedPuzzleIds: [], canManage: account.canManage, remoteEnabled: false,
+  }
+  if (completionResult.error && !isMissingRelation(completionResult.error)) {
+    throw new Error(`無法讀取成語通關紀錄：${completionResult.error.message}`)
   }
   const catalog = catalogResult.error ? STARTER_IDIOM_ENTRIES : (catalogResult.data || []).map(mapIdiomEntry)
   return {
@@ -87,6 +93,7 @@ export async function loadIdiomWordGridContext({ guestMode = false } = {}, clien
     catalog,
     energy: Number(walletResult.data?.energy || 0),
     studentId: account.studentId,
+    completedPuzzleIds: (completionResult.data || []).map((row) => String(row.puzzle_id || '')).filter(Boolean),
     canManage: account.canManage,
     remoteEnabled: true,
   }

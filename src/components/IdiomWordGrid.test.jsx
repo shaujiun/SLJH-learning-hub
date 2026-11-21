@@ -38,6 +38,19 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('2 能量')
   })
 
+  it('其他裝置載入遠端通關紀錄後直接解鎖成語學習', () => {
+    const html = renderToStaticMarkup(
+      <PlayIdiomPuzzle
+        puzzle={puzzle}
+        context={{ studentId: 'student-1', energy: 5, remoteEnabled: true, completedPuzzleIds: [puzzle.id] }}
+        focusTaskId=""
+        onEnergyChange={() => {}}
+      />,
+    )
+    expect(html).toContain('本關成語學習')
+    expect(html).toContain('一心一意')
+  })
+
   it('管理者可設定黑格、白格、提示字、完整答案、等級與發布狀態', () => {
     const html = renderToStaticMarkup(
       <IdiomPuzzleEditor

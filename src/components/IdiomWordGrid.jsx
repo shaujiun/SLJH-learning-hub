@@ -156,7 +156,7 @@ export function IdiomLearningPanel({ puzzle }) {
   )
 }
 
-export function PlayIdiomPuzzle({ puzzle, context, focusTaskId, onEnergyChange }) {
+export function PlayIdiomPuzzle({ puzzle, context, focusTaskId, onEnergyChange, onPuzzleCompleted = () => {} }) {
   const initial = useMemo(() => restoreProgress(context.studentId, puzzle.id), [context.studentId, puzzle.id])
   const [assignments, setAssignments] = useState(initial.assignments || {})
   const [revealedKeys, setRevealedKeys] = useState(initial.revealedKeys || [])
@@ -165,7 +165,7 @@ export function PlayIdiomPuzzle({ puzzle, context, focusTaskId, onEnergyChange }
   const [selectedCellKey, setSelectedCellKey] = useState('')
   const [checkedWrongKeys, setCheckedWrongKeys] = useState([])
   const [message, setMessage] = useState('')
-  const [completed, setCompleted] = useState(Boolean(initial.completed))
+  const [completed, setCompleted] = useState(Boolean(initial.completed || context.completedPuzzleIds?.includes(puzzle.id)))
   const [busy, setBusy] = useState(false)
   const tiles = useMemo(() => createIdiomBankTiles(puzzle), [puzzle])
   const usedTileIds = new Set(Object.values(assignments))
@@ -281,22 +281,22 @@ export function PlayIdiomPuzzle({ puzzle, context, focusTaskId, onEnergyChange }
       return
     }
     const wasCompleted = completed
-    setCompleted(true)
-    setMessage('全部正確，已解鎖本關成語的釋義與出處。')
-    if (!wasCompleted && context.studentId) {
-      const givenKeys = new Set(puzzle.givenCellKeys || [])
-      const answerCellCount = (puzzle.board?.cells || []).filter((cell) => !givenKeys.has(cell.key)).length
-      trackLearningActivityAttempt(buildIdiomWordGridProgress({
-        puzzle, focusTaskId, answerCellCount, hintsUsed,
-      }))
-    }
     if (!context.studentId || puzzle.id.startsWith('starter-')) {
+      setCompleted(true)
+      setMessage('全部正確，已解鎖本關成語的釋義與出處。')
       if (!wasCompleted) onEnergyChange(Math.min(20, context.energy + (hintUses ? 3 : 4)))
       return
     }
     setBusy(true)
     try {
       const saved = await completeIdiomPuzzle({ puzzleId: puzzle.id, hintsUsed: hintUses, focusTaskId })
+      const givenKeys = new Set(puzzle.givenCellKeys || [])
+      const answerCellCount = (puzzle.board?.cells || []).filter((cell) => !givenKeys.has(cell.key)).length
+      await trackLearningActivityAttempt(buildIdiomWordGridProgress({
+        puzzle, focusTaskId, answerCellCount, hintsUsed,
+      }))
+      setCompleted(true)
+      onPuzzleCompleted(puzzle.id)
       onEnergyChange(saved.energy)
       setMessage(`全部正確，已解鎖成語學習。${saved.energyEarned ? `本關獲得 ${saved.energyEarned} 點能量。` : '本關已領取過能量。'}${saved.taskCompleted ? '每日任務也已完成。' : ''}`)
     } catch (error) {
@@ -550,7 +550,7 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
 }
 
 export default function IdiomWordGrid({ guestMode = false }) {
-  const [state, setState] = useState({ loading: true, error: '', puzzles: [], catalog: [], energy: 0, studentId: '', canManage: false, remoteEnabled: false })
+  const [state, setState] = useState({ loading: true, error: '', puzzles: [], catalog: [], energy: 0, studentId: '', completedPuzzleIds: [], canManage: false, remoteEnabled: false })
   const [selectedId, setSelectedId] = useState('')
   const [editing, setEditing] = useState(null)
   const focusTaskId = typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('focusTask') || ''
@@ -595,12 +595,22 @@ export default function IdiomWordGrid({ guestMode = false }) {
         <>
           {state.puzzles.length > 0 && (
             <div className="idiom-puzzle-toolbar">
-              <label className="idiom-puzzle-picker">選擇關卡<select value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>{state.puzzles.map((item) => <option key={item.id} value={item.id}>{formatDate(item.publishedOn)}・{item.title}・{stageLabels[item.stage] || '自訂'}・{IDIOM_DIFFICULTIES[item.difficulty]?.label}</option>)}</select></label>
+              <label className="idiom-puzzle-picker">選擇關卡<select value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>{state.puzzles.map((item) => <option key={item.id} value={item.id}>{formatDate(item.publishedOn)}・{item.title}・{stageLabels[item.stage] || '自訂'}・{IDIOM_DIFFICULTIES[item.difficulty]?.label}{state.completedPuzzleIds.includes(item.id) ? '・已完成' : ''}</option>)}</select></label>
               {state.canManage && puzzle && <button type="button" onClick={() => setEditing(puzzle)}><Pencil aria-hidden="true" />編輯這一題</button>}
             </div>
           )}
           {puzzle
-            ? <PlayIdiomPuzzle key={puzzle.id} puzzle={puzzle} context={state} focusTaskId={focusTaskId} onEnergyChange={(energy) => setState((current) => ({ ...current, energy }))} />
+            ? <PlayIdiomPuzzle
+              key={puzzle.id}
+              puzzle={puzzle}
+              context={state}
+              focusTaskId={focusTaskId}
+              onEnergyChange={(energy) => setState((current) => ({ ...current, energy }))}
+              onPuzzleCompleted={(puzzleId) => setState((current) => ({
+                ...current,
+                completedPuzzleIds: [...new Set([...(current.completedPuzzleIds || []), puzzleId])],
+              }))}
+            />
             : <section className="idiom-empty-state"><h2>尚無已發布題目</h2><p>管理者建立並發布題目後，學生即可開始作答。</p>{state.canManage && <button type="button" className="primary-button" onClick={() => setEditing({})}><Plus aria-hidden="true" />建立第一題</button>}</section>}
         </>
       )}
