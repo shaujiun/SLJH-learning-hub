@@ -7,7 +7,7 @@ import {
 
 const subjectNames = {
   math: '數學', english: '英語', science: '自然', geography: '地理',
-  history: '歷史', puzzle: '益智遊戲', general: '綜合',
+  history: '歷史', puzzle: '益智遊戲', focus_training: '專注力', general: '綜合',
 }
 
 function formatDate(value) {

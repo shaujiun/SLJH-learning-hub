@@ -22,7 +22,9 @@ import {
 } from '../lib/factorClash.js'
 import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
 import { calculateFactorClashAwaySeconds, normalizeFactorClashAwaySeconds } from '../lib/factorClashAwayTime.js'
+import { buildFactorClashDuelProgress, buildFactorClashSoloProgress } from '../lib/activityProgress.js'
 import { loadFactorClashAccess, recordFactorClashRound } from '../services/factorClashService.js'
+import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
 import {
   clearFactorClashSeat, createFactorClashRoom, joinFactorClashRoom, leaveFactorClashRoom,
   loadFactorClashRoom, readFactorClashSeat, releaseFactorClashSeat,
@@ -278,6 +280,7 @@ function RoomMatch({ seat, snapshot, refresh, onLeave }) {
   const [localSkillUsed, setLocalSkillUsed] = useState(false)
   const startedAtRef = useRef(Date.now())
   const deadlineRef = useRef(0)
+  const progressSavedRef = useRef(false)
 
   useEffect(() => {
     setPlacement({}); setCrossAnswer(emptyCross); setSelected(''); setAttempts(0)
@@ -299,6 +302,12 @@ function RoomMatch({ seat, snapshot, refresh, onLeave }) {
     }, 250)
     return () => window.clearInterval(timer)
   }, [question, resolved, room.status])
+
+  useEffect(() => {
+    if (room.status !== 'finished' || progressSavedRef.current) return
+    progressSavedRef.current = true
+    trackLearningActivityAttempt(buildFactorClashDuelProgress({ room, self }))
+  }, [room, self])
 
   if (room.status === 'playing' && !question) return <section className="factor-room-result"><CheckCircle2 aria-hidden="true" /><p>你的 10 題已完成</p><h2>等待對手完成</h2><div><strong>{self.nickname}　{self.score} 分</strong><strong>{opponent?.nickname || '對手'}　{opponent?.score || 0} 分</strong></div><p>請保留此頁，系統會自動更新最後結果。</p></section>
   if (room.status === 'finished') {
@@ -551,6 +560,10 @@ export default function FactorClash() {
       setSaveMessage('訪客練習不會寫入學生個人進度。')
       return
     }
+    trackLearningActivityAttempt(buildFactorClashSoloProgress({
+      focusTaskId, mode, difficulty, questionCount: questions.length, points,
+      firstTryCorrect, secondTryCorrect, timeoutCount, awayCount, awaySeconds,
+    }))
     setSaveMessage('正在儲存本輪進度……')
     recordFactorClashRound({
       access, focusTaskId, mode, difficulty, questionCount: questions.length, points,
