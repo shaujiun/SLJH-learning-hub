@@ -66,4 +66,19 @@ describe('英語閱讀題量檢查與安全補題', () => {
     expect(result.unresolved.choice).toBe(2)
     expect(result.questions.every((question) => question.kind === 'cloze')).toBe(true)
   })
+
+  it('再次補題時不會重複使用既有定位題的同一句原文', () => {
+    const firstSentence = 'Millions of people depend on GPS to find their way.'
+    const result = buildSupplementalReadingQuestions({
+      articleText: article,
+      questions: [{
+        kind: 'choice', position: 1, groupScope: 'all',
+        prompt: `Which paragraph contains this information? “${firstSentence}”`,
+        options: ['Paragraph 1', 'Paragraph 2', 'Paragraph 3'], answers: ['A'],
+      }],
+    })
+    const generatedChoices = result.questions.filter((question) => question.kind === 'choice')
+    expect(generatedChoices).toHaveLength(2)
+    expect(generatedChoices.every((question) => !question.prompt.includes(firstSentence))).toBe(true)
+  })
 })

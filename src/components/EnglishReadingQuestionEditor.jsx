@@ -95,24 +95,24 @@ export default function EnglishReadingQuestionEditor({
     const remaining = importQueue.slice(1)
     setImportQueue(remaining)
     setForm(remaining[0] || blankQuestion(questions.length + 1))
-    setStatus(remaining.length ? `已略過一題，還有 ${remaining.length} 題待校對。` : '辨識匯入已結束，略過的題目不會儲存。')
+    setStatus(remaining.length ? `已略過一題，還有 ${remaining.length} 題待校對。` : '待校對題目已結束，略過的草稿不會儲存。')
   }
 
   function cancelImport() {
     setImportQueue([])
     setForm(blankQuestion(questions.length + 1))
-    setStatus('已清除尚未儲存的辨識題目；原始辨識文字仍保留在上方欄位。')
+    setStatus('已清除尚未儲存的待校對題目；資料庫內已儲存的題目不受影響。')
   }
 
   function beginManualQuestion() {
-    if (importQueue.length && !window.confirm('尚有辨識題目未校對；改為手動新增會清除這批待匯入題目，確定繼續？')) return
+    if (importQueue.length && !window.confirm('尚有題目草稿未校對；改為手動新增會清除這批待儲存題目，確定繼續？')) return
     setImportQueue([])
     setForm(blankQuestion(questions.length + 1))
     setStatus('')
   }
 
   function editSavedQuestion(item) {
-    if (importQueue.length && !window.confirm('尚有辨識題目未校對；切換到已儲存題目會清除這批待匯入題目，確定繼續？')) return
+    if (importQueue.length && !window.confirm('尚有題目草稿未校對；切換到已儲存題目會清除這批待儲存題目，確定繼續？')) return
     setImportQueue([])
     setForm(item)
     setStatus('')
