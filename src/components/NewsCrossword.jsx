@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { isSupabaseConfigured } from '../lib/supabase.js'
 import { accountPuzzleProgressKey } from '../lib/puzzleProgress.js'
+import { buildNewsCrosswordProgress } from '../lib/activityProgress.js'
 import {
   NEWS_CROSSWORD_SIZE,
   answerForClue,
@@ -38,6 +39,7 @@ import {
   loadNewsCrosswordPuzzles,
   saveNewsCrosswordPuzzle,
 } from '../services/newsCrosswordService.js'
+import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
 import './wordGridPuzzle.css'
 import './newsCrossword.css'
 
@@ -250,6 +252,10 @@ function PlayArea({ puzzle, progressOwnerId }) {
     if (result.status === 'incomplete') setMessage('仍有白格尚未填寫。')
     else if (result.status === 'practice-complete') setMessage('已填完；本題尚未收錄答案，暫時無法核對。')
     else if (result.correct) {
+      if (!perfectCompletedAt && progressOwnerId) {
+        const answerCellCount = puzzle.grid.filter((cell) => cell.type === newsCrosswordCellTypes.empty).length
+        trackLearningActivityAttempt(buildNewsCrosswordProgress({ puzzle, answerCellCount }))
+      }
       setPerfectCompletedAt((current) => current || new Date().toISOString())
       setMessage('全部答對，完整答案已解鎖。')
     } else {

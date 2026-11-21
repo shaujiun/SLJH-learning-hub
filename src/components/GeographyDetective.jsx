@@ -25,6 +25,7 @@ import {
   geographyDetectiveScore,
 } from '../lib/geographyDetective.js'
 import { learningHubUrl } from '../lib/guestPractice.js'
+import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
 import './geographyDetective.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
@@ -326,6 +327,12 @@ export default function GeographyDetective() {
       return
     }
     setBestScores((scores) => saveBestScore(chapterId, finalScore, scores))
+    trackLearningActivityAttempt({
+      subjectCode: 'geography', activityCode: 'geography_detective', activityName: '地理偵探社',
+      modeCode: chapterId, score: finalScore,
+      correctCount: results.filter((item) => item.mistakeCount === 0).length,
+      questionCount: round.length,
+    })
     setPhase('result')
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' })
   }

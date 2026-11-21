@@ -27,6 +27,7 @@ import {
 import { isSupabaseConfigured } from '../lib/supabase.js'
 import { accountPuzzleProgressKey } from '../lib/puzzleProgress.js'
 import { loadNumberGridPuzzles, saveNumberGridPuzzle } from '../services/numberGridPuzzleService.js'
+import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
 import './numberGridChallenge.css'
 
 function loadProgress(challenge, progressOwnerId) {
@@ -315,6 +316,14 @@ export default function NumberGridChallenge({ guestMode = false }) {
     }
     setCheckedResult(result)
     if (result.correct) {
+      if (!perfectCompletedAt) {
+        trackLearningActivityAttempt({
+          subjectCode: 'puzzle', activityCode: 'number_grid', activityName: '十拿九穩之變形挑戰',
+          modeCode: challenge.id || challenge.issueOn || 'issue', score: 100,
+          correctCount: 9, questionCount: 9,
+          metadata: { issueOn: challenge.issueOn || challenge.id || null },
+        })
+      }
       setPerfectCompletedAt((current) => current || new Date().toISOString())
       setMessage('全部加總正確，已完成挑戰並解鎖解答。')
     } else {

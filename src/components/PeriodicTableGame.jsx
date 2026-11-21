@@ -32,6 +32,7 @@ import {
   recordPeriodicTableAttempt,
 } from '../services/periodicTableService.js'
 import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
+import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
 import { guestLaunchUrl, isGuestMode, learningHubUrl } from '../lib/guestPractice.js'
 import PeriodicBattle from './PeriodicBattle.jsx'
 import PeriodicTableGrid from './PeriodicTableGrid.jsx'
@@ -180,6 +181,14 @@ export default function PeriodicTableGame() {
 
   const finishQuiz = async () => {
     const score = Math.round((correctCount / questions.length) * 100)
+    if (!reviewing && context?.student) {
+      trackLearningActivityAttempt({
+        subjectCode: 'science', activityCode: 'periodic_table', activityName: '元素週期表練習',
+        modeCode: `${level}_${mode}${introGroup ? `_group_${introGroup}` : ''}`,
+        source: focusTaskId ? 'daily_task' : 'free_practice',
+        score, correctCount, questionCount: questions.length,
+      })
+    }
     setSaving(true)
     try {
       const progress = reviewing ? null : await recordPeriodicTableAttempt({

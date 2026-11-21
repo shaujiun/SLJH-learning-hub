@@ -43,7 +43,8 @@ describe('英語閱讀資料庫存取界線', () => {
     expect(gpsDraftMigration).toContain("array['C']")
   })
   it('學生答錯時資料庫不回傳正解、解析或教師原文依據', () => {
-    expect(feedbackMigration).toContain("if not correct then\n    return jsonb_build_object('correct', false);")
+    const normalizedFeedbackMigration = feedbackMigration.replace(/\r\n/g, '\n')
+    expect(normalizedFeedbackMigration).toContain("if not correct then\n    return jsonb_build_object('correct', false);")
     expect(feedbackMigration).toContain("return jsonb_build_object('correct', true, 'expected', key_row.answers")
     expect(feedbackMigration).toContain('revoke all on function public.submit_english_reading_answer(uuid, text[], text) from public, anon')
   })

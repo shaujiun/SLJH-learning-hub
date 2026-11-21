@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, Bot, RotateCcw, Swords } from 'lucide-react'
 import AnimalEquationFunctionIcon from './AnimalEquationFunctionIcon.jsx'
 import AnimalEquationRadicalText from './AnimalEquationRadicalText.jsx'
@@ -14,6 +14,7 @@ import {
   submitPracticeRadical,
   takeAiPracticeTurn,
 } from '../lib/animalEquationPractice.js'
+import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
 import './animalEquationPractice.css'
 
 const publicName = (view, playerId) => view.players.find((player) => player.id === playerId)?.displayName || '玩家'
@@ -63,6 +64,7 @@ export default function AnimalEquationPractice({ onBack }) {
   const [selectedCards, setSelectedCards] = useState([])
   const [functionCardId, setFunctionCardId] = useState('')
   const [secondsLeft, setSecondsLeft] = useState(8)
+  const recordedGame = useRef(false)
   const view = useMemo(() => practicePublicView(game, 'you'), [game])
   const me = view.players.find((player) => player.id === 'you')
   const myTurn = game.status === 'playing' && game.currentPlayerId === 'you'
@@ -77,6 +79,17 @@ export default function AnimalEquationPractice({ onBack }) {
     const timer = window.setTimeout(() => setGame((current) => takeAiPracticeTurn(current)), 950)
     return () => window.clearTimeout(timer)
   }, [game.status, game.currentPlayerId, game.turnNumber])
+
+  useEffect(() => {
+    if (game.status === 'playing' && game.turnNumber === 1) recordedGame.current = false
+    if (game.status !== 'finished' || recordedGame.current) return
+    recordedGame.current = true
+    trackLearningActivityAttempt({
+      subjectCode: 'math', activityCode: 'animal_equation_practice', activityName: '根式馬戲團教學試玩',
+      modeCode: 'solo_ai', score: game.winnerPlayerId === 'you' ? 100 : 0,
+      metadata: { won: game.winnerPlayerId === 'you', turnCount: game.turnNumber },
+    })
+  }, [game.status, game.turnNumber, game.winnerPlayerId])
 
   useEffect(() => {
     if (game.status !== 'review' && game.status !== 'reaction') return undefined

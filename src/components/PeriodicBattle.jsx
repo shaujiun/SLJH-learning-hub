@@ -19,6 +19,7 @@ import {
   createPeriodicBattleQuestions,
   secondsUntil,
 } from '../lib/periodicBattle.js'
+import { buildPeriodicBattleProgress } from '../lib/activityProgress.js'
 import {
   getElementsForLevel,
   periodicLevels,
@@ -36,6 +37,7 @@ import {
   startPeriodicBattle,
   subscribePeriodicBattle,
 } from '../services/periodicBattleService.js'
+import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
 import PeriodicTableGrid from './PeriodicTableGrid.jsx'
 
 const questionCountOptions = {
@@ -252,6 +254,7 @@ export default function PeriodicBattle({ context, onExit }) {
   const [room, setRoom] = useState(null)
   const [error, setError] = useState('')
   const advancing = useRef(false)
+  const progressSaved = useRef(false)
 
   useEffect(() => {
     if (!room?.id) return undefined
@@ -278,6 +281,12 @@ export default function PeriodicBattle({ context, onExit }) {
     }, 500)
     return () => window.clearInterval(timer)
   }, [room?.id, room?.status])
+
+  useEffect(() => {
+    if (room?.status !== 'finished' || progressSaved.current) return
+    progressSaved.current = true
+    trackLearningActivityAttempt(buildPeriodicBattleProgress({ room }))
+  }, [room])
 
   return (
     <>

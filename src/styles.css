@@ -4221,3 +4221,142 @@ p {
     grid-column: 1 / -1;
   }
 }
+
+.learning-progress-panel {
+  margin: 1.25rem 0;
+  overflow: hidden;
+  border: 1px solid #cbdde5;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgb(22 65 82 / 8%);
+}
+
+.learning-progress-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border: 0;
+  background: linear-gradient(135deg, #eff9f8, #f7fbff);
+  color: #18384a;
+  text-align: left;
+  cursor: pointer;
+}
+
+.learning-progress-toggle > span,
+.learning-progress-toggle > span > span {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.learning-progress-toggle > span > svg {
+  width: 34px;
+  height: 34px;
+  padding: 7px;
+  border-radius: 11px;
+  background: #197182;
+  color: #fff;
+}
+
+.learning-progress-toggle small,
+.learning-progress-toggle strong {
+  display: block;
+}
+
+.learning-progress-toggle small {
+  color: #4f7b88;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+}
+
+.learning-progress-toggle > svg {
+  transition: transform 180ms ease;
+}
+
+.learning-progress-toggle > svg.is-open {
+  transform: rotate(180deg);
+}
+
+.learning-progress-content {
+  padding: 1rem 1.2rem 1.2rem;
+}
+
+.learning-progress-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.learning-progress-filters label {
+  display: grid;
+  gap: 0.35rem;
+  color: #355c69;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.learning-progress-filters select {
+  min-width: 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #b9d0d8;
+  border-radius: 10px;
+  background: #fff;
+  color: #173747;
+}
+
+.learning-progress-table-wrap {
+  margin-bottom: 0.8rem;
+  overflow-x: auto;
+}
+
+.learning-progress-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.learning-progress-table th,
+.learning-progress-table td {
+  padding: 0.7rem;
+  border-bottom: 1px solid #e4edef;
+  text-align: left;
+  vertical-align: top;
+}
+
+.learning-progress-table th {
+  color: #557580;
+  font-size: 0.8rem;
+}
+
+.learning-progress-table td {
+  color: #173747;
+  font-size: 0.9rem;
+}
+
+.learning-progress-table td strong,
+.learning-progress-table td small {
+  display: block;
+}
+
+.learning-progress-table td small {
+  margin-top: 0.16rem;
+  color: #6f858d;
+}
+
+@media (max-width: 700px) {
+  .learning-progress-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .learning-progress-toggle {
+    padding: 0.9rem;
+  }
+
+  .learning-progress-content {
+    padding: 0.8rem;
+  }
+}

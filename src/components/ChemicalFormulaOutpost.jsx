@@ -42,6 +42,7 @@ import {
   transferLabel,
 } from '../lib/chemicalFormula.js'
 import { learningHubUrl } from '../lib/guestPractice.js'
+import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
 import './chemicalFormulaOutpost.css'
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
@@ -638,6 +639,12 @@ export default function ChemicalFormulaOutpost() {
       return
     }
     setBestScores((scores) => saveBestScore(mode, finalScore, scores))
+    trackLearningActivityAttempt({
+      subjectCode: 'science', activityCode: 'chemical_formula', activityName: '化學事前哨站',
+      modeCode: mode, score: finalScore,
+      correctCount: results.filter((item) => item.mistakeCount === 0).length,
+      questionCount: totalSteps,
+    })
     setPhase('result')
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' })
   }

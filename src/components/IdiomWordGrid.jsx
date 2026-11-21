@@ -26,6 +26,7 @@ import {
   IDIOM_EDITOR_CELL_TYPES,
   IDIOM_DIFFICULTIES,
 } from '../lib/idiomWordGrid.js'
+import { buildIdiomWordGridProgress } from '../lib/activityProgress.js'
 import {
   completeIdiomPuzzle,
   loadIdiomWordGridContext,
@@ -33,6 +34,7 @@ import {
   saveIdiomPuzzle,
   spendIdiomHint,
 } from '../services/idiomWordGridService.js'
+import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
 import {
   IDIOM_DICTIONARY_ATTRIBUTION,
   IDIOM_DICTIONARY_VERSION,
@@ -281,6 +283,13 @@ export function PlayIdiomPuzzle({ puzzle, context, focusTaskId, onEnergyChange }
     const wasCompleted = completed
     setCompleted(true)
     setMessage('全部正確，已解鎖本關成語的釋義與出處。')
+    if (!wasCompleted && context.studentId) {
+      const givenKeys = new Set(puzzle.givenCellKeys || [])
+      const answerCellCount = (puzzle.board?.cells || []).filter((cell) => !givenKeys.has(cell.key)).length
+      trackLearningActivityAttempt(buildIdiomWordGridProgress({
+        puzzle, focusTaskId, answerCellCount, hintsUsed,
+      }))
+    }
     if (!context.studentId || puzzle.id.startsWith('starter-')) {
       if (!wasCompleted) onEnergyChange(Math.min(20, context.energy + (hintUses ? 3 : 4)))
       return

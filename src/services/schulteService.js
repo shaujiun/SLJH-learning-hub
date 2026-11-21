@@ -1,6 +1,8 @@
 import { isSupabaseConfigured, requireSupabase } from '../lib/supabase.js'
 import { clearRememberedFocusTask } from '../lib/focusTaskLaunch.js'
+import { buildSchulteProgress } from '../lib/activityProgress.js'
 import { findPendingFocusTaskId } from './focusTaskRecoveryService.js'
+import { trackLearningActivityAttempt } from './learningProgressService.js'
 import {
   calculateDynamicSchulteResult,
   calculatePhraseSchulteResult,
@@ -110,6 +112,15 @@ export async function recordSchulteCompletion({
     : ''
   const effectiveFocusTaskId = focusTaskId || recoveredTaskId
 
+  await trackLearningActivityAttempt(buildSchulteProgress({
+    activityCode: 'schulte_static',
+    activityName: '靜態舒爾特方格',
+    modeCode: `grid_${result.size}x${result.size}`,
+    result,
+    attemptKey: localRecord.id,
+    focusTaskId: effectiveFocusTaskId,
+  }), client)
+
   const { data, error } = await client.rpc('record_schulte_attempt', {
     p_focus_task_id: effectiveFocusTaskId || null,
     p_grid_size: result.size,
@@ -170,6 +181,15 @@ export async function recordDynamicSchulteCompletion({
     : ''
   const effectiveFocusTaskId = focusTaskId || recoveredTaskId
 
+  await trackLearningActivityAttempt(buildSchulteProgress({
+    activityCode: 'schulte_dynamic',
+    activityName: '動態舒爾特方格',
+    modeCode: `count_${result.size}`,
+    result,
+    attemptKey: localRecord.id,
+    focusTaskId: effectiveFocusTaskId,
+  }), client)
+
   const { data, error } = await client.rpc('record_dynamic_schulte_attempt', {
     p_focus_task_id: effectiveFocusTaskId || null,
     p_item_count: result.size,
@@ -228,6 +248,15 @@ export async function recordShapeSchulteCompletion({
       }, client)
     : ''
   const effectiveFocusTaskId = focusTaskId || recoveredTaskId
+
+  await trackLearningActivityAttempt(buildSchulteProgress({
+    activityCode: 'schulte_shape',
+    activityName: '圖形舒爾特方格',
+    modeCode: 'shape_5x5',
+    result,
+    attemptKey: localRecord.id,
+    focusTaskId: effectiveFocusTaskId,
+  }), client)
 
   const { data, error } = await client.rpc('record_shape_schulte_attempt', {
     p_focus_task_id: effectiveFocusTaskId || null,
@@ -401,6 +430,23 @@ export async function recordSchulteMemorizationCompletion({ setId, durationMs, e
     p_error_count: errorCount,
   })
   if (error) throw error
+  if (data?.preview !== true) {
+    const result = {
+      durationMs,
+      errorCount,
+      totalNumbers: 5,
+      averageTapMs: Math.round(Math.max(0, Number(durationMs) || 0) / 5),
+    }
+    await trackLearningActivityAttempt(buildSchulteProgress({
+      activityCode: 'schulte_memorization',
+      activityName: '佳句記憶舒爾特',
+      modeCode: 'phrase_set',
+      result,
+      attemptKey: `memorization:${setId}`,
+      questionCount: 5,
+      metadata: { setId },
+    }), client)
+  }
   return data
 }
 
@@ -480,6 +526,15 @@ export async function recordPhraseSchulteCompletion({
     : ''
   const effectiveFocusTaskId = focusTaskId || recoveredTaskId
   const remotePhraseId = String(phraseId).startsWith('default-') ? null : phraseId || null
+  await trackLearningActivityAttempt(buildSchulteProgress({
+    activityCode: 'schulte_phrase',
+    activityName: '詩句與名言舒爾特',
+    modeCode: 'sentence',
+    result,
+    attemptKey: localRecord.id,
+    focusTaskId: effectiveFocusTaskId,
+    metadata: { phraseId: phraseId || null },
+  }), client)
   const { data, error } = await client.rpc('record_phrase_schulte_attempt', {
     p_focus_task_id: effectiveFocusTaskId || null,
     p_phrase_id: remotePhraseId,
