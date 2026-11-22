@@ -2,7 +2,7 @@ import { buildIdiomPuzzle } from '../lib/idiomWordGrid.js'
 import officialEntries from './idiomWordGridOfficialEntries.json'
 
 export const IDIOM_DICTIONARY_VERSION = 'dict_idioms_2020_20260929'
-export const IDIOM_DICTIONARY_ATTRIBUTION = '中華民國教育部（Ministry of Education, R.O.C.）。《成語典》2020。'
+export const IDIOM_DICTIONARY_ATTRIBUTION = '中華民國教育部（Ministry of Education, R.O.C.）。《成語典》（版本編號：2020_20260929）網址：http://dict.idioms.moe.edu.tw/'
 
 export const STARTER_IDIOM_ENTRIES = officialEntries
 

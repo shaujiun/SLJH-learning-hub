@@ -20,6 +20,9 @@ export function mapIdiomEntry(entry) {
     sourceUrl: entry.source_url,
     illustrationUrl: entry.illustration_url,
     stage: entry.stage,
+    sourceEntryId: Number(entry.source_entry_id || 0) || null,
+    zhuyin: entry.zhuyin || '',
+    pinyin: entry.pinyin || '',
   }
 }
 
@@ -71,7 +74,7 @@ export async function loadIdiomWordGridContext({ guestMode = false } = {}, clien
   if (!account.canManage) query = query.eq('status', 'published')
   const [puzzleResult, catalogResult, walletResult, completionResult] = await Promise.all([
     query,
-    client.from('idiom_entries').select('id,phrase,definition,source_text,story,source_url,illustration_url,stage').eq('is_active', true).order('phrase'),
+    client.from('idiom_entries').select('id,phrase,definition,source_text,story,source_url,illustration_url,stage,source_entry_id,zhuyin,pinyin').eq('is_active', true).order('phrase'),
     account.studentId
       ? client.from('idiom_word_grid_wallets').select('energy').eq('student_id', account.studentId).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
@@ -112,6 +115,9 @@ export async function saveIdiomEntry(input, client = requireSupabase()) {
     source_url: String(input.sourceUrl || '').trim(),
     illustration_url: String(input.illustrationUrl || '').trim(),
     stage: ['elementary', 'junior', 'senior'].includes(input.stage) ? input.stage : 'junior',
+    source_entry_id: Number(input.sourceEntryId || 0) || null,
+    zhuyin: String(input.zhuyin || '').trim(),
+    pinyin: String(input.pinyin || '').trim(),
     license_version: input.sourceVersion || 'dict_idioms_2020_20260929',
     is_active: true,
     updated_at: new Date().toISOString(),
@@ -119,7 +125,7 @@ export async function saveIdiomEntry(input, client = requireSupabase()) {
   const { data, error } = await client
     .from('idiom_entries')
     .upsert(payload, { onConflict: 'phrase' })
-    .select('id,phrase,definition,source_text,story,source_url,illustration_url,stage')
+    .select('id,phrase,definition,source_text,story,source_url,illustration_url,stage,source_entry_id,zhuyin,pinyin')
     .single()
   if (error) throw new Error(`無法儲存成語資料：${error.message}`)
   return mapIdiomEntry(data)

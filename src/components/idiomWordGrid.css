@@ -62,6 +62,11 @@
 .idiom-chip-list button.is-active { color: #fff; border-color: #197365; background: #197365; }
 .idiom-entry-card { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(220px, .6fr); gap: 1rem; padding: 1.1rem; border-radius: 18px; background: #f2f8f5; }
 .idiom-entry-card h3 { margin: 0 0 .7rem; font-size: 1.8rem; color: #174f47; }
+.idiom-entry-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: .8rem; }
+.idiom-entry-title-row h3 { margin-bottom: .25rem; }
+.idiom-entry-title-row p { margin: 0; color: #637770; line-height: 1.6; }
+.idiom-speech-button { display: inline-flex; align-items: center; gap: .35rem; min-height: 44px; padding: .55rem .7rem; border: 1px solid #72a29a; border-radius: 10px; background: #fff; color: #176b60; font-weight: 900; cursor: pointer; white-space: nowrap; }
+.idiom-speech-button svg { width: 1.1rem; }
 .idiom-entry-card dl { margin: 0; }
 .idiom-entry-card dl div { margin: .65rem 0; }
 .idiom-entry-card dt { color: #a15422; font-weight: 900; }
@@ -93,11 +98,35 @@
 .idiom-entry-editor { margin-top: .75rem; padding: .75rem; border: 1px solid #d7e3df; border-radius: 12px; background: #fbfdfc; }
 .idiom-entry-editor summary { display: flex; align-items: center; gap: .35rem; color: #176b60; font-weight: 900; cursor: pointer; }
 .idiom-entry-editor > p { color: #637770; }
+.idiom-dictionary-search { margin-bottom: .8rem; padding: .8rem; border: 1px solid #b9d5cf; border-radius: 12px; background: #eef8f5; }
+.idiom-dictionary-search > label { display: grid; gap: .35rem; font-weight: 900; }
+.idiom-dictionary-search > label span { display: flex; align-items: center; gap: .35rem; }
+.idiom-dictionary-search > label svg { width: 1.1rem; }
+.idiom-dictionary-search input { box-sizing: border-box; width: 100%; min-height: 46px; padding: .6rem .7rem; border: 2px solid #6d938e; border-radius: 10px; background: #fff; color: #17324a; font: inherit; }
+.idiom-dictionary-search > p { margin: .55rem 0 0; color: #62766f; }
+.idiom-dictionary-search > p.is-error { color: #9b3429; }
+.idiom-dictionary-results { max-height: 330px; display: grid; gap: .45rem; overflow: auto; margin: .7rem 0 0; padding: 0; list-style: none; }
+.idiom-dictionary-results li { display: grid; grid-template-columns: minmax(0, 1fr) 46px; gap: .4rem; }
+.idiom-dictionary-pick { min-width: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .15rem .65rem; padding: .65rem .75rem; border: 1px solid #b6ccc7; border-radius: 10px; background: #fff; color: #17324a; text-align: left; cursor: pointer; }
+.idiom-dictionary-pick strong { color: #176b60; font-size: 1.15rem; }
+.idiom-dictionary-pick span { align-self: center; overflow-wrap: anywhere; color: #6b7f79; }
+.idiom-dictionary-pick small { grid-column: 1 / -1; display: -webkit-box; overflow: hidden; color: #536b65; line-height: 1.55; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.idiom-dictionary-speak { display: grid; place-items: center; min-height: 46px; border: 1px solid #72a29a; border-radius: 10px; background: #fff; color: #176b60; cursor: pointer; }
+.idiom-dictionary-speak svg { width: 1.25rem; }
+.idiom-speech-note { font-size: .86rem; }
 .idiom-entry-editor-fields { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; }
 .idiom-entry-editor-fields label { display: grid; gap: .25rem; font-weight: 800; }
 .idiom-entry-editor-fields label.is-wide { grid-column: 1 / -1; }
 .idiom-entry-editor-fields input, .idiom-entry-editor-fields select, .idiom-entry-editor-fields textarea { box-sizing: border-box; width: 100%; padding: .55rem; border: 1px solid #82999c; border-radius: 9px; background: #fff; color: #17324a; font: inherit; }
-.idiom-entry-editor > button { display: inline-flex; align-items: center; gap: .35rem; margin-top: .65rem; padding: .65rem .85rem; border: 0; border-radius: 9px; background: #197365; color: #fff; font-weight: 900; cursor: pointer; }
+.idiom-entry-editor-fields input:read-only, .idiom-entry-editor-fields textarea:read-only { background: #f0f5f3; color: #405952; }
+.idiom-official-reading { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr auto; gap: .6rem; align-items: stretch; padding: .7rem; border: 1px solid #c6d9d5; border-radius: 10px; background: #f5faf8; }
+.idiom-official-reading div { display: grid; gap: .2rem; }
+.idiom-official-reading span { overflow-wrap: anywhere; color: #536b65; }
+.idiom-official-reading button { display: inline-flex; align-items: center; gap: .3rem; padding: .55rem .7rem; border: 1px solid #72a29a; border-radius: 9px; background: #fff; color: #176b60; font-weight: 900; cursor: pointer; }
+.idiom-entry-editor-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .55rem; margin-top: .65rem; }
+.idiom-entry-editor-actions button { display: inline-flex; align-items: center; gap: .35rem; min-height: 44px; padding: .65rem .85rem; border: 0; border-radius: 9px; background: #197365; color: #fff; font-weight: 900; cursor: pointer; }
+.idiom-entry-editor-actions button.secondary-button { border: 1px solid #82999c; background: #fff; color: #294856; }
+.idiom-entry-editor-actions button:disabled { opacity: .5; cursor: not-allowed; }
 .idiom-editor-tabs { display: flex; gap: .45rem; margin: .8rem 0; }
 .idiom-editor-tabs button, .idiom-editor-tools button { padding: .55rem .8rem; border: 1px solid #82999c; border-radius: 9px; background: #fff; color: #294856; font-weight: 900; cursor: pointer; }
 .idiom-editor-tabs button.is-active, .idiom-editor-tools button.is-active { border-color: #197365; background: #197365; color: #fff; }
@@ -144,4 +173,6 @@ button.idiom-editor-cell { cursor: pointer; }
   .idiom-editor-grid { --idiom-editor-size: 39px; }
   .idiom-entry-editor-fields { grid-template-columns: 1fr; }
   .idiom-entry-editor-fields label.is-wide { grid-column: auto; }
+  .idiom-entry-title-row, .idiom-official-reading { grid-template-columns: 1fr; display: grid; }
+  .idiom-speech-button { width: fit-content; }
 }

@@ -12,7 +12,9 @@ import {
   Plus,
   RotateCcw,
   Save,
+  Search,
   Sparkles,
+  Volume2,
   X,
 } from 'lucide-react'
 import {
@@ -26,6 +28,7 @@ import {
   IDIOM_EDITOR_CELL_TYPES,
   IDIOM_DIFFICULTIES,
 } from '../lib/idiomWordGrid.js'
+import { searchIdiomDictionary, speakIdiom } from '../lib/idiomDictionary.js'
 import { buildIdiomWordGridProgress } from '../lib/activityProgress.js'
 import {
   completeIdiomPuzzle,
@@ -34,6 +37,7 @@ import {
   saveIdiomPuzzle,
   spendIdiomHint,
 } from '../services/idiomWordGridService.js'
+import { loadIdiomDictionary } from '../services/idiomDictionaryService.js'
 import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
 import {
   IDIOM_DICTIONARY_ATTRIBUTION,
@@ -132,7 +136,10 @@ export function IdiomLearningPanel({ puzzle }) {
       {entry && (
         <article className="idiom-entry-card">
           <div className="idiom-entry-copy">
-            <h3>{entry.phrase}</h3>
+            <div className="idiom-entry-title-row">
+              <div><h3>{entry.phrase}</h3>{entry.zhuyin && <p>{entry.zhuyin}</p>}</div>
+              <button type="button" className="idiom-speech-button" onClick={() => speakIdiom(entry.phrase)}><Volume2 aria-hidden="true" />播放發音</button>
+            </div>
             <dl>
               <div><dt>釋義</dt><dd>{entry.definition || '本題的教育部釋義尚待同步；可先開啟原始條目查詢。'}</dd></div>
               <div><dt>典源或出處</dt><dd>{entry.source || '請參閱教育部《成語典》原始條目。'}</dd></div>
@@ -151,6 +158,7 @@ export function IdiomLearningPanel({ puzzle }) {
         <strong>資料來源</strong>
         <span>{IDIOM_DICTIONARY_ATTRIBUTION}</span>
         <span>資料版本：{puzzle.sourceVersion || IDIOM_DICTIONARY_VERSION}；內容依原授權資料呈現，不改寫釋義與典源。</span>
+        <a href="idiom-dictionary-license.txt" target="_blank" rel="noreferrer">查看授權說明 <ExternalLink aria-hidden="true" /></a>
       </footer>
     </section>
   )
@@ -432,19 +440,56 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
   const [tool, setTool] = useState(IDIOM_EDITOR_CELL_TYPES.block)
   const [saving, setSaving] = useState(false)
   const [messages, setMessages] = useState([])
-  const [entryForm, setEntryForm] = useState({ phrase: '', stage: 'junior', definition: '', source: '', sourceUrl: '' })
+  const emptyEntryForm = { phrase: '', stage: 'junior', definition: '', source: '', story: '', sourceUrl: '', sourceEntryId: null, zhuyin: '', pinyin: '' }
+  const [entryForm, setEntryForm] = useState(emptyEntryForm)
   const [entrySaving, setEntrySaving] = useState(false)
+  const [dictionaryQuery, setDictionaryQuery] = useState('')
+  const [dictionaryState, setDictionaryState] = useState({ loading: false, loaded: false, error: '', entries: [] })
   const available = catalog.filter((entry) => stage === 'all' || entry.stage === stage || selectedIds.includes(entry.id))
   const selectedEntries = catalog.filter((entry) => selectedIds.includes(entry.id))
+  const dictionaryResults = useMemo(
+    () => searchIdiomDictionary(dictionaryState.entries, dictionaryQuery, 12),
+    [dictionaryQuery, dictionaryState.entries],
+  )
 
   const toggle = (id) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])
+  const ensureDictionary = async () => {
+    if (dictionaryState.loaded || dictionaryState.loading) return
+    setDictionaryState((current) => ({ ...current, loading: true, error: '' }))
+    try {
+      const payload = await loadIdiomDictionary()
+      setDictionaryState({ loading: false, loaded: true, error: '', entries: payload.entries })
+    } catch (error) {
+      setDictionaryState({ loading: false, loaded: false, error: error.message, entries: [] })
+    }
+  }
+  const chooseDictionaryEntry = (entry) => {
+    setEntryForm((current) => ({
+      ...current,
+      phrase: entry.phrase,
+      definition: entry.definition,
+      source: entry.source,
+      story: entry.story,
+      sourceUrl: entry.sourceUrl,
+      sourceEntryId: entry.sourceEntryId,
+      zhuyin: entry.zhuyin,
+      pinyin: entry.pinyin,
+    }))
+    setDictionaryQuery(entry.phrase)
+    setMessages([`已帶入教育部《成語典》「${entry.phrase}」的官方資料；請選擇適合等級後加入本題。`])
+  }
+  const clearEntryForm = () => {
+    setEntryForm({ ...emptyEntryForm, stage: entryForm.stage })
+    setDictionaryQuery('')
+  }
   const addEntry = async () => {
     setEntrySaving(true)
     try {
       const entry = await saveIdiomEntry({ ...entryForm, sourceVersion: IDIOM_DICTIONARY_VERSION })
       onCatalogAdded(entry)
       setSelectedIds((current) => [...new Set([...current, entry.id])])
-      setEntryForm({ phrase: '', stage: 'junior', definition: '', source: '', sourceUrl: '' })
+      setEntryForm(emptyEntryForm)
+      setDictionaryQuery('')
       setMessages([`已新增「${entry.phrase}」，並加入本題。`])
     } catch (error) {
       setMessages([error.message])
@@ -516,16 +561,40 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
         {available.map((entry) => <label key={entry.id}><input type="checkbox" checked={selectedIds.includes(entry.id)} onChange={() => toggle(entry.id)} /><span>{entry.phrase}</span><small>{stageLabels[entry.stage]}</small></label>)}
       </div>
       <details className="idiom-entry-editor">
-        <summary><Plus aria-hidden="true" />成語不在清單中？新增成語資料</summary>
-        <p>請依教育部《成語典》輸入；新增後會自動加入本題。</p>
-        <div className="idiom-entry-editor-fields">
-          <label>成語<input value={entryForm.phrase} onChange={(event) => setEntryForm((current) => ({ ...current, phrase: event.target.value }))} /></label>
-          <label>適合等級<select value={entryForm.stage} onChange={(event) => setEntryForm((current) => ({ ...current, stage: event.target.value }))}><option value="elementary">國小階段</option><option value="junior">國中階段</option><option value="senior">高中延伸</option></select></label>
-          <label className="is-wide">釋義<textarea rows="3" value={entryForm.definition} onChange={(event) => setEntryForm((current) => ({ ...current, definition: event.target.value }))} /></label>
-          <label className="is-wide">典源或出處<textarea rows="3" value={entryForm.source} onChange={(event) => setEntryForm((current) => ({ ...current, source: event.target.value }))} /></label>
-          <label className="is-wide">教育部成語典網址<input type="url" value={entryForm.sourceUrl} onChange={(event) => setEntryForm((current) => ({ ...current, sourceUrl: event.target.value }))} /></label>
+        <summary><Plus aria-hidden="true" />搜尋教育部《成語典》並加入成語</summary>
+        <p>輸入成語或部分文字，點選結果後會自動帶入官方釋義、典源、典故、注音及網址。</p>
+        <div className="idiom-dictionary-search">
+          <label><span><Search aria-hidden="true" />搜尋成語</span><input value={dictionaryQuery} placeholder="例如：一字千金" onFocus={ensureDictionary} onChange={(event) => { setDictionaryQuery(event.target.value); if (event.target.value.trim()) ensureDictionary() }} /></label>
+          {dictionaryState.loading && <p role="status">正在載入教育部成語資料……</p>}
+          {dictionaryState.error && <p className="is-error" role="alert">{dictionaryState.error}</p>}
+          {dictionaryState.loaded && dictionaryQuery.trim() && dictionaryResults.length === 0 && <p>找不到相符成語，可改用其他文字搜尋或切換手動輸入。</p>}
+          {dictionaryResults.length > 0 && (
+            <ul className="idiom-dictionary-results">
+              {dictionaryResults.map((entry) => (
+                <li key={entry.sourceEntryId || entry.phrase}>
+                  <button type="button" className="idiom-dictionary-pick" onClick={() => chooseDictionaryEntry(entry)}>
+                    <strong>{entry.phrase}</strong><span>{entry.zhuyin || '未收錄注音'}</span><small>{entry.definition}</small>
+                  </button>
+                  <button type="button" className="idiom-dictionary-speak" onClick={() => speakIdiom(entry.phrase)} aria-label={`播放${entry.phrase}發音`}><Volume2 aria-hidden="true" /></button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="idiom-speech-note">發音使用本裝置的繁體中文語音；破音字仍請依畫面上的教育部注音核對。</p>
         </div>
-        <button type="button" disabled={entrySaving} onClick={addEntry}><Save aria-hidden="true" />{entrySaving ? '儲存中……' : '新增並加入本題'}</button>
+        <div className="idiom-entry-editor-fields">
+          <label>成語<input readOnly={Boolean(entryForm.sourceEntryId)} value={entryForm.phrase} onChange={(event) => setEntryForm((current) => ({ ...current, phrase: event.target.value }))} /></label>
+          <label>適合等級<select value={entryForm.stage} onChange={(event) => setEntryForm((current) => ({ ...current, stage: event.target.value }))}><option value="elementary">國小階段</option><option value="junior">國中階段</option><option value="senior">高中延伸</option></select></label>
+          {entryForm.sourceEntryId && <div className="idiom-official-reading is-wide"><div><strong>教育部注音</strong><span>{entryForm.zhuyin || '未收錄'}</span></div><div><strong>漢語拼音</strong><span>{entryForm.pinyin || '未收錄'}</span></div><button type="button" onClick={() => speakIdiom(entryForm.phrase)}><Volume2 aria-hidden="true" />試聽</button></div>}
+          <label className="is-wide">釋義<textarea readOnly={Boolean(entryForm.sourceEntryId)} rows="3" value={entryForm.definition} onChange={(event) => setEntryForm((current) => ({ ...current, definition: event.target.value }))} /></label>
+          <label className="is-wide">典源或出處<textarea readOnly={Boolean(entryForm.sourceEntryId)} rows="4" value={entryForm.source} onChange={(event) => setEntryForm((current) => ({ ...current, source: event.target.value }))} /></label>
+          <label className="is-wide">完整典故<textarea readOnly={Boolean(entryForm.sourceEntryId)} rows="4" value={entryForm.story} onChange={(event) => setEntryForm((current) => ({ ...current, story: event.target.value }))} /></label>
+          <label className="is-wide">教育部成語典網址<input readOnly={Boolean(entryForm.sourceEntryId)} type="url" value={entryForm.sourceUrl} onChange={(event) => setEntryForm((current) => ({ ...current, sourceUrl: event.target.value }))} /></label>
+        </div>
+        <div className="idiom-entry-editor-actions">
+          {entryForm.sourceEntryId && <button type="button" className="secondary-button" onClick={clearEntryForm}>清除並改為手動輸入</button>}
+          <button type="button" disabled={entrySaving} onClick={addEntry}><Save aria-hidden="true" />{entrySaving ? '儲存中……' : '新增並加入本題'}</button>
+        </div>
       </details>
       <button type="button" className="idiom-auto-layout-button" onClick={generate}><Sparkles aria-hidden="true" />依所選成語自動排版</button>
 

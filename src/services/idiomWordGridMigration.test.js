@@ -5,10 +5,12 @@ const migrationUrl = new URL('../../supabase/migrations/20261031150000_add_idiom
 const seedUrl = new URL('../../supabase/migrations/20261031151000_seed_idiom_word_grid.sql', import.meta.url)
 const publicReadUrl = new URL('../../supabase/migrations/20261031152000_fix_idiom_word_grid_public_read.sql', import.meta.url)
 const taskLaunchFixUrl = new URL('../../supabase/migrations/20261121170000_fix_idiom_word_grid_task_launch.sql', import.meta.url)
+const dictionaryMetadataUrl = new URL('../../supabase/migrations/20261122123000_add_idiom_dictionary_metadata.sql', import.meta.url)
 const sql = readFileSync(migrationUrl, 'utf8')
 const seedSql = readFileSync(seedUrl, 'utf8')
 const publicReadSql = readFileSync(publicReadUrl, 'utf8')
 const taskLaunchFixSql = readFileSync(taskLaunchFixUrl, 'utf8')
+const dictionaryMetadataSql = readFileSync(dictionaryMetadataUrl, 'utf8')
 
 describe('成語填字圖 migration', () => {
   it('建立題庫、能量、提示與通關資料並套用 RLS', () => {
@@ -57,5 +59,12 @@ describe('成語填字圖 migration', () => {
     expect(taskLaunchFixSql).toContain("status in ('pending', 'expired')")
     expect(taskLaunchFixSql).toContain("?puzzle=word-grid&mode=idiom")
     expect(taskLaunchFixSql).not.toContain("mode=idiom?puzzle")
+  })
+
+  it('保存教育部條目編號、注音與拼音供搜尋帶入', () => {
+    expect(dictionaryMetadataSql).toContain('source_entry_id bigint')
+    expect(dictionaryMetadataSql).toContain("zhuyin text not null default ''")
+    expect(dictionaryMetadataSql).toContain("pinyin text not null default ''")
+    expect(dictionaryMetadataSql).toContain('idiom_entries_source_entry_id_uidx')
   })
 })
