@@ -62,8 +62,8 @@ async function accountContext(client) {
   }
 }
 
-export async function loadYiziContext({ guestMode = false } = {}, client = null) {
-  if (!client) {
+export async function loadYiziContext({ guestMode = false } = {}, client = undefined) {
+  if (client === undefined) {
     try { client = requireSupabase() } catch { client = null }
   }
   const fallback = {
