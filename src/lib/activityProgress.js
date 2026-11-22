@@ -118,6 +118,30 @@ export function buildNewsCrosswordProgress({ puzzle, answerCellCount = 0 }) {
   }
 }
 
+export function buildYiziProgress({
+  gameType, modeCode = 'untimed', score = 0, correctCount = 0,
+  questionCount = 1, durationMs = 0, attemptKey = '', metadata = {},
+}) {
+  const names = {
+    remove_part: '去無成字', four_sayings: '四說新語',
+    component_pairs: '成雙成對', idiom_board: '隻字片語',
+  }
+  const total = Math.max(1, safeCount(questionCount))
+  return {
+    subjectCode: 'puzzle',
+    activityCode: `yizi_${gameType || 'practice'}`,
+    activityName: names[gameType] || '一字千金文字挑戰',
+    modeCode,
+    source: 'free_practice',
+    score: Math.max(0, Math.min(100, Number(score) || 0)),
+    correctCount: Math.min(total, safeCount(correctCount)),
+    questionCount: total,
+    durationSeconds: Math.round(safeCount(durationMs) / 1000),
+    attemptKey: attemptKey || undefined,
+    metadata,
+  }
+}
+
 export function buildSchulteProgress({
   activityCode, activityName, modeCode, result, attemptKey,
   focusTaskId = '', questionCount = null, metadata = {},

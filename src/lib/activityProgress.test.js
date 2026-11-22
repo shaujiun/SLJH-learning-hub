@@ -6,6 +6,7 @@ import {
   buildNewsCrosswordProgress,
   buildPeriodicBattleProgress,
   buildSchulteProgress,
+  buildYiziProgress,
   resolveTrackedFocusTaskId,
 } from './activityProgress.js'
 
@@ -73,5 +74,13 @@ describe('跨活動統一進度資料', () => {
       durationSeconds: 32, attemptKey: 'schulte:local-round',
       metadata: { errorCount: 2, averageTapMs: 917 },
     })
+  })
+
+  it('一字千金暫時固定記為自由練習', () => {
+    expect(buildYiziProgress({ gameType: 'four_sayings', score: 80, correctCount: 1, durationMs: 42000 }))
+      .toMatchObject({
+        subjectCode: 'puzzle', activityCode: 'yizi_four_sayings', activityName: '四說新語',
+        source: 'free_practice', score: 80, correctCount: 1, questionCount: 1, durationSeconds: 42,
+      })
   })
 })
