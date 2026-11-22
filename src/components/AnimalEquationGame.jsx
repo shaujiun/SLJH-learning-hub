@@ -46,6 +46,7 @@ import {
   subscribeAnimalEquationRoom,
 } from '../services/animalEquationRoomService.js'
 import { equationTokenLabel, parseEquationTokens } from '../lib/equationTokenParser.js'
+import { resolveTrackedFocusTaskId } from '../lib/activityProgress.js'
 import { functionCardTargets, functionDefenseMap } from '../lib/animalEquationFunctions.js'
 import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
 import { recordAnimalEquationTask } from '../services/animalEquationTaskService.js'
@@ -634,10 +635,10 @@ export default function AnimalEquationGame({ onBack, onGuide }) {
     if (room?.status !== 'finished' || gameKey === recordedTaskGameKey) return
     const me = room.players?.find((player) => player.id === room.mePlayerId)
     setRecordedTaskGameKey(gameKey)
-    trackLearningActivityAttempt({
+    const trackGame = (trackedTaskId = focusTaskId) => trackLearningActivityAttempt({
       subjectCode: 'math', activityCode: 'animal_equation', activityName: '根式馬戲團',
       modeCode: Number(room.humanPlayerLimit) === 1 ? 'solo_ai' : 'multiplayer',
-      source: focusTaskId && Number(room.humanPlayerLimit) === 1 ? 'daily_task' : 'free_practice',
+      source: trackedTaskId && Number(room.humanPlayerLimit) === 1 ? 'daily_task' : 'free_practice',
       score: room.winnerPlayerId === room.mePlayerId ? 100 : 0,
       completed: true,
       metadata: {
@@ -647,17 +648,24 @@ export default function AnimalEquationGame({ onBack, onGuide }) {
         humanPlayerLimit: Number(room.humanPlayerLimit || 1),
       },
     })
-    if (Number(room.humanPlayerLimit) !== 1) return
+    if (Number(room.humanPlayerLimit) !== 1) {
+      trackGame('')
+      return
+    }
     recordAnimalEquationTask({
       focusTaskId,
       finished: true,
       validRadicalPlays: Number(me?.validRadicalPlays || 0),
     }).then((result) => {
+      trackGame(resolveTrackedFocusTaskId(focusTaskId, result))
       if (!result) return
       setTaskNotice(result.passed
         ? '本局已完成，並已記入今日任務進度。'
         : '本局已完成；至少要成功打出 1 次根式牌，才會完成今日任務。')
-    }).catch((nextError) => setTaskNotice(nextError.message))
+    }).catch((nextError) => {
+      trackGame()
+      setTaskNotice(nextError.message)
+    })
   }, [focusTaskId, recordedTaskGameKey, room])
 
   async function run(action, operation) {

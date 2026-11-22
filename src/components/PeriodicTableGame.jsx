@@ -27,6 +27,7 @@ import {
   randomIntroGroup,
   resolvePeriodicGameSelection,
 } from '../lib/periodicTable.js'
+import { resolveTrackedFocusTaskId } from '../lib/activityProgress.js'
 import {
   loadPeriodicTableContext,
   recordPeriodicTableAttempt,
@@ -181,11 +182,12 @@ export default function PeriodicTableGame() {
 
   const finishQuiz = async () => {
     const score = Math.round((correctCount / questions.length) * 100)
-    if (!reviewing && context?.student) {
+    const trackQuiz = (trackedTaskId = focusTaskId) => {
+      if (reviewing || !context?.student) return
       trackLearningActivityAttempt({
         subjectCode: 'science', activityCode: 'periodic_table', activityName: '元素週期表練習',
         modeCode: `${level}_${mode}${introGroup ? `_group_${introGroup}` : ''}`,
-        source: focusTaskId ? 'daily_task' : 'free_practice',
+        source: trackedTaskId ? 'daily_task' : 'free_practice',
         score, correctCount, questionCount: questions.length,
       })
     }
@@ -201,11 +203,13 @@ export default function PeriodicTableGame() {
           correctCount,
           questionCount: questions.length,
         })
+      trackQuiz(resolveTrackedFocusTaskId(focusTaskId, progress))
       if (progress?.introGroup) setIntroGroup(progress.introGroup)
       if (progress?.leveledUp && progress.learningLevel) setLevel(progress.learningLevel)
       setResult({ score, progress, wrongNumbers })
       setPhase('result')
     } catch (error) {
+      trackQuiz()
       setResult({ score, progress: null, wrongNumbers, saveError: error.message })
       setPhase('result')
     } finally {

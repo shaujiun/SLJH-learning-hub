@@ -6,9 +6,16 @@ import {
   buildNewsCrosswordProgress,
   buildPeriodicBattleProgress,
   buildSchulteProgress,
+  resolveTrackedFocusTaskId,
 } from './activityProgress.js'
 
 describe('跨活動統一進度資料', () => {
+  it('補登任務成功後優先採用服務回傳的任務編號', () => {
+    expect(resolveTrackedFocusTaskId('', { matchedFocusTaskId: 'recovered-task' })).toBe('recovered-task')
+    expect(resolveTrackedFocusTaskId('explicit-task', { matchedFocusTaskId: 'recovered-task' })).toBe('recovered-task')
+    expect(resolveTrackedFocusTaskId('explicit-task')).toBe('explicit-task')
+  })
+
   it('因式交鋒單人局依 15 分換算百分比並保留每日任務來源', () => {
     const payload = buildFactorClashSoloProgress({
       focusTaskId: 'task-1', mode: 'cross', difficulty: 'advanced', questionCount: 5,
