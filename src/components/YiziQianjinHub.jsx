@@ -36,7 +36,13 @@ export default function YiziQianjinHub({ guestMode = false }) {
       <h1>一字千金文字挑戰</h1><p>從文字部件、成語取字到棋盤接龍，練習觀察、重組與詞彙運用。</p></div>
       {context.canManage ? <button type="button" onClick={() => setShowEditor((value) => !value)}>{showEditor ? '返回試玩' : '題庫工作區'}</button> : <span />}</header>
     <section className="yizi-notice"><strong>{guestMode ? '訪客練習' : context.studentId ? '登入學生' : context.canManage ? '管理者試玩' : '一般練習'}</strong>
-      <span>{context.studentId ? '作答紀錄會隨帳號跨裝置保存。' : guestMode ? '可以玩單人與房間對戰，但不保存長期戰績。' : '管理者試玩不會寫入學生戰績。'}</span></section>
+      <span>{context.studentId
+        ? '作答紀錄會隨帳號跨裝置保存。'
+        : guestMode
+          ? '可以玩單人與房間對戰，但不保存長期戰績。'
+          : context.canManage
+            ? '管理者試玩不會寫入學生戰績。'
+            : '未登入時可以練習，但不保存長期戰績。'}</span></section>
     {message && <p className="yizi-feedback is-error">{message}</p>}
     {showEditor && context.canManage ? <YiziQuestionEditor questions={questions} remoteEnabled={context.remoteEnabled} onSaved={load} /> : <>
       <nav className="yizi-game-tabs" aria-label="選擇文字遊戲">{tabs.map((type) => <button type="button" key={type}
