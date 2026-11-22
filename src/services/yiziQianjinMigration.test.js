@@ -1,0 +1,31 @@
+import { readFileSync } from 'node:fs'
+import { describe, expect, it } from 'vitest'
+
+const baseSql = readFileSync(new URL('../../supabase/migrations/20261122120000_add_yizi_qianjin_games.sql', import.meta.url), 'utf8')
+const roomSql = readFileSync(new URL('../../supabase/migrations/20261122120500_add_yizi_idiom_rooms.sql', import.meta.url), 'utf8')
+const seedSql = readFileSync(new URL('../../supabase/migrations/20261122121000_seed_yizi_qianjin_bank.sql', import.meta.url), 'utf8')
+
+describe('一字千金資料庫遷移', () => {
+  it('建立題庫、作答、成語與房間資料表', () => {
+    for (const table of ['yizi_questions', 'yizi_idiom_lexicon', 'yizi_attempts', 'yizi_rooms', 'yizi_room_players', 'yizi_room_moves']) {
+      expect(baseSql).toContain(`public.${table}`)
+    }
+    expect(baseSql).toContain("'remove_part', 'four_sayings', 'component_pairs', 'idiom_board'")
+    expect(baseSql).toContain('不屬於每日任務')
+  })
+
+  it('房間由伺服器驗證回合、時間與合法成語', () => {
+    expect(roomSql).toContain('yizi_submit_room_move')
+    expect(roomSql).toContain('yizi_not_your_turn')
+    expect(roomSql).toContain('yizi_turn_timed_out')
+    expect(roomSql).toContain("interval '120 seconds'")
+    expect(roomSql).toContain('yizi_board_can_place')
+  })
+
+  it('種子資料記錄來源版本並包含三種單人題型', () => {
+    expect(seedSql).toContain('588cb8eabab92f42f73b4f8e3bf4873a8ed003c9')
+    expect(seedSql).toContain("'remove_part'")
+    expect(seedSql).toContain("'four_sayings'")
+    expect(seedSql).toContain("'component_pairs'")
+  })
+})

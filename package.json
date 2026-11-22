@@ -10,7 +10,8 @@
     "test": "vitest run",
     "history:questions:sync": "node scripts/generate-history-official-questions.mjs",
     "idioms:sync": "node scripts/sync-idiom-word-grid-data.mjs",
-    "idioms:seed": "node scripts/generate-idiom-word-grid-seed.mjs"
+    "idioms:seed": "node scripts/generate-idiom-word-grid-seed.mjs",
+    "yizi:sync": "node scripts/sync-yizi-qianjin-data.mjs"
   },
   "dependencies": {
     "@fontsource/iansui": "^5.2.5",

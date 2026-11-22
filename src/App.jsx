@@ -71,6 +71,7 @@ const EnglishReadingPractice = lazy(() => import('./components/EnglishReadingPra
 const LearningMapLibrary = lazy(() => import('./components/LearningMapLibrary.jsx'))
 const PythagorasChallenge = lazy(() => import('./components/PythagorasChallenge.jsx'))
 const FactorClash = lazy(() => import('./components/FactorClash.jsx'))
+const YiziQianjinHub = lazy(() => import('./components/YiziQianjinHub.jsx'))
 
 const contactBookUrl = import.meta.env.VITE_CONTACT_BOOK_URL?.trim()
   || 'https://shaujiun.github.io/SLJH114-06OCB/'
@@ -341,6 +342,12 @@ function PuzzleGames({ guestMode = false }) {
       name: '十拿九穩之變形挑戰',
       detail: '來源：聯合報好讀周報・設計者：狄運來老師',
       url: guestMode ? '?puzzle=number-grid&guest=1' : '?puzzle=number-grid',
+      external: false,
+    },
+    {
+      name: '一字千金文字挑戰',
+      detail: '四說新語、去無成字、成雙成對與隻字片語；目前不列入每日任務',
+      url: guestMode ? '?puzzle=yizi&guest=1' : '?puzzle=yizi',
       external: false,
     },
     { name: '神機妙算', detail: '本校楊志宏老師、郭安澤老師協同製作', url: 'https://andrewkotw.github.io/card-puzzle/#4CLUE', external: true },
@@ -1062,6 +1069,9 @@ export default function App() {
   }
   if (searchParams.get('puzzle') === 'number-grid') {
     return <Suspense fallback={<LoadingScreen />}><NumberGridChallenge guestMode={guestMode} /></Suspense>
+  }
+  if (searchParams.get('puzzle') === 'yizi') {
+    return <Suspense fallback={<LoadingScreen />}><YiziQianjinHub guestMode={guestMode} /></Suspense>
   }
   if (searchParams.get('reading') === 'workshop') {
     if (guestMode) return <ReadingLoginRequired />
