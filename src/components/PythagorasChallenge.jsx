@@ -19,6 +19,7 @@ import {
   pythagorasValueNumber,
   pythagorasValueText,
 } from '../lib/pythagorasChallenge.js'
+import { resolveTrackedFocusTaskId } from '../lib/activityProgress.js'
 import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
 import { isGuestMode, learningHubUrl } from '../lib/guestPractice.js'
 import {
@@ -247,7 +248,7 @@ export default function PythagorasChallenge() {
         correctCount: challengeTarget,
         questionCount: challengeTarget,
       })
-      matchedFocusTaskId = result?.matchedFocusTaskId || matchedFocusTaskId
+      matchedFocusTaskId = resolveTrackedFocusTaskId(matchedFocusTaskId, result)
       if (!result) {
         setTaskSaveState({ status: 'idle', message: '' })
         return

@@ -49,6 +49,7 @@ import {
 } from '../lib/geographyGame.js'
 import { getFocusTaskCurriculumScope } from '../lib/focusTaskCurriculum.js'
 import { resolveFocusTaskId } from '../lib/focusTaskLaunch.js'
+import { resolveTrackedFocusTaskId } from '../lib/activityProgress.js'
 import { isGuestMode, learningHubUrl } from '../lib/guestPractice.js'
 import { loadGeographyContext, recordGeographyAttempt } from '../services/geographyTaskService.js'
 import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
@@ -1434,15 +1435,19 @@ export default function GeographyFillMap() {
     setTaskSaveError('')
     window.scrollTo({ top: 0, behavior: 'smooth' })
 
-    if (taskContext.student) {
+    const trackRound = (trackedTaskId = focusTaskId) => {
+      if (!taskContext.student) return
       trackLearningActivityAttempt({
         subjectCode: 'geography', activityCode: 'geography_fill_map', activityName: '地理填圖練習',
-        modeCode: `${areaId}_${chapter.id}`, source: focusTaskId ? 'daily_task' : 'free_practice',
+        modeCode: `${areaId}_${chapter.id}`, source: trackedTaskId ? 'daily_task' : 'free_practice',
         score: finalScore, correctCount: score, questionCount: round.length,
         metadata: { topicId, difficulty: difficulty.id },
       })
     }
-    if (taskLoadError || (!focusTaskId && !taskContext.student)) return
+    if (taskLoadError || (!focusTaskId && !taskContext.student)) {
+      trackRound()
+      return
+    }
     setSavingTask(true)
     try {
       const progress = await recordGeographyAttempt({
@@ -1455,7 +1460,9 @@ export default function GeographyFillMap() {
         questionCount: round.length,
       })
       setTaskProgress(progress)
+      trackRound(resolveTrackedFocusTaskId(focusTaskId, progress))
     } catch (error) {
+      trackRound()
       setTaskSaveError(error.message || '無法儲存地理每日任務。')
     } finally {
       setSavingTask(false)

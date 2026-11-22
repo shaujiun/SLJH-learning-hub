@@ -10,6 +10,10 @@ function safeCount(value) {
   return Number.isFinite(count) ? Math.max(0, count) : 0
 }
 
+export function resolveTrackedFocusTaskId(explicitTaskId = '', taskResult = null) {
+  return String(taskResult?.matchedFocusTaskId || explicitTaskId || '').trim()
+}
+
 export function buildFactorClashSoloProgress({
   focusTaskId = '', mode = 'area', difficulty = 'basic', questionCount = 0,
   points = 0, firstTryCorrect = 0, secondTryCorrect = 0,
