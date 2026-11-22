@@ -67,16 +67,19 @@ describe('成語填字圖服務', () => {
     const query = result({
       id: 'entry-1', phrase: '一鼓作氣', definition: '比喻趁勁頭強時一氣做完。',
       source_text: '《左傳》', story: '', source_url: 'https://dict.idioms.moe.edu.tw/',
-      illustration_url: '', stage: 'junior',
+      illustration_url: '', stage: 'junior', source_entry_id: 520,
+      zhuyin: 'ㄧ ㄗˋ ㄑㄧㄢ ㄐㄧㄣ', pinyin: 'yī zì qiān jīn',
     })
     const client = { from: vi.fn(() => query) }
 
     await expect(saveIdiomEntry({
       phrase: '一鼓作氣', definition: '比喻趁勁頭強時一氣做完。',
       source: '《左傳》', sourceUrl: 'https://dict.idioms.moe.edu.tw/', stage: 'junior',
-    }, client)).resolves.toMatchObject({ id: 'entry-1', phrase: '一鼓作氣', stage: 'junior' })
+      sourceEntryId: 520, zhuyin: 'ㄧ ㄗˋ ㄑㄧㄢ ㄐㄧㄣ', pinyin: 'yī zì qiān jīn',
+    }, client)).resolves.toMatchObject({ id: 'entry-1', phrase: '一鼓作氣', stage: 'junior', sourceEntryId: 520 })
     expect(query.upsert).toHaveBeenCalledWith(expect.objectContaining({
-      phrase: '一鼓作氣', stage: 'junior', is_active: true,
+      phrase: '一鼓作氣', stage: 'junior', source_entry_id: 520,
+      zhuyin: 'ㄧ ㄗˋ ㄑㄧㄢ ㄐㄧㄣ', pinyin: 'yī zì qiān jīn', is_active: true,
     }), { onConflict: 'phrase' })
   })
 })

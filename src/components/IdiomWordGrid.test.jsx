@@ -13,7 +13,7 @@ import {
 const puzzle = {
   id: 'test-puzzle', title: '成語挑戰', publishedOn: '2026-10-31', sourceVersion: 'dict_idioms_2020_20260929',
   ...buildIdiomPuzzle([
-    { id: 'a', phrase: '一心一意', definition: '專心一意。', source: '教育部《成語典》。', sourceUrl: 'https://dict.idioms.moe.edu.tw/' },
+    { id: 'a', phrase: '一心一意', definition: '專心一意。', source: '教育部《成語典》。', sourceUrl: 'https://dict.idioms.moe.edu.tw/', zhuyin: 'ㄧ ㄒㄧㄣ ㄧ ㄧˋ' },
     { id: 'b', phrase: '心平氣和', definition: '心情平靜。', source: '教育部《成語典》。' },
     { id: 'c', phrase: '和氣生財', definition: '待人和善能招來財富。', source: '教育部《成語典》。' },
     { id: 'd', phrase: '財源廣進', definition: '財富從各方而來。', source: '教育部《成語典》。' },
@@ -32,6 +32,8 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('一心一意')
     expect(html).toContain('專心一意。')
     expect(html).toContain('典源或出處')
+    expect(html).toContain('播放發音')
+    expect(html).toContain('ㄧ ㄒㄧㄣ ㄧ ㄧˋ')
     expect(html).toContain('插圖須經教師確認與成語內容相符後才會顯示')
   })
 
@@ -82,6 +84,7 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('完整答案')
     expect(html).toContain('適合等級')
     expect(html).toContain('正式發布')
-    expect(html).toContain('新增成語資料')
+    expect(html).toContain('搜尋教育部《成語典》並加入成語')
+    expect(html).toContain('破音字')
   })
 })

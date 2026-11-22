@@ -30,6 +30,9 @@ export function normalizeIdiomEntry(entry, index = 0) {
     sourceUrl: String(entry?.sourceUrl || '').trim(),
     illustrationUrl: String(entry?.illustrationUrl || '').trim(),
     stage: String(entry?.stage || 'junior').trim(),
+    sourceEntryId: Number(entry?.sourceEntryId || 0) || null,
+    zhuyin: String(entry?.zhuyin || '').trim(),
+    pinyin: String(entry?.pinyin || '').trim(),
   }
 }
 
