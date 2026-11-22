@@ -580,13 +580,14 @@ export default function FactorClash() {
       setSaveMessage('訪客練習不會寫入學生個人進度。')
       return
     }
+    const effectiveFocusTaskId = focusTaskId || access.task?.id || ''
     trackLearningActivityAttempt(buildFactorClashSoloProgress({
-      focusTaskId, mode, difficulty, questionCount: questions.length, points,
+      focusTaskId: effectiveFocusTaskId, mode, difficulty, questionCount: questions.length, points,
       firstTryCorrect, secondTryCorrect, timeoutCount, awayCount, awaySeconds,
     }))
     setSaveMessage('正在儲存本輪進度……')
     recordFactorClashRound({
-      access, focusTaskId, mode, difficulty, questionCount: questions.length, points,
+      access, focusTaskId: effectiveFocusTaskId, mode, difficulty, questionCount: questions.length, points,
       firstTryCorrect, secondTryCorrect, timeoutCount, awayCount, awaySeconds,
     }).then((result) => setSaveMessage(result?.taskCompleted ? '進度已儲存，本次每日任務已完成。' : '本輪進度已儲存。'))
       .catch((error) => setSaveMessage(error.message || '本輪已完成，但目前無法儲存進度。'))

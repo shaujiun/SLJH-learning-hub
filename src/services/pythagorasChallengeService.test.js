@@ -12,6 +12,20 @@ function queryResult(data) {
   }
 }
 
+function recoveryClient(taskRows = [], rpcResult = { passed: true }) {
+  const query = {
+    select() { return this },
+    eq() { return this },
+    lte() { return this },
+    order() { return this },
+    limit: async () => ({ data: taskRows, error: null }),
+  }
+  return {
+    from: vi.fn(() => query),
+    rpc: vi.fn(async () => ({ data: rpcResult, error: null })),
+  }
+}
+
 describe('畢氏定理挑戰賽分組', () => {
   it('訪客可自行選擇 A／B 組，預設為 B 組', async () => {
     expect(await loadPythagorasChallengeAccess({ guestMode: true })).toEqual({
@@ -83,10 +97,32 @@ describe('畢氏定理每日任務成績', () => {
   })
 
   it('自由練習沒有任務編號時不寫入資料庫', async () => {
-    const rpc = vi.fn()
+    const client = recoveryClient([])
     await expect(recordPythagorasChallengeAttempt({
-      score: 100, correctCount: 10, questionCount: 10,
-    }, { rpc })).resolves.toBeNull()
-    expect(rpc).not.toHaveBeenCalled()
+      trackStudentProgress: true, score: 100, correctCount: 10, questionCount: 10,
+    }, client)).resolves.toBeNull()
+    expect(client.rpc).not.toHaveBeenCalled()
+  })
+
+  it('換裝置或網址遺失任務編號時，自動補登待完成的畢氏定理任務', async () => {
+    const client = recoveryClient([
+      { id: 'recovered-pythagoras-task', assigned_date: '2026-11-22' },
+    ], { passed: true, score: 100 })
+
+    const result = await recordPythagorasChallengeAttempt({
+      trackStudentProgress: true, score: 100, correctCount: 10, questionCount: 10,
+    }, client)
+
+    expect(client.rpc).toHaveBeenCalledWith('record_focus_task_attempt', {
+      p_focus_task_id: 'recovered-pythagoras-task',
+      p_score: 100,
+      p_correct_count: 10,
+      p_question_count: 10,
+    })
+    expect(result).toMatchObject({
+      passed: true,
+      matchedFocusTaskId: 'recovered-pythagoras-task',
+      recoveredFocusTask: true,
+    })
   })
 })

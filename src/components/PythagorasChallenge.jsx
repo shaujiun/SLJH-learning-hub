@@ -237,16 +237,8 @@ export default function PythagorasChallenge() {
     setPhase('complete')
     if (access?.role !== 'student') return
 
-    trackLearningActivityAttempt({
-      subjectCode: 'math', activityCode: 'pythagoras_challenge', activityName: '畢氏定理挑戰賽（測驗類）',
-      modeCode: `group_${String(group || 'B').toLowerCase()}`,
-      source: focusTaskId ? 'daily_task' : 'free_practice', score: 100,
-      correctCount: challengeTarget, questionCount: challengeTarget, durationSeconds: finalElapsed,
-      metadata: { answerAttempts: attempts },
-    })
-    if (!focusTaskId) return
-
-    setTaskSaveState({ status: 'saving', message: '正在儲存每日任務完成紀錄……' })
+    let matchedFocusTaskId = focusTaskId
+    setTaskSaveState({ status: 'saving', message: '正在儲存練習與每日任務進度……' })
     try {
       const result = await recordPythagorasChallengeAttempt({
         focusTaskId,
@@ -255,12 +247,25 @@ export default function PythagorasChallenge() {
         correctCount: challengeTarget,
         questionCount: challengeTarget,
       })
+      matchedFocusTaskId = result?.matchedFocusTaskId || matchedFocusTaskId
+      if (!result) {
+        setTaskSaveState({ status: 'idle', message: '' })
+        return
+      }
       setTaskSaveState({
         status: result?.passed ? 'saved' : 'not-passed',
         message: result?.passed ? '每日任務已完成並儲存。' : '本次紀錄已儲存，但尚未達到任務標準。',
       })
     } catch (error) {
       setTaskSaveState({ status: 'error', message: error.message || '無法儲存每日任務。' })
+    } finally {
+      trackLearningActivityAttempt({
+        subjectCode: 'math', activityCode: 'pythagoras_challenge', activityName: '畢氏定理挑戰賽（測驗類）',
+        modeCode: `group_${String(group || 'B').toLowerCase()}`,
+        source: matchedFocusTaskId ? 'daily_task' : 'free_practice', score: 100,
+        correctCount: challengeTarget, questionCount: challengeTarget, durationSeconds: finalElapsed,
+        metadata: { answerAttempts: attempts },
+      })
     }
   }
 
