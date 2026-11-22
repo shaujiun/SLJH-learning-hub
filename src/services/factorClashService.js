@@ -1,6 +1,7 @@
 import { clearRememberedFocusTask } from '../lib/focusTaskLaunch.js'
 import { normalizeFactorClashAwaySeconds } from '../lib/factorClashAwayTime.js'
 import { isSupabaseConfigured, requireSupabase } from '../lib/supabase.js'
+import { findPendingFocusTaskId } from './focusTaskRecoveryService.js'
 
 function taipeiToday(date = new Date()) {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -45,16 +46,34 @@ export async function loadFactorClashAccess({ guestMode = false, focusTaskId = '
   })
   if (groupError) throw new Error(`無法確認數學分組：${groupError.message}`)
   const group = String(groupData || 'B').toUpperCase() === 'A' ? 'A' : 'B'
+  let recoveredTaskId = ''
+  if (!focusTaskId) {
+    try {
+      recoveredTaskId = await findPendingFocusTaskId({
+        subjectCode: 'math',
+        activityCode: 'factor_clash_solo',
+      }, resolvedClient)
+    } catch {
+      // 待辦查詢暫時失敗時，仍保留學生分組與自由練習入口；完成時會再嘗試補登。
+    }
+  }
+  const effectiveTaskId = focusTaskId || recoveredTaskId
   let task = null
-  if (focusTaskId) {
+  if (effectiveTaskId) {
     const { data, error } = await resolvedClient.from('student_focus_tasks')
       .select('id,activity_code_snapshot,activity_name_snapshot,question_count,status')
-      .eq('id', focusTaskId).maybeSingle()
+      .eq('id', effectiveTaskId).maybeSingle()
     if (error) throw new Error(`無法讀取每日任務：${error.message}`)
     if (!data || String(data.activity_code_snapshot || '').toLowerCase() !== 'factor_clash_solo') {
       throw new Error('這個每日任務不是因式交鋒。')
     }
-    task = { id: data.id, name: data.activity_name_snapshot, mode: dailyMode(data.id), status: data.status }
+    task = {
+      id: data.id,
+      name: data.activity_name_snapshot,
+      mode: dailyMode(data.id),
+      status: data.status,
+      recovered: Boolean(recoveredTaskId),
+    }
   }
   return {
     role: 'student', studentId: student.id, displayName: student.full_name || student.student_id_code || '',
@@ -81,8 +100,13 @@ export async function recordFactorClashRound({
   })
   if (sessionError) throw new Error(`無法儲存因式交鋒練習紀錄：${sessionError.message}`)
 
-  const effectiveTaskId = focusTaskId
-  if (!effectiveTaskId || questionCount < 5) return { saved: true, taskCompleted: false }
+  if (questionCount < 5) return { saved: true, taskCompleted: false }
+  const recoveredTaskId = focusTaskId ? '' : await findPendingFocusTaskId({
+    subjectCode: 'math',
+    activityCode: 'factor_clash_solo',
+  }, client)
+  const effectiveTaskId = focusTaskId || recoveredTaskId
+  if (!effectiveTaskId) return { saved: true, taskCompleted: false }
   const score = Math.max(0, Math.min(100, Math.round((Number(points) || 0) / 15 * 100)))
   const { data, error } = await client.rpc('record_focus_task_attempt', {
     p_focus_task_id: effectiveTaskId,
@@ -92,5 +116,10 @@ export async function recordFactorClashRound({
   })
   if (error) throw new Error(`練習已儲存，但每日任務無法完成：${error.message}`)
   if (data?.passed) clearRememberedFocusTask(effectiveTaskId)
-  return { saved: true, taskCompleted: Boolean(data?.passed), matchedFocusTaskId: effectiveTaskId }
+  return {
+    saved: true,
+    taskCompleted: Boolean(data?.passed),
+    matchedFocusTaskId: effectiveTaskId,
+    recoveredFocusTask: Boolean(recoveredTaskId),
+  }
 }

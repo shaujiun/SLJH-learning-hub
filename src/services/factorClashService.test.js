@@ -10,7 +10,7 @@ function singleRowQuery(data, error = null) {
   }
 }
 
-function accessClient({ role = 'student', student = null, group = 'B' } = {}) {
+function accessClient({ role = 'student', student = null, group = 'B', pendingTask = null } = {}) {
   const rpc = vi.fn(async (name, params) => {
     expect(name).toBe('resolve_student_learning_group')
     expect(params).toMatchObject({ p_student_id: student?.id, p_subject_code: 'math' })
@@ -27,6 +27,30 @@ function accessClient({ role = 'student', student = null, group = 'B' } = {}) {
         return singleRowQuery({ username: 'viewer', display_name: '測試者', user_type: role })
       }
       if (table === 'students') return singleRowQuery(student)
+      if (table === 'student_focus_tasks') {
+        if (!pendingTask) {
+          const pendingQuery = {
+            select() { return this },
+            eq() { return this },
+            lte() { return this },
+            order() { return this },
+            limit: async () => ({ data: [], error: null }),
+          }
+          return pendingQuery
+        }
+        const pendingQuery = {
+          select() { return this },
+          eq(field) {
+            this.lookupById = field === 'id'
+            return this
+          },
+          lte() { return this },
+          order() { return this },
+          limit: async () => ({ data: [{ id: pendingTask.id, assigned_date: '2026-11-22' }], error: null }),
+          maybeSingle: async () => ({ data: pendingTask, error: null }),
+        }
+        return pendingQuery
+      }
       throw new Error(`未預期查詢資料表：${table}`)
     }),
     rpc,
@@ -63,6 +87,28 @@ describe('因式交鋒角色與分組存取', () => {
     })
     expect(client.rpc).not.toHaveBeenCalled()
   })
+
+  it('換裝置或網址遺失任務編號時，自動找回待完成的因式交鋒任務', async () => {
+    const client = accessClient({
+      role: 'student',
+      student: { id: 'student-1', student_id_code: '80601', full_name: '學生甲' },
+      group: 'A',
+      pendingTask: {
+        id: 'task-recovered-1',
+        activity_code_snapshot: 'factor_clash_solo',
+        activity_name_snapshot: '因式交鋒單人練習',
+        question_count: 5,
+        status: 'pending',
+      },
+    })
+
+    await expect(loadFactorClashAccess({}, client)).resolves.toMatchObject({
+      role: 'student',
+      group: 'A',
+      difficulty: 'advanced',
+      task: { id: 'task-recovered-1', status: 'pending', recovered: true },
+    })
+  })
 })
 
 describe('因式交鋒練習紀錄', () => {
@@ -89,5 +135,41 @@ describe('因式交鋒練習紀錄', () => {
       away_seconds: MAX_FACTOR_CLASH_AWAY_SECONDS,
     }))
     expect(result).toEqual({ saved: true, taskCompleted: false })
+  })
+
+  it('完成時可再次找回遺失編號的待完成任務並補登', async () => {
+    const insert = vi.fn().mockResolvedValue({ error: null })
+    const taskQuery = {
+      select() { return this },
+      eq() { return this },
+      lte() { return this },
+      order() { return this },
+      limit: async () => ({
+        data: [{ id: 'recovered-factor-task', assigned_date: '2026-11-22' }],
+        error: null,
+      }),
+    }
+    const client = {
+      from: vi.fn((table) => table === 'factor_clash_sessions' ? { insert } : taskQuery),
+      rpc: vi.fn(async () => ({ data: { passed: true }, error: null })),
+    }
+
+    const result = await recordFactorClashRound({
+      access: { role: 'student', studentId: 'student-1' },
+      mode: 'cross', difficulty: 'advanced', questionCount: 5, points: 12,
+      firstTryCorrect: 3, secondTryCorrect: 2,
+    }, client)
+
+    expect(client.rpc).toHaveBeenCalledWith('record_focus_task_attempt', {
+      p_focus_task_id: 'recovered-factor-task',
+      p_score: 80,
+      p_correct_count: 5,
+      p_question_count: 5,
+    })
+    expect(result).toMatchObject({
+      taskCompleted: true,
+      matchedFocusTaskId: 'recovered-factor-task',
+      recoveredFocusTask: true,
+    })
   })
 })
