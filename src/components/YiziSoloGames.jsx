@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import HandwritingAnswer from './HandwritingAnswer.jsx'
+import { SafeHandwritingAnswer } from './HandwritingAnswer.jsx'
+import YiziFourSayingsRoom from './YiziFourSayingsRoom.jsx'
 import {
-  acceptedAnswers, checkYiziAnswer, formatTimeChoice, normalizeChineseAnswer,
-  scoreFourSayings, shuffleItems, YIZI_DIFFICULTIES, YIZI_TIME_OPTIONS,
+  acceptedAnswers, arrangeFourSayingsIdioms, checkYiziAnswer, formatTimeChoice,
+  normalizeChineseAnswer, orderedFourSayingsAnswer, scoreFourSayings, shuffleItems,
+  updateFourSayingsSelection, YIZI_DIFFICULTIES, YIZI_TIME_OPTIONS,
 } from '../lib/yiziQianjin.js'
 import { buildYiziProgress } from '../lib/activityProgress.js'
 import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
@@ -45,7 +47,7 @@ function ModeSettings({ gameType, difficulty, setDifficulty, timeLimit, setTimeL
   </div>
 }
 
-function AnswerInput({ length, value, onChange, inputMode, setInputMode, allowClick = false, children }) {
+function AnswerInput({ length, value, onChange, inputMode, setInputMode, allowClick = false, resetKey = '', children }) {
   return <div className="yizi-answer-area">
     <div className="yizi-input-tabs" role="tablist" aria-label="作答方式">
       {allowClick && <button type="button" className={inputMode === 'click' ? 'is-active' : ''} onClick={() => setInputMode('click')}>點選</button>}
@@ -56,7 +58,8 @@ function AnswerInput({ length, value, onChange, inputMode, setInputMode, allowCl
     {inputMode === 'keyboard' && <label className="yizi-keyboard-answer">輸入答案
       <input value={value} maxLength={length} autoComplete="off" onChange={(event) => onChange(event.target.value)} />
     </label>}
-    {inputMode === 'handwriting' && <HandwritingAnswer length={length} value={value} onChange={onChange} />}
+    {inputMode === 'handwriting' && <SafeHandwritingAnswer resetKey={resetKey} length={length} value={value} onChange={onChange}
+      onFallback={() => setInputMode('keyboard')} />}
   </div>
 }
 
@@ -121,7 +124,7 @@ export function RemovePartGame({ questions, context }) {
   return <section className="yizi-game-card">
     <h2>去無成字</h2><p>四個部件中去除一個，將保留的三個部件重新組成一字。你不必指出去掉哪個部件。</p>
     <ModeSettings gameType="remove_part" {...{ difficulty, setDifficulty, timeLimit, setTimeLimit }} disabled={running} />
-    <div className="yizi-round-bar"><button type="button" className="primary" onClick={start}>{question ? '換一題' : '開始出題'}</button>
+    <div className="yizi-round-bar"><button type="button" className="primary" onClick={start}>{question ? '下一題' : '開始出題'}</button>
       {running && timeLimit > 0 && <strong>剩餘 {remaining} 秒</strong>}</div>
     {question && <>
       <div className="yizi-parts-stage">{displayedParts.map((part, index) => <span key={`${part}-${index}`} style={{ '--part-angle': `${[-14, 9, -5, 16][index % 4]}deg` }}>{part}</span>)}</div>
@@ -132,33 +135,28 @@ export function RemovePartGame({ questions, context }) {
   </section>
 }
 
-function ReorderCharacters({ characters, onChange }) {
-  const [selectedIndex, setSelectedIndex] = useState(null)
-  const choose = (index) => {
-    if (selectedIndex === null) { setSelectedIndex(index); return }
-    const next = [...characters]
-    ;[next[selectedIndex], next[index]] = [next[index], next[selectedIndex]]
-    setSelectedIndex(null); onChange(next)
-  }
+function ClickSequenceAnswer({ characters, onClear }) {
   return <div className="yizi-reorder">
-    <p>依答案順序排列：先點一字，再點另一字即可交換。</p>
-    <div>{characters.map((character, index) => <button type="button" className={selectedIndex === index ? 'is-selected' : ''}
-      key={`${character}-${index}`} onClick={() => choose(index)}>{character || '？'}</button>)}</div>
+    <p>請依答案順序點選；第 1 個點的字會放在第 1 格。</p>
+    <div>{Array.from({ length: 4 }, (_, index) => <span key={index}>{characters[index] || '？'}</span>)}</div>
+    <button type="button" onClick={onClear}>清除重選</button>
   </div>
 }
 
-export function FourSayingsGame({ questions, context }) {
+function SoloFourSayingsGame({ questions, context }) {
   const [difficulty, setDifficulty] = useState(0)
   const [timeLimit, setTimeLimit] = useState(40)
   const [question, setQuestion] = useState(null)
+  const [displayedIdioms, setDisplayedIdioms] = useState([])
   const [selected, setSelected] = useState(['', '', '', ''])
-  const [ordered, setOrdered] = useState(['', '', '', ''])
+  const [selectionOrder, setSelectionOrder] = useState([])
   const [answer, setAnswer] = useState('')
   const [inputMode, setInputMode] = useState('click')
   const [running, setRunning] = useState(false)
   const [hintUsed, setHintUsed] = useState(false)
   const [wrongCount, setWrongCount] = useState(0)
   const [feedback, setFeedback] = useState(null)
+  const [currentScore, setCurrentScore] = useState(Number(context?.scoreByGame?.four_sayings || 0))
   const startedAt = useRef(0)
   const pool = useMemo(() => questions.filter((item) => !difficulty || item.difficulty === difficulty), [difficulty, questions])
   const revealHint = () => setHintUsed(true)
@@ -171,23 +169,40 @@ export function FourSayingsGame({ questions, context }) {
   useEffect(() => {
     if (running && timeLimit > 0 && remaining > 0 && remaining <= Math.floor(timeLimit / 2)) setHintUsed(true)
   }, [remaining, running, timeLimit])
-  useEffect(() => { if (inputMode === 'click') setAnswer(ordered.join('')) }, [inputMode, ordered])
+  const clickAnswer = orderedFourSayingsAnswer(selected, selectionOrder)
+  useEffect(() => { if (inputMode === 'click') setAnswer(clickAnswer) }, [clickAnswer, inputMode])
   const start = () => {
     const next = pickQuestion(pool, question?.id)
-    setQuestion(next); setSelected(['', '', '', '']); setOrdered(['', '', '', '']); setAnswer('')
+    setQuestion(next); setDisplayedIdioms(arrangeFourSayingsIdioms(next)); setSelected(['', '', '', '']); setSelectionOrder([]); setAnswer('')
     setHintUsed(false); setWrongCount(0); setFeedback(null); setRunning(Boolean(next)); startedAt.current = Date.now()
   }
   const selectCharacter = (rowIndex, character) => {
-    const next = [...selected]; next[rowIndex] = character; setSelected(next); setOrdered(next)
+    const next = updateFourSayingsSelection(selected, selectionOrder, rowIndex, character)
+    setSelected(next.selected); setSelectionOrder(next.selectionOrder)
+  }
+  const changeInputMode = (mode) => {
+    setInputMode(mode); setFeedback(null)
+    setAnswer(mode === 'click' ? clickAnswer : '')
+  }
+  const clearClickAnswer = () => {
+    setSelected(['', '', '', '']); setSelectionOrder([]); setAnswer('')
+  }
+  const giveUp = () => {
+    if (!running || !question) return
+    setRunning(false)
+    setFeedback({ type: 'answer', text: `已放棄本題。答案：${acceptedAnswers(question).join('、')}。本題不計分，之後仍可能再次出現。` })
+    persistResult({ context, question, gameType: 'four_sayings', timeLimit, answer, correct: false, score: 0,
+      startedAt: startedAt.current, metadata: { hintUsed, abandoned: true } })
   }
   const submit = () => {
     if (!running || !question) return
-    const normalized = normalizeChineseAnswer(inputMode === 'click' ? ordered.join('') : answer)
+    const normalized = normalizeChineseAnswer(inputMode === 'click' ? clickAnswer : answer)
     if (normalized.length !== 4) { setFeedback({ type: 'error', text: '請完成四個字後再送出。' }); return }
     const correct = checkYiziAnswer(question, normalized)
     const score = scoreFourSayings({ correct, hintUsed })
     if (correct) {
       setRunning(false); setFeedback({ type: 'success', text: `答對了！本題獲得 ${score} 分。` })
+      setCurrentScore((value) => value + score)
       persistResult({ context, question, gameType: 'four_sayings', timeLimit, answer: normalized, correct, score, startedAt: startedAt.current, metadata: { hintUsed } })
       return
     }
@@ -201,22 +216,40 @@ export function FourSayingsGame({ questions, context }) {
   return <section className="yizi-game-card">
     <h2>四說新語</h2><p>每句成語各取一字，再重新排列成第五句成語。預設使用點選作答。</p>
     <ModeSettings gameType="four_sayings" {...{ difficulty, setDifficulty, timeLimit, setTimeLimit }} disabled={running} />
-    <div className="yizi-round-bar"><button type="button" className="primary" onClick={start}>{question ? '換一題' : '開始出題'}</button>
+    <div className="yizi-round-bar"><button type="button" className="primary" onClick={start}>{question ? '下一題' : '開始出題'}</button>
+      <strong className="yizi-current-score">目前 {currentScore} 分</strong>
       {running && timeLimit > 0 && <strong>剩餘 {remaining} 秒</strong>}</div>
     {question && <>
-      <div className="yizi-sayings">{(question.prompt.idioms || []).map((idiom, rowIndex) => <div key={`${idiom}-${rowIndex}`}>
+      <div className="yizi-sayings">{displayedIdioms.map((idiom, rowIndex) => <div key={`${idiom}-${rowIndex}`}>
         <span>第 {rowIndex + 1} 句</span>{Array.from(idiom).map((character, index) => <button type="button" disabled={!running || inputMode !== 'click'}
           className={selected[rowIndex] === character ? 'is-selected' : ''} key={`${character}-${index}`} onClick={() => selectCharacter(rowIndex, character)}>{character}</button>)}
       </div>)}</div>
       {hintUsed && <p className="yizi-hint">提示：答案中包含「{Array.from(correctAnswer)[0] || '？'}」。本題答對最高 1 分。</p>}
       {!hintUsed && running && <button type="button" className="yizi-hint-button" onClick={revealHint}>顯示一字提示</button>}
-      <AnswerInput length={4} value={answer} onChange={setAnswer} inputMode={inputMode} setInputMode={setInputMode} allowClick>
-        <ReorderCharacters characters={ordered} onChange={setOrdered} />
+      <AnswerInput length={4} value={answer} onChange={setAnswer} inputMode={inputMode} setInputMode={changeInputMode}
+        resetKey={question.id} allowClick>
+        <ClickSequenceAnswer characters={Array.from(clickAnswer)} onClear={clearClickAnswer} />
       </AnswerInput>
-      <button type="button" className="yizi-submit" disabled={!running} onClick={submit}>送出答案</button>
+      <div className="yizi-submit-row"><button type="button" className="yizi-submit" disabled={!running} onClick={submit}>送出答案</button>
+        <button type="button" className="yizi-give-up" disabled={!running} onClick={giveUp}>放棄，直接看答案</button></div>
     </>}
     {feedback && <p className={feedbackClass(feedback)}>{feedback.text}</p>}
   </section>
+}
+
+export function FourSayingsGame({ questions, context }) {
+  const [playMode, setPlayMode] = useState('solo')
+  return <>
+    <div className="yizi-four-mode-switch" role="tablist" aria-label="四說新語遊玩模式">
+      <button type="button" role="tab" aria-selected={playMode === 'solo'} className={playMode === 'solo' ? 'is-active' : ''}
+        onClick={() => setPlayMode('solo')}>單人練習</button>
+      <button type="button" role="tab" aria-selected={playMode === 'duel'} className={playMode === 'duel' ? 'is-active' : ''}
+        onClick={() => setPlayMode('duel')}>雙人競賽</button>
+    </div>
+    {playMode === 'solo'
+      ? <SoloFourSayingsGame questions={questions} context={context} />
+      : <YiziFourSayingsRoom context={context} />}
+  </>
 }
 
 export function ComponentPairsGame({ questions, context }) {
@@ -269,7 +302,7 @@ export function ComponentPairsGame({ questions, context }) {
   return <section className="yizi-game-card">
     <h2>成雙成對</h2><p>觀察 16 個部件，任取兩個組成國字。部件可重複搭配，但同一答案不能重複。</p>
     <ModeSettings gameType="component_pairs" {...{ difficulty, setDifficulty, timeLimit, setTimeLimit }} disabled={running} />
-    <div className="yizi-round-bar"><button type="button" className="primary" onClick={start}>{question ? '換一題' : '開始出題'}</button>
+    <div className="yizi-round-bar"><button type="button" className="primary" onClick={start}>{question ? '下一題' : '開始出題'}</button>
       {running && timeLimit > 0 && <strong>剩餘 {remaining} 秒</strong>}</div>
     {question && <>
       <div className="yizi-component-grid">{(question.prompt.parts || []).map((part, index) => <span key={`${part}-${index}`}>{part}</span>)}</div>

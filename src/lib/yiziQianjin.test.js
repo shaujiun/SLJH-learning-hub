@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import {
   applyIdiomPlacement,
+  arrangeFourSayingsIdioms,
   canPlaceIdiom,
   checkYiziAnswer,
   chooseIdiomAiMove,
   createIdiomBoard,
   findIdiomPlacements,
   localYiziQuestions,
+  orderedFourSayingsAnswer,
   scoreFourSayings,
+  updateFourSayingsSelection,
   yiziQuestionCounts,
 } from './yiziQianjin.js'
 
@@ -23,6 +26,17 @@ describe('yiziQianjin', () => {
     expect(localYiziQuestions('four_sayings', 1).length).toBeGreaterThan(0)
     expect(scoreFourSayings({ correct: true, hintUsed: false })).toBe(2)
     expect(scoreFourSayings({ correct: true, hintUsed: true })).toBe(1)
+  })
+
+  it('四說新語易級保留順序，中難級打亂，答案依點選順序組合', () => {
+    const prompt = { idioms: ['春風化雨', '袖手旁觀', '清風明月', '手舞足蹈'] }
+    expect(arrangeFourSayingsIdioms({ difficulty: 1, prompt }, () => 0)).toEqual(prompt.idioms)
+    expect(arrangeFourSayingsIdioms({ difficulty: 2, prompt }, () => 0)).not.toEqual(prompt.idioms)
+    let state = updateFourSayingsSelection(['', '', '', ''], [], 2, '旁')
+    state = updateFourSayingsSelection(state.selected, state.selectionOrder, 0, '袖')
+    state = updateFourSayingsSelection(state.selected, state.selectionOrder, 3, '觀')
+    state = updateFourSayingsSelection(state.selected, state.selectionOrder, 1, '手')
+    expect(orderedFourSayingsAnswer(state.selected, state.selectionOrder)).toBe('旁袖觀手')
   })
 
   it('只允許四字成語與既有文字交會且不能衝突', () => {

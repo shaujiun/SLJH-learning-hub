@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 const baseSql = readFileSync(new URL('../../supabase/migrations/20261122120000_add_yizi_qianjin_games.sql', import.meta.url), 'utf8')
 const roomSql = readFileSync(new URL('../../supabase/migrations/20261122120500_add_yizi_idiom_rooms.sql', import.meta.url), 'utf8')
 const seedSql = readFileSync(new URL('../../supabase/migrations/20261122121000_seed_yizi_qianjin_bank.sql', import.meta.url), 'utf8')
+const fourSayingsRoomSql = readFileSync(new URL('../../supabase/migrations/20261123110000_add_yizi_four_sayings_rooms.sql', import.meta.url), 'utf8')
 
 describe('一字千金資料庫遷移', () => {
   it('建立題庫、作答、成語與房間資料表', () => {
@@ -27,5 +28,16 @@ describe('一字千金資料庫遷移', () => {
     expect(seedSql).toContain("'remove_part'")
     expect(seedSql).toContain("'four_sayings'")
     expect(seedSql).toContain("'component_pairs'")
+  })
+
+  it('四說新語競賽固定同題、5 或 10 題與房主作答設定', () => {
+    for (const table of ['yizi_four_sayings_rooms', 'yizi_four_sayings_players', 'yizi_four_sayings_answers']) {
+      expect(fourSayingsRoomSql).toContain(`public.${table}`)
+    }
+    expect(fourSayingsRoomSql).toContain('question_count in (5, 10)')
+    expect(fourSayingsRoomSql).toContain("input_mode in ('click', 'keyboard', 'handwriting')")
+    expect(fourSayingsRoomSql).toContain('question_ids[selected_room.current_round]')
+    expect(fourSayingsRoomSql).toContain('yizi_four_sayings_submit_answer')
+    expect(fourSayingsRoomSql).toContain('total_duration_ms')
   })
 })
