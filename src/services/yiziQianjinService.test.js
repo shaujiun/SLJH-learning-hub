@@ -44,12 +44,13 @@ describe('yiziQianjinService', () => {
     ])).toEqual({ four_sayings: 3, remove_part: 1 })
   })
 
-  it('建立競賽房間會傳送房主固定的 5／10 題、時間與作答方式', async () => {
+  it('建立競賽房間會傳送題數、時間、作答方式、人數與賽制', async () => {
     useMemoryStorage()
     const client = roomClient({ roomCode: '123456', seatToken: 'host-token', seatNo: 1 })
-    await createYiziFourSayingsRoom({ nickname: '小明', inputMode: 'handwriting', timeLimitSeconds: 60, questionCount: 10 }, client)
+    await createYiziFourSayingsRoom({ nickname: '小明', inputMode: 'handwriting', timeLimitSeconds: 60, questionCount: 10, playerLimit: 36, competitionMode: 'eliminate_2' }, client)
     expect(client.rpc).toHaveBeenCalledWith('yizi_four_sayings_create_room', {
       p_nickname: '小明', p_input_mode: 'handwriting', p_time_limit_seconds: 60, p_question_count: 10,
+      p_player_limit: 36, p_competition_mode: 'eliminate_2',
     })
   })
 

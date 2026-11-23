@@ -9,11 +9,11 @@ const errorMessages = {
   yizi_room_code_unavailable: '目前無法產生房間代碼，請稍後再試。',
   yizi_room_not_found: '找不到這個房間，請確認 6 位數代碼。',
   yizi_room_started: '這個房間已經開始或結束。',
-  yizi_room_full: '這個房間已有 2 位玩家。',
+  yizi_room_full: '這個房間已達人數上限。',
   yizi_duplicate_nickname: '同一房間不能使用相同暱稱。',
   yizi_seat_invalid: '找不到這個座位，請重新加入。',
   yizi_host_required: '只有房主可以開始對戰。',
-  yizi_players_incomplete: '請等待第 2 位玩家加入。',
+  yizi_players_incomplete: '至少需要 2 位玩家才能開始。',
   yizi_time_limit_invalid: '請選擇 60、90 或 120 秒。',
   yizi_room_not_playing: '這一局目前不能下棋。',
   yizi_not_your_turn: '目前不是你的回合。',
@@ -25,8 +25,11 @@ const errorMessages = {
   yizi_answer_mode_invalid: '請選擇點選、輸入或手寫作答。',
   yizi_four_time_limit_invalid: '四說新語競賽每題可設定 40 秒或 60 秒。',
   yizi_question_count_invalid: '四說新語競賽請選擇 5 題或 10 題。',
+  yizi_player_limit_invalid: '一般房最多 8 人，全班房最多 36 人。',
+  yizi_competition_mode_invalid: '請選擇積分賽、一錯淘汰或兩錯淘汰。',
   yizi_questions_insufficient: '已發布的四說新語題目不足，無法建立這場競賽。',
-  yizi_round_answered: '這一題已經作答完畢，請等待對手。',
+  yizi_round_answered: '這一題已經作答完畢，請等待其他玩家。',
+  yizi_player_eliminated: '你已被淘汰，目前只能觀戰。',
   yizi_four_answer_invalid: '請完成四個字後再送出。',
 }
 
@@ -247,6 +250,8 @@ export async function createYiziFourSayingsRoom(settings, client) {
     p_input_mode: settings.inputMode,
     p_time_limit_seconds: Number(settings.timeLimitSeconds),
     p_question_count: Number(settings.questionCount),
+    p_player_limit: Number(settings.playerLimit),
+    p_competition_mode: settings.competitionMode,
   }, '無法建立四說新語競賽房間', client)
   rememberYiziFourSayingsRoomSeat(seat)
   return seat

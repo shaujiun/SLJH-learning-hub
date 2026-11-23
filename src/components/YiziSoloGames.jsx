@@ -4,6 +4,7 @@ import YiziFourSayingsRoom from './YiziFourSayingsRoom.jsx'
 import {
   acceptedAnswers, arrangeFourSayingsIdioms, checkYiziAnswer, formatTimeChoice,
   normalizeChineseAnswer, orderedFourSayingsAnswer, scoreFourSayings, shuffleItems,
+  pickQuestionFromCycle,
   updateFourSayingsSelection, YIZI_DIFFICULTIES, YIZI_TIME_OPTIONS,
 } from '../lib/yiziQianjin.js'
 import { buildYiziProgress } from '../lib/activityProgress.js'
@@ -157,6 +158,7 @@ function SoloFourSayingsGame({ questions, context }) {
   const [wrongCount, setWrongCount] = useState(0)
   const [feedback, setFeedback] = useState(null)
   const [currentScore, setCurrentScore] = useState(Number(context?.scoreByGame?.four_sayings || 0))
+  const [usedQuestionIds, setUsedQuestionIds] = useState([])
   const startedAt = useRef(0)
   const pool = useMemo(() => questions.filter((item) => !difficulty || item.difficulty === difficulty), [difficulty, questions])
   const revealHint = () => setHintUsed(true)
@@ -171,8 +173,11 @@ function SoloFourSayingsGame({ questions, context }) {
   }, [remaining, running, timeLimit])
   const clickAnswer = orderedFourSayingsAnswer(selected, selectionOrder)
   useEffect(() => { if (inputMode === 'click') setAnswer(clickAnswer) }, [clickAnswer, inputMode])
+  useEffect(() => { setUsedQuestionIds([]) }, [difficulty])
   const start = () => {
-    const next = pickQuestion(pool, question?.id)
+    const cycle = pickQuestionFromCycle(pool, usedQuestionIds)
+    const next = cycle.question
+    setUsedQuestionIds(cycle.usedQuestionIds)
     setQuestion(next); setDisplayedIdioms(arrangeFourSayingsIdioms(next)); setSelected(['', '', '', '']); setSelectionOrder([]); setAnswer('')
     setHintUsed(false); setWrongCount(0); setFeedback(null); setRunning(Boolean(next)); startedAt.current = Date.now()
   }
@@ -244,7 +249,7 @@ export function FourSayingsGame({ questions, context }) {
       <button type="button" role="tab" aria-selected={playMode === 'solo'} className={playMode === 'solo' ? 'is-active' : ''}
         onClick={() => setPlayMode('solo')}>單人練習</button>
       <button type="button" role="tab" aria-selected={playMode === 'duel'} className={playMode === 'duel' ? 'is-active' : ''}
-        onClick={() => setPlayMode('duel')}>雙人競賽</button>
+        onClick={() => setPlayMode('duel')}>多人競賽</button>
     </div>
     {playMode === 'solo'
       ? <SoloFourSayingsGame questions={questions} context={context} />
