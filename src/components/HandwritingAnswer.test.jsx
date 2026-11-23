@@ -13,5 +13,8 @@ describe('HandwritingAnswer', () => {
   it('只保留單一中文字候選', async () => {
     const fetcher = vi.fn(async () => ({ ok: true, json: async () => ['SUCCESS', [[null, ['字', '中文', '語']]]] }))
     await expect(recognizeTraditionalChinese([{ x: [1], y: [1] }], fetcher)).resolves.toEqual(['字', '語'])
+    const request = JSON.parse(fetcher.mock.calls[0][1].body)
+    expect(request.requests[0].ink[0]).toHaveLength(3)
+    expect(request.requests[0].ink[0][2]).toEqual([0])
   })
 })

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { SafeHandwritingAnswer } from './HandwritingAnswer.jsx'
+import YiziFourSayingsRoom from './YiziFourSayingsRoom.jsx'
 import {
   acceptedAnswers, arrangeFourSayingsIdioms, checkYiziAnswer, formatTimeChoice,
   normalizeChineseAnswer, orderedFourSayingsAnswer, scoreFourSayings, shuffleItems,
@@ -142,7 +143,7 @@ function ClickSequenceAnswer({ characters, onClear }) {
   </div>
 }
 
-export function FourSayingsGame({ questions, context }) {
+function SoloFourSayingsGame({ questions, context }) {
   const [difficulty, setDifficulty] = useState(0)
   const [timeLimit, setTimeLimit] = useState(40)
   const [question, setQuestion] = useState(null)
@@ -234,6 +235,21 @@ export function FourSayingsGame({ questions, context }) {
     </>}
     {feedback && <p className={feedbackClass(feedback)}>{feedback.text}</p>}
   </section>
+}
+
+export function FourSayingsGame({ questions, context }) {
+  const [playMode, setPlayMode] = useState('solo')
+  return <>
+    <div className="yizi-four-mode-switch" role="tablist" aria-label="四說新語遊玩模式">
+      <button type="button" role="tab" aria-selected={playMode === 'solo'} className={playMode === 'solo' ? 'is-active' : ''}
+        onClick={() => setPlayMode('solo')}>單人練習</button>
+      <button type="button" role="tab" aria-selected={playMode === 'duel'} className={playMode === 'duel' ? 'is-active' : ''}
+        onClick={() => setPlayMode('duel')}>雙人競賽</button>
+    </div>
+    {playMode === 'solo'
+      ? <SoloFourSayingsGame questions={questions} context={context} />
+      : <YiziFourSayingsRoom context={context} />}
+  </>
 }
 
 export function ComponentPairsGame({ questions, context }) {

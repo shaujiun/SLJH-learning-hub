@@ -9,7 +9,7 @@ export async function recognizeTraditionalChinese(strokes, fetcher = fetch, sign
     options: 'enable_pre_space',
     requests: [{
       writing_guide: { writing_area_width: PAD_SIZE, writing_area_height: PAD_SIZE },
-      ink: strokes.map((stroke) => [stroke.x, stroke.y]),
+      ink: strokes.map((stroke) => [stroke.x, stroke.y, stroke.t || stroke.x.map((_, index) => index * 16)]),
       language: 'zh_TW',
     }],
   }
@@ -20,6 +20,19 @@ export async function recognizeTraditionalChinese(strokes, fetcher = fetch, sign
   const result = await response.json()
   if (result?.[0] !== 'SUCCESS') return []
   return (result?.[1]?.[0]?.[1] || []).filter((item) => Array.from(String(item)).length === 1 && /[㐀-鿿]/.test(item))
+}
+
+async function recognizeWithRetry(strokes, signal) {
+  let lastError = null
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try { return await recognizeTraditionalChinese(strokes, fetch, signal) }
+    catch (error) {
+      lastError = error
+      if (signal.aborted || attempt === 1) throw error
+      await new Promise((resolve) => window.setTimeout(resolve, 300))
+    }
+  }
+  throw lastError
 }
 
 function drawPad(canvas, strokes) {
@@ -66,7 +79,7 @@ function HandwritingPad({ value, onChange, label }) {
     event.preventDefault()
     try { canvasRef.current.setPointerCapture(event.pointerId) } catch { /* 某些行動瀏覽器不支援指標鎖定 */ }
     const start = point(event)
-    activeStroke.current = { x: [start.x], y: [start.y] }
+    activeStroke.current = { x: [start.x], y: [start.y], t: [0], startedAt: performance.now() }
     setStrokes((items) => [...items, activeStroke.current])
   }
   const pointerMove = (event) => {
@@ -75,7 +88,10 @@ function HandwritingPad({ value, onChange, label }) {
     const next = point(event)
     activeStroke.current.x.push(next.x)
     activeStroke.current.y.push(next.y)
-    setStrokes((items) => [...items.slice(0, -1), { ...activeStroke.current, x: [...activeStroke.current.x], y: [...activeStroke.current.y] }])
+    activeStroke.current.t.push(Math.max(0, Math.round(performance.now() - activeStroke.current.startedAt)))
+    setStrokes((items) => [...items.slice(0, -1), {
+      ...activeStroke.current, x: [...activeStroke.current.x], y: [...activeStroke.current.y], t: [...activeStroke.current.t],
+    }])
   }
   const pointerUp = () => { activeStroke.current = null }
   const clear = () => {
@@ -88,7 +104,7 @@ function HandwritingPad({ value, onChange, label }) {
     const controller = new AbortController()
     const timer = window.setTimeout(() => controller.abort(), 12000)
     try {
-      const result = await recognizeTraditionalChinese(strokes, fetch, controller.signal)
+      const result = await recognizeWithRetry(strokes, controller.signal)
       setCandidates(result.slice(0, 8))
       if (result[0]) onChange(result[0])
       setStatus(result.length ? '請選擇正確候選字。' : '暫時辨識不出來，請重寫或改用鍵盤。')

@@ -2,6 +2,7 @@ import { requireSupabase } from '../lib/supabase.js'
 import { localCommonIdioms, localYiziQuestions, normalizeChineseAnswer, YIZI_SOURCE } from '../lib/yiziQianjin.js'
 
 const roomStorageKey = 'sljh.yizi.idiomRoomSeat.v1'
+const fourSayingsRoomStorageKey = 'sljh.yizi.fourSayingsRoomSeat.v1'
 const errorMessages = {
   student_required: '管理者與訪客的試玩不會寫入學生進度。',
   yizi_nickname_invalid: '暱稱請輸入 1～12 個字。',
@@ -21,6 +22,12 @@ const errorMessages = {
   yizi_idiom_used: '這句成語本局已經使用過。',
   yizi_move_invalid: '成語必須與盤面文字交會，且不可覆蓋不同文字。',
   yizi_legal_move_exists: '盤面仍有可使用的常見成語。',
+  yizi_answer_mode_invalid: '請選擇點選、輸入或手寫作答。',
+  yizi_four_time_limit_invalid: '四說新語競賽每題可設定 40 秒或 60 秒。',
+  yizi_question_count_invalid: '四說新語競賽請選擇 5 題或 10 題。',
+  yizi_questions_insufficient: '已發布的四說新語題目不足，無法建立這場競賽。',
+  yizi_round_answered: '這一題已經作答完畢，請等待對手。',
+  yizi_four_answer_invalid: '請完成四個字後再送出。',
 }
 
 function isMissingRelation(error) {
@@ -209,6 +216,85 @@ export function claimNoYiziRoomMove(seat, client) {
 
 export function leaveYiziRoom(seat, client) {
   return roomRpc('yizi_leave_room', { p_room_code: seat.roomCode, p_seat_token: seat.seatToken }, '無法離開房間', client)
+}
+
+function rememberRoomSeat(storageKey, seat) {
+  window.localStorage.setItem(storageKey, JSON.stringify(seat))
+}
+
+function readRoomSeat(storageKey) {
+  try {
+    const seat = JSON.parse(window.localStorage.getItem(storageKey) || 'null')
+    return seat?.roomCode && seat?.seatToken ? seat : null
+  } catch { return null }
+}
+
+export function rememberYiziFourSayingsRoomSeat(seat) {
+  rememberRoomSeat(fourSayingsRoomStorageKey, seat)
+}
+
+export function readYiziFourSayingsRoomSeat() {
+  return readRoomSeat(fourSayingsRoomStorageKey)
+}
+
+export function clearYiziFourSayingsRoomSeat() {
+  window.localStorage.removeItem(fourSayingsRoomStorageKey)
+}
+
+export async function createYiziFourSayingsRoom(settings, client) {
+  const seat = await roomRpc('yizi_four_sayings_create_room', {
+    p_nickname: String(settings.nickname || '').trim(),
+    p_input_mode: settings.inputMode,
+    p_time_limit_seconds: Number(settings.timeLimitSeconds),
+    p_question_count: Number(settings.questionCount),
+  }, '無法建立四說新語競賽房間', client)
+  rememberYiziFourSayingsRoomSeat(seat)
+  return seat
+}
+
+export async function joinYiziFourSayingsRoom(roomCode, nickname, client) {
+  const seat = await roomRpc('yizi_four_sayings_join_room', {
+    p_room_code: String(roomCode).replace(/\D/g, '').slice(0, 6),
+    p_nickname: String(nickname || '').trim(),
+  }, '無法加入四說新語競賽房間', client)
+  rememberYiziFourSayingsRoomSeat(seat)
+  return seat
+}
+
+export function loadYiziFourSayingsRoom(seat, client) {
+  return roomRpc('yizi_four_sayings_room_snapshot', {
+    p_room_code: seat.roomCode, p_seat_token: seat.seatToken,
+  }, '無法讀取四說新語競賽房間', client)
+}
+
+export function startYiziFourSayingsRoom(seat, client) {
+  return roomRpc('yizi_four_sayings_start_room', {
+    p_room_code: seat.roomCode, p_seat_token: seat.seatToken,
+  }, '無法開始四說新語競賽', client)
+}
+
+export function useYiziFourSayingsRoomHint(seat, client) {
+  return roomRpc('yizi_four_sayings_use_hint', {
+    p_room_code: seat.roomCode, p_seat_token: seat.seatToken,
+  }, '無法取得提示', client)
+}
+
+export function submitYiziFourSayingsRoomAnswer(seat, answer, client) {
+  return roomRpc('yizi_four_sayings_submit_answer', {
+    p_room_code: seat.roomCode, p_seat_token: seat.seatToken, p_answer: answer,
+  }, '無法送出競賽答案', client)
+}
+
+export function giveUpYiziFourSayingsRoomRound(seat, client) {
+  return roomRpc('yizi_four_sayings_give_up', {
+    p_room_code: seat.roomCode, p_seat_token: seat.seatToken,
+  }, '無法放棄本題', client)
+}
+
+export function leaveYiziFourSayingsRoom(seat, client) {
+  return roomRpc('yizi_four_sayings_leave_room', {
+    p_room_code: seat.roomCode, p_seat_token: seat.seatToken,
+  }, '無法離開四說新語競賽房間', client)
 }
 
 export { YIZI_SOURCE }
