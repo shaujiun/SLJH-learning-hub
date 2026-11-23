@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
-  createYiziFourSayingsRoom, joinYiziFourSayingsRoom, loadYiziContext, mapYiziQuestion, summarizeYiziScores,
+  createYiziFourSayingsRoom, createYiziWordCompetitionRoom, joinYiziFourSayingsRoom,
+  joinYiziWordCompetitionRoom, loadYiziContext, mapYiziQuestion, summarizeYiziScores,
 } from './yiziQianjinService.js'
 
 const originalWindow = globalThis.window
@@ -59,5 +60,26 @@ describe('yiziQianjinService', () => {
     const client = roomClient({ roomCode: '654321', seatToken: 'guest-token', seatNo: 2 })
     await joinYiziFourSayingsRoom('65-43-21', '小華', client)
     expect(client.rpc).toHaveBeenCalledWith('yizi_four_sayings_join_room', { p_room_code: '654321', p_nickname: '小華' })
+  })
+
+  it('建立成雙成對輪流競賽會傳送難度、回合時間、題數與房間上限', async () => {
+    useMemoryStorage()
+    const client = roomClient({ roomCode: '112233', seatToken: 'host-token', seatNo: 1, gameType: 'component_pairs' })
+    await createYiziWordCompetitionRoom({
+      nickname: '小明', gameType: 'component_pairs', competitionMode: 'turns', inputMode: 'keyboard',
+      difficulty: 2, timeLimitSeconds: 60, questionCount: 10, playerLimit: 36,
+    }, client)
+    expect(client.rpc).toHaveBeenCalledWith('yizi_word_competition_create_room', {
+      p_nickname: '小明', p_game_type: 'component_pairs', p_competition_mode: 'turns',
+      p_input_mode: 'keyboard', p_difficulty: 2, p_time_limit_seconds: 60,
+      p_question_count: 10, p_player_limit: 36,
+    })
+  })
+
+  it('加入去無成字或成雙成對競賽只需房號與暱稱', async () => {
+    useMemoryStorage()
+    const client = roomClient({ roomCode: '112233', seatToken: 'guest-token', seatNo: 2, gameType: 'remove_part' })
+    await joinYiziWordCompetitionRoom('11-22-33', '小華', client)
+    expect(client.rpc).toHaveBeenCalledWith('yizi_word_competition_join_room', { p_room_code: '112233', p_nickname: '小華' })
   })
 })

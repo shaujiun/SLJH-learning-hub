@@ -6,6 +6,7 @@ const roomSql = readFileSync(new URL('../../supabase/migrations/20261122120500_a
 const seedSql = readFileSync(new URL('../../supabase/migrations/20261122121000_seed_yizi_qianjin_bank.sql', import.meta.url), 'utf8')
 const fourSayingsRoomSql = readFileSync(new URL('../../supabase/migrations/20261123110000_add_yizi_four_sayings_rooms.sql', import.meta.url), 'utf8')
 const multiplayerSql = readFileSync(new URL('../../supabase/migrations/20261123170000_expand_yizi_four_sayings_multiplayer.sql', import.meta.url), 'utf8')
+const wordCompetitionSql = readFileSync(new URL('../../supabase/migrations/20261123180000_add_yizi_word_competition_rooms.sql', import.meta.url), 'utf8')
 
 describe('一字千金資料庫遷移', () => {
   it('建立題庫、作答、成語與房間資料表', () => {
@@ -49,5 +50,17 @@ describe('一字千金資料庫遷移', () => {
     expect(multiplayerSql).toContain('player_count')
     expect(multiplayerSql).toContain('yizi_four_sayings_mark_failure')
     expect(multiplayerSql).toContain('player_count < 2')
+  })
+
+  it('去無成字及成雙成對支援多人積分，成雙成對另有逐題輪流制', () => {
+    for (const table of ['yizi_word_competition_rooms', 'yizi_word_competition_players', 'yizi_word_competition_round_players']) {
+      expect(wordCompetitionSql).toContain(`public.${table}`)
+    }
+    expect(wordCompetitionSql).toContain("game_type in ('remove_part', 'component_pairs')")
+    expect(wordCompetitionSql).toContain("competition_mode in ('points', 'turns')")
+    expect(wordCompetitionSql).toContain('player_limit in (8, 36)')
+    expect(wordCompetitionSql).toContain('yizi_word_competition_next_turn')
+    expect(wordCompetitionSql).toContain("status = 'eliminated'")
+    expect(wordCompetitionSql).toContain('round_found_answers')
   })
 })

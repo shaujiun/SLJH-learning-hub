@@ -69,6 +69,7 @@
 .yizi-room-nickname { max-width: 420px; }
 .yizi-room-create-settings, .yizi-room-join { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; margin-top: 1rem; }
 .yizi-room-create-settings label, .yizi-room-join label { align-items: flex-start; flex-direction: column; }
+.yizi-fixed-setting { align-self: stretch; display: flex; align-items: center; padding: .55rem .75rem; border: 1px solid #8db4ad; border-radius: 10px; background: #edf7f4; }
 .yizi-room-join { padding-top: 1rem; border-top: 1px dashed #cdbb9e; }
 .yizi-room-locked-settings { display: flex; flex-wrap: wrap; gap: .65rem; margin: .75rem 0; }
 .yizi-room-locked-settings span { padding: .55rem .75rem; border: 1px solid #8db4ad; border-radius: 10px; background: #edf7f4; }
@@ -138,7 +139,7 @@
   .yizi-sayings > div { grid-template-columns: repeat(4, 1fr); }
   .yizi-sayings > div > span { grid-column: 1 / -1; }
   .yizi-room-nickname, .yizi-room-nickname input, .yizi-room-create-settings label, .yizi-room-create-settings select,
-  .yizi-room-create-settings button, .yizi-room-join label, .yizi-room-join input, .yizi-room-join button { width: 100%; }
+  .yizi-room-create-settings button, .yizi-fixed-setting, .yizi-room-join label, .yizi-room-join input, .yizi-room-join button { width: 100%; }
   .yizi-competition-scoreboard { grid-template-columns: 1fr; }
   .yizi-component-grid { grid-template-columns: repeat(4, 1fr); }
   .yizi-editor-heading { align-items: flex-start; flex-direction: column; }
