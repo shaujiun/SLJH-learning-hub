@@ -4,7 +4,7 @@ import { clearRememberedFocusTask } from '../lib/focusTaskLaunch.js'
 import { findPendingFocusTaskId } from './focusTaskRecoveryService.js'
 import { getStarterIdiomPuzzles, STARTER_IDIOM_ENTRIES } from '../data/idiomWordGridStarter.js'
 
-const PUZZLE_SELECT = 'id,title,published_on,difficulty,puzzle_data,source_version,illustration_url,is_daily_eligible,status,updated_at'
+const PUZZLE_SELECT = 'id,title,published_on,difficulty,puzzle_data,source_version,illustration_url,is_daily_eligible,status,created_at,updated_at'
 
 function isMissingRelation(error) {
   return ['42P01', 'PGRST205', 'PGRST202'].includes(error?.code)
@@ -32,6 +32,7 @@ export function mapIdiomPuzzle(row) {
     id: String(row?.id || ''),
     title: String(row?.title || '成語填字圖'),
     publishedOn: row?.published_on || '',
+    createdAt: row?.created_at || '',
     difficulty: row?.difficulty || data.difficulty || 'basic',
     board: data.board || { width: 0, height: 0, cells: [], placements: [] },
     idioms: Array.isArray(data.idioms) ? data.idioms : [],

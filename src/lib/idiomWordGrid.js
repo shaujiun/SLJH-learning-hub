@@ -9,6 +9,38 @@ export const IDIOM_DIFFICULTIES = {
   challenge: { label: '挑戰', minWords: 9, givenRatio: 0.14 },
 }
 
+export const IDIOM_DIFFICULTY_ORDER = ['beginner', 'basic', 'advanced', 'challenge']
+
+function compareLevelOrder(left, right) {
+  const leftCreatedAt = String(left?.createdAt || '')
+  const rightCreatedAt = String(right?.createdAt || '')
+  if (leftCreatedAt && rightCreatedAt && leftCreatedAt !== rightCreatedAt) {
+    return leftCreatedAt.localeCompare(rightCreatedAt)
+  }
+
+  const publishedOrder = String(left?.publishedOn || '').localeCompare(String(right?.publishedOn || ''))
+  if (publishedOrder !== 0) return publishedOrder
+  return String(left?.id || '').localeCompare(String(right?.id || ''))
+}
+
+export function buildIdiomLevelNavigation(puzzles = [], completedPuzzleIds = [], difficulty = 'beginner') {
+  const completed = new Set(completedPuzzleIds || [])
+  const difficultyLabel = IDIOM_DIFFICULTIES[difficulty]?.label || '基礎'
+  return [...(puzzles || [])]
+    .filter((puzzle) => puzzle?.difficulty === difficulty)
+    .sort(compareLevelOrder)
+    .map((puzzle, index) => ({
+      puzzle,
+      levelNumber: index + 1,
+      levelLabel: `${difficultyLabel}第 ${index + 1} 關`,
+      completed: completed.has(puzzle.id),
+    }))
+}
+
+export function pickPreferredIdiomLevel(levels = []) {
+  return levels.find((level) => !level.completed) || levels.at(-1) || null
+}
+
 export const IDIOM_EDITOR_CELL_TYPES = {
   block: 'block',
   empty: 'empty',
