@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest'
 import {
   assessIdiomAssignments,
   buildIdiomBoard,
+  buildIdiomLevelNavigation,
   buildIdiomPuzzle,
   buildManualIdiomPuzzle,
   chooseHintCell,
   createIdiomBankTiles,
   editorGridFromPuzzle,
+  pickPreferredIdiomLevel,
 } from './idiomWordGrid.js'
 
 const entries = [
@@ -17,6 +19,32 @@ const entries = [
 ]
 
 describe('成語填字圖核心', () => {
+  it('依難度建立固定關卡編號，並把已通關題目留在回顧清單', () => {
+    const puzzles = [
+      { id: 'new', difficulty: 'beginner', createdAt: '2026-11-23T02:00:00Z' },
+      { id: 'old', difficulty: 'beginner', createdAt: '2026-11-22T02:00:00Z' },
+      { id: 'basic', difficulty: 'basic', createdAt: '2026-11-21T02:00:00Z' },
+    ]
+    const levels = buildIdiomLevelNavigation(puzzles, ['old'], 'beginner')
+
+    expect(levels.map((level) => level.puzzle.id)).toEqual(['old', 'new'])
+    expect(levels.map((level) => level.levelLabel)).toEqual(['入門第 1 關', '入門第 2 關'])
+    expect(levels.map((level) => level.completed)).toEqual([true, false])
+    expect(pickPreferredIdiomLevel(levels)?.puzzle.id).toBe('new')
+  })
+
+  it('該難度全部通關時預設停在最新一關，發布新題後改為新題', () => {
+    const completed = [
+      { id: 'one', difficulty: 'advanced', createdAt: '2026-11-20T02:00:00Z' },
+      { id: 'two', difficulty: 'advanced', createdAt: '2026-11-21T02:00:00Z' },
+    ]
+    const completedIds = completed.map((puzzle) => puzzle.id)
+    expect(pickPreferredIdiomLevel(buildIdiomLevelNavigation(completed, completedIds, 'advanced'))?.puzzle.id).toBe('two')
+
+    const withNewPuzzle = [...completed, { id: 'three', difficulty: 'advanced', createdAt: '2026-11-23T02:00:00Z' }]
+    expect(pickPreferredIdiomLevel(buildIdiomLevelNavigation(withNewPuzzle, completedIds, 'advanced'))?.puzzle.id).toBe('three')
+  })
+
   it('依共同文字排成可變大小的交錯版面', () => {
     const board = buildIdiomBoard(entries)
     expect(board.placements).toHaveLength(4)

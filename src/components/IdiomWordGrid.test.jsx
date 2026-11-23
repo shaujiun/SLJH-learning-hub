@@ -59,6 +59,36 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('一心一意')
   })
 
+  it('通關後可進入同難度下一關，最後一關則顯示等待更新', () => {
+    const context = { studentId: 'student-1', energy: 5, remoteEnabled: true, completedPuzzleIds: [puzzle.id] }
+    const withNext = renderToStaticMarkup(
+      <PlayIdiomPuzzle
+        puzzle={puzzle}
+        context={context}
+        focusTaskId=""
+        levelLabel="入門第 1 關"
+        nextLevelLabel="入門第 2 關"
+        onNextPuzzle={() => {}}
+        onEnergyChange={() => {}}
+      />,
+    )
+    expect(withNext).toContain('入門第 1 關已通關')
+    expect(withNext).toContain('進入下一關')
+    expect(withNext).not.toContain('2026／10／31')
+
+    const finalLevel = renderToStaticMarkup(
+      <PlayIdiomPuzzle
+        puzzle={puzzle}
+        context={context}
+        focusTaskId=""
+        levelLabel="入門第 2 關"
+        onEnergyChange={() => {}}
+      />,
+    )
+    expect(finalLevel).toContain('這是目前這個難度最後一關，請靜待更新。')
+    expect(finalLevel).toContain('重新挑戰本關')
+  })
+
   it('重玩同一關通關時會用目前提示次數建立同步紀錄', () => {
     const progress = buildIdiomCompletionProgress({ puzzle, focusTaskId: 'task-1', hintUses: 2 })
     expect(progress).toMatchObject({

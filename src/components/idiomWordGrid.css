@@ -8,10 +8,17 @@
 .word-grid-mode-tabs { max-width: 1180px; margin: 1.25rem auto; display: flex; gap: .65rem; padding: .45rem; border: 1px solid #c8ddd7; border-radius: 16px; background: #ffffffcc; width: fit-content; }
 .word-grid-mode-tabs a { padding: .7rem 1rem; border-radius: 11px; color: #48616c; font-weight: 900; text-decoration: none; }
 .word-grid-mode-tabs a.is-active { color: #fff; background: #197365; box-shadow: 0 6px 15px #19736535; }
-.idiom-guest-note, .idiom-puzzle-picker, .idiom-admin-editor, .idiom-play-card, .idiom-learning-panel, .idiom-empty-state { max-width: 1180px; margin: 1rem auto; }
+.idiom-guest-note, .idiom-puzzle-picker, .idiom-admin-editor, .idiom-play-card, .idiom-learning-panel, .idiom-level-complete-card, .idiom-empty-state { max-width: 1180px; margin: 1rem auto; }
 .idiom-guest-note { padding: .8rem 1rem; border-left: 4px solid #d88c2f; border-radius: 8px; background: #fff8e8; color: #75501f; }
 .idiom-puzzle-picker { display: flex; align-items: center; justify-content: center; gap: .65rem; font-weight: 900; }
 .idiom-puzzle-picker select { min-height: 48px; min-width: min(100%, 360px); padding: .55rem .8rem; border: 2px solid #6f8a91; border-radius: 10px; background: #fff; color: #17324a; font-size: 1.05rem; font-weight: 800; }
+.idiom-difficulty-tabs { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: .65rem; width: 100%; }
+.idiom-difficulty-tabs button { display: grid; gap: .18rem; min-height: 66px; padding: .65rem .8rem; border: 2px solid #b8cbc7; border-radius: 14px; background: #fff; color: #385763; cursor: pointer; }
+.idiom-difficulty-tabs button strong { font-size: 1.08rem; }
+.idiom-difficulty-tabs button span { font-size: .8rem; color: #6a7e83; }
+.idiom-difficulty-tabs button.is-active { border-color: #197365; background: #e2f4ee; color: #135e54; box-shadow: 0 6px 16px #19736524; }
+.idiom-difficulty-tabs button:disabled { opacity: .48; cursor: not-allowed; }
+.idiom-no-levels { margin: 0; color: #6a7e83; }
 .idiom-play-card, .idiom-learning-panel, .idiom-admin-editor, .idiom-empty-state { border: 1px solid #d6e5df; border-radius: 24px; background: #fffffff2; box-shadow: 0 18px 48px #24483b12; }
 .idiom-play-card { padding: clamp(1rem, 2.5vw, 2rem); }
 .idiom-play-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
@@ -52,6 +59,11 @@
 .idiom-play-actions { display: flex; justify-content: center; gap: .7rem; margin-top: 1rem; }
 .idiom-play-actions button { display: inline-flex; align-items: center; gap: .35rem; }
 .idiom-status-message { padding: .8rem 1rem; border-left: 4px solid #d77828; border-radius: 8px; background: #fff5e9; color: #744816; }
+.idiom-level-complete-card { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.2rem; border: 2px solid #83b4a5; border-radius: 18px; background: #eaf8f2; color: #174f47; }
+.idiom-level-complete-card > div { display: grid; gap: .2rem; }
+.idiom-level-complete-card > div span { color: #58736f; }
+.idiom-level-complete-card > p { margin: 0; font-weight: 900; }
+.idiom-level-complete-card button { display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; }
 .idiom-learning-panel { padding: clamp(1rem, 2.5vw, 2rem); }
 .idiom-learning-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 .idiom-learning-heading h2 { margin: .15rem 0; }
@@ -145,7 +157,8 @@ button.idiom-editor-cell { cursor: pointer; }
 .idiom-editor-messages.is-success { border-color: #197365; background: #eaf7f2; color: #165b52; }
 .idiom-editor-preview { overflow: auto; margin-top: 1rem; padding: 1rem; border-radius: 14px; background: #eef6f2; }
 .idiom-editor-preview h3 { margin-top: 0; }
-.idiom-puzzle-toolbar { max-width: 1180px; margin: 1rem auto; display: flex; align-items: center; justify-content: center; gap: .7rem; }
+.idiom-puzzle-toolbar { max-width: 1180px; margin: 1rem auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .7rem; padding: 1rem; border: 1px solid #c8ddd7; border-radius: 18px; background: #ffffffc9; }
+.idiom-puzzle-toolbar .idiom-difficulty-tabs { flex-basis: 100%; }
 .idiom-puzzle-toolbar .idiom-puzzle-picker { margin: 0; }
 .idiom-puzzle-toolbar > button { display: inline-flex; align-items: center; gap: .3rem; padding: .65rem .8rem; border: 1px solid #7e9898; border-radius: 10px; background: #fff; color: #294856; font-weight: 900; cursor: pointer; }
 .idiom-empty-state { padding: 2rem; text-align: center; }
@@ -170,6 +183,8 @@ button.idiom-editor-cell { cursor: pointer; }
   .idiom-page-header, .idiom-admin-heading, .idiom-admin-section-heading, .idiom-puzzle-toolbar { align-items: stretch; }
   .idiom-create-button { margin-left: 0; width: fit-content; }
   .idiom-puzzle-toolbar { display: grid; }
+  .idiom-difficulty-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .idiom-level-complete-card { align-items: stretch; flex-direction: column; }
   .idiom-editor-grid { --idiom-editor-size: 39px; }
   .idiom-entry-editor-fields { grid-template-columns: 1fr; }
   .idiom-entry-editor-fields label.is-wide { grid-column: auto; }

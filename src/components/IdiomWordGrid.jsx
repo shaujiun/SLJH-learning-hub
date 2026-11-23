@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft,
+  ArrowRight,
   BookOpen,
   Check,
   CircleAlert,
@@ -25,8 +26,11 @@ import {
   createIdiomEditorGrid,
   createIdiomBankTiles,
   editorGridFromPuzzle,
+  buildIdiomLevelNavigation,
   IDIOM_EDITOR_CELL_TYPES,
+  IDIOM_DIFFICULTY_ORDER,
   IDIOM_DIFFICULTIES,
+  pickPreferredIdiomLevel,
 } from '../lib/idiomWordGrid.js'
 import { searchIdiomDictionary, speakIdiom } from '../lib/idiomDictionary.js'
 import { buildIdiomWordGridProgress } from '../lib/activityProgress.js'
@@ -45,7 +49,7 @@ import {
 } from '../data/idiomWordGridStarter.js'
 import './idiomWordGrid.css'
 
-const difficultyOrder = ['beginner', 'basic', 'advanced', 'challenge']
+const difficultyOrder = IDIOM_DIFFICULTY_ORDER
 const stageLabels = {
   elementary: '國小階段',
   junior: '國中階段',
@@ -53,11 +57,6 @@ const stageLabels = {
   all: '跨階段／自訂',
 }
 
-function formatDate(value) {
-  if (!value) return '自由練習'
-  const [year, month, day] = value.split('-')
-  return `${year}／${month}／${day}`
-}
 function progressKey(studentId, puzzleId) {
   return `sljh:idiom-word-grid:${studentId || 'guest'}:${puzzleId}`
 }
@@ -172,7 +171,16 @@ export function buildIdiomCompletionProgress({ puzzle, focusTaskId = '', hintUse
   })
 }
 
-export function PlayIdiomPuzzle({ puzzle, context, focusTaskId, onEnergyChange, onPuzzleCompleted = () => {} }) {
+export function PlayIdiomPuzzle({
+  puzzle,
+  context,
+  focusTaskId,
+  levelLabel,
+  nextLevelLabel = '',
+  onEnergyChange,
+  onPuzzleCompleted = () => {},
+  onNextPuzzle = null,
+}) {
   const initial = useMemo(() => restoreProgress(context.studentId, puzzle.id), [context.studentId, puzzle.id])
   const [assignments, setAssignments] = useState(initial.assignments || {})
   const [revealedKeys, setRevealedKeys] = useState(initial.revealedKeys || [])
@@ -299,6 +307,7 @@ export function PlayIdiomPuzzle({ puzzle, context, focusTaskId, onEnergyChange, 
     const wasCompleted = completed
     if (!context.studentId || puzzle.id.startsWith('starter-')) {
       setCompleted(true)
+      onPuzzleCompleted(puzzle.id)
       setMessage('全部正確，已解鎖本關成語的釋義與出處。')
       if (!wasCompleted) onEnergyChange(Math.min(20, context.energy + (hintUses ? 3 : 4)))
       return
@@ -322,7 +331,7 @@ export function PlayIdiomPuzzle({ puzzle, context, focusTaskId, onEnergyChange, 
     <>
       <section className="idiom-play-card">
         <div className="idiom-play-heading">
-          <div><p className="eyebrow">IDIOM CROSSWORD</p><h2>{puzzle.title}</h2><span>{formatDate(puzzle.publishedOn)}・{IDIOM_DIFFICULTIES[puzzle.difficulty]?.label || '基礎'}</span></div>
+          <div><p className="eyebrow">IDIOM CROSSWORD</p><h2>{puzzle.title}</h2><span>{levelLabel || IDIOM_DIFFICULTIES[puzzle.difficulty]?.label || '基礎'}・{stageLabels[puzzle.stage] || '自訂'}</span></div>
           <div className="idiom-energy"><Coins aria-hidden="true" /><strong>{context.energy}</strong><span>／20 能量</span></div>
         </div>
         <p className="idiom-play-instruction">先選下方字卡，再點選題目空格。格子右下方有圓點，代表這個字同時連接橫向與直向成語。</p>
@@ -343,12 +352,21 @@ export function PlayIdiomPuzzle({ puzzle, context, focusTaskId, onEnergyChange, 
           </div>
         </section>
         <div className="idiom-play-actions">
-          <button type="button" className="secondary-button" onClick={reset}><RotateCcw aria-hidden="true" />重新開始</button>
+          <button type="button" className="secondary-button" onClick={reset}><RotateCcw aria-hidden="true" />{completed ? '重新挑戰本關' : '重新開始'}</button>
           <button type="button" className="primary-button" disabled={busy} onClick={checkAnswer}><Check aria-hidden="true" />完成檢查</button>
         </div>
         {message && <p className="idiom-status-message" role="status">{message}</p>}
       </section>
-      {completed && <IdiomLearningPanel puzzle={puzzle} />}
+      {completed && (
+        <>
+          <section className="idiom-level-complete-card">
+            {onNextPuzzle
+              ? <><div><strong>{levelLabel}已通關</strong><span>下一關：{nextLevelLabel}</span></div><button type="button" className="primary-button" onClick={onNextPuzzle}>進入下一關<ArrowRight aria-hidden="true" /></button></>
+              : <p>這是目前這個難度最後一關，請靜待更新。</p>}
+          </section>
+          <IdiomLearningPanel puzzle={puzzle} />
+        </>
+      )}
     </>
   )
 }
@@ -625,6 +643,7 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
 export default function IdiomWordGrid({ guestMode = false }) {
   const [state, setState] = useState({ loading: true, error: '', puzzles: [], catalog: [], energy: 0, studentId: '', completedPuzzleIds: [], canManage: false, remoteEnabled: false })
   const [selectedId, setSelectedId] = useState('')
+  const [selectedDifficulty, setSelectedDifficulty] = useState('beginner')
   const [editing, setEditing] = useState(null)
   const focusTaskId = typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('focusTask') || ''
   const returnUrl = guestMode ? './?guest=1' : './'
@@ -632,8 +651,20 @@ export default function IdiomWordGrid({ guestMode = false }) {
     setState((current) => ({ ...current, loading: true, error: '' }))
     try {
       const data = await loadIdiomWordGridContext({ guestMode })
-      setState({ loading: false, error: '', ...data })
-      setSelectedId((current) => data.puzzles.some((puzzle) => puzzle.id === current) ? current : data.puzzles[0]?.id || '')
+      const localCompletedIds = data.puzzles
+        .filter((puzzle) => restoreProgress(data.studentId, puzzle.id).completed)
+        .map((puzzle) => puzzle.id)
+      const completedPuzzleIds = [...new Set([...(data.completedPuzzleIds || []), ...localCompletedIds])]
+      const firstPendingDifficulty = difficultyOrder.find((difficulty) => {
+        const levels = buildIdiomLevelNavigation(data.puzzles, completedPuzzleIds, difficulty)
+        return levels.some((level) => !level.completed)
+      })
+      const firstAvailableDifficulty = difficultyOrder.find((difficulty) => data.puzzles.some((puzzle) => puzzle.difficulty === difficulty))
+      const difficulty = firstPendingDifficulty || firstAvailableDifficulty || 'beginner'
+      const preferredLevel = pickPreferredIdiomLevel(buildIdiomLevelNavigation(data.puzzles, completedPuzzleIds, difficulty))
+      setState({ loading: false, error: '', ...data, completedPuzzleIds })
+      setSelectedDifficulty(difficulty)
+      setSelectedId(preferredLevel?.puzzle.id || '')
     } catch (error) {
       setState((current) => ({ ...current, loading: false, error: error.message }))
     }
@@ -641,7 +672,19 @@ export default function IdiomWordGrid({ guestMode = false }) {
   useEffect(() => { load() }, [guestMode])
   if (state.loading) return <main className="center-screen"><p>正在載入成語填字圖……</p></main>
   if (state.error) return <main className="center-screen"><CircleAlert aria-hidden="true" /><h1>暫時無法載入成語填字圖</h1><p>{state.error}</p><a className="secondary-button" href={returnUrl}>返回學習系統</a></main>
-  const puzzle = state.puzzles.find((item) => item.id === selectedId) || state.puzzles[0]
+  const difficultyLevels = buildIdiomLevelNavigation(state.puzzles, state.completedPuzzleIds, selectedDifficulty)
+  const selectedLevel = difficultyLevels.find((level) => level.puzzle.id === selectedId) || pickPreferredIdiomLevel(difficultyLevels)
+  const puzzle = selectedLevel?.puzzle || null
+  const selectedLevelIndex = difficultyLevels.findIndex((level) => level.puzzle.id === puzzle?.id)
+  const nextLevel = selectedLevelIndex >= 0 ? difficultyLevels[selectedLevelIndex + 1] || null : null
+  const pendingLevels = difficultyLevels.filter((level) => !level.completed)
+  const completedLevels = difficultyLevels.filter((level) => level.completed)
+  const chooseDifficulty = (difficulty) => {
+    const levels = buildIdiomLevelNavigation(state.puzzles, state.completedPuzzleIds, difficulty)
+    const preferred = pickPreferredIdiomLevel(levels)
+    setSelectedDifficulty(difficulty)
+    setSelectedId(preferred?.puzzle.id || '')
+  }
   return (
     <main className="idiom-word-grid-page">
       <header className="idiom-page-header">
@@ -668,7 +711,22 @@ export default function IdiomWordGrid({ guestMode = false }) {
         <>
           {state.puzzles.length > 0 && (
             <div className="idiom-puzzle-toolbar">
-              <label className="idiom-puzzle-picker">選擇關卡<select value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>{state.puzzles.map((item) => <option key={item.id} value={item.id}>{formatDate(item.publishedOn)}・{item.title}・{stageLabels[item.stage] || '自訂'}・{IDIOM_DIFFICULTIES[item.difficulty]?.label}{state.completedPuzzleIds.includes(item.id) ? '・已完成' : ''}</option>)}</select></label>
+              <nav className="idiom-difficulty-tabs" aria-label="選擇難度">
+                {difficultyOrder.map((difficulty) => {
+                  const levels = buildIdiomLevelNavigation(state.puzzles, state.completedPuzzleIds, difficulty)
+                  const pendingCount = levels.filter((level) => !level.completed).length
+                  return <button key={difficulty} type="button" className={selectedDifficulty === difficulty ? 'is-active' : ''} disabled={levels.length === 0} aria-pressed={selectedDifficulty === difficulty} onClick={() => chooseDifficulty(difficulty)}><strong>{IDIOM_DIFFICULTIES[difficulty].label}</strong><span>{levels.length === 0 ? '尚未開放' : pendingCount > 0 ? `${pendingCount} 關未通關` : '全部通關'}</span></button>
+                })}
+              </nav>
+              {difficultyLevels.length > 0 && (
+                <label className="idiom-puzzle-picker">選擇關卡
+                  <select value={puzzle?.id || ''} onChange={(event) => setSelectedId(event.target.value)}>
+                    {pendingLevels.length > 0 && <optgroup label="尚未通關">{pendingLevels.map((level) => <option key={level.puzzle.id} value={level.puzzle.id}>{level.levelLabel}</option>)}</optgroup>}
+                    {completedLevels.length > 0 && <optgroup label="回顧已通關關卡">{completedLevels.map((level) => <option key={level.puzzle.id} value={level.puzzle.id}>{level.levelLabel}・可重答</option>)}</optgroup>}
+                  </select>
+                </label>
+              )}
+              {difficultyLevels.length === 0 && <p className="idiom-no-levels">這個難度目前尚未開放關卡。</p>}
               {state.canManage && puzzle && <button type="button" onClick={() => setEditing(puzzle)}><Pencil aria-hidden="true" />編輯這一題</button>}
             </div>
           )}
@@ -678,6 +736,9 @@ export default function IdiomWordGrid({ guestMode = false }) {
               puzzle={puzzle}
               context={state}
               focusTaskId={focusTaskId}
+              levelLabel={selectedLevel?.levelLabel}
+              nextLevelLabel={nextLevel?.levelLabel}
+              onNextPuzzle={nextLevel ? () => setSelectedId(nextLevel.puzzle.id) : null}
               onEnergyChange={(energy) => setState((current) => ({ ...current, energy }))}
               onPuzzleCompleted={(puzzleId) => setState((current) => ({
                 ...current,
