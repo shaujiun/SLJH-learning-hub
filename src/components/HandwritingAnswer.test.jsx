@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
-import HandwritingAnswer, { recognizeTraditionalChinese } from './HandwritingAnswer.jsx'
+import HandwritingAnswer, { normalizeHandwritingStrokes, rankHandwritingCandidates, recognizeTraditionalChinese } from './HandwritingAnswer.jsx'
 
 describe('HandwritingAnswer', () => {
   it('四字模式建立四個獨立手寫區', () => {
@@ -15,6 +15,20 @@ describe('HandwritingAnswer', () => {
     await expect(recognizeTraditionalChinese([{ x: [1], y: [1] }], fetcher)).resolves.toEqual(['字', '語'])
     const request = JSON.parse(fetcher.mock.calls[0][1].body)
     expect(request.requests[0].ink[0]).toHaveLength(3)
-    expect(request.requests[0].ink[0][2]).toEqual([0])
+    expect(request.requests[0].ink[0][2]).toEqual([8])
+  })
+
+  it('正規化筆跡並維持跨筆畫遞增時間', () => {
+    const result = normalizeHandwritingStrokes([
+      { x: [10, 20], y: [20, 20], t: [0, 10] },
+      { x: [15, 15], y: [30, 40], t: [30, 40] },
+    ])
+    expect(result).toHaveLength(2)
+    expect(Math.min(...result.flatMap((stroke) => stroke.x))).toBeGreaterThan(0)
+    expect(result[1].t[0]).toBeGreaterThan(result[0].t.at(-1))
+  })
+
+  it('依畫面可見文字優先排列候選字但不刪除其他候選', () => {
+    expect(rankHandwritingCandidates(['觀', '歡', '袖'], ['袖', '手', '旁', '觀'])).toEqual(['觀', '袖', '歡'])
   })
 })

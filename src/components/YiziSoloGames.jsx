@@ -49,7 +49,7 @@ function ModeSettings({ gameType, difficulty, setDifficulty, timeLimit, setTimeL
   </div>
 }
 
-function AnswerInput({ length, value, onChange, inputMode, setInputMode, allowClick = false, resetKey = '', children }) {
+function AnswerInput({ length, value, onChange, inputMode, setInputMode, allowClick = false, resetKey = '', preferredCharacters = [], children }) {
   return <div className="yizi-answer-area">
     <div className="yizi-input-tabs" role="tablist" aria-label="作答方式">
       {allowClick && <button type="button" className={inputMode === 'click' ? 'is-active' : ''} onClick={() => setInputMode('click')}>點選</button>}
@@ -61,7 +61,7 @@ function AnswerInput({ length, value, onChange, inputMode, setInputMode, allowCl
       <input value={value} maxLength={length} autoComplete="off" onChange={(event) => onChange(event.target.value)} />
     </label>}
     {inputMode === 'handwriting' && <SafeHandwritingAnswer resetKey={resetKey} length={length} value={value} onChange={onChange}
-      onFallback={() => setInputMode('keyboard')} />}
+      preferredCharacters={preferredCharacters} onFallback={() => setInputMode('keyboard')} />}
   </div>
 }
 
@@ -244,7 +244,7 @@ function SoloFourSayingsGame({ questions, context }) {
       {hintUsed && <p className="yizi-hint">提示：答案中包含「{Array.from(correctAnswer)[0] || '？'}」。本題答對最高 1 分。</p>}
       {!hintUsed && running && <button type="button" className="yizi-hint-button" onClick={revealHint}>顯示一字提示</button>}
       <AnswerInput length={4} value={answer} onChange={setAnswer} inputMode={inputMode} setInputMode={changeInputMode}
-        resetKey={question.id} allowClick>
+        resetKey={question.id} preferredCharacters={displayedIdioms.join('')} allowClick>
         <ClickSequenceAnswer characters={Array.from(clickAnswer)} onClear={clearClickAnswer} />
       </AnswerInput>
       <div className="yizi-submit-row"><button type="button" className="yizi-submit" disabled={!running} onClick={submit}>送出答案</button>

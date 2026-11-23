@@ -212,7 +212,7 @@ export default function YiziFourSayingsRoom() {
         ? <label className="yizi-keyboard-answer">輸入四字答案<input value={answer} maxLength="4" disabled={!roundActive}
           onChange={(event) => setAnswer(event.target.value)} /></label>
         : <SafeHandwritingAnswer resetKey={questionKey} length={4} value={answer} onChange={setAnswer}
-          onFallback={() => setHandwritingFallback(true)} />}
+          preferredCharacters={idioms.join('')} onFallback={() => setHandwritingFallback(true)} />}
         {handwritingFallback && <p className="yizi-feedback">手寫辨識暫時失敗，已保留本題並改用鍵盤備援。</p>}</>}
     {snapshot.currentQuestion?.hintCharacter && <p className="yizi-hint">提示：答案包含「{snapshot.currentQuestion.hintCharacter}」。本題答對最高 1 分。</p>}
     {roundActive && !snapshot.myRound?.hintUsed && <button type="button" disabled={busy}

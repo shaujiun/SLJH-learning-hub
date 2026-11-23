@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import HandwritingAnswer from './HandwritingAnswer.jsx'
+import { SafeHandwritingAnswer } from './HandwritingAnswer.jsx'
 import {
   applyIdiomPlacement, boardKey, canPlaceIdiom, chooseIdiomAiMove, createIdiomBoard,
   localCommonIdioms, normalizeChineseAnswer, YIZI_DIRECTION_LABELS,
@@ -53,7 +53,7 @@ function MoveComposer({ board, disabled, onSubmit }) {
       <button type="button" className={inputMode === 'handwriting' ? 'is-active' : ''} onClick={() => setInputMode('handwriting')}>手寫</button></div>
     {inputMode === 'keyboard'
       ? <label className="yizi-keyboard-answer">四字成語<input value={phrase} maxLength={4} disabled={disabled} onChange={(event) => setPhrase(event.target.value)} /></label>
-      : <HandwritingAnswer length={4} value={phrase} onChange={setPhrase} />}
+      : <SafeHandwritingAnswer length={4} value={phrase} onChange={setPhrase} onFallback={() => setInputMode('keyboard')} />}
     <button type="button" className="yizi-submit" disabled={disabled} onClick={submit}>將成語放入棋盤</button>
     {error && <p className="yizi-feedback is-error">{error}</p>}
   </div>
