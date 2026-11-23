@@ -7,6 +7,7 @@ describe('HandwritingAnswer', () => {
     const html = renderToStaticMarkup(<HandwritingAnswer length={4} value="" onChange={() => {}} />)
     expect((html.match(/手寫區/g) || []).length).toBe(4)
     expect(html).toContain('辨識')
+    expect(html).not.toContain('尚未選字')
   })
 
   it('只保留單一中文字候選', async () => {

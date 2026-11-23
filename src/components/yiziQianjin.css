@@ -26,6 +26,7 @@
 .yizi-settings label, .yizi-room-lobby > label, .yizi-room-actions label, .yizi-room-waiting label { display: flex; align-items: center; gap: .5rem; font-weight: 900; }
 .yizi-settings select, .yizi-room-lobby input, .yizi-room-actions input, .yizi-room-waiting select { min-height: 46px; padding: .55rem .7rem; border: 1px solid #8ba7a5; border-radius: 10px; color: var(--yizi-ink); background: #fff; font-size: 1rem; }
 .yizi-round-bar, .yizi-submit-row { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin: .8rem 0; }
+.yizi-current-score { padding: .55rem .8rem; border: 1px solid #c6922d; border-radius: 10px; color: #70470d; background: #fff2c7; }
 .yizi-page button { min-height: 44px; padding: .55rem .85rem; border: 1px solid #78909b; border-radius: 10px; color: #17344a; background: #fff; font-weight: 850; cursor: pointer; }
 .yizi-page button.primary, .yizi-page .yizi-submit { color: #fff; border-color: #16676a; background: #166f71; }
 .yizi-page button:disabled { opacity: .52; cursor: not-allowed; }
@@ -47,8 +48,9 @@
 .yizi-sayings button.is-selected { color: #fff; border-color: #166f71; background: #166f71; }
 .yizi-reorder { padding: .8rem; border: 1px dashed #bd8c41; border-radius: 12px; background: #fffae9; }
 .yizi-reorder p { margin: 0 0 .55rem; }
-.yizi-reorder > div { display: flex; gap: .5rem; }
-.yizi-reorder button { min-width: 52px; font-size: 1.35rem; }
+.yizi-reorder > div { display: flex; gap: .5rem; margin-bottom: .55rem; }
+.yizi-reorder span { min-width: 52px; min-height: 48px; display: grid; place-items: center; border: 1px solid #8a7863; border-radius: 8px; background: #fff; font-size: 1.35rem; font-weight: 900; }
+.yizi-give-up { color: #8b2d24 !important; border-color: #c64c3c !important; background: #fff5f2 !important; }
 .yizi-hint { padding: .7rem 1rem; border-radius: 12px; background: #fff2c7; }
 .yizi-component-grid { display: grid; grid-template-columns: repeat(8, minmax(45px, 1fr)); gap: .45rem; margin: 1rem 0; }
 .yizi-component-grid span { min-height: 52px; display: grid; place-items: center; border: 1px solid #a68e71; border-radius: 11px; background: #fff; font-size: 1.4rem; font-weight: 900; }

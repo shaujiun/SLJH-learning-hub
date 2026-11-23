@@ -42,6 +42,27 @@ export function shuffleItems(items, random = Math.random) {
   return result
 }
 
+export function arrangeFourSayingsIdioms(question, random = Math.random) {
+  const idioms = [...(question?.prompt?.idioms || [])]
+  if (Number(question?.difficulty || 1) <= 1 || idioms.length < 2) return idioms
+  const shuffled = shuffleItems(idioms, random)
+  if (shuffled.every((idiom, index) => idiom === idioms[index])) {
+    return [...idioms.slice(1), idioms[0]]
+  }
+  return shuffled
+}
+
+export function updateFourSayingsSelection(selected, selectionOrder, rowIndex, character) {
+  const nextSelected = [...selected]
+  nextSelected[rowIndex] = character
+  const nextOrder = selectionOrder.includes(rowIndex) ? [...selectionOrder] : [...selectionOrder, rowIndex]
+  return { selected: nextSelected, selectionOrder: nextOrder }
+}
+
+export function orderedFourSayingsAnswer(selected, selectionOrder) {
+  return selectionOrder.map((rowIndex) => selected[rowIndex] || '').join('')
+}
+
 export function localYiziQuestions(gameType, difficulty = 0) {
   return questionBank.questions
     .filter((question) => question.gameType === gameType && (!difficulty || question.difficulty === Number(difficulty)))

@@ -32,6 +32,13 @@ function translatedError(error, fallback) {
   return new Error(key ? errorMessages[key] : `${fallback}：${error?.message || '未知錯誤'}`)
 }
 
+export function summarizeYiziScores(attempts = []) {
+  return attempts.reduce((scores, attempt) => ({
+    ...scores,
+    [attempt.game_type]: Number(scores[attempt.game_type] || 0) + Number(attempt.score || 0),
+  }), {})
+}
+
 export function mapYiziQuestion(row) {
   return {
     id: String(row?.id || row?.stable_key || ''),
@@ -68,21 +75,26 @@ export async function loadYiziContext({ guestMode = false } = {}, client = undef
   }
   const fallback = {
     questions: ['remove_part', 'four_sayings', 'component_pairs'].flatMap((type) => localYiziQuestions(type)),
-    commonIdioms: localCommonIdioms(), studentId: '', canManage: false, remoteEnabled: false,
+    commonIdioms: localCommonIdioms(), studentId: '', canManage: false, remoteEnabled: false, scoreByGame: {},
   }
   if (!client) return fallback
   const account = guestMode ? { studentId: '', canManage: false } : await accountContext(client)
   let query = client.from('yizi_questions').select('*').order('game_type').order('difficulty').order('updated_at', { ascending: false })
   if (!account.canManage) query = query.eq('status', 'published')
-  const { data, error } = await query
+  const attemptQuery = account.studentId
+    ? client.from('yizi_attempts').select('game_type,score').eq('student_id', account.studentId)
+    : Promise.resolve({ data: [], error: null })
+  const [{ data, error }, attemptResult] = await Promise.all([query, attemptQuery])
   if (error && !isMissingRelation(error)) throw new Error(`無法讀取一字千金題庫：${error.message}`)
   if (error) return { ...fallback, studentId: account.studentId, canManage: account.canManage }
+  const scoreByGame = summarizeYiziScores(attemptResult.error ? [] : attemptResult.data || [])
   return {
     questions: (data || []).map(mapYiziQuestion),
     commonIdioms: localCommonIdioms(),
     studentId: account.studentId,
     canManage: account.canManage,
     remoteEnabled: true,
+    scoreByGame,
   }
 }
 

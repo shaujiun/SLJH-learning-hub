@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { Component, useEffect, useRef, useState } from 'react'
 import './handwritingAnswer.css'
 
 const PAD_SIZE = 180
 
-export async function recognizeTraditionalChinese(strokes, fetcher = fetch) {
+export async function recognizeTraditionalChinese(strokes, fetcher = fetch, signal = undefined) {
   if (!strokes.length) return []
   const body = {
     options: 'enable_pre_space',
@@ -14,7 +14,7 @@ export async function recognizeTraditionalChinese(strokes, fetcher = fetch) {
     }],
   }
   const response = await fetcher('https://inputtools.google.com/request?itc=zh-t-i0-handwrit&app=demopage', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal,
   })
   if (!response.ok) throw new Error(`HTTP ${response.status}`)
   const result = await response.json()
@@ -51,6 +51,7 @@ function HandwritingPad({ value, onChange, label }) {
   const [strokes, setStrokes] = useState([])
   const [candidates, setCandidates] = useState([])
   const [status, setStatus] = useState('')
+  const [recognizing, setRecognizing] = useState(false)
 
   useEffect(() => drawPad(canvasRef.current, strokes), [strokes])
 
@@ -63,7 +64,7 @@ function HandwritingPad({ value, onChange, label }) {
   }
   const pointerDown = (event) => {
     event.preventDefault()
-    canvasRef.current.setPointerCapture(event.pointerId)
+    try { canvasRef.current.setPointerCapture(event.pointerId) } catch { /* 某些行動瀏覽器不支援指標鎖定 */ }
     const start = point(event)
     activeStroke.current = { x: [start.x], y: [start.y] }
     setStrokes((items) => [...items, activeStroke.current])
@@ -81,27 +82,29 @@ function HandwritingPad({ value, onChange, label }) {
     setStrokes([]); setCandidates([]); setStatus(''); onChange('')
   }
   const recognize = async () => {
-    if (!strokes.length) { setStatus('請先寫字。'); return }
+    if (!strokes.length || recognizing) { if (!strokes.length) setStatus('請先寫字。'); return }
     setStatus('辨識中…')
+    setRecognizing(true)
+    const controller = new AbortController()
+    const timer = window.setTimeout(() => controller.abort(), 12000)
     try {
-      const result = await recognizeTraditionalChinese(strokes)
+      const result = await recognizeTraditionalChinese(strokes, fetch, controller.signal)
       setCandidates(result.slice(0, 8))
       if (result[0]) onChange(result[0])
       setStatus(result.length ? '請選擇正確候選字。' : '暫時辨識不出來，請重寫或改用鍵盤。')
-    } catch {
-      setStatus('無法連線辨識，請改用鍵盤輸入。')
-    }
+    } catch { setStatus('手寫辨識逾時或無法連線，請重試或改用鍵盤輸入。') }
+    finally { window.clearTimeout(timer); setRecognizing(false) }
   }
 
   return (
     <div className="handwriting-pad">
-      <div className="handwriting-pad-label">{label}：<strong>{value || '尚未選字'}</strong></div>
+      <div className="handwriting-pad-label">{label}</div>
       <canvas ref={canvasRef} width={PAD_SIZE} height={PAD_SIZE} aria-label={`${label}手寫區`}
         onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} />
       <div className="handwriting-actions">
         <button type="button" onClick={() => setStrokes((items) => items.slice(0, -1))}>復原一筆</button>
         <button type="button" onClick={clear}>清除</button>
-        <button type="button" className="primary" onClick={recognize}>辨識</button>
+        <button type="button" className="primary" disabled={recognizing} onClick={recognize}>{recognizing ? '辨識中…' : '辨識'}</button>
       </div>
       {candidates.length > 0 && <div className="handwriting-candidates" aria-label="候選字">
         {candidates.map((candidate) => <button type="button" className={candidate === value ? 'is-selected' : ''}
@@ -124,4 +127,21 @@ export default function HandwritingAnswer({ length = 1, value = '', onChange }) 
         value={characters[index] || ''} onChange={(character) => updateCharacter(index, character)} />)}
     </div>
   )
+}
+
+class HandwritingErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { failed: false } }
+  static getDerivedStateFromError() { return { failed: true } }
+  componentDidCatch(error) { console.error('Handwriting input failed.', error) }
+  render() {
+    if (this.state.failed) return <div className="handwriting-fallback" role="alert">
+      <p>手寫區暫時無法使用，其他作答內容仍保留。</p>
+      <button type="button" onClick={this.props.onFallback}>改用鍵盤輸入</button>
+    </div>
+    return this.props.children
+  }
+}
+
+export function SafeHandwritingAnswer({ resetKey = '', onFallback, ...props }) {
+  return <HandwritingErrorBoundary key={resetKey} onFallback={onFallback}><HandwritingAnswer {...props} /></HandwritingErrorBoundary>
 }
