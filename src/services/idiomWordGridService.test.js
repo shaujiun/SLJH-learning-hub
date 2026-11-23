@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { completeIdiomPuzzle, loadIdiomWordGridContext, mapIdiomPuzzle, saveIdiomEntry, spendIdiomHint } from './idiomWordGridService.js'
+import { completeIdiomPuzzle, loadIdiomWordGridContext, mapIdiomPuzzle, saveIdiomEntry, saveIdiomPuzzle, spendIdiomHint } from './idiomWordGridService.js'
 
 function result(data, error = null) {
   const promise = Promise.resolve({ data, error })
@@ -9,6 +9,8 @@ function result(data, error = null) {
   promise.maybeSingle = vi.fn(() => promise)
   promise.single = vi.fn(() => promise)
   promise.upsert = vi.fn(() => promise)
+  promise.insert = vi.fn(() => promise)
+  promise.update = vi.fn(() => promise)
   return promise
 }
 
@@ -81,5 +83,28 @@ describe('成語填字圖服務', () => {
       phrase: '一鼓作氣', stage: 'junior', source_entry_id: 520,
       zhuyin: 'ㄧ ㄗˋ ㄑㄧㄢ ㄐㄧㄣ', pinyin: 'yī zì qiān jīn', is_active: true,
     }), { onConflict: 'phrase' })
+  })
+
+  it('新增成語填字圖使用獨立題目身分，不以題名與日期覆寫舊題', async () => {
+    const query = result(null)
+    const client = { from: vi.fn(() => query) }
+    const puzzle = {
+      title: '成語填字圖', publishedOn: '2026-11-23', difficulty: 'basic', stage: 'junior', status: 'draft',
+      board: { width: 4, height: 4, cells: [], placements: [{}, {}, {}, {}] },
+      idioms: [], givenCellKeys: [], editorGrid: { width: 4, height: 4, cells: [] },
+    }
+    await expect(saveIdiomPuzzle(puzzle, client)).resolves.toBeUndefined()
+    expect(query.insert).toHaveBeenCalledWith(expect.objectContaining({ title: '成語填字圖', published_on: '2026-11-23' }))
+    expect(query.upsert).not.toHaveBeenCalled()
+  })
+
+  it('舊資料庫尚未移除唯一限制時顯示可理解的中文訊息', async () => {
+    const query = result(null, { code: '23505', message: 'duplicate key value violates unique constraint "idiom_word_grid_title_date_unique"' })
+    const client = { from: vi.fn(() => query) }
+    const puzzle = {
+      title: '成語填字圖', publishedOn: '2026-11-23', difficulty: 'basic',
+      board: { placements: [{}, {}, {}, {}] }, idioms: [], givenCellKeys: [],
+    }
+    await expect(saveIdiomPuzzle(puzzle, client)).rejects.toThrow('同一天已有相同題名的舊資料')
   })
 })

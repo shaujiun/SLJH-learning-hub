@@ -181,5 +181,10 @@ export async function saveIdiomPuzzle(input, client = requireSupabase()) {
     ? client.from('idiom_word_grid_puzzles').update(payload).eq('id', input.id)
     : client.from('idiom_word_grid_puzzles').insert(payload)
   const { error } = await query
-  if (error) throw new Error(`無法儲存成語填字圖：${error.message}`)
+  if (error) {
+    if (error.code === '23505' && String(error.message || '').includes('idiom_word_grid_title_date_unique')) {
+      throw new Error('同一天已有相同題名的舊資料。請重新整理後再試；若仍出現此訊息，表示資料庫更新尚未完成。')
+    }
+    throw new Error(`無法儲存成語填字圖：${error.message}`)
+  }
 }

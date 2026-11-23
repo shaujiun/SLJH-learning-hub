@@ -6,11 +6,13 @@ const seedUrl = new URL('../../supabase/migrations/20261031151000_seed_idiom_wor
 const publicReadUrl = new URL('../../supabase/migrations/20261031152000_fix_idiom_word_grid_public_read.sql', import.meta.url)
 const taskLaunchFixUrl = new URL('../../supabase/migrations/20261121170000_fix_idiom_word_grid_task_launch.sql', import.meta.url)
 const dictionaryMetadataUrl = new URL('../../supabase/migrations/20261122123000_add_idiom_dictionary_metadata.sql', import.meta.url)
+const duplicateTitleFixUrl = new URL('../../supabase/migrations/20261123150000_allow_duplicate_idiom_word_grid_titles.sql', import.meta.url)
 const sql = readFileSync(migrationUrl, 'utf8')
 const seedSql = readFileSync(seedUrl, 'utf8')
 const publicReadSql = readFileSync(publicReadUrl, 'utf8')
 const taskLaunchFixSql = readFileSync(taskLaunchFixUrl, 'utf8')
 const dictionaryMetadataSql = readFileSync(dictionaryMetadataUrl, 'utf8')
+const duplicateTitleFixSql = readFileSync(duplicateTitleFixUrl, 'utf8')
 
 describe('成語填字圖 migration', () => {
   it('建立題庫、能量、提示與通關資料並套用 RLS', () => {
@@ -66,5 +68,11 @@ describe('成語填字圖 migration', () => {
     expect(dictionaryMetadataSql).toContain("zhuyin text not null default ''")
     expect(dictionaryMetadataSql).toContain("pinyin text not null default ''")
     expect(dictionaryMetadataSql).toContain('idiom_entries_source_entry_id_uidx')
+  })
+
+  it('同一天可建立多題同名成語填字圖，仍保留日期題名查找索引', () => {
+    expect(duplicateTitleFixSql).toContain('drop constraint if exists idiom_word_grid_title_date_unique')
+    expect(duplicateTitleFixSql).toContain('idiom_word_grid_puzzles_title_date_idx')
+    expect(duplicateTitleFixSql).not.toContain('create unique index')
   })
 })
