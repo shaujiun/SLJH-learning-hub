@@ -66,7 +66,6 @@ export default function YiziWordCompetitionRoom({ gameType, context }) {
   const [playerLimit, setPlayerLimit] = useState(8)
   const [competitionMode, setCompetitionMode] = useState('points')
   const [answer, setAnswer] = useState('')
-  const [handwritingFallback, setHandwritingFallback] = useState(false)
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
   const recordedRef = useRef('')
@@ -86,7 +85,7 @@ export default function YiziWordCompetitionRoom({ gameType, context }) {
   const room = snapshot?.room
   const me = snapshot?.players?.find((player) => player.seatNo === snapshot.meSeat)
   const isTurns = room?.competitionMode === 'turns'
-  const effectiveInputMode = room?.inputMode === 'handwriting' && handwritingFallback ? 'keyboard' : room?.inputMode
+  const effectiveInputMode = room?.inputMode
   const isMyTurn = !isTurns || room?.currentTurnSeat === snapshot?.meSeat
   const canAnswer = room?.status === 'playing' && me?.status === 'connected' && snapshot?.myRound?.status === 'active' && isMyTurn
   const timerStartedAt = isTurns ? room?.turnStartedAt : room?.roundStartedAt
@@ -197,8 +196,7 @@ export default function YiziWordCompetitionRoom({ gameType, context }) {
     {room.gameType === 'component_pairs' && room.competitionMode === 'turns' && (room.roundFoundAnswers || []).length > 0 && <div className="yizi-found"><strong>全房已答：</strong>{room.roundFoundAnswers.map((item) => <span key={item}>{item}</span>)}</div>}
     {room.gameType === 'component_pairs' && room.competitionMode === 'points' && snapshot.myRound?.foundAnswers?.length > 0 && <div className="yizi-found"><strong>你已答對：</strong>{snapshot.myRound.foundAnswers.map((item) => <span key={item}>{item}</span>)}</div>}
     {effectiveInputMode === 'keyboard' ? <label className="yizi-keyboard-answer">輸入一個國字<input maxLength="1" value={answer} disabled={!canAnswer} onChange={(event) => setAnswer(event.target.value)} /></label>
-      : canAnswer ? <SafeHandwritingAnswer resetKey={`${questionKey}:${room.currentTurnSeat || 0}`} length={1} value={answer} onChange={setAnswer} onFallback={() => { setHandwritingFallback(true); setMessage('手寫辨識暫時無法使用，已切換為鍵盤輸入。') }} /> : null}
-    {handwritingFallback && <p className="yizi-feedback">本裝置已改用鍵盤輸入；房間的其他玩家不受影響。</p>}
+      : canAnswer ? <SafeHandwritingAnswer resetKey={`${questionKey}:${room.currentTurnSeat || 0}`} length={1} value={answer} onChange={setAnswer} /> : null}
     <div className="yizi-submit-row"><button type="button" className="yizi-submit" disabled={busy || !canAnswer} onClick={submit}>送出答案</button>
       <button type="button" className="yizi-give-up" disabled={busy || !canAnswer} onClick={() => run(() => giveUpYiziWordCompetitionRound(seat))}>{isTurns ? '本題想不到' : '結束本題'}</button></div>
     {!canAnswer && <p className="yizi-feedback">{isTurns && snapshot.myRound?.status === 'active' ? '等待輪到你。' : '你已完成或退出本題，等待其他玩家。'}</p>}

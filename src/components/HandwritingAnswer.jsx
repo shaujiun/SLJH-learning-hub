@@ -3,7 +3,7 @@ import './handwritingAnswer.css'
 
 const PAD_SIZE = 180
 const RECOGNITION_TIMEOUT_MS = 8000
-const MAX_RECOGNITION_FAILURES = 2
+const AUTO_RECOGNITION_DELAY_MS = 900
 
 function finitePoints(stroke) {
   const points = []
@@ -54,6 +54,15 @@ export function rankHandwritingCandidates(candidates, preferredCharacters = []) 
   return [...new Set(candidates || [])].sort((left, right) => Number(preferred.has(right)) - Number(preferred.has(left)))
 }
 
+export function coalescedPointerSamples(event) {
+  const nativeEvent = event?.nativeEvent || event
+  try {
+    const samples = nativeEvent?.getCoalescedEvents?.()
+    if (samples?.length) return Array.from(samples)
+  } catch { /* 部分行動瀏覽器宣告支援但呼叫時仍可能失敗 */ }
+  return nativeEvent ? [nativeEvent] : []
+}
+
 export async function recognizeTraditionalChinese(strokes, fetcher = fetch, signal = undefined, preferredCharacters = []) {
   const normalizedStrokes = normalizeHandwritingStrokes(strokes)
   if (!normalizedStrokes.length) return []
@@ -88,7 +97,7 @@ async function recognizeWithRetry(strokes, signal, preferredCharacters) {
   throw lastError
 }
 
-function drawPad(canvas, strokes) {
+export function drawPad(canvas, strokes) {
   const context = canvas?.getContext?.('2d')
   if (!context) return
   context.clearRect(0, 0, PAD_SIZE, PAD_SIZE)
@@ -100,30 +109,60 @@ function drawPad(canvas, strokes) {
   })
   context.setLineDash([])
   context.strokeStyle = '#17324a'
+  context.fillStyle = '#17324a'
   context.lineWidth = 6
   context.lineCap = 'round'
   context.lineJoin = 'round'
   strokes.forEach((stroke) => {
     if (!stroke.x.length) return
+    if (stroke.x.length === 1) {
+      context.beginPath(); context.arc(stroke.x[0], stroke.y[0], 3, 0, Math.PI * 2); context.fill(); return
+    }
     context.beginPath(); context.moveTo(stroke.x[0], stroke.y[0])
     stroke.x.slice(1).forEach((x, index) => context.lineTo(x, stroke.y[index + 1]))
     context.stroke()
   })
 }
 
-function HandwritingPad({ value, onChange, label, preferredCharacters, onRecognitionFailure, onFallback }) {
+function HandwritingPad({ value, onChange, label, preferredCharacters }) {
   const canvasRef = useRef(null)
   const activeStroke = useRef(null)
   const writingStartedAt = useRef(null)
   const requestController = useRef(null)
-  const failureCount = useRef(0)
+  const requestVersion = useRef(0)
+  const autoRecognitionTimer = useRef(null)
+  const recognizeRef = useRef(null)
+  const strokesRef = useRef([])
   const [strokes, setStrokes] = useState([])
   const [candidates, setCandidates] = useState([])
   const [status, setStatus] = useState('')
   const [recognizing, setRecognizing] = useState(false)
 
   useEffect(() => drawPad(canvasRef.current, strokes), [strokes])
-  useEffect(() => () => requestController.current?.abort(), [])
+  useEffect(() => () => {
+    requestVersion.current += 1
+    requestController.current?.abort()
+    window.clearTimeout(autoRecognitionTimer.current)
+  }, [])
+
+  const cancelPendingRecognition = () => {
+    requestVersion.current += 1
+    requestController.current?.abort()
+    requestController.current = null
+    window.clearTimeout(autoRecognitionTimer.current)
+    setRecognizing(false)
+  }
+
+  const replaceStrokes = (next) => {
+    strokesRef.current = next
+    setStrokes(next)
+  }
+
+  const scheduleAutomaticRecognition = () => {
+    window.clearTimeout(autoRecognitionTimer.current)
+    if (!strokesRef.current.length) return
+    autoRecognitionTimer.current = window.setTimeout(() => recognizeRef.current?.({ automatic: true }), AUTO_RECOGNITION_DELAY_MS)
+  }
 
   const point = (event) => {
     const rect = canvasRef.current.getBoundingClientRect()
@@ -134,11 +173,13 @@ function HandwritingPad({ value, onChange, label, preferredCharacters, onRecogni
   }
   const pointerDown = (event) => {
     event.preventDefault()
-    try { canvasRef.current.setPointerCapture(event.pointerId) } catch { /* 某些行動瀏覽器不支援指標鎖定 */ }
+    cancelPendingRecognition()
+    const nativeEvent = event.nativeEvent || event
+    try { canvasRef.current.setPointerCapture(nativeEvent.pointerId) } catch { /* 某些行動瀏覽器不支援指標鎖定 */ }
     if (!writingStartedAt.current) writingStartedAt.current = performance.now()
-    const start = point(event)
+    const start = point(nativeEvent)
     activeStroke.current = { x: [start.x], y: [start.y], t: [Math.round(performance.now() - writingStartedAt.current)] }
-    setStrokes((items) => [...items, activeStroke.current])
+    replaceStrokes([...strokesRef.current, activeStroke.current])
     setCandidates([])
     setStatus('')
     if (value) onChange('')
@@ -146,8 +187,7 @@ function HandwritingPad({ value, onChange, label, preferredCharacters, onRecogni
   const pointerMove = (event) => {
     if (!activeStroke.current) return
     event.preventDefault()
-    const events = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [event]
-    events.forEach((sample) => {
+    coalescedPointerSamples(event).forEach((sample) => {
       const next = point(sample)
       const lastIndex = activeStroke.current.x.length - 1
       if (Math.hypot(next.x - activeStroke.current.x[lastIndex], next.y - activeStroke.current.y[lastIndex]) < 0.35) return
@@ -155,71 +195,79 @@ function HandwritingPad({ value, onChange, label, preferredCharacters, onRecogni
       activeStroke.current.y.push(next.y)
       activeStroke.current.t.push(Math.max(0, Math.round(performance.now() - writingStartedAt.current)))
     })
-    setStrokes((items) => [...items.slice(0, -1), {
+    const updatedStroke = {
       ...activeStroke.current, x: [...activeStroke.current.x], y: [...activeStroke.current.y], t: [...activeStroke.current.t],
-    }])
+    }
+    activeStroke.current = updatedStroke
+    replaceStrokes([...strokesRef.current.slice(0, -1), updatedStroke])
   }
-  const pointerUp = () => { activeStroke.current = null }
+  const pointerUp = (event) => {
+    const nativeEvent = event?.nativeEvent || event
+    try { canvasRef.current.releasePointerCapture(nativeEvent?.pointerId) } catch { /* 沒有鎖定時不需處理 */ }
+    activeStroke.current = null
+    scheduleAutomaticRecognition()
+  }
   const clear = () => {
-    requestController.current?.abort()
+    cancelPendingRecognition()
     writingStartedAt.current = null
-    failureCount.current = 0
-    setStrokes([]); setCandidates([]); setStatus(''); onChange('')
+    replaceStrokes([]); setCandidates([]); setStatus(''); onChange('')
   }
   const undo = () => {
-    setStrokes((items) => {
-      const next = items.slice(0, -1)
-      if (!next.length) writingStartedAt.current = null
-      return next
-    })
+    cancelPendingRecognition()
+    const next = strokesRef.current.slice(0, -1)
+    if (!next.length) writingStartedAt.current = null
+    replaceStrokes(next)
     setCandidates([])
     setStatus('')
     onChange('')
+    if (next.length) scheduleAutomaticRecognition()
   }
-  const registerFailure = (message) => {
-    failureCount.current += 1
-    setStatus(message)
-    if (failureCount.current >= MAX_RECOGNITION_FAILURES) onRecognitionFailure?.()
-  }
-  const recognize = async () => {
-    if (!strokes.length || recognizing) { if (!strokes.length) setStatus('請先寫字。'); return }
-    setStatus('辨識中…')
+  const recognize = async ({ automatic = false } = {}) => {
+    const pendingStrokes = strokesRef.current.map((stroke) => ({ x: [...stroke.x], y: [...stroke.y], t: [...stroke.t] }))
+    if (!pendingStrokes.length) { if (!automatic) setStatus('請先寫字。'); return }
+    window.clearTimeout(autoRecognitionTimer.current)
+    const version = requestVersion.current + 1
+    requestVersion.current = version
+    requestController.current?.abort()
+    setStatus('')
     setRecognizing(true)
     const controller = new AbortController()
-    requestController.current?.abort()
     requestController.current = controller
     const timer = window.setTimeout(() => controller.abort(), RECOGNITION_TIMEOUT_MS)
     try {
-      const result = await recognizeWithRetry(strokes, controller.signal, preferredCharacters)
+      const result = await recognizeWithRetry(pendingStrokes, controller.signal, preferredCharacters)
+      if (requestVersion.current !== version) return
       setCandidates(result.slice(0, 8))
-      if (result.length) {
-        failureCount.current = 0
-        setStatus('請點選你寫的字，系統不會自動替你決定。')
-      } else registerFailure('暫時辨識不出來；連續失敗兩次會自動改用鍵盤。')
-    } catch (error) {
-      if (!controller.signal.aborted || requestController.current === controller) {
-        registerFailure('手寫辨識逾時或無法連線；連續失敗兩次會自動改用鍵盤。')
+      setStatus(result.length ? '請點選你寫的字。' : '可繼續補寫或復原一筆，停筆後會再次辨識。')
+    } catch {
+      if (requestVersion.current === version) {
+        setCandidates([])
+        setStatus('筆畫已保留，可繼續補寫、復原一筆或稍後重新辨識。')
       }
     } finally {
       window.clearTimeout(timer)
-      if (requestController.current === controller) requestController.current = null
-      setRecognizing(false)
+      if (requestVersion.current === version) {
+        requestController.current = null
+        setRecognizing(false)
+      }
     }
   }
+  recognizeRef.current = recognize
 
   return (
     <div className="handwriting-pad">
-      <div className="handwriting-pad-label">{label}</div>
+      <div className="handwriting-pad-label">{label}<small>停筆後自動辨識</small></div>
       <canvas ref={canvasRef} width={PAD_SIZE} height={PAD_SIZE} aria-label={`${label}手寫區`}
         onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} />
       <div className="handwriting-actions">
         <button type="button" onClick={undo}>復原一筆</button>
         <button type="button" onClick={clear}>清除</button>
-        <button type="button" className="primary" disabled={recognizing} onClick={recognize}>{recognizing ? '辨識中…' : '辨識'}</button>
-        {onFallback && <button type="button" onClick={onFallback}>改用鍵盤</button>}
+        <button type="button" className="primary" disabled={recognizing} onClick={() => recognizeRef.current?.()}>{recognizing ? '更新候選字…' : '立即辨識'}</button>
       </div>
-      {candidates.length > 0 && <div className="handwriting-candidates" aria-label="候選字">
-        {candidates.map((candidate) => <button type="button" className={candidate === value ? 'is-selected' : ''}
+      {(strokes.length > 0 || candidates.length > 0) && <div className="handwriting-candidates" aria-label="候選字" aria-live="polite">
+        {recognizing && <span>正在更新候選字…</span>}
+        {!recognizing && candidates.length === 0 && <span>可繼續補寫或復原一筆。</span>}
+        {!recognizing && candidates.map((candidate) => <button type="button" className={candidate === value ? 'is-selected' : ''}
           key={candidate} onClick={() => { onChange(candidate); setStatus(`已選擇「${candidate}」。`) }}>{candidate}</button>)}
       </div>}
       {status && <p className="handwriting-status">{status}</p>}
@@ -227,7 +275,7 @@ function HandwritingPad({ value, onChange, label, preferredCharacters, onRecogni
   )
 }
 
-export default function HandwritingAnswer({ length = 1, value = '', onChange, preferredCharacters = [], onRecognitionFailure, onFallback }) {
+export default function HandwritingAnswer({ length = 1, value = '', onChange, preferredCharacters = [] }) {
   const characters = Array.from(value || '')
   const updateCharacter = (index, character) => {
     const next = Array.from({ length }, (_, itemIndex) => itemIndex === index ? character : characters[itemIndex] || '')
@@ -237,7 +285,7 @@ export default function HandwritingAnswer({ length = 1, value = '', onChange, pr
     <div className="handwriting-answer">
       {Array.from({ length }, (_, index) => <HandwritingPad key={index} label={`第 ${index + 1} 字`}
         value={characters[index] || ''} onChange={(character) => updateCharacter(index, character)}
-        preferredCharacters={preferredCharacters} onRecognitionFailure={onRecognitionFailure} onFallback={onFallback} />)}
+        preferredCharacters={preferredCharacters} />)}
     </div>
   )
 }
@@ -247,16 +295,16 @@ class HandwritingErrorBoundary extends Component {
   static getDerivedStateFromError() { return { failed: true } }
   componentDidCatch(error) { console.error('Handwriting input failed.', error) }
   render() {
-    if (this.state.failed) return <div className="handwriting-fallback" role="alert">
-      <p>手寫區暫時無法使用，其他作答內容仍保留。</p>
-      <button type="button" onClick={this.props.onFallback}>改用鍵盤輸入</button>
+    if (this.state.failed) return <div className="handwriting-fallback" role="status">
+      <p>手寫區需要重新載入，已選答案仍保留。</p>
+      <button type="button" onClick={() => this.setState({ failed: false })}>重新開啟手寫區</button>
     </div>
     return this.props.children
   }
 }
 
-export function SafeHandwritingAnswer({ resetKey = '', onFallback, ...props }) {
-  return <HandwritingErrorBoundary key={resetKey} onFallback={onFallback}>
-    <HandwritingAnswer {...props} onFallback={onFallback} onRecognitionFailure={onFallback} />
+export function SafeHandwritingAnswer({ resetKey = '', ...props }) {
+  return <HandwritingErrorBoundary key={resetKey}>
+    <HandwritingAnswer {...props} />
   </HandwritingErrorBoundary>
 }

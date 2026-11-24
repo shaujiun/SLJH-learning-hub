@@ -61,7 +61,7 @@ function AnswerInput({ length, value, onChange, inputMode, setInputMode, allowCl
       <input value={value} maxLength={length} autoComplete="off" onChange={(event) => onChange(event.target.value)} />
     </label>}
     {inputMode === 'handwriting' && <SafeHandwritingAnswer resetKey={resetKey} length={length} value={value} onChange={onChange}
-      preferredCharacters={preferredCharacters} onFallback={() => setInputMode('keyboard')} />}
+      preferredCharacters={preferredCharacters} />}
   </div>
 }
 
