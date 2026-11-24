@@ -80,7 +80,6 @@ export default function YiziFourSayingsRoom() {
   const [answer, setAnswer] = useState('')
   const [selected, setSelected] = useState(['', '', '', ''])
   const [selectionOrder, setSelectionOrder] = useState([])
-  const [handwritingFallback, setHandwritingFallback] = useState(false)
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
   const recordedRef = useRef('')
@@ -100,13 +99,13 @@ export default function YiziFourSayingsRoom() {
   const questionKey = `${snapshot?.room?.roomCode || ''}:${snapshot?.room?.currentRound || 0}`
   const idioms = useMemo(() => arrangeFourSayingsIdioms(snapshot?.currentQuestion, seededRandom(questionKey)), [snapshot?.currentQuestion?.id, questionKey])
   useEffect(() => {
-    setAnswer(''); setSelected(['', '', '', '']); setSelectionOrder([]); setHandwritingFallback(false)
+    setAnswer(''); setSelected(['', '', '', '']); setSelectionOrder([])
   }, [questionKey])
 
   const me = snapshot?.players?.find((player) => player.seatNo === snapshot.meSeat)
   const roundActive = snapshot?.room?.status === 'playing' && me?.status === 'connected' && snapshot?.myRound?.status === 'active'
   const clickAnswer = orderedFourSayingsAnswer(selected, selectionOrder)
-  const effectiveMode = snapshot?.room?.inputMode === 'handwriting' && handwritingFallback ? 'keyboard' : snapshot?.room?.inputMode
+  const effectiveMode = snapshot?.room?.inputMode
   useEffect(() => { if (effectiveMode === 'click') setAnswer(clickAnswer) }, [clickAnswer, effectiveMode])
   const remaining = useCountdown(snapshot?.room?.roundStartedAt, snapshot?.room?.timeLimitSeconds, roundActive, refresh)
 
@@ -212,8 +211,7 @@ export default function YiziFourSayingsRoom() {
         ? <label className="yizi-keyboard-answer">輸入四字答案<input value={answer} maxLength="4" disabled={!roundActive}
           onChange={(event) => setAnswer(event.target.value)} /></label>
         : <SafeHandwritingAnswer resetKey={questionKey} length={4} value={answer} onChange={setAnswer}
-          preferredCharacters={idioms.join('')} onFallback={() => setHandwritingFallback(true)} />}
-        {handwritingFallback && <p className="yizi-feedback">手寫辨識暫時失敗，已保留本題並改用鍵盤備援。</p>}</>}
+          preferredCharacters={idioms.join('')} />}</>}
     {snapshot.currentQuestion?.hintCharacter && <p className="yizi-hint">提示：答案包含「{snapshot.currentQuestion.hintCharacter}」。本題答對最高 1 分。</p>}
     {roundActive && !snapshot.myRound?.hintUsed && <button type="button" disabled={busy}
       onClick={() => run(() => useYiziFourSayingsRoomHint(seat))}>顯示一字提示</button>}
