@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { SafeHandwritingAnswer } from './HandwritingAnswer.jsx'
 import YiziFourSayingsRoom from './YiziFourSayingsRoom.jsx'
+import YiziWordCompetitionRoom from './YiziWordCompetitionRoom.jsx'
 import {
   acceptedAnswers, arrangeFourSayingsIdioms, checkYiziAnswer, formatTimeChoice,
   normalizeChineseAnswer, orderedFourSayingsAnswer, scoreFourSayings, shuffleItems,
+  pickQuestionFromCycle,
   updateFourSayingsSelection, YIZI_DIFFICULTIES, YIZI_TIME_OPTIONS,
 } from '../lib/yiziQianjin.js'
 import { buildYiziProgress } from '../lib/activityProgress.js'
@@ -47,7 +49,7 @@ function ModeSettings({ gameType, difficulty, setDifficulty, timeLimit, setTimeL
   </div>
 }
 
-function AnswerInput({ length, value, onChange, inputMode, setInputMode, allowClick = false, resetKey = '', children }) {
+function AnswerInput({ length, value, onChange, inputMode, setInputMode, allowClick = false, resetKey = '', preferredCharacters = [], children }) {
   return <div className="yizi-answer-area">
     <div className="yizi-input-tabs" role="tablist" aria-label="作答方式">
       {allowClick && <button type="button" className={inputMode === 'click' ? 'is-active' : ''} onClick={() => setInputMode('click')}>點選</button>}
@@ -59,7 +61,7 @@ function AnswerInput({ length, value, onChange, inputMode, setInputMode, allowCl
       <input value={value} maxLength={length} autoComplete="off" onChange={(event) => onChange(event.target.value)} />
     </label>}
     {inputMode === 'handwriting' && <SafeHandwritingAnswer resetKey={resetKey} length={length} value={value} onChange={onChange}
-      onFallback={() => setInputMode('keyboard')} />}
+      preferredCharacters={preferredCharacters} onFallback={() => setInputMode('keyboard')} />}
   </div>
 }
 
@@ -81,7 +83,7 @@ async function persistResult({ context, question, gameType, timeLimit, answer, c
   }))
 }
 
-export function RemovePartGame({ questions, context }) {
+function SoloRemovePartGame({ questions, context }) {
   const [difficulty, setDifficulty] = useState(0)
   const [timeLimit, setTimeLimit] = useState(30)
   const [question, setQuestion] = useState(null)
@@ -135,6 +137,17 @@ export function RemovePartGame({ questions, context }) {
   </section>
 }
 
+export function RemovePartGame({ questions, context }) {
+  const [playMode, setPlayMode] = useState('solo')
+  return <>
+    <div className="yizi-four-mode-switch" role="tablist" aria-label="去無成字遊玩模式">
+      <button type="button" role="tab" aria-selected={playMode === 'solo'} className={playMode === 'solo' ? 'is-active' : ''} onClick={() => setPlayMode('solo')}>單人練習</button>
+      <button type="button" role="tab" aria-selected={playMode === 'competition'} className={playMode === 'competition' ? 'is-active' : ''} onClick={() => setPlayMode('competition')}>多人競賽</button>
+    </div>
+    {playMode === 'solo' ? <SoloRemovePartGame questions={questions} context={context} /> : <YiziWordCompetitionRoom gameType="remove_part" context={context} />}
+  </>
+}
+
 function ClickSequenceAnswer({ characters, onClear }) {
   return <div className="yizi-reorder">
     <p>請依答案順序點選；第 1 個點的字會放在第 1 格。</p>
@@ -157,6 +170,7 @@ function SoloFourSayingsGame({ questions, context }) {
   const [wrongCount, setWrongCount] = useState(0)
   const [feedback, setFeedback] = useState(null)
   const [currentScore, setCurrentScore] = useState(Number(context?.scoreByGame?.four_sayings || 0))
+  const [usedQuestionIds, setUsedQuestionIds] = useState([])
   const startedAt = useRef(0)
   const pool = useMemo(() => questions.filter((item) => !difficulty || item.difficulty === difficulty), [difficulty, questions])
   const revealHint = () => setHintUsed(true)
@@ -171,8 +185,11 @@ function SoloFourSayingsGame({ questions, context }) {
   }, [remaining, running, timeLimit])
   const clickAnswer = orderedFourSayingsAnswer(selected, selectionOrder)
   useEffect(() => { if (inputMode === 'click') setAnswer(clickAnswer) }, [clickAnswer, inputMode])
+  useEffect(() => { setUsedQuestionIds([]) }, [difficulty])
   const start = () => {
-    const next = pickQuestion(pool, question?.id)
+    const cycle = pickQuestionFromCycle(pool, usedQuestionIds)
+    const next = cycle.question
+    setUsedQuestionIds(cycle.usedQuestionIds)
     setQuestion(next); setDisplayedIdioms(arrangeFourSayingsIdioms(next)); setSelected(['', '', '', '']); setSelectionOrder([]); setAnswer('')
     setHintUsed(false); setWrongCount(0); setFeedback(null); setRunning(Boolean(next)); startedAt.current = Date.now()
   }
@@ -227,7 +244,7 @@ function SoloFourSayingsGame({ questions, context }) {
       {hintUsed && <p className="yizi-hint">提示：答案中包含「{Array.from(correctAnswer)[0] || '？'}」。本題答對最高 1 分。</p>}
       {!hintUsed && running && <button type="button" className="yizi-hint-button" onClick={revealHint}>顯示一字提示</button>}
       <AnswerInput length={4} value={answer} onChange={setAnswer} inputMode={inputMode} setInputMode={changeInputMode}
-        resetKey={question.id} allowClick>
+        resetKey={question.id} preferredCharacters={displayedIdioms.join('')} allowClick>
         <ClickSequenceAnswer characters={Array.from(clickAnswer)} onClear={clearClickAnswer} />
       </AnswerInput>
       <div className="yizi-submit-row"><button type="button" className="yizi-submit" disabled={!running} onClick={submit}>送出答案</button>
@@ -244,7 +261,7 @@ export function FourSayingsGame({ questions, context }) {
       <button type="button" role="tab" aria-selected={playMode === 'solo'} className={playMode === 'solo' ? 'is-active' : ''}
         onClick={() => setPlayMode('solo')}>單人練習</button>
       <button type="button" role="tab" aria-selected={playMode === 'duel'} className={playMode === 'duel' ? 'is-active' : ''}
-        onClick={() => setPlayMode('duel')}>雙人競賽</button>
+        onClick={() => setPlayMode('duel')}>多人競賽</button>
     </div>
     {playMode === 'solo'
       ? <SoloFourSayingsGame questions={questions} context={context} />
@@ -252,7 +269,7 @@ export function FourSayingsGame({ questions, context }) {
   </>
 }
 
-export function ComponentPairsGame({ questions, context }) {
+function SoloComponentPairsGame({ questions, context }) {
   const [difficulty, setDifficulty] = useState(0)
   const [timeLimit, setTimeLimit] = useState(30)
   const [question, setQuestion] = useState(null)
@@ -313,4 +330,15 @@ export function ComponentPairsGame({ questions, context }) {
     </>}
     {feedback && <p className={feedbackClass(feedback)}>{feedback.text}</p>}
   </section>
+}
+
+export function ComponentPairsGame({ questions, context }) {
+  const [playMode, setPlayMode] = useState('solo')
+  return <>
+    <div className="yizi-four-mode-switch" role="tablist" aria-label="成雙成對遊玩模式">
+      <button type="button" role="tab" aria-selected={playMode === 'solo'} className={playMode === 'solo' ? 'is-active' : ''} onClick={() => setPlayMode('solo')}>單人練習</button>
+      <button type="button" role="tab" aria-selected={playMode === 'competition'} className={playMode === 'competition' ? 'is-active' : ''} onClick={() => setPlayMode('competition')}>多人競賽</button>
+    </div>
+    {playMode === 'solo' ? <SoloComponentPairsGame questions={questions} context={context} /> : <YiziWordCompetitionRoom gameType="component_pairs" context={context} />}
+  </>
 }

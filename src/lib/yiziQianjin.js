@@ -42,6 +42,20 @@ export function shuffleItems(items, random = Math.random) {
   return result
 }
 
+export function pickQuestionFromCycle(questions = [], usedQuestionIds = [], random = Math.random) {
+  const used = new Set(usedQuestionIds || [])
+  const remaining = questions.filter((question) => !used.has(question.id))
+  const pool = remaining.length ? remaining : questions
+  const question = pool[Math.floor(random() * pool.length)] || null
+  return {
+    question,
+    usedQuestionIds: question
+      ? [...(remaining.length ? used : []), question.id]
+      : [],
+    restarted: Boolean(question && !remaining.length && questions.length > 0),
+  }
+}
+
 export function arrangeFourSayingsIdioms(question, random = Math.random) {
   const idioms = [...(question?.prompt?.idioms || [])]
   if (Number(question?.difficulty || 1) <= 1 || idioms.length < 2) return idioms

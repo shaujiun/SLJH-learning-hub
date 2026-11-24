@@ -3,17 +3,18 @@ import { localCommonIdioms, localYiziQuestions, normalizeChineseAnswer, YIZI_SOU
 
 const roomStorageKey = 'sljh.yizi.idiomRoomSeat.v1'
 const fourSayingsRoomStorageKey = 'sljh.yizi.fourSayingsRoomSeat.v1'
+const wordCompetitionRoomStorageKey = 'sljh.yizi.wordCompetitionRoomSeat.v1'
 const errorMessages = {
   student_required: '管理者與訪客的試玩不會寫入學生進度。',
   yizi_nickname_invalid: '暱稱請輸入 1～12 個字。',
   yizi_room_code_unavailable: '目前無法產生房間代碼，請稍後再試。',
   yizi_room_not_found: '找不到這個房間，請確認 6 位數代碼。',
   yizi_room_started: '這個房間已經開始或結束。',
-  yizi_room_full: '這個房間已有 2 位玩家。',
+  yizi_room_full: '這個房間已達人數上限。',
   yizi_duplicate_nickname: '同一房間不能使用相同暱稱。',
   yizi_seat_invalid: '找不到這個座位，請重新加入。',
   yizi_host_required: '只有房主可以開始對戰。',
-  yizi_players_incomplete: '請等待第 2 位玩家加入。',
+  yizi_players_incomplete: '至少需要 2 位玩家才能開始。',
   yizi_time_limit_invalid: '請選擇 60、90 或 120 秒。',
   yizi_room_not_playing: '這一局目前不能下棋。',
   yizi_not_your_turn: '目前不是你的回合。',
@@ -25,9 +26,18 @@ const errorMessages = {
   yizi_answer_mode_invalid: '請選擇點選、輸入或手寫作答。',
   yizi_four_time_limit_invalid: '四說新語競賽每題可設定 40 秒或 60 秒。',
   yizi_question_count_invalid: '四說新語競賽請選擇 5 題或 10 題。',
+  yizi_player_limit_invalid: '一般房最多 8 人，全班房最多 36 人。',
+  yizi_competition_mode_invalid: '請選擇積分賽、一錯淘汰或兩錯淘汰。',
   yizi_questions_insufficient: '已發布的四說新語題目不足，無法建立這場競賽。',
-  yizi_round_answered: '這一題已經作答完畢，請等待對手。',
+  yizi_round_answered: '這一題已經作答完畢，請等待其他玩家。',
+  yizi_player_eliminated: '你已被淘汰，目前只能觀戰。',
   yizi_four_answer_invalid: '請完成四個字後再送出。',
+  yizi_word_game_invalid: '競賽玩法必須是去無成字或成雙成對。',
+  yizi_word_mode_invalid: '去無成字採積分制；成雙成對可選積分制或輪流答題制。',
+  yizi_difficulty_invalid: '請選擇混合、易、中或難。',
+  yizi_word_time_invalid: '競賽時間請選擇 30、60 或 90 秒。',
+  yizi_word_round_inactive: '你目前不能作答，請等待下一題。',
+  yizi_word_answer_invalid: '請手寫或輸入一個國字。',
 }
 
 function isMissingRelation(error) {
@@ -247,6 +257,8 @@ export async function createYiziFourSayingsRoom(settings, client) {
     p_input_mode: settings.inputMode,
     p_time_limit_seconds: Number(settings.timeLimitSeconds),
     p_question_count: Number(settings.questionCount),
+    p_player_limit: Number(settings.playerLimit),
+    p_competition_mode: settings.competitionMode,
   }, '無法建立四說新語競賽房間', client)
   rememberYiziFourSayingsRoomSeat(seat)
   return seat
@@ -295,6 +307,73 @@ export function leaveYiziFourSayingsRoom(seat, client) {
   return roomRpc('yizi_four_sayings_leave_room', {
     p_room_code: seat.roomCode, p_seat_token: seat.seatToken,
   }, '無法離開四說新語競賽房間', client)
+}
+
+export function rememberYiziWordCompetitionSeat(seat) {
+  rememberRoomSeat(wordCompetitionRoomStorageKey, seat)
+}
+
+export function readYiziWordCompetitionSeat(gameType = '') {
+  const seat = readRoomSeat(wordCompetitionRoomStorageKey)
+  return !gameType || seat?.gameType === gameType ? seat : null
+}
+
+export function clearYiziWordCompetitionSeat() {
+  window.localStorage.removeItem(wordCompetitionRoomStorageKey)
+}
+
+export async function createYiziWordCompetitionRoom(settings, client) {
+  const seat = await roomRpc('yizi_word_competition_create_room', {
+    p_nickname: String(settings.nickname || '').trim(),
+    p_game_type: settings.gameType,
+    p_competition_mode: settings.competitionMode,
+    p_input_mode: settings.inputMode,
+    p_difficulty: Number(settings.difficulty),
+    p_time_limit_seconds: Number(settings.timeLimitSeconds),
+    p_question_count: Number(settings.questionCount),
+    p_player_limit: Number(settings.playerLimit),
+  }, '無法建立文字競賽房間', client)
+  rememberYiziWordCompetitionSeat(seat)
+  return seat
+}
+
+export async function joinYiziWordCompetitionRoom(roomCode, nickname, client) {
+  const seat = await roomRpc('yizi_word_competition_join_room', {
+    p_room_code: String(roomCode).replace(/\D/g, '').slice(0, 6),
+    p_nickname: String(nickname || '').trim(),
+  }, '無法加入文字競賽房間', client)
+  rememberYiziWordCompetitionSeat(seat)
+  return seat
+}
+
+export function loadYiziWordCompetitionRoom(seat, client) {
+  return roomRpc('yizi_word_competition_snapshot', {
+    p_room_code: seat.roomCode, p_seat_token: seat.seatToken,
+  }, '無法讀取文字競賽房間', client)
+}
+
+export function startYiziWordCompetitionRoom(seat, client) {
+  return roomRpc('yizi_word_competition_start_room', {
+    p_room_code: seat.roomCode, p_seat_token: seat.seatToken,
+  }, '無法開始文字競賽', client)
+}
+
+export function submitYiziWordCompetitionAnswer(seat, answer, client) {
+  return roomRpc('yizi_word_competition_submit_answer', {
+    p_room_code: seat.roomCode, p_seat_token: seat.seatToken, p_answer: answer,
+  }, '無法送出競賽答案', client)
+}
+
+export function giveUpYiziWordCompetitionRound(seat, client) {
+  return roomRpc('yizi_word_competition_give_up', {
+    p_room_code: seat.roomCode, p_seat_token: seat.seatToken,
+  }, '無法結束本題', client)
+}
+
+export function leaveYiziWordCompetitionRoom(seat, client) {
+  return roomRpc('yizi_word_competition_leave_room', {
+    p_room_code: seat.roomCode, p_seat_token: seat.seatToken,
+  }, '無法離開文字競賽房間', client)
 }
 
 export { YIZI_SOURCE }

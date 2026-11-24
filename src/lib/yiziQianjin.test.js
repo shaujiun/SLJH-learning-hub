@@ -9,6 +9,7 @@ import {
   findIdiomPlacements,
   localYiziQuestions,
   orderedFourSayingsAnswer,
+  pickQuestionFromCycle,
   scoreFourSayings,
   updateFourSayingsSelection,
   yiziQuestionCounts,
@@ -37,6 +38,22 @@ describe('yiziQianjin', () => {
     state = updateFourSayingsSelection(state.selected, state.selectionOrder, 3, '觀')
     state = updateFourSayingsSelection(state.selected, state.selectionOrder, 1, '手')
     expect(orderedFourSayingsAnswer(state.selected, state.selectionOrder)).toBe('旁袖觀手')
+  })
+
+  it('四說新語同一難度題目全部輪完前不重複', () => {
+    const questions = [{ id: 'a' }, { id: 'b' }, { id: 'c' }]
+    let used = []
+    const picked = []
+    for (let index = 0; index < 3; index += 1) {
+      const cycle = pickQuestionFromCycle(questions, used, () => 0)
+      picked.push(cycle.question.id)
+      used = cycle.usedQuestionIds
+    }
+    expect(picked).toEqual(['a', 'b', 'c'])
+    const restarted = pickQuestionFromCycle(questions, used, () => 0)
+    expect(restarted.question.id).toBe('a')
+    expect(restarted.restarted).toBe(true)
+    expect(restarted.usedQuestionIds).toEqual(['a'])
   })
 
   it('只允許四字成語與既有文字交會且不能衝突', () => {
