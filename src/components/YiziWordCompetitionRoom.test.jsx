@@ -15,11 +15,13 @@ describe('YiziWordCompetitionRoom', () => {
   it('去無成字可建立 8 人或 36 人積分房', () => {
     const html = renderLobby('remove_part')
     for (const text of ['去無成字多人競賽', '積分', '5 題', '10 題', '最多 8 人', '最多 36 人']) expect(html).toContain(text)
+    expect(html).toContain('斷線後保留座位 120 秒')
     expect(html).not.toContain('輪流答題制')
   })
 
   it('成雙成對可選積分制或輪流答題制', () => {
     const html = renderLobby('component_pairs')
     for (const text of ['成雙成對多人競賽', '積分制', '輪流答題制', '30 秒', '60 秒', '90 秒']) expect(html).toContain(text)
+    expect(html).toContain('斷線後保留座位 120 秒')
   })
 })

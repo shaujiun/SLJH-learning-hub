@@ -14,5 +14,6 @@ describe('YiziFourSayingsRoom', () => {
     }
     expect(html).toContain('建立競賽房間')
     expect(html).toContain('加入房間')
+    expect(html).toContain('斷線後保留座位 120 秒')
   })
 })
