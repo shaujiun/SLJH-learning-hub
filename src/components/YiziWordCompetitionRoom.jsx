@@ -67,13 +67,14 @@ export default function YiziWordCompetitionRoom({ gameType, context }) {
   const [competitionMode, setCompetitionMode] = useState('points')
   const [answer, setAnswer] = useState('')
   const [message, setMessage] = useState('')
+  const [syncError, setSyncError] = useState('')
   const [busy, setBusy] = useState(false)
   const recordedRef = useRef('')
 
   const refresh = async (currentSeat = seat) => {
     if (!currentSeat) return
-    try { setSnapshot(await loadYiziWordCompetitionRoom(currentSeat)); setMessage('') }
-    catch (error) { setMessage(error.message) }
+    try { setSnapshot(await loadYiziWordCompetitionRoom(currentSeat)); setSyncError('') }
+    catch (error) { setSyncError(error.message) }
   }
   useEffect(() => {
     if (!seat) return undefined
@@ -164,10 +165,10 @@ export default function YiziWordCompetitionRoom({ gameType, context }) {
       </div>
       <div className="yizi-room-join"><label>房間代碼<input inputMode="numeric" maxLength="6" value={roomCode} onChange={(event) => setRoomCode(event.target.value.replace(/\D/g, '').slice(0, 6))} /></label>
         <button type="button" disabled={busy || !nickname.trim() || roomCode.length !== 6} onClick={joinRoom}>加入房間</button></div>
-    </div>{message && <p className="yizi-feedback is-error">{message}</p>}
+    </div><p className="yizi-feedback">斷線後保留座位 120 秒，同一裝置重新開啟可繼續。</p>{message && <p className="yizi-feedback is-error">{message}</p>}
   </section>
 
-  if (!snapshot) return <section className="yizi-game-card"><p>正在讀取房間……</p>{message && <p className="yizi-feedback is-error">{message}</p>}</section>
+  if (!snapshot) return <section className="yizi-game-card"><p>正在讀取房間……</p>{syncError && <p className="yizi-feedback is-error">{syncError}</p>}{message && <p className="yizi-feedback is-error">{message}</p>}</section>
   if (room.status === 'waiting') return <section className="yizi-game-card">
     <h2>{YIZI_GAME_LABELS[room.gameType]}多人競賽</h2>
     <div className="yizi-room-summary"><strong>房間代碼：{room.roomCode}</strong><span>目前 {snapshot.players.length}／{room.playerLimit} 人</span></div>
@@ -175,6 +176,7 @@ export default function YiziWordCompetitionRoom({ gameType, context }) {
     <div className="yizi-waiting-player-list">{snapshot.players.map((player) => <span key={player.seatNo}>{player.seatNo === 1 ? '房主' : `第 ${player.seatNo} 位`}：<strong>{player.nickname}</strong></span>)}</div>
     {snapshot.meSeat === 1 && <button type="button" className="primary" disabled={busy || snapshot.players.length < 2} onClick={() => run(() => startYiziWordCompetitionRoom(seat))}>開始競賽</button>}
     <button type="button" className="yizi-give-up" disabled={busy} onClick={leaveRoom}>離開房間</button>
+    {syncError && <p className="yizi-feedback is-error">房間同步失敗：{syncError}</p>}
     {message && <p className="yizi-feedback is-error">{message}</p>}
   </section>
 
@@ -183,6 +185,8 @@ export default function YiziWordCompetitionRoom({ gameType, context }) {
     <LockedSettings room={room} /><Scoreboard players={snapshot.players} winnerSeat={room.winnerSeat} meSeat={snapshot.meSeat} />
     {snapshot.lastRound?.answers?.length > 0 && <p className="yizi-feedback is-answer">最後一題可接受答案：{snapshot.lastRound.answers.join('、')}</p>}
     <button type="button" className="primary" onClick={leaveRoom}>返回競賽大廳</button>
+    {syncError && <p className="yizi-feedback is-error">房間同步失敗：{syncError}</p>}
+    {message && <p className="yizi-feedback is-error">{message}</p>}
   </section>
 
   const parts = snapshot.currentQuestion?.prompt?.parts || []
@@ -200,6 +204,7 @@ export default function YiziWordCompetitionRoom({ gameType, context }) {
     <div className="yizi-submit-row"><button type="button" className="yizi-submit" disabled={busy || !canAnswer} onClick={submit}>送出答案</button>
       <button type="button" className="yizi-give-up" disabled={busy || !canAnswer} onClick={() => run(() => giveUpYiziWordCompetitionRound(seat))}>{isTurns ? '本題想不到' : '結束本題'}</button></div>
     {!canAnswer && <p className="yizi-feedback">{isTurns && snapshot.myRound?.status === 'active' ? '等待輪到你。' : '你已完成或退出本題，等待其他玩家。'}</p>}
+    {syncError && <p className="yizi-feedback is-error">房間同步失敗：{syncError}</p>}
     {message && <p className={`yizi-feedback ${String(message).includes('正確') ? 'is-success' : 'is-error'}`}>{message}</p>}
   </section>
 }

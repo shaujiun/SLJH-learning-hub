@@ -81,13 +81,14 @@ export default function YiziFourSayingsRoom() {
   const [selected, setSelected] = useState(['', '', '', ''])
   const [selectionOrder, setSelectionOrder] = useState([])
   const [message, setMessage] = useState('')
+  const [syncError, setSyncError] = useState('')
   const [busy, setBusy] = useState(false)
   const recordedRef = useRef('')
 
   const refresh = async (currentSeat = seat) => {
     if (!currentSeat) return
-    try { setSnapshot(await loadYiziFourSayingsRoom(currentSeat)); setMessage('') }
-    catch (error) { setMessage(error.message) }
+    try { setSnapshot(await loadYiziFourSayingsRoom(currentSeat)); setSyncError('') }
+    catch (error) { setSyncError(error.message) }
   }
   useEffect(() => {
     if (!seat) return undefined
@@ -173,11 +174,11 @@ export default function YiziFourSayingsRoom() {
         onChange={(event) => setRoomCode(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="6 位數" /></label>
         <button type="button" disabled={busy || !nickname.trim() || roomCode.length !== 6} onClick={joinRoom}>加入房間</button></div>
     </div>
-    <p className="yizi-feedback">至少 2 人即可開始。答對且未用提示得 2 分，使用提示後得 1 分；淘汰者可留在房間觀戰。</p>
+    <p className="yizi-feedback">至少 2 人即可開始。答對且未用提示得 2 分，使用提示後得 1 分；淘汰者可留在房間觀戰。斷線後保留座位 120 秒，同一裝置重新開啟可繼續。</p>
     {message && <p className="yizi-feedback is-error">{message}</p>}
   </section>
 
-  if (!snapshot) return <section className="yizi-game-card"><p>正在讀取房間……</p>{message && <p className="yizi-feedback is-error">{message}</p>}</section>
+  if (!snapshot) return <section className="yizi-game-card"><p>正在讀取房間……</p>{syncError && <p className="yizi-feedback is-error">{syncError}</p>}{message && <p className="yizi-feedback is-error">{message}</p>}</section>
   const room = snapshot.room
   if (room.status === 'waiting') return <section className="yizi-game-card">
     <h2>四說新語多人競賽</h2><div className="yizi-room-summary"><strong>房間代碼：{room.roomCode}</strong><span>將代碼提供給參賽者；至少 2 人即可開始。</span><span>目前 {snapshot.players.length}／{room.playerLimit} 人</span></div>
@@ -186,6 +187,7 @@ export default function YiziFourSayingsRoom() {
       {snapshot.meSeat === 1 && <button type="button" className="primary" disabled={busy || snapshot.players.length < 2}
         onClick={() => run(() => startYiziFourSayingsRoom(seat))}>開始 {room.questionCount} 題競賽</button>}
     </div><button type="button" className="yizi-give-up" disabled={busy} onClick={leaveRoom}>離開房間</button>
+    {syncError && <p className="yizi-feedback is-error">房間同步失敗：{syncError}</p>}
     {message && <p className="yizi-feedback is-error">{message}</p>}
   </section>
 
@@ -193,7 +195,7 @@ export default function YiziFourSayingsRoom() {
     <h2>{room.winnerSeat === null ? '本場並列' : room.winnerSeat === snapshot.meSeat ? '你獲勝了' : `${snapshot.players.find((player) => player.seatNo === room.winnerSeat)?.nickname || '其他玩家'}獲勝`}</h2>
     <LockedSettings room={room} /><PlayerScoreboard players={snapshot.players} winnerSeat={room.winnerSeat} meSeat={snapshot.meSeat} />
     {snapshot.lastRound?.answer && <p className="yizi-feedback is-answer">最後一題答案：{snapshot.lastRound.answer}</p>}
-    <button type="button" className="primary" onClick={leaveRoom}>返回競賽大廳</button>{message && <p className="yizi-feedback is-error">{message}</p>}
+    <button type="button" className="primary" onClick={leaveRoom}>返回競賽大廳</button>{syncError && <p className="yizi-feedback is-error">房間同步失敗：{syncError}</p>}{message && <p className="yizi-feedback is-error">{message}</p>}
   </section>
 
   return <section className="yizi-game-card yizi-competition-round">
@@ -223,6 +225,7 @@ export default function YiziFourSayingsRoom() {
       ? <p className="yizi-feedback is-error">你已被淘汰，目前為觀戰模式；可以繼續查看排行榜與題目進度。</p>
       : !roundActive && <p className="yizi-feedback">你已完成本題，正在等待其他玩家。</p>}
     {snapshot.myRound?.attemptCount === 1 && roundActive && <p className="yizi-feedback is-error">第一次答案不正確，還有一次作答機會。</p>}
+    {syncError && <p className="yizi-feedback is-error">房間同步失敗：{syncError}</p>}
     {message && <p className="yizi-feedback is-error">{message}</p>}
   </section>
 }

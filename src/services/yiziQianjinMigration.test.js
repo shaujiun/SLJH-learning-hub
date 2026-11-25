@@ -7,6 +7,7 @@ const seedSql = readFileSync(new URL('../../supabase/migrations/20261122121000_s
 const fourSayingsRoomSql = readFileSync(new URL('../../supabase/migrations/20261123110000_add_yizi_four_sayings_rooms.sql', import.meta.url), 'utf8')
 const multiplayerSql = readFileSync(new URL('../../supabase/migrations/20261123170000_expand_yizi_four_sayings_multiplayer.sql', import.meta.url), 'utf8')
 const wordCompetitionSql = readFileSync(new URL('../../supabase/migrations/20261123180000_add_yizi_word_competition_rooms.sql', import.meta.url), 'utf8')
+const reconnectTimeoutSql = readFileSync(new URL('../../supabase/migrations/20261125100000_fix_yizi_multiplayer_reconnect_timeout.sql', import.meta.url), 'utf8')
 
 describe('一字千金資料庫遷移', () => {
   it('建立題庫、作答、成語與房間資料表', () => {
@@ -62,5 +63,11 @@ describe('一字千金資料庫遷移', () => {
     expect(wordCompetitionSql).toContain('yizi_word_competition_next_turn')
     expect(wordCompetitionSql).toContain("status = 'eliminated'")
     expect(wordCompetitionSql).toContain('round_found_answers')
+  })
+
+  it('所有一字千金多人房間統一保留斷線座位 120 秒', () => {
+    expect(reconnectTimeoutSql).toContain('public.yizi_four_sayings_room_snapshot(text,uuid)')
+    expect(reconnectTimeoutSql).toContain('public.yizi_word_competition_snapshot(text,uuid)')
+    expect(reconnectTimeoutSql).toContain("replace(definition, '180 seconds', '120 seconds')")
   })
 })
