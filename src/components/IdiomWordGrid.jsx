@@ -477,6 +477,8 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
     () => searchIdiomDictionary(dictionaryState.entries, dictionaryQuery, 12),
     [dictionaryQuery, dictionaryState.entries],
   )
+  const normalizedEntryPhrase = Array.from(String(entryForm.phrase || '').replace(/\s/g, '')).join('')
+  const existingCatalogEntry = catalog.find((entry) => entry.phrase === normalizedEntryPhrase) || null
 
   const toggle = (id) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])
   const ensureDictionary = async () => {
@@ -517,9 +519,11 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
     if (value.replace(/\s/g, '')) ensureDictionaryAppendix()
   }
   const chooseDictionaryEntry = (entry) => {
+    const existingEntry = catalog.find((item) => item.phrase === entry.phrase)
     setEntryForm((current) => ({
       ...current,
       phrase: entry.phrase,
+      stage: existingEntry?.stage || current.stage,
       definition: entry.definition,
       source: entry.source,
       story: entry.story,
@@ -529,7 +533,14 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
       pinyin: entry.pinyin,
     }))
     setDictionaryQuery(entry.phrase)
-    setMessages([`已帶入教育部《成語典》「${entry.phrase}」的官方資料；請選擇適合等級後加入本題。`])
+    setMessages([existingEntry
+      ? `題庫已有「${entry.phrase}」。已帶入較新的官方資料；儲存後會更新既有資料並加入本題。`
+      : `已帶入教育部《成語典》「${entry.phrase}」的官方資料；請選擇適合等級後加入本題。`])
+  }
+  const startManualEntry = () => {
+    const phrase = Array.from(String(dictionaryQuery || '').replace(/\s/g, '')).join('')
+    setEntryForm((current) => ({ ...emptyEntryForm, phrase, stage: current.stage }))
+    setMessages([`請自行補充「${phrase}」的釋義與出處；日後若成語典收錄更完整資料，可再搜尋並更新。`])
   }
   const clearEntryForm = () => {
     setEntryForm({ ...emptyEntryForm, stage: entryForm.stage })
@@ -543,7 +554,9 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
       setSelectedIds((current) => [...new Set([...current, entry.id])])
       setEntryForm(emptyEntryForm)
       setDictionaryQuery('')
-      setMessages([`已新增「${entry.phrase}」，並加入本題。`])
+      setMessages([entry.wasUpdated
+        ? `已更新「${entry.phrase}」的既有資料，並加入本題。`
+        : `已新增「${entry.phrase}」，並加入本題。`])
     } catch (error) {
       setMessages([error.message])
     } finally {
@@ -626,7 +639,12 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
           {dictionaryState.appendixLoading && <p role="status">正在補查修訂本參考資料……</p>}
           {dictionaryState.error && <p className="is-error" role="alert">{dictionaryState.error}</p>}
           {dictionaryState.appendixError && <p className="is-error" role="alert">修訂本參考資料載入失敗：{dictionaryState.appendixError}</p>}
-          {dictionaryState.loaded && dictionaryState.appendixLoaded && dictionaryQuery.trim() && dictionaryResults.length === 0 && <p>正文與修訂本參考資料都找不到相符成語，可改用其他文字搜尋或切換手動輸入。</p>}
+          {dictionaryState.loaded && dictionaryState.appendixLoaded && dictionaryQuery.trim() && dictionaryResults.length === 0 && (
+            <div className="idiom-dictionary-not-found">
+              <p>正文與修訂本參考資料都找不到相符成語，可由老師自行建立；日後找到更完整資料時仍可更新。</p>
+              <button type="button" onClick={startManualEntry}>以「{dictionaryQuery.replace(/\s/g, '')}」建立自訂資料</button>
+            </div>
+          )}
           {dictionaryResults.length > 0 && (
             <ul className="idiom-dictionary-results">
               {dictionaryResults.map((entry) => (
@@ -641,6 +659,11 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
           )}
           <p className="idiom-speech-note">發音使用本裝置的繁體中文語音；破音字仍請依畫面上的教育部注音核對。</p>
         </div>
+        {existingCatalogEntry && (
+          <p className="idiom-entry-update-note" role="status">
+            題庫已有「{existingCatalogEntry.phrase}」。本次儲存會以新資料的非空欄位更新原資料，並保留既有圖片與新資料未提供的內容。
+          </p>
+        )}
         <div className="idiom-entry-editor-fields">
           <label>成語<input readOnly={Boolean(entryForm.sourceEntryId)} value={entryForm.phrase} onChange={(event) => setEntryForm((current) => ({ ...current, phrase: event.target.value }))} /></label>
           <label>適合等級<select value={entryForm.stage} onChange={(event) => setEntryForm((current) => ({ ...current, stage: event.target.value }))}><option value="elementary">國小階段</option><option value="junior">國中階段</option><option value="senior">高中延伸</option></select></label>
@@ -652,7 +675,7 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
         </div>
         <div className="idiom-entry-editor-actions">
           {entryForm.sourceEntryId && <button type="button" className="secondary-button" onClick={clearEntryForm}>清除並改為手動輸入</button>}
-          <button type="button" disabled={entrySaving} onClick={addEntry}><Save aria-hidden="true" />{entrySaving ? '儲存中……' : '新增並加入本題'}</button>
+          <button type="button" disabled={entrySaving} onClick={addEntry}><Save aria-hidden="true" />{entrySaving ? '儲存中……' : existingCatalogEntry ? '更新既有資料並加入本題' : '新增並加入本題'}</button>
         </div>
       </details>
       <button type="button" className="idiom-auto-layout-button" onClick={generate}><Sparkles aria-hidden="true" />依所選成語自動排版</button>

@@ -5,6 +5,7 @@ import { findPendingFocusTaskId } from './focusTaskRecoveryService.js'
 import { getStarterIdiomPuzzles, STARTER_IDIOM_ENTRIES } from '../data/idiomWordGridStarter.js'
 
 const PUZZLE_SELECT = 'id,title,published_on,difficulty,puzzle_data,source_version,illustration_url,is_daily_eligible,status,created_at,updated_at'
+const IDIOM_ENTRY_SELECT = 'id,phrase,definition,source_text,story,source_url,illustration_url,stage,source_entry_id,zhuyin,pinyin,license_version'
 
 function isMissingRelation(error) {
   return ['42P01', 'PGRST205', 'PGRST202'].includes(error?.code)
@@ -108,18 +109,25 @@ export async function saveIdiomEntry(input, client = requireSupabase()) {
   const definition = String(input.definition || '').trim()
   if (phrase.length < 4) throw new Error('成語至少需要 4 個字。')
   if (!definition) throw new Error('請輸入教育部成語典的釋義。')
+  const { data: existing, error: existingError } = await client
+    .from('idiom_entries')
+    .select(IDIOM_ENTRY_SELECT)
+    .eq('phrase', phrase)
+    .maybeSingle()
+  if (existingError) throw new Error(`無法檢查既有成語資料：${existingError.message}`)
+  const incomingText = (value, fallback = '') => String(value || '').trim() || String(fallback || '').trim()
   const payload = {
     phrase,
     definition,
-    source_text: String(input.source || '').trim(),
-    story: String(input.story || '').trim(),
-    source_url: String(input.sourceUrl || '').trim(),
-    illustration_url: String(input.illustrationUrl || '').trim(),
+    source_text: incomingText(input.source, existing?.source_text),
+    story: incomingText(input.story, existing?.story),
+    source_url: incomingText(input.sourceUrl, existing?.source_url),
+    illustration_url: incomingText(input.illustrationUrl, existing?.illustration_url),
     stage: ['elementary', 'junior', 'senior'].includes(input.stage) ? input.stage : 'junior',
-    source_entry_id: Number(input.sourceEntryId || 0) || null,
-    zhuyin: String(input.zhuyin || '').trim(),
-    pinyin: String(input.pinyin || '').trim(),
-    license_version: input.sourceVersion || 'dict_idioms_2020_20260929',
+    source_entry_id: Number(input.sourceEntryId || 0) || Number(existing?.source_entry_id || 0) || null,
+    zhuyin: incomingText(input.zhuyin, existing?.zhuyin),
+    pinyin: incomingText(input.pinyin, existing?.pinyin),
+    license_version: input.sourceVersion || existing?.license_version || 'dict_idioms_2020_20260929',
     is_active: true,
     updated_at: new Date().toISOString(),
   }
@@ -129,7 +137,7 @@ export async function saveIdiomEntry(input, client = requireSupabase()) {
     .select('id,phrase,definition,source_text,story,source_url,illustration_url,stage,source_entry_id,zhuyin,pinyin')
     .single()
   if (error) throw new Error(`無法儲存成語資料：${error.message}`)
-  return mapIdiomEntry(data)
+  return { ...mapIdiomEntry(data), wasUpdated: Boolean(existing) }
 }
 
 export async function spendIdiomHint({ puzzleId, kind, cellKey }, client = requireSupabase()) {

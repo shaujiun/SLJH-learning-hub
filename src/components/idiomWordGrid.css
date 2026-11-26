@@ -112,6 +112,7 @@
 .idiom-entry-editor { margin-top: .75rem; padding: .75rem; border: 1px solid #d7e3df; border-radius: 12px; background: #fbfdfc; }
 .idiom-entry-editor summary { display: flex; align-items: center; gap: .35rem; color: #176b60; font-weight: 900; cursor: pointer; }
 .idiom-entry-editor > p { color: #637770; }
+.idiom-entry-editor > p.idiom-entry-update-note { padding: .65rem .75rem; border-left: 4px solid #d09325; border-radius: 6px; background: #fff8e7; color: #6d5018; }
 .idiom-dictionary-search { margin-bottom: .8rem; padding: .8rem; border: 1px solid #b9d5cf; border-radius: 12px; background: #eef8f5; }
 .idiom-dictionary-search > label { display: grid; gap: .35rem; font-weight: 900; }
 .idiom-dictionary-search > label span { display: flex; align-items: center; gap: .35rem; }
@@ -119,6 +120,9 @@
 .idiom-dictionary-search input { box-sizing: border-box; width: 100%; min-height: 46px; padding: .6rem .7rem; border: 2px solid #6d938e; border-radius: 10px; background: #fff; color: #17324a; font: inherit; }
 .idiom-dictionary-search > p { margin: .55rem 0 0; color: #62766f; }
 .idiom-dictionary-search > p.is-error { color: #9b3429; }
+.idiom-dictionary-not-found { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: .55rem; }
+.idiom-dictionary-not-found p { flex: 1 1 320px; margin: 0; color: #62766f; }
+.idiom-dictionary-not-found button { min-height: 40px; padding: .5rem .7rem; border: 1px solid #197365; border-radius: 8px; background: #fff; color: #176b60; font-weight: 900; cursor: pointer; }
 .idiom-dictionary-results { max-height: 330px; display: grid; gap: .45rem; overflow: auto; margin: .7rem 0 0; padding: 0; list-style: none; }
 .idiom-dictionary-results li { display: grid; grid-template-columns: minmax(0, 1fr) 46px; gap: .4rem; }
 .idiom-dictionary-pick { min-width: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .15rem .65rem; padding: .65rem .75rem; border: 1px solid #b6ccc7; border-radius: 10px; background: #fff; color: #17324a; text-align: left; cursor: pointer; }

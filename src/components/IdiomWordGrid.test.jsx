@@ -118,5 +118,6 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('破音字')
     expect(html).toContain('依所選成語自動排版')
     expect(html).toContain('先勾選至少 4 個具有共同文字的成語')
+    expect(html).toContain('新增並加入本題')
   })
 })

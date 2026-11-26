@@ -85,6 +85,32 @@ describe('成語填字圖服務', () => {
     }), { onConflict: 'phrase' })
   })
 
+  it('較完整的後建資料可更新同名成語，且不會清空既有圖片與未提供欄位', async () => {
+    const readQuery = result({
+      id: 'entry-1', phrase: '三心二意', definition: '教師先行建立的說明。',
+      source_text: '教師已補充的出處', story: '', source_url: '', illustration_url: 'https://example.com/teacher-image.png',
+      stage: 'elementary', source_entry_id: null, zhuyin: '', pinyin: '', license_version: 'teacher-created',
+    })
+    const writeQuery = result({
+      id: 'entry-1', phrase: '三心二意', definition: '心志不專一、猶豫不決。',
+      source_text: '教師已補充的出處', story: '教育部完整典故', source_url: 'https://dict.idioms.moe.edu.tw/idiomView.jsp?ID=6662',
+      illustration_url: 'https://example.com/teacher-image.png', stage: 'junior', source_entry_id: 106662,
+      zhuyin: 'ㄙㄢ ㄒㄧㄣ ㄦˋ ㄧˋ', pinyin: 'sān xīn èr yì',
+    })
+    const client = { from: vi.fn().mockReturnValueOnce(readQuery).mockReturnValueOnce(writeQuery) }
+
+    await expect(saveIdiomEntry({
+      phrase: '三心二意', definition: '心志不專一、猶豫不決。', source: '', story: '教育部完整典故',
+      sourceUrl: 'https://dict.idioms.moe.edu.tw/idiomView.jsp?ID=6662', stage: 'junior', sourceEntryId: 106662,
+      zhuyin: 'ㄙㄢ ㄒㄧㄣ ㄦˋ ㄧˋ', pinyin: 'sān xīn èr yì', sourceVersion: 'dict_idioms_2020_20260929',
+    }, client)).resolves.toMatchObject({ id: 'entry-1', phrase: '三心二意', wasUpdated: true })
+    expect(writeQuery.upsert).toHaveBeenCalledWith(expect.objectContaining({
+      phrase: '三心二意', definition: '心志不專一、猶豫不決。',
+      source_text: '教師已補充的出處', story: '教育部完整典故',
+      illustration_url: 'https://example.com/teacher-image.png', source_entry_id: 106662,
+    }), { onConflict: 'phrase' })
+  })
+
   it('新增成語填字圖使用獨立題目身分，不以題名與日期覆寫舊題', async () => {
     const query = result(null)
     const client = { from: vi.fn(() => query) }
