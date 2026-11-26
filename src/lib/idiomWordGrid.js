@@ -493,6 +493,26 @@ export function assignIdiomTile(assignments = {}, cellKey = '', tileId = null) {
   return next
 }
 
+export function applyRevealedIdiomCells(puzzle, assignments = {}, cellKeys = []) {
+  const tiles = createIdiomBankTiles(puzzle)
+  const cellMap = new Map((puzzle?.board?.cells || []).map((cell) => [cell.key, cell]))
+  let next = { ...assignments }
+  ;[...new Set(cellKeys || [])].forEach((cellKey) => {
+    const cell = cellMap.get(cellKey)
+    if (!cell) return
+    const currentTileId = next[cellKey]
+    if (tiles[currentTileId]?.character === cell.solution) return
+
+    const usedByOtherCells = new Set(Object.entries(next)
+      .filter(([key]) => key !== cellKey)
+      .map(([, tileId]) => tileId))
+    const unusedMatchingTile = tiles.find((tile) => tile.character === cell.solution && !usedByOtherCells.has(tile.id))
+    const matchingTile = unusedMatchingTile || tiles.find((tile) => tile.character === cell.solution)
+    if (matchingTile) next = assignIdiomTile(next, cellKey, matchingTile.id)
+  })
+  return next
+}
+
 export function serializeIdiomPuzzle(puzzle) {
   return {
     difficulty: puzzle.difficulty,

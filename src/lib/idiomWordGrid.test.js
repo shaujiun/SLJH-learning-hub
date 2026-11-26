@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   assessIdiomAssignments,
+  applyRevealedIdiomCells,
   buildIdiomBoard,
   buildIdiomLevelNavigation,
   buildIdiomPuzzle,
@@ -90,6 +91,23 @@ describe('成語填字圖核心', () => {
 
     const assigned = assignIdiomTile({ '0:0': 2, '1:1': 3 }, '2:2', 2)
     expect(assigned).toEqual({ '1:1': 3, '2:2': 2 })
+  })
+
+  it('揭示提示字時同步占用正確字卡，完成檢查不會留下無法填入的字', () => {
+    const puzzle = buildIdiomPuzzle(entries, 'challenge')
+    const tiles = createIdiomBankTiles(puzzle)
+    const target = puzzle.board.cells.find((cell) => !puzzle.givenCellKeys.includes(cell.key))
+    const assignments = applyRevealedIdiomCells(puzzle, {}, [target.key])
+    const assignedTileId = assignments[target.key]
+
+    expect(Number.isInteger(assignedTileId)).toBe(true)
+    expect(tiles[assignedTileId].character).toBe(target.solution)
+    expect(new Set(Object.values(assignments)).size).toBe(1)
+
+    const crossKeys = chooseAllCrossHintCells(puzzle).map((cell) => cell.key)
+    const allCrossAssignments = applyRevealedIdiomCells(puzzle, {}, crossKeys)
+    expect(Object.keys(allCrossAssignments)).toHaveLength(crossKeys.length)
+    expect(new Set(Object.values(allCrossAssignments)).size).toBe(crossKeys.length)
   })
 
   it('可將教師手動編輯的黑格、白格、提示字與答案建成題目', () => {

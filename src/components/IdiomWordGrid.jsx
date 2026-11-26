@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import {
   assessIdiomAssignments,
+  applyRevealedIdiomCells,
   assignIdiomTile,
   buildIdiomPuzzle,
   buildManualIdiomPuzzle,
@@ -271,7 +272,7 @@ export function PlayIdiomPuzzle({
   onNextPuzzle = null,
 }) {
   const initial = useMemo(() => restoreProgress(context.studentId, puzzle.id), [context.studentId, puzzle.id])
-  const [assignments, setAssignments] = useState(initial.assignments || {})
+  const [assignments, setAssignments] = useState(() => applyRevealedIdiomCells(puzzle, initial.assignments || {}, initial.revealedKeys || []))
   const [revealedKeys, setRevealedKeys] = useState(initial.revealedKeys || [])
   const [hintUses, setHintUses] = useState(Number(initial.hintUses || initial.revealedKeys?.length || 0))
   const [selectedTile, setSelectedTile] = useState(null)
@@ -381,11 +382,7 @@ export function PlayIdiomPuzzle({
       onEnergyChange(nextEnergy)
       setHintUses((current) => current + 1)
       setRevealedKeys((current) => [...new Set([...current, target.key])])
-      setAssignments((current) => {
-        const next = { ...current }
-        delete next[target.key]
-        return next
-      })
+      setAssignments((current) => applyRevealedIdiomCells(puzzle, current, [target.key]))
       setMessage(kind === 'cross' ? '已揭示一個同時連接兩個成語的交錯字。' : '已揭示所選格的一個字。')
     } catch (error) {
       setMessage(error.message)
@@ -444,11 +441,7 @@ export function PlayIdiomPuzzle({
       onEnergyChange(nextEnergy)
       setHintUses((current) => current + 1)
       setRevealedKeys((current) => [...new Set([...current, ...targetKeys])])
-      setAssignments((current) => {
-        const next = { ...current }
-        targetKeys.forEach((key) => { delete next[key] })
-        return next
-      })
+      setAssignments((current) => applyRevealedIdiomCells(puzzle, current, targetKeys))
       setMessage(`已揭示全部 ${targets.length} 個交錯字。`)
     } catch (error) {
       setMessage(error.message)
@@ -533,7 +526,8 @@ export function PlayIdiomPuzzle({
         <section className="idiom-character-bank" aria-labelledby="idiom-bank-title">
           <div><h3 id="idiom-bank-title">可填文字</h3><span>剩餘 {tiles.length - usedTileIds.size} 字</span></div>
           <div className="idiom-bank-tiles">
-            {tiles.map((tile) => <button key={tile.id} type="button" data-tile-id={tile.id} disabled={usedTileIds.has(tile.id)} className={selectedTile === tile.id ? 'is-selected' : ''} onClick={(event) => chooseTile(tile, event)}>{tile.character}</button>)}
+            {tiles.filter((tile) => !usedTileIds.has(tile.id)).map((tile) => <button key={tile.id} type="button" data-tile-id={tile.id} className={selectedTile === tile.id ? 'is-selected' : ''} onClick={(event) => chooseTile(tile, event)}>{tile.character}</button>)}
+            {usedTileIds.size === tiles.length && <p className="idiom-bank-empty">所有文字都已放入題目。</p>}
           </div>
         </section>
         <div className="idiom-play-actions">

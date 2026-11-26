@@ -61,6 +61,7 @@
 .idiom-bank-tiles button { width: 46px; height: 50px; border: 2px solid #67858b; border-radius: 10px; background: #fff; color: #17324a; font: 900 1.45rem/1 'Iansui', sans-serif; cursor: pointer; }
 .idiom-bank-tiles button.is-selected { border-color: #d77828; background: #fff0d2; transform: translateY(-3px); }
 .idiom-bank-tiles button:disabled { opacity: .22; transform: none; }
+.idiom-bank-empty { margin: .2rem 0; color: #536d78; font-weight: 800; }
 .idiom-tile-flight { position: fixed; z-index: 1200; display: grid; place-items: center; width: 42px; height: 46px; border: 2px solid #d77828; border-radius: 10px; background: #fff0d2; color: #17324a; font: 900 1.45rem/1 'Iansui', sans-serif; pointer-events: none; transform: translate(-50%, -50%); animation: idiom-tile-flight .5s ease-in-out forwards; }
 @keyframes idiom-tile-flight { to { opacity: .2; transform: translate(calc(var(--flight-x) - 50%), calc(var(--flight-y) - 50%)) scale(.78); } }
 .idiom-play-actions { display: flex; justify-content: center; gap: .7rem; margin-top: 1rem; }
