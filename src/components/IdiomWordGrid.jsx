@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -20,9 +20,11 @@ import {
 } from 'lucide-react'
 import {
   assessIdiomAssignments,
+  assignIdiomTile,
   buildIdiomPuzzle,
   buildManualIdiomPuzzle,
   chooseHintCell,
+  chooseAllCrossHintCells,
   createIdiomEditorGrid,
   createIdiomBankTiles,
   editorGridFromPuzzle,
@@ -39,6 +41,7 @@ import {
   loadIdiomWordGridContext,
   saveIdiomEntry,
   saveIdiomPuzzle,
+  saveIdiomReviews,
   spendIdiomHint,
 } from '../services/idiomWordGridService.js'
 import { loadIdiomDictionary, loadIdiomDictionaryAppendix } from '../services/idiomDictionaryService.js'
@@ -77,13 +80,14 @@ function PuzzleTabs({ guestMode }) {
   )
 }
 
-export function IdiomBoard({ puzzle, assignments, selectedCellKey, revealedKeys, checkedWrongKeys = [], onCellClick }) {
+export function IdiomBoard({ puzzle, assignments, selectedCellKey, revealedKeys, checkedWrongKeys = [], arrivingCellKey = '', onCellClick, boardRef = null }) {
   const tiles = useMemo(() => createIdiomBankTiles(puzzle), [puzzle])
   const given = new Set(puzzle.givenCellKeys || [])
   const revealed = new Set(revealedKeys || [])
   const cellMap = new Map((puzzle.board?.cells || []).map((cell) => [cell.key, cell]))
   return (
     <div
+      ref={boardRef}
       className="idiom-grid-board"
       role="grid"
       aria-label="成語填字圖題目"
@@ -103,8 +107,9 @@ export function IdiomBoard({ puzzle, assignments, selectedCellKey, revealedKeys,
             key={key}
             type="button"
             role="gridcell"
-            className={`idiom-grid-cell ${fixed ? 'is-given' : ''} ${revealed.has(key) ? 'is-hint' : ''} ${checkedWrongKeys.includes(key) ? 'is-checked-wrong' : ''} ${cell.isIntersection ? 'is-intersection' : ''} ${selectedCellKey === key ? 'is-selected-cell' : ''}`}
+            className={`idiom-grid-cell ${fixed ? 'is-given' : ''} ${revealed.has(key) ? 'is-hint' : ''} ${checkedWrongKeys.includes(key) ? 'is-checked-wrong' : ''} ${cell.isIntersection ? 'is-intersection' : ''} ${selectedCellKey === key ? 'is-selected-cell' : ''} ${arrivingCellKey === key ? 'is-tile-arriving' : ''}`}
             disabled={fixed}
+            data-cell-key={key}
             onClick={() => onCellClick(key)}
             aria-label={`第 ${row + 1} 列第 ${column + 1} 格${value ? `，${value}` : '，空白'}${cell.isIntersection ? '，交錯格' : ''}`}
           >
@@ -117,15 +122,37 @@ export function IdiomBoard({ puzzle, assignments, selectedCellKey, revealedKeys,
   )
 }
 
-export function IdiomLearningPanel({ puzzle }) {
+export function IdiomLearningPanel({
+  puzzle,
+  reviewEntryIds = [],
+  canReview = false,
+  onToggleReview = async () => {},
+  compact = false,
+  title = '本關成語學習',
+}) {
   const [selectedId, setSelectedId] = useState(puzzle.idioms[0]?.id || '')
+  const [reviewBusy, setReviewBusy] = useState(false)
+  const [reviewMessage, setReviewMessage] = useState('')
   useEffect(() => setSelectedId(puzzle.idioms[0]?.id || ''), [puzzle.id])
   const entry = puzzle.idioms.find((idiom) => idiom.id === selectedId) || puzzle.idioms[0]
+  const isReviewed = Boolean(entry && reviewEntryIds.includes(entry.id))
+  const toggleReview = async () => {
+    if (!entry || !canReview) return
+    setReviewBusy(true)
+    try {
+      await onToggleReview([entry.id], !isReviewed)
+      setReviewMessage(isReviewed ? `已將「${entry.phrase}」移出複習清單。` : `已將「${entry.phrase}」加入複習清單。`)
+    } catch (error) {
+      setReviewMessage(error.message)
+    } finally {
+      setReviewBusy(false)
+    }
+  }
   return (
-    <section className="idiom-learning-panel" aria-labelledby="idiom-learning-title">
+    <section className={`idiom-learning-panel ${compact ? 'is-compact' : ''}`} aria-labelledby="idiom-learning-title">
       <div className="idiom-learning-heading">
-        <div><p className="eyebrow">AFTER CLEARING</p><h2 id="idiom-learning-title">本關成語學習</h2></div>
-        <span><BookOpen aria-hidden="true" />全部答對後解鎖</span>
+        <div><p className="eyebrow">IDIOM REVIEW</p><h2 id="idiom-learning-title">{title}</h2></div>
+        <span><BookOpen aria-hidden="true" />點選成語查看解釋</span>
       </div>
       <div className="idiom-chip-list" role="list">
         {puzzle.idioms.map((idiom) => (
@@ -137,7 +164,10 @@ export function IdiomLearningPanel({ puzzle }) {
           <div className="idiom-entry-copy">
             <div className="idiom-entry-title-row">
               <div><h3>{entry.phrase}</h3>{entry.zhuyin && <p>{entry.zhuyin}</p>}</div>
-              <button type="button" className="idiom-speech-button" onClick={() => speakIdiom(entry.phrase)}><Volume2 aria-hidden="true" />播放發音</button>
+              <div className="idiom-entry-title-actions">
+                <button type="button" className="idiom-speech-button" onClick={() => speakIdiom(entry.phrase)}><Volume2 aria-hidden="true" />播放發音</button>
+                {canReview && <button type="button" className={`idiom-review-toggle ${isReviewed ? 'is-reviewed' : ''}`} disabled={reviewBusy} onClick={toggleReview}>{isReviewed ? '已加入複習' : '加入複習'}</button>}
+              </div>
             </div>
             <dl>
               <div><dt>釋義</dt><dd>{entry.definition || '本題的教育部釋義尚待同步；可先開啟原始條目查詢。'}</dd></div>
@@ -153,6 +183,7 @@ export function IdiomLearningPanel({ puzzle }) {
           </div>
         </article>
       )}
+      {reviewMessage && <p className="idiom-review-message" role="status">{reviewMessage}</p>}
       <footer className="idiom-attribution">
         <strong>資料來源</strong>
         <span>{IDIOM_DICTIONARY_ATTRIBUTION}</span>
@@ -160,6 +191,62 @@ export function IdiomLearningPanel({ puzzle }) {
         <a href="idiom-dictionary-license.txt" target="_blank" rel="noreferrer">查看授權說明 <ExternalLink aria-hidden="true" /></a>
       </footer>
     </section>
+  )
+}
+
+export function IdiomCompletionDialog({
+  puzzle,
+  levelLabel,
+  nextLevelLabel = '',
+  reviewEntryIds = [],
+  canReview = false,
+  onToggleReview = async () => {},
+  onClose,
+  onNextPuzzle = null,
+}) {
+  return (
+    <div className="idiom-dialog-backdrop" role="presentation">
+      <section className="idiom-completion-dialog" role="dialog" aria-modal="true" aria-labelledby="idiom-completion-title">
+        <header>
+          <div><p>通關完成</p><h2 id="idiom-completion-title">{levelLabel || '本關'}全部答對</h2></div>
+          <button type="button" className="icon-button" onClick={onClose} aria-label="關閉通關視窗"><X aria-hidden="true" /></button>
+        </header>
+        <IdiomLearningPanel
+          puzzle={puzzle}
+          reviewEntryIds={reviewEntryIds}
+          canReview={canReview}
+          onToggleReview={onToggleReview}
+          compact
+        />
+        <footer>
+          <button type="button" className="secondary-button" onClick={onClose}>留在本關</button>
+          {onNextPuzzle
+            ? <button type="button" className="primary-button" onClick={() => { onClose(); onNextPuzzle() }}>進入下一關：{nextLevelLabel}<ArrowRight aria-hidden="true" /></button>
+            : <strong>這是目前這個難度最後一關，請靜待更新。</strong>}
+        </footer>
+      </section>
+    </div>
+  )
+}
+
+function IdiomReviewDialog({ entries, reviewEntryIds, onToggleReview, onClose }) {
+  const puzzle = useMemo(() => ({
+    id: 'student-idiom-review-library',
+    idioms: entries,
+    sourceVersion: IDIOM_DICTIONARY_VERSION,
+  }), [entries])
+  return (
+    <div className="idiom-dialog-backdrop" role="presentation">
+      <section className="idiom-review-dialog" role="dialog" aria-modal="true" aria-labelledby="idiom-review-dialog-title">
+        <header>
+          <div><p>MY REVIEW LIST</p><h2 id="idiom-review-dialog-title">我的成語複習</h2></div>
+          <button type="button" className="icon-button" onClick={onClose} aria-label="關閉複習清單"><X aria-hidden="true" /></button>
+        </header>
+        {entries.length > 0
+          ? <IdiomLearningPanel puzzle={puzzle} reviewEntryIds={reviewEntryIds} canReview onToggleReview={onToggleReview} compact title="點選成語複習" />
+          : <div className="idiom-review-empty"><BookOpen aria-hidden="true" /><p>目前還沒有收錄成語。答題錯誤或覺得不熟時，可以加入複習清單。</p></div>}
+      </section>
+    </div>
   )
 }
 
@@ -177,6 +264,8 @@ export function PlayIdiomPuzzle({
   focusTaskId,
   levelLabel,
   nextLevelLabel = '',
+  reviewEntryIds = [],
+  onToggleReview = async () => {},
   onEnergyChange,
   onPuzzleCompleted = () => {},
   onNextPuzzle = null,
@@ -190,7 +279,12 @@ export function PlayIdiomPuzzle({
   const [checkedWrongKeys, setCheckedWrongKeys] = useState([])
   const [message, setMessage] = useState('')
   const [completed, setCompleted] = useState(Boolean(initial.completed || context.completedPuzzleIds?.includes(puzzle.id)))
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false)
+  const [arrivingCellKey, setArrivingCellKey] = useState('')
+  const [tileFlight, setTileFlight] = useState(null)
   const [busy, setBusy] = useState(false)
+  const boardRef = useRef(null)
+  const animationTimerRef = useRef(null)
   const tiles = useMemo(() => createIdiomBankTiles(puzzle), [puzzle])
   const usedTileIds = new Set(Object.values(assignments))
 
@@ -198,6 +292,10 @@ export function PlayIdiomPuzzle({
     if (typeof window === 'undefined') return
     window.localStorage.setItem(progressKey(context.studentId, puzzle.id), JSON.stringify({ assignments, revealedKeys, hintUses, completed }))
   }, [assignments, completed, context.studentId, hintUses, puzzle.id, revealedKeys])
+
+  useEffect(() => () => {
+    if (animationTimerRef.current) window.clearTimeout(animationTimerRef.current)
+  }, [])
 
   const reset = () => {
     setAssignments({})
@@ -207,28 +305,59 @@ export function PlayIdiomPuzzle({
     setSelectedCellKey('')
     setCheckedWrongKeys([])
     setCompleted(false)
-    setMessage('已重新開始；先選字卡，再點選空格。')
+    setShowCompletionDialog(false)
+    setMessage('已重新開始；可先選方格再選文字，也可先選文字再點方格。')
+  }
+
+  const assignTileToCell = (cellKey, tileId) => {
+    setAssignments((current) => assignIdiomTile(current, cellKey, tileId))
+    setSelectedTile(null)
+    setSelectedCellKey('')
+    setArrivingCellKey(cellKey)
+    if (animationTimerRef.current) window.clearTimeout(animationTimerRef.current)
+    animationTimerRef.current = window.setTimeout(() => {
+      setArrivingCellKey('')
+      setTileFlight(null)
+    }, 500)
   }
 
   const placeTile = (cellKey) => {
+    const wasSelected = selectedCellKey === cellKey
     setSelectedCellKey(cellKey)
     setCheckedWrongKeys((current) => current.filter((key) => key !== cellKey))
-    if (selectedTile == null) {
-      if (!Number.isInteger(assignments[cellKey])) return
+    if (selectedTile != null) {
+      assignTileToCell(cellKey, selectedTile)
+      return
+    }
+    if (wasSelected && Number.isInteger(assignments[cellKey])) {
       setAssignments((current) => {
         const next = { ...current }
         delete next[cellKey]
         return next
       })
+      setSelectedCellKey('')
+    }
+  }
+
+  const chooseTile = (tile, event) => {
+    if (!selectedCellKey) {
+      setSelectedTile((current) => current === tile.id ? null : tile.id)
       return
     }
-    setAssignments((current) => {
-      const next = { ...current }
-      Object.keys(next).forEach((key) => { if (next[key] === selectedTile) delete next[key] })
-      next[cellKey] = selectedTile
-      return next
-    })
-    setSelectedTile(null)
+    const target = boardRef.current?.querySelector(`[data-cell-key="${selectedCellKey}"]`)
+    if (target && event?.currentTarget) {
+      const sourceRect = event.currentTarget.getBoundingClientRect()
+      const targetRect = target.getBoundingClientRect()
+      setTileFlight({
+        token: `${Date.now()}-${tile.id}`,
+        character: tile.character,
+        left: sourceRect.left + sourceRect.width / 2,
+        top: sourceRect.top + sourceRect.height / 2,
+        x: targetRect.left + targetRect.width / 2 - sourceRect.left - sourceRect.width / 2,
+        y: targetRect.top + targetRect.height / 2 - sourceRect.top - sourceRect.height / 2,
+      })
+    }
+    assignTileToCell(selectedCellKey, tile.id)
   }
 
   const revealHint = async (kind) => {
@@ -272,13 +401,13 @@ export function PlayIdiomPuzzle({
       setMessage(result.status === 'incomplete' ? '請先填入一些文字，再使用錯字檢查。' : '目前填入的文字沒有發現錯位。')
       return
     }
-    if (context.energy < 1) {
-      setMessage('能量不足，需要 1 點。')
+    if (context.energy < 2) {
+      setMessage('能量不足，需要 2 點。')
       return
     }
     setBusy(true)
     try {
-      let nextEnergy = context.energy - 1
+      let nextEnergy = context.energy - 2
       if (context.remoteEnabled && context.studentId && !puzzle.id.startsWith('starter-')) {
         const saved = await spendIdiomHint({ puzzleId: puzzle.id, kind: 'check', cellKey: wrongCellKey })
         nextEnergy = saved.energy
@@ -294,6 +423,51 @@ export function PlayIdiomPuzzle({
     }
   }
 
+  const revealAllCrossHints = async () => {
+    const targets = chooseAllCrossHintCells(puzzle, revealedKeys)
+    if (targets.length === 0) {
+      setMessage('本題目前沒有尚未揭示的交錯字。')
+      return
+    }
+    if (context.energy < 10) {
+      setMessage('能量不足，需要 10 點。')
+      return
+    }
+    setBusy(true)
+    try {
+      let nextEnergy = context.energy - 10
+      if (context.remoteEnabled && context.studentId && !puzzle.id.startsWith('starter-')) {
+        const saved = await spendIdiomHint({ puzzleId: puzzle.id, kind: 'all_cross', cellKey: 'all' })
+        nextEnergy = saved.energy
+      }
+      const targetKeys = targets.map((target) => target.key)
+      onEnergyChange(nextEnergy)
+      setHintUses((current) => current + 1)
+      setRevealedKeys((current) => [...new Set([...current, ...targetKeys])])
+      setAssignments((current) => {
+        const next = { ...current }
+        targetKeys.forEach((key) => { delete next[key] })
+        return next
+      })
+      setMessage(`已揭示全部 ${targets.length} 個交錯字。`)
+    } catch (error) {
+      setMessage(error.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const addWrongIdiomsToReview = async (wrongCellKeys = []) => {
+    if (!context.studentId || puzzle.id.startsWith('starter-')) return 0
+    const wrongKeys = new Set(wrongCellKeys)
+    const entryIds = [...new Set((puzzle.board?.cells || [])
+      .filter((cell) => wrongKeys.has(cell.key))
+      .flatMap((cell) => cell.idiomIds || []))]
+    if (entryIds.length === 0) return 0
+    await onToggleReview(entryIds, true)
+    return entryIds.length
+  }
+
   const checkAnswer = async () => {
     const result = assessIdiomAssignments(puzzle, assignments)
     if (result.status === 'incomplete') {
@@ -301,15 +475,21 @@ export function PlayIdiomPuzzle({
       return
     }
     if (!result.correct) {
-      setMessage('還有文字位置不正確；系統不會直接公布答案，可以繼續調整或使用提示。')
+      try {
+        const reviewCount = await addWrongIdiomsToReview(result.wrongCellKeys)
+        setMessage(`還有文字位置不正確；系統不會直接公布答案，可以繼續調整或使用提示。${reviewCount ? `相關的 ${reviewCount} 個成語已加入複習清單。` : ''}`)
+      } catch (error) {
+        setMessage(`還有文字位置不正確；可繼續調整。${error.message}`)
+      }
       return
     }
     const wasCompleted = completed
     if (!context.studentId || puzzle.id.startsWith('starter-')) {
       setCompleted(true)
+      setShowCompletionDialog(true)
       onPuzzleCompleted(puzzle.id)
       setMessage('全部正確，已解鎖本關成語的釋義與出處。')
-      if (!wasCompleted) onEnergyChange(Math.min(20, context.energy + (hintUses ? 3 : 4)))
+      if (!wasCompleted) onEnergyChange(context.energy + (hintUses ? 3 : 4))
       return
     }
     setBusy(true)
@@ -317,10 +497,14 @@ export function PlayIdiomPuzzle({
       const saved = await completeIdiomPuzzle({ puzzleId: puzzle.id, hintsUsed: hintUses, focusTaskId })
       await trackLearningActivityAttempt(buildIdiomCompletionProgress({ puzzle, focusTaskId, hintUses }))
       setCompleted(true)
+      setShowCompletionDialog(true)
       onPuzzleCompleted(puzzle.id)
       onEnergyChange(saved.energy)
       setMessage(`全部正確，已解鎖成語學習。${saved.energyEarned ? `本關獲得 ${saved.energyEarned} 點能量。` : '本關已領取過能量。'}${saved.taskCompleted ? '每日任務也已完成。' : ''}`)
     } catch (error) {
+      setCompleted(true)
+      setShowCompletionDialog(true)
+      onPuzzleCompleted(puzzle.id)
       setMessage(`${error.message}；本機仍保留本次通關。`)
     } finally {
       setBusy(false)
@@ -332,41 +516,35 @@ export function PlayIdiomPuzzle({
       <section className="idiom-play-card">
         <div className="idiom-play-heading">
           <div><p className="eyebrow">IDIOM CROSSWORD</p><h2>{puzzle.title}</h2><span>{levelLabel || IDIOM_DIFFICULTIES[puzzle.difficulty]?.label || '基礎'}・{stageLabels[puzzle.stage] || '自訂'}</span></div>
-          <div className="idiom-energy"><Coins aria-hidden="true" /><strong>{context.energy}</strong><span>／20 能量</span></div>
+          <div className="idiom-energy"><Coins aria-hidden="true" /><strong>{context.energy}</strong><span>能量</span></div>
         </div>
-        <p className="idiom-play-instruction">先選下方字卡，再點選題目空格。格子右下方有圓點，代表這個字同時連接橫向與直向成語。</p>
+        <p className="idiom-play-instruction">先點選題目空格，再選下方文字即可直接填入；也可先選文字再點方格。再次點選同一個已填方格可取回文字；右下圓點代表交錯字。</p>
         <div className="idiom-solving-layout">
-          <div className="idiom-board-wrap"><IdiomBoard puzzle={puzzle} assignments={assignments} selectedCellKey={selectedCellKey} revealedKeys={revealedKeys} checkedWrongKeys={checkedWrongKeys} onCellClick={placeTile} /></div>
+          <div className="idiom-board-wrap"><IdiomBoard puzzle={puzzle} assignments={assignments} selectedCellKey={selectedCellKey} revealedKeys={revealedKeys} checkedWrongKeys={checkedWrongKeys} arrivingCellKey={arrivingCellKey} onCellClick={placeTile} boardRef={boardRef} /></div>
           <aside className="idiom-hint-panel">
             <h3><Lightbulb aria-hidden="true" />提示工具</h3>
             <button type="button" disabled={busy || context.energy < 1} onClick={() => revealHint('letter')}><strong>一字提示</strong><span>先選空格，再揭示正確字</span><b>1 能量</b></button>
             <button type="button" disabled={busy || context.energy < 2} onClick={() => revealHint('cross')}><strong>交錯字提示</strong><span>揭示同時連接兩個成語的字</span><b>2 能量</b></button>
-            <button type="button" disabled={busy || context.energy < 1} onClick={checkOneWrong}><strong>錯字檢查</strong><span>標記一個放錯的位置，不公布答案</span><b>1 能量</b></button>
+            {['advanced', 'challenge'].includes(puzzle.difficulty) && <button type="button" disabled={busy || context.energy < 10} onClick={revealAllCrossHints}><strong>所有交錯字提示</strong><span>一次揭示本題所有交錯位置</span><b>10 能量</b></button>}
+            <button type="button" disabled={busy || context.energy < 2} onClick={checkOneWrong}><strong>錯字檢查</strong><span>標記一個放錯的位置，不公布答案</span><b>2 能量</b></button>
             <p>首次通關可得 3 點；未使用提示再加 1 點。同一關重玩不重複獲得。</p>
           </aside>
         </div>
         <section className="idiom-character-bank" aria-labelledby="idiom-bank-title">
           <div><h3 id="idiom-bank-title">可填文字</h3><span>剩餘 {tiles.length - usedTileIds.size} 字</span></div>
           <div className="idiom-bank-tiles">
-            {tiles.map((tile) => <button key={tile.id} type="button" disabled={usedTileIds.has(tile.id)} className={selectedTile === tile.id ? 'is-selected' : ''} onClick={() => setSelectedTile((current) => current === tile.id ? null : tile.id)}>{tile.character}</button>)}
+            {tiles.map((tile) => <button key={tile.id} type="button" data-tile-id={tile.id} disabled={usedTileIds.has(tile.id)} className={selectedTile === tile.id ? 'is-selected' : ''} onClick={(event) => chooseTile(tile, event)}>{tile.character}</button>)}
           </div>
         </section>
         <div className="idiom-play-actions">
           <button type="button" className="secondary-button" onClick={reset}><RotateCcw aria-hidden="true" />{completed ? '重新挑戰本關' : '重新開始'}</button>
+          {completed && <button type="button" className="secondary-button" onClick={() => setShowCompletionDialog(true)}><BookOpen aria-hidden="true" />查看本關成語解說</button>}
           <button type="button" className="primary-button" disabled={busy} onClick={checkAnswer}><Check aria-hidden="true" />完成檢查</button>
         </div>
         {message && <p className="idiom-status-message" role="status">{message}</p>}
       </section>
-      {completed && (
-        <>
-          <section className="idiom-level-complete-card">
-            {onNextPuzzle
-              ? <><div><strong>{levelLabel}已通關</strong><span>下一關：{nextLevelLabel}</span></div><button type="button" className="primary-button" onClick={onNextPuzzle}>進入下一關<ArrowRight aria-hidden="true" /></button></>
-              : <p>這是目前這個難度最後一關，請靜待更新。</p>}
-          </section>
-          <IdiomLearningPanel puzzle={puzzle} />
-        </>
-      )}
+      {tileFlight && <span key={tileFlight.token} className="idiom-tile-flight" style={{ left: tileFlight.left, top: tileFlight.top, '--flight-x': `${tileFlight.x}px`, '--flight-y': `${tileFlight.y}px` }} aria-hidden="true">{tileFlight.character}</span>}
+      {showCompletionDialog && <IdiomCompletionDialog puzzle={puzzle} levelLabel={levelLabel} nextLevelLabel={nextLevelLabel} reviewEntryIds={reviewEntryIds} canReview={Boolean(context.studentId)} onToggleReview={onToggleReview} onClose={() => setShowCompletionDialog(false)} onNextPuzzle={onNextPuzzle} />}
     </>
   )
 }
@@ -706,10 +884,11 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
 }
 
 export default function IdiomWordGrid({ guestMode = false }) {
-  const [state, setState] = useState({ loading: true, error: '', puzzles: [], catalog: [], energy: 0, studentId: '', completedPuzzleIds: [], canManage: false, remoteEnabled: false })
+  const [state, setState] = useState({ loading: true, error: '', puzzles: [], catalog: [], energy: 0, studentId: '', completedPuzzleIds: [], reviewEntryIds: [], canManage: false, remoteEnabled: false })
   const [selectedId, setSelectedId] = useState('')
   const [selectedDifficulty, setSelectedDifficulty] = useState('beginner')
   const [editing, setEditing] = useState(null)
+  const [showReviewDialog, setShowReviewDialog] = useState(false)
   const focusTaskId = typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('focusTask') || ''
   const returnUrl = guestMode ? './?guest=1' : './'
   const load = async () => {
@@ -744,6 +923,24 @@ export default function IdiomWordGrid({ guestMode = false }) {
   const nextLevel = selectedLevelIndex >= 0 ? difficultyLevels[selectedLevelIndex + 1] || null : null
   const pendingLevels = difficultyLevels.filter((level) => !level.completed)
   const completedLevels = difficultyLevels.filter((level) => level.completed)
+  const reviewEntries = state.catalog.filter((entry) => state.reviewEntryIds?.includes(entry.id))
+  const updateReviewEntries = async (entryIds, shouldReview) => {
+    const normalizedIds = [...new Set((entryIds || []).map((id) => String(id || '')).filter(Boolean))]
+    if (normalizedIds.length === 0) return
+    const previousIds = state.reviewEntryIds || []
+    const nextIds = shouldReview
+      ? [...new Set([...previousIds, ...normalizedIds])]
+      : previousIds.filter((id) => !normalizedIds.includes(id))
+    setState((current) => ({ ...current, reviewEntryIds: nextIds }))
+    try {
+      if (state.remoteEnabled && state.studentId) {
+        await saveIdiomReviews({ studentId: state.studentId, entryIds: normalizedIds, shouldReview })
+      }
+    } catch (error) {
+      setState((current) => ({ ...current, reviewEntryIds: previousIds }))
+      throw error
+    }
+  }
   const chooseDifficulty = (difficulty) => {
     const levels = buildIdiomLevelNavigation(state.puzzles, state.completedPuzzleIds, difficulty)
     const preferred = pickPreferredIdiomLevel(levels)
@@ -755,7 +952,10 @@ export default function IdiomWordGrid({ guestMode = false }) {
       <header className="idiom-page-header">
         <a className="idiom-back-link" href={returnUrl}><ArrowLeft aria-hidden="true" />返回學習系統</a>
         <div><p>文字益智遊戲</p><h1>填字圖</h1><span>在交錯文字中認識成語，通關後閱讀教育部釋義與典源。</span></div>
-        {state.canManage && !editing && <button type="button" className="idiom-create-button" onClick={() => setEditing({})}><Plus aria-hidden="true" />建立新題</button>}
+        <div className="idiom-page-actions">
+          {state.studentId && !editing && <button type="button" className="idiom-review-button" onClick={() => setShowReviewDialog(true)}><BookOpen aria-hidden="true" />我的成語複習（{reviewEntries.length}）</button>}
+          {state.canManage && !editing && <button type="button" className="idiom-create-button" onClick={() => setEditing({})}><Plus aria-hidden="true" />建立新題</button>}
+        </div>
       </header>
       <PuzzleTabs guestMode={guestMode} />
       {guestMode && <p className="idiom-guest-note">訪客可以自由遊玩；能量與通關紀錄不會跨裝置保存。登入學生後才會記錄每日任務與帳號能量。</p>}
@@ -803,6 +1003,8 @@ export default function IdiomWordGrid({ guestMode = false }) {
               focusTaskId={focusTaskId}
               levelLabel={selectedLevel?.levelLabel}
               nextLevelLabel={nextLevel?.levelLabel}
+              reviewEntryIds={state.reviewEntryIds || []}
+              onToggleReview={updateReviewEntries}
               onNextPuzzle={nextLevel ? () => setSelectedId(nextLevel.puzzle.id) : null}
               onEnergyChange={(energy) => setState((current) => ({ ...current, energy }))}
               onPuzzleCompleted={(puzzleId) => setState((current) => ({
@@ -813,6 +1015,7 @@ export default function IdiomWordGrid({ guestMode = false }) {
             : <section className="idiom-empty-state"><h2>尚無已發布題目</h2><p>管理者建立並發布題目後，學生即可開始作答。</p>{state.canManage && <button type="button" className="primary-button" onClick={() => setEditing({})}><Plus aria-hidden="true" />建立第一題</button>}</section>}
         </>
       )}
+      {showReviewDialog && <IdiomReviewDialog entries={reviewEntries} reviewEntryIds={state.reviewEntryIds || []} onToggleReview={updateReviewEntries} onClose={() => setShowReviewDialog(false)} />}
     </main>
   )
 }

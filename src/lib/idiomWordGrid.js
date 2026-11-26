@@ -478,6 +478,21 @@ export function chooseHintCell(puzzle, assignments = {}, revealedKeys = [], kind
   return requested || empty[0] || cells[0] || null
 }
 
+export function chooseAllCrossHintCells(puzzle, revealedKeys = []) {
+  const fixed = new Set([...(puzzle?.givenCellKeys || []), ...(revealedKeys || [])])
+  return (puzzle?.board?.cells || []).filter((cell) => cell.isIntersection && !fixed.has(cell.key))
+}
+
+export function assignIdiomTile(assignments = {}, cellKey = '', tileId = null) {
+  if (!cellKey || !Number.isInteger(tileId)) return { ...assignments }
+  const next = { ...assignments }
+  Object.keys(next).forEach((key) => {
+    if (next[key] === tileId) delete next[key]
+  })
+  next[cellKey] = tileId
+  return next
+}
+
 export function serializeIdiomPuzzle(puzzle) {
   return {
     difficulty: puzzle.difficulty,

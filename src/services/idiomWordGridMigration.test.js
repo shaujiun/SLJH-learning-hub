@@ -7,12 +7,14 @@ const publicReadUrl = new URL('../../supabase/migrations/20261031152000_fix_idio
 const taskLaunchFixUrl = new URL('../../supabase/migrations/20261121170000_fix_idiom_word_grid_task_launch.sql', import.meta.url)
 const dictionaryMetadataUrl = new URL('../../supabase/migrations/20261122123000_add_idiom_dictionary_metadata.sql', import.meta.url)
 const duplicateTitleFixUrl = new URL('../../supabase/migrations/20261123150000_allow_duplicate_idiom_word_grid_titles.sql', import.meta.url)
+const reviewAndEnergyUrl = new URL('../../supabase/migrations/20261126100000_expand_idiom_review_and_energy.sql', import.meta.url)
 const sql = readFileSync(migrationUrl, 'utf8')
 const seedSql = readFileSync(seedUrl, 'utf8')
 const publicReadSql = readFileSync(publicReadUrl, 'utf8')
 const taskLaunchFixSql = readFileSync(taskLaunchFixUrl, 'utf8')
 const dictionaryMetadataSql = readFileSync(dictionaryMetadataUrl, 'utf8')
 const duplicateTitleFixSql = readFileSync(duplicateTitleFixUrl, 'utf8')
+const reviewAndEnergySql = readFileSync(reviewAndEnergyUrl, 'utf8')
 
 describe('成語填字圖 migration', () => {
   it('建立題庫、能量、提示與通關資料並套用 RLS', () => {
@@ -74,5 +76,15 @@ describe('成語填字圖 migration', () => {
     expect(duplicateTitleFixSql).toContain('drop constraint if exists idiom_word_grid_title_date_unique')
     expect(duplicateTitleFixSql).toContain('idiom_word_grid_puzzles_title_date_idx')
     expect(duplicateTitleFixSql).not.toContain('create unique index')
+  })
+
+  it('移除能量上限、調整提示成本並建立學生複習清單', () => {
+    expect(reviewAndEnergySql).toContain('idiom_word_grid_wallets_energy_nonnegative')
+    expect(reviewAndEnergySql).toContain('set energy = public.idiom_word_grid_wallets.energy + earned')
+    expect(reviewAndEnergySql).not.toContain('least(20')
+    expect(reviewAndEnergySql).toContain("when p_hint_kind in ('cross', 'check') then 2")
+    expect(reviewAndEnergySql).toContain("when p_hint_kind = 'all_cross' then 10")
+    expect(reviewAndEnergySql).toContain('create table if not exists public.idiom_word_grid_reviews')
+    expect(reviewAndEnergySql).toContain('create policy idiom_review_self_read')
   })
 })

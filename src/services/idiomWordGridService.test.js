@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { completeIdiomPuzzle, loadIdiomWordGridContext, mapIdiomPuzzle, saveIdiomEntry, saveIdiomPuzzle, spendIdiomHint } from './idiomWordGridService.js'
+import { completeIdiomPuzzle, loadIdiomWordGridContext, mapIdiomPuzzle, saveIdiomEntry, saveIdiomPuzzle, saveIdiomReviews, spendIdiomHint } from './idiomWordGridService.js'
 
 function result(data, error = null) {
   const promise = Promise.resolve({ data, error })
@@ -11,6 +11,8 @@ function result(data, error = null) {
   promise.upsert = vi.fn(() => promise)
   promise.insert = vi.fn(() => promise)
   promise.update = vi.fn(() => promise)
+  promise.delete = vi.fn(() => promise)
+  promise.in = vi.fn(() => promise)
   return promise
 }
 
@@ -46,6 +48,7 @@ describe('成語填字圖服務', () => {
           status: 'published', is_daily_eligible: true,
         }])
         if (table === 'idiom_word_grid_completions') return result([{ puzzle_id: 'puzzle-1' }])
+        if (table === 'idiom_word_grid_reviews') return result([{ idiom_entry_id: 'entry-2' }])
         if (table === 'idiom_word_grid_wallets') return result({ energy: 7 })
         return result([])
       }),
@@ -53,7 +56,7 @@ describe('成語填字圖服務', () => {
     }
 
     await expect(loadIdiomWordGridContext({}, client)).resolves.toMatchObject({
-      studentId: 'student-1', completedPuzzleIds: ['puzzle-1'], energy: 7, remoteEnabled: true,
+      studentId: 'student-1', completedPuzzleIds: ['puzzle-1'], reviewEntryIds: ['entry-2'], energy: 7, remoteEnabled: true,
     })
   })
 
@@ -63,6 +66,21 @@ describe('成語填字圖服務', () => {
     await expect(completeIdiomPuzzle({ puzzleId: 'p1', hintsUsed: 0, focusTaskId: 'task-1' }, client)).resolves.toMatchObject({ energy: 8, energyEarned: 4, firstCompletion: true })
     expect(client.rpc).toHaveBeenCalledWith('spend_idiom_word_grid_hint', expect.objectContaining({ p_hint_kind: 'cross' }))
     expect(client.rpc).toHaveBeenCalledWith('complete_idiom_word_grid', expect.objectContaining({ p_hints_used: 0 }))
+  })
+
+  it('學生可加入或移除跨裝置成語複習清單', async () => {
+    const addQuery = result(null)
+    const removeQuery = result(null)
+    const client = { from: vi.fn().mockReturnValueOnce(addQuery).mockReturnValueOnce(removeQuery) }
+    await expect(saveIdiomReviews({ studentId: 'student-1', entryIds: ['entry-1', 'entry-2'], shouldReview: true }, client)).resolves.toBeUndefined()
+    expect(addQuery.upsert).toHaveBeenCalledWith([
+      expect.objectContaining({ student_id: 'student-1', idiom_entry_id: 'entry-1' }),
+      expect.objectContaining({ student_id: 'student-1', idiom_entry_id: 'entry-2' }),
+    ], { onConflict: 'student_id,idiom_entry_id' })
+
+    await expect(saveIdiomReviews({ studentId: 'student-1', entryIds: ['entry-1'], shouldReview: false }, client)).resolves.toBeUndefined()
+    expect(removeQuery.delete).toHaveBeenCalled()
+    expect(removeQuery.in).toHaveBeenCalledWith('idiom_entry_id', ['entry-1'])
   })
 
   it('管理者可新增成語釋義與適合階段', async () => {

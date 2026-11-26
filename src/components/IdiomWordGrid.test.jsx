@@ -5,6 +5,7 @@ import { buildIdiomPuzzle } from '../lib/idiomWordGrid.js'
 import {
   buildIdiomCompletionProgress,
   IdiomBoard,
+  IdiomCompletionDialog,
   IdiomLearningPanel,
   IdiomPuzzleEditor,
   PlayIdiomPuzzle,
@@ -46,7 +47,7 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('2 能量')
   })
 
-  it('其他裝置載入遠端通關紀錄後直接解鎖成語學習', () => {
+  it('其他裝置載入遠端通關紀錄後可直接開啟本關成語解說', () => {
     const html = renderToStaticMarkup(
       <PlayIdiomPuzzle
         puzzle={puzzle}
@@ -55,11 +56,29 @@ describe('成語填字圖畫面', () => {
         onEnergyChange={() => {}}
       />,
     )
-    expect(html).toContain('本關成語學習')
-    expect(html).toContain('一心一意')
+    expect(html).toContain('查看本關成語解說')
   })
 
-  it('通關後可進入同難度下一關，最後一關則顯示等待更新', () => {
+  it('通關視窗直接列出本關成語、解釋入口與下一關按鈕', () => {
+    const html = renderToStaticMarkup(
+      <IdiomCompletionDialog
+        puzzle={puzzle}
+        levelLabel="入門第 1 關"
+        nextLevelLabel="入門第 2 關"
+        reviewEntryIds={[]}
+        canReview
+        onToggleReview={() => {}}
+        onClose={() => {}}
+        onNextPuzzle={() => {}}
+      />,
+    )
+    expect(html).toContain('入門第 1 關全部答對')
+    expect(html).toContain('一心一意')
+    expect(html).toContain('加入複習')
+    expect(html).toContain('進入下一關：入門第 2 關')
+  })
+
+  it('已通關關卡可重新開啟解說，最後一關視窗顯示等待更新', () => {
     const context = { studentId: 'student-1', energy: 5, remoteEnabled: true, completedPuzzleIds: [puzzle.id] }
     const withNext = renderToStaticMarkup(
       <PlayIdiomPuzzle
@@ -72,21 +91,17 @@ describe('成語填字圖畫面', () => {
         onEnergyChange={() => {}}
       />,
     )
-    expect(withNext).toContain('入門第 1 關已通關')
-    expect(withNext).toContain('進入下一關')
+    expect(withNext).toContain('查看本關成語解說')
     expect(withNext).not.toContain('2026／10／31')
 
     const finalLevel = renderToStaticMarkup(
-      <PlayIdiomPuzzle
+      <IdiomCompletionDialog
         puzzle={puzzle}
-        context={context}
-        focusTaskId=""
         levelLabel="入門第 2 關"
-        onEnergyChange={() => {}}
+        onClose={() => {}}
       />,
     )
     expect(finalLevel).toContain('這是目前這個難度最後一關，請靜待更新。')
-    expect(finalLevel).toContain('重新挑戰本關')
   })
 
   it('重玩同一關通關時會用目前提示次數建立同步紀錄', () => {
@@ -97,6 +112,22 @@ describe('成語填字圖畫面', () => {
       metadata: { hintsUsed: 2 },
     })
     expect(progress.questionCount).toBeGreaterThan(0)
+  })
+
+  it('進階與挑戰關卡提供 10 點的所有交錯字提示', () => {
+    const html = renderToStaticMarkup(
+      <PlayIdiomPuzzle
+        puzzle={{ ...puzzle, difficulty: 'advanced' }}
+        context={{ studentId: 'student-1', energy: 12, remoteEnabled: true, completedPuzzleIds: [], reviewEntryIds: [] }}
+        focusTaskId=""
+        onEnergyChange={() => {}}
+      />,
+    )
+    expect(html).toContain('所有交錯字提示')
+    expect(html).toContain('10 能量')
+    expect(html).toContain('錯字檢查')
+    expect(html).not.toContain('／20 能量')
+    expect(html).toContain('先點選題目空格，再選下方文字')
   })
 
   it('管理者可設定黑格、白格、提示字、完整答案、等級與發布狀態', () => {

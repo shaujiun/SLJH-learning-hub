@@ -5,9 +5,11 @@ import {
   buildIdiomLevelNavigation,
   buildIdiomPuzzle,
   buildManualIdiomPuzzle,
+  chooseAllCrossHintCells,
   chooseHintCell,
   createIdiomBankTiles,
   editorGridFromPuzzle,
+  assignIdiomTile,
   pickPreferredIdiomLevel,
 } from './idiomWordGrid.js'
 
@@ -78,6 +80,16 @@ describe('成語填字圖核心', () => {
     const puzzle = buildIdiomPuzzle(entries, 'challenge')
     const cell = chooseHintCell(puzzle, {}, [], 'cross')
     expect(cell?.isIntersection).toBe(true)
+  })
+
+  it('所有交錯字提示會排除已提示格，字卡可直接移入所選方格', () => {
+    const puzzle = buildIdiomPuzzle(entries, 'challenge')
+    const crossCells = chooseAllCrossHintCells(puzzle)
+    expect(crossCells.length).toBeGreaterThan(0)
+    expect(chooseAllCrossHintCells(puzzle, [crossCells[0].key])).toHaveLength(crossCells.length - 1)
+
+    const assigned = assignIdiomTile({ '0:0': 2, '1:1': 3 }, '2:2', 2)
+    expect(assigned).toEqual({ '1:1': 3, '2:2': 2 })
   })
 
   it('可將教師手動編輯的黑格、白格、提示字與答案建成題目', () => {
