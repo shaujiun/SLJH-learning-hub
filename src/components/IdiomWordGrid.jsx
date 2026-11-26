@@ -41,7 +41,7 @@ import {
   saveIdiomPuzzle,
   spendIdiomHint,
 } from '../services/idiomWordGridService.js'
-import { loadIdiomDictionary } from '../services/idiomDictionaryService.js'
+import { loadIdiomDictionary, loadIdiomDictionaryAppendix } from '../services/idiomDictionaryService.js'
 import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
 import {
   IDIOM_DICTIONARY_ATTRIBUTION,
@@ -462,7 +462,15 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
   const [entryForm, setEntryForm] = useState(emptyEntryForm)
   const [entrySaving, setEntrySaving] = useState(false)
   const [dictionaryQuery, setDictionaryQuery] = useState('')
-  const [dictionaryState, setDictionaryState] = useState({ loading: false, loaded: false, error: '', entries: [] })
+  const [dictionaryState, setDictionaryState] = useState({
+    loading: false,
+    loaded: false,
+    error: '',
+    entries: [],
+    appendixLoading: false,
+    appendixLoaded: false,
+    appendixError: '',
+  })
   const available = catalog.filter((entry) => stage === 'all' || entry.stage === stage || selectedIds.includes(entry.id))
   const selectedEntries = catalog.filter((entry) => selectedIds.includes(entry.id))
   const dictionaryResults = useMemo(
@@ -476,10 +484,37 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
     setDictionaryState((current) => ({ ...current, loading: true, error: '' }))
     try {
       const payload = await loadIdiomDictionary()
-      setDictionaryState({ loading: false, loaded: true, error: '', entries: payload.entries })
+      setDictionaryState((current) => ({
+        ...current,
+        loading: false,
+        loaded: true,
+        error: '',
+        entries: [...payload.entries, ...current.entries.filter((entry) => entry.sourceType === '修訂本參考資料')],
+      }))
     } catch (error) {
-      setDictionaryState({ loading: false, loaded: false, error: error.message, entries: [] })
+      setDictionaryState((current) => ({ ...current, loading: false, loaded: false, error: error.message }))
     }
+  }
+  const ensureDictionaryAppendix = async () => {
+    if (dictionaryState.appendixLoaded || dictionaryState.appendixLoading) return
+    setDictionaryState((current) => ({ ...current, appendixLoading: true, appendixError: '' }))
+    try {
+      const payload = await loadIdiomDictionaryAppendix()
+      setDictionaryState((current) => ({
+        ...current,
+        appendixLoading: false,
+        appendixLoaded: true,
+        appendixError: '',
+        entries: [...current.entries.filter((entry) => entry.sourceType !== '修訂本參考資料'), ...payload.entries],
+      }))
+    } catch (error) {
+      setDictionaryState((current) => ({ ...current, appendixLoading: false, appendixLoaded: false, appendixError: error.message }))
+    }
+  }
+  const updateDictionaryQuery = (value) => {
+    setDictionaryQuery(value)
+    ensureDictionary()
+    if (value.replace(/\s/g, '')) ensureDictionaryAppendix()
   }
   const chooseDictionaryEntry = (entry) => {
     setEntryForm((current) => ({
@@ -522,6 +557,10 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
     return result
   }
   const generate = () => {
+    if (selectedEntries.length < 4) {
+      setMessages(['請先勾選至少 4 個成語，再由系統尋找共同文字進行交錯排版。'])
+      return
+    }
     const generated = buildIdiomPuzzle(selectedEntries, difficulty)
     if (generated.board.placements.length < 4) {
       setMessages(['目前選取的成語無法形成至少 4 條交錯，請增加具有共同文字的成語。'])
@@ -582,16 +621,18 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
         <summary><Plus aria-hidden="true" />搜尋教育部《成語典》並加入成語</summary>
         <p>輸入成語或部分文字，點選結果後會自動帶入官方釋義、典源、典故、注音及網址。</p>
         <div className="idiom-dictionary-search">
-          <label><span><Search aria-hidden="true" />搜尋成語</span><input value={dictionaryQuery} placeholder="例如：一字千金" onFocus={ensureDictionary} onChange={(event) => { setDictionaryQuery(event.target.value); if (event.target.value.trim()) ensureDictionary() }} /></label>
+          <label><span><Search aria-hidden="true" />搜尋成語</span><input value={dictionaryQuery} placeholder="例如：一字千金" onFocus={ensureDictionary} onChange={(event) => updateDictionaryQuery(event.target.value)} /></label>
           {dictionaryState.loading && <p role="status">正在載入教育部成語資料……</p>}
+          {dictionaryState.appendixLoading && <p role="status">正在補查修訂本參考資料……</p>}
           {dictionaryState.error && <p className="is-error" role="alert">{dictionaryState.error}</p>}
-          {dictionaryState.loaded && dictionaryQuery.trim() && dictionaryResults.length === 0 && <p>找不到相符成語，可改用其他文字搜尋或切換手動輸入。</p>}
+          {dictionaryState.appendixError && <p className="is-error" role="alert">修訂本參考資料載入失敗：{dictionaryState.appendixError}</p>}
+          {dictionaryState.loaded && dictionaryState.appendixLoaded && dictionaryQuery.trim() && dictionaryResults.length === 0 && <p>正文與修訂本參考資料都找不到相符成語，可改用其他文字搜尋或切換手動輸入。</p>}
           {dictionaryResults.length > 0 && (
             <ul className="idiom-dictionary-results">
               {dictionaryResults.map((entry) => (
                 <li key={entry.sourceEntryId || entry.phrase}>
                   <button type="button" className="idiom-dictionary-pick" onClick={() => chooseDictionaryEntry(entry)}>
-                    <strong>{entry.phrase}</strong><span>{entry.zhuyin || '未收錄注音'}</span><small>{entry.definition}</small>
+                    <strong>{entry.phrase}</strong><span>{entry.zhuyin || '未收錄注音'}</span><small>{entry.definition}</small><em>{entry.sourceType || '教育部成語典正文'}</em>
                   </button>
                   <button type="button" className="idiom-dictionary-speak" onClick={() => speakIdiom(entry.phrase)} aria-label={`播放${entry.phrase}發音`}><Volume2 aria-hidden="true" /></button>
                 </li>
@@ -615,6 +656,7 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
         </div>
       </details>
       <button type="button" className="idiom-auto-layout-button" onClick={generate}><Sparkles aria-hidden="true" />依所選成語自動排版</button>
+      <p className="idiom-auto-layout-note">先勾選至少 4 個具有共同文字的成語；系統會自動建立交錯版面，仍可在下方手動調整。</p>
 
       <div className="idiom-admin-section-heading"><div><h3>② 建立題目與完整答案</h3><p>題目格設定黑格、白格與提示字；完整答案逐格輸入正確文字。</p></div></div>
       <div className="idiom-editor-tabs">

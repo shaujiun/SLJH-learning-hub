@@ -107,6 +107,8 @@
 .idiom-admin-catalog label { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: .15rem .35rem; padding: .45rem; border-radius: 8px; background: #f5f8f7; }
 .idiom-admin-catalog label small { grid-column: 2; color: #72847e; }
 .idiom-auto-layout-button { display: inline-flex; align-items: center; gap: .35rem; margin-top: .7rem; padding: .65rem .85rem; border: 1px solid #197365; border-radius: 9px; background: #eef8f5; color: #176b60; font-weight: 900; cursor: pointer; }
+.idiom-auto-layout-note { margin: .4rem 0 0; color: #526661; font-size: .92rem; }
+.idiom-dictionary-results em { display: inline-flex; width: fit-content; padding: .12rem .42rem; border-radius: 999px; background: #edf4f2; color: #4c6660; font-size: .78rem; font-style: normal; font-weight: 800; }
 .idiom-entry-editor { margin-top: .75rem; padding: .75rem; border: 1px solid #d7e3df; border-radius: 12px; background: #fbfdfc; }
 .idiom-entry-editor summary { display: flex; align-items: center; gap: .35rem; color: #176b60; font-weight: 900; cursor: pointer; }
 .idiom-entry-editor > p { color: #637770; }

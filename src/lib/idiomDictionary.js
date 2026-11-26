@@ -7,8 +7,10 @@ function stringValue(value) {
 
 export function normalizeDictionaryEntry(entry) {
   const sourceEntryId = Number(entry?.sourceEntryId ?? entry?.id ?? entry?.編號) || null
+  const websiteEntryId = Number(entry?.websiteEntryId ?? entry?.網站ID) || sourceEntryId
   return {
     sourceEntryId,
+    websiteEntryId,
     phrase: stringValue(entry?.phrase ?? entry?.成語).replace(/\s/g, ''),
     zhuyin: stringValue(entry?.zhuyin ?? entry?.注音),
     pinyin: stringValue(entry?.pinyin ?? entry?.漢語拼音),
@@ -16,10 +18,18 @@ export function normalizeDictionaryEntry(entry) {
     source: stringValue(entry?.source ?? entry?.典源或出處),
     story: stringValue(entry?.story ?? entry?.典故說明),
     sourceType: stringValue(entry?.sourceType ?? entry?.['主條成語／非主條成語']),
-    sourceUrl: stringValue(entry?.sourceUrl) || (sourceEntryId
-      ? `https://dict.idioms.moe.edu.tw/idiomView.jsp?ID=${sourceEntryId}&webMd=2&la=0`
+    sourceUrl: stringValue(entry?.sourceUrl) || (websiteEntryId
+      ? `https://dict.idioms.moe.edu.tw/idiomView.jsp?ID=${websiteEntryId}&webMd=2&la=0`
       : 'https://dict.idioms.moe.edu.tw/'),
   }
+}
+
+function sourceTypeRank(value) {
+  const sourceType = String(value || '')
+  if (sourceType === '主條成語') return 0
+  if (sourceType === '非主條成語') return 1
+  if (sourceType.includes('修訂本參考資料')) return 2
+  return 3
 }
 
 function matchRank(phrase, query) {
@@ -38,7 +48,7 @@ export function searchIdiomDictionary(entries, query, limit = 20) {
     .sort((left, right) => {
       const rank = matchRank(left.phrase, keyword) - matchRank(right.phrase, keyword)
       if (rank) return rank
-      const mainRank = Number(!left.sourceType.includes('主條')) - Number(!right.sourceType.includes('主條'))
+      const mainRank = sourceTypeRank(left.sourceType) - sourceTypeRank(right.sourceType)
       if (mainRank) return mainRank
       return left.phrase.localeCompare(right.phrase, 'zh-TW')
     })

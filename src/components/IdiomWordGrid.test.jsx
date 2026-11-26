@@ -116,5 +116,7 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('正式發布')
     expect(html).toContain('搜尋教育部《成語典》並加入成語')
     expect(html).toContain('破音字')
+    expect(html).toContain('依所選成語自動排版')
+    expect(html).toContain('先勾選至少 4 個具有共同文字的成語')
   })
 })
