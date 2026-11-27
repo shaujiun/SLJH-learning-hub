@@ -8,6 +8,7 @@ const taskLaunchFixUrl = new URL('../../supabase/migrations/20261121170000_fix_i
 const dictionaryMetadataUrl = new URL('../../supabase/migrations/20261122123000_add_idiom_dictionary_metadata.sql', import.meta.url)
 const duplicateTitleFixUrl = new URL('../../supabase/migrations/20261123150000_allow_duplicate_idiom_word_grid_titles.sql', import.meta.url)
 const reviewAndEnergyUrl = new URL('../../supabase/migrations/20261126100000_expand_idiom_review_and_energy.sql', import.meta.url)
+const hintRulesUrl = new URL('../../supabase/migrations/20261127100000_update_idiom_hint_rules.sql', import.meta.url)
 const sql = readFileSync(migrationUrl, 'utf8')
 const seedSql = readFileSync(seedUrl, 'utf8')
 const publicReadSql = readFileSync(publicReadUrl, 'utf8')
@@ -15,6 +16,7 @@ const taskLaunchFixSql = readFileSync(taskLaunchFixUrl, 'utf8')
 const dictionaryMetadataSql = readFileSync(dictionaryMetadataUrl, 'utf8')
 const duplicateTitleFixSql = readFileSync(duplicateTitleFixUrl, 'utf8')
 const reviewAndEnergySql = readFileSync(reviewAndEnergyUrl, 'utf8')
+const hintRulesSql = readFileSync(hintRulesUrl, 'utf8')
 
 describe('成語填字圖 migration', () => {
   it('建立題庫、能量、提示與通關資料並套用 RLS', () => {
@@ -86,5 +88,14 @@ describe('成語填字圖 migration', () => {
     expect(reviewAndEnergySql).toContain("when p_hint_kind = 'all_cross' then 10")
     expect(reviewAndEnergySql).toContain('create table if not exists public.idiom_word_grid_reviews')
     expect(reviewAndEnergySql).toContain('create policy idiom_review_self_read')
+  })
+
+  it('完整成語提示扣 5 點，且資料庫跨裝置限制每關最多兩次提示', () => {
+    expect(hintRulesSql).toContain("when p_hint_kind = 'idiom' then 5")
+    expect(hintRulesSql).toContain("check (energy_cost in (1, 2, 5, 10))")
+    expect(hintRulesSql).toContain('for update')
+    expect(hintRulesSql).toContain('existing_hint_count >= 2')
+    expect(hintRulesSql).toContain("message = 'idiom_hint_limit_reached'")
+    expect(hintRulesSql).not.toContain("p_hint_kind not in ('letter', 'cross', 'check'")
   })
 })

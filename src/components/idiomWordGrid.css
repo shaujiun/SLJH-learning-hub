@@ -28,9 +28,10 @@
 .idiom-play-heading h2 { margin: .2rem 0; font-size: clamp(1.5rem, 3vw, 2.4rem); }
 .idiom-play-heading .eyebrow { margin: 0; color: #b35f24; font-weight: 900; letter-spacing: .13em; }
 .idiom-play-heading span { color: #66808a; }
-.idiom-energy { display: flex; align-items: center; gap: .28rem; padding: .65rem .9rem; border-radius: 999px; background: #fff2b4; color: #825900; white-space: nowrap; }
+.idiom-energy { display: grid; grid-template-columns: auto auto auto; align-items: center; gap: .1rem .28rem; padding: .55rem .9rem; border-radius: 18px; background: #fff2b4; color: #825900; white-space: nowrap; }
 .idiom-energy svg { width: 1.25rem; }
 .idiom-energy strong { font-size: 1.35rem; }
+.idiom-energy small { grid-column: 1 / -1; padding-top: .12rem; color: #765f25; font-weight: 800; text-align: right; }
 .idiom-play-instruction { margin: 1rem 0; color: #536d78; }
 .idiom-solving-layout { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 1.2rem; align-items: start; }
 .idiom-board-wrap { min-width: 0; overflow: auto; padding: .8rem; border-radius: 18px; background: linear-gradient(135deg, #eff8f2, #e8f4f6); }
@@ -41,7 +42,9 @@
 .idiom-grid-cell:hover, .idiom-grid-cell.is-selected-cell { border-color: #d77828; box-shadow: 0 0 0 3px #f1a15945; }
 .idiom-grid-cell.is-given { border-color: #2f7268; background: #d8f1e8; cursor: default; }
 .idiom-grid-cell.is-hint { border-color: #c47a13; background: #fff0b9; }
-.idiom-grid-cell.is-checked-wrong { border-color: #bd2f2f; background: #ffe4e1; animation: idiom-wrong-pulse .65s ease-in-out 2; }
+.idiom-grid-cell.is-idiom-correct, .idiom-grid-cell.is-idiom-incorrect { background: var(--idiom-feedback-background); transition: background .2s ease, border-color .2s ease; }
+.idiom-grid-cell.is-idiom-correct { border-color: #4d8178; }
+.idiom-grid-cell.is-idiom-incorrect { border-color: #bd2f2f; color: #8f2222; animation: idiom-wrong-pulse .65s ease-in-out 2; }
 .idiom-grid-cell.is-tile-arriving { animation: idiom-cell-arrival .5s ease-out; }
 @keyframes idiom-wrong-pulse { 50% { transform: scale(1.06); box-shadow: 0 0 0 4px #d73b3b30; } }
 @keyframes idiom-cell-arrival { 0% { color: transparent; transform: scale(.72); } 75% { transform: scale(1.08); } 100% { transform: scale(1); } }
@@ -129,8 +132,11 @@
 .idiom-admin-section-heading p { margin-top: .25rem; color: #637770; }
 .idiom-admin-section-heading > strong { min-width: max-content; padding: .45rem .7rem; border-radius: 999px; background: #fff2b4; color: #805b13; }
 .idiom-admin-catalog { max-height: 240px; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .35rem; overflow: auto; padding: .7rem; border: 1px solid #d0dfda; border-radius: 12px; }
-.idiom-admin-catalog label { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: .15rem .35rem; padding: .45rem; border-radius: 8px; background: #f5f8f7; }
-.idiom-admin-catalog label small { grid-column: 2; color: #72847e; }
+.idiom-admin-catalog-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: stretch; gap: .3rem; padding: .35rem; border-radius: 10px; background: #f5f8f7; }
+.idiom-admin-catalog-item label { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: .15rem .35rem; min-width: 0; padding: .25rem; }
+.idiom-admin-catalog-item label small { grid-column: 2; color: #72847e; }
+.idiom-admin-catalog-item > button { display: inline-flex; align-items: center; justify-content: center; gap: .2rem; min-height: 42px; padding: .35rem .5rem; border: 1px solid #7f9d98; border-radius: 8px; background: #fff; color: #176b60; font-weight: 900; cursor: pointer; }
+.idiom-admin-catalog-item > button svg { width: 1rem; }
 .idiom-auto-layout-button { display: inline-flex; align-items: center; gap: .35rem; margin-top: .7rem; padding: .65rem .85rem; border: 1px solid #197365; border-radius: 9px; background: #eef8f5; color: #176b60; font-weight: 900; cursor: pointer; }
 .idiom-auto-layout-note { margin: .4rem 0 0; color: #526661; font-size: .92rem; }
 .idiom-dictionary-results em { display: inline-flex; width: fit-content; padding: .12rem .42rem; border-radius: 999px; background: #edf4f2; color: #4c6660; font-size: .78rem; font-style: normal; font-weight: 800; }

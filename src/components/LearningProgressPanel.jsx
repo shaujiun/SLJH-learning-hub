@@ -22,6 +22,10 @@ function scoreText(value) {
   return value === null || value === undefined ? '未計分' : `${Math.round(Number(value))} 分`
 }
 
+export function shouldShowLearningMode(role) {
+  return role === 'admin'
+}
+
 export default function LearningProgressPanel({ role }) {
   const [open, setOpen] = useState(role === 'student')
   const [rows, setRows] = useState([])
@@ -88,10 +92,10 @@ export default function LearningProgressPanel({ role }) {
         {status.error && <p className="manager-notice error-notice">{status.error}</p>}
         {status.loading ? <p className="manager-empty"><RefreshCw className="spin-icon" aria-hidden="true" />正在讀取進度……</p>
           : !status.error && visibleRows.length === 0 ? <p className="manager-empty">目前還沒有完成紀錄；完成一個關卡或一輪測驗後會顯示在這裡。</p>
-            : !status.error && <div className="learning-progress-table-wrap"><table className="learning-progress-table"><thead><tr>{role === 'admin' && <th>學生</th>}<th>科目／活動</th><th>模式</th><th>完成</th><th>最近／最佳</th><th>最近完成</th></tr></thead><tbody>{visibleRows.map((row) => <tr key={`${row.studentId}:${row.subjectCode}:${row.activityCode}:${row.modeCode}`}>
+            : !status.error && <div className="learning-progress-table-wrap"><table className="learning-progress-table"><thead><tr>{role === 'admin' && <th>學生</th>}<th>科目／活動</th>{shouldShowLearningMode(role) && <th>模式</th>}<th>完成</th><th>最近／最佳</th><th>最近完成</th></tr></thead><tbody>{visibleRows.map((row) => <tr key={`${row.studentId}:${row.subjectCode}:${row.activityCode}:${row.modeCode}`}>
               {role === 'admin' && <td><strong>{row.seatNumber ?? '—'} 號　{row.studentName}</strong><small>{row.className}</small></td>}
               <td><strong>{subjectNames[row.subjectCode] || row.subjectCode}</strong><small>{row.activityName}</small></td>
-              <td>{row.modeCode === 'default' ? '一般' : row.modeCode.replaceAll('_', ' ')}</td>
+              {shouldShowLearningMode(role) && <td>{row.modeCode === 'default' ? '一般' : row.modeCode.replaceAll('_', ' ')}</td>}
               <td>{row.completionCount} 次<small>共作答 {row.attemptCount} 次</small></td>
               <td>{scoreText(row.latestScore)}<small>最佳 {scoreText(row.bestScore)}</small></td>
               <td>{formatDate(row.lastAttemptedAt)}</td>
