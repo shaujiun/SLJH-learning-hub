@@ -7,7 +7,7 @@ import {
   CircleAlert,
   Coins,
   ExternalLink,
-  Image as ImageIcon,
+  ImagePlus,
   Lightbulb,
   Pencil,
   Plus,
@@ -46,6 +46,7 @@ import {
   saveIdiomPuzzle,
   saveIdiomReviews,
   spendIdiomHint,
+  uploadIdiomIllustration,
 } from '../services/idiomWordGridService.js'
 import { loadIdiomDictionary, loadIdiomDictionaryAppendix } from '../services/idiomDictionaryService.js'
 import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
@@ -71,7 +72,7 @@ const chineseTextInputProps = {
   spellCheck: false,
 }
 
-const idiomFeedbackColors = ['#d8f3e8', '#dcecff', '#fff0bd', '#eadfff', '#d9f2f5', '#ffe0cf', '#e7efc8', '#f8dff0']
+const idiomFeedbackColors = ['#a9dfca', '#b7d5f5', '#f3d47f', '#ccb5ea', '#a6dfe5', '#f3b995', '#cddc8c', '#efb2d6']
 
 function idiomFeedbackBackground(feedback = []) {
   const colors = feedback.map((item) => (
@@ -192,7 +193,7 @@ export function IdiomLearningPanel({
         ))}
       </div>
       {entry && (
-        <article className="idiom-entry-card">
+        <article className={`idiom-entry-card ${entry.illustrationUrl ? 'has-illustration' : ''}`}>
           <div className="idiom-entry-copy">
             <div className="idiom-entry-title-row">
               <div><h3>{entry.phrase}</h3>{entry.zhuyin && <p>{entry.zhuyin}</p>}</div>
@@ -208,11 +209,11 @@ export function IdiomLearningPanel({
             {entry.story && <details><summary>閱讀完整典故</summary><p>{entry.story}</p></details>}
             {entry.sourceUrl && <a href={entry.sourceUrl} target="_blank" rel="noreferrer">開啟教育部《成語典》條目<ExternalLink aria-hidden="true" /></a>}
           </div>
-          <div className={`idiom-entry-illustration ${entry.illustrationUrl ? 'has-image' : ''}`}>
-            {entry.illustrationUrl
-              ? <img src={entry.illustrationUrl} alt={`${entry.phrase}的輔助插圖`} />
-              : <><ImageIcon aria-hidden="true" /><span>插圖須經教師確認與成語內容相符後才會顯示</span></>}
-          </div>
+          {entry.illustrationUrl && (
+            <div className="idiom-entry-illustration has-image">
+              <img src={entry.illustrationUrl} alt={`${entry.phrase}的輔助插圖`} />
+            </div>
+          )}
         </article>
       )}
       {reviewMessage && <p className="idiom-review-message" role="status">{reviewMessage}</p>}
@@ -696,6 +697,9 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
   const [difficulty, setDifficulty] = useState(puzzle?.difficulty || 'beginner')
   const [stage, setStage] = useState(puzzle?.stage || 'junior')
   const [selectedIds, setSelectedIds] = useState((puzzle?.idioms || []).map((entry) => entry.id))
+  const [acceptedAnswerDrafts, setAcceptedAnswerDrafts] = useState(() => Object.fromEntries(
+    Object.entries(puzzle?.acceptedAnswers || {}).map(([idiomId, answers]) => [idiomId, (answers || []).join('、')]),
+  ))
   const [editorGrid, setEditorGrid] = useState(() => puzzle ? editorGridFromPuzzle(puzzle) : createIdiomEditorGrid(8, 8))
   const [preview, setPreview] = useState(null)
   const [status, setStatus] = useState(puzzle?.status || 'draft')
@@ -707,8 +711,10 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
   const emptyEntryForm = { phrase: '', stage: 'junior', definition: '', source: '', story: '', sourceUrl: '', illustrationUrl: '', sourceEntryId: null, zhuyin: '', pinyin: '' }
   const [entryForm, setEntryForm] = useState(emptyEntryForm)
   const [entrySaving, setEntrySaving] = useState(false)
+  const [entryImageUploading, setEntryImageUploading] = useState(false)
   const [entryEditorOpen, setEntryEditorOpen] = useState(false)
   const entryEditorRef = useRef(null)
+  const entryImageInputRef = useRef(null)
   const [dictionaryQuery, setDictionaryQuery] = useState('')
   const [dictionaryState, setDictionaryState] = useState({
     loading: false,
@@ -776,6 +782,7 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
       source: entry.source,
       story: entry.story,
       sourceUrl: entry.sourceUrl,
+      illustrationUrl: existingEntry?.illustrationUrl || entry.illustrationUrl || '',
       sourceEntryId: entry.sourceEntryId,
       zhuyin: entry.zhuyin,
       pinyin: entry.pinyin,
@@ -786,6 +793,16 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
       ? `題庫已有「${entry.phrase}」。已帶入較新的官方資料；儲存後會更新既有資料並加入本題。`
       : `已帶入教育部《成語典》「${entry.phrase}」的官方資料；請選擇適合等級後加入本題。`])
   }
+  useEffect(() => {
+    const normalizedQuery = Array.from(String(dictionaryQuery || '').replace(/\s/g, '')).join('')
+    const exactEntry = dictionaryResults.find((entry) => entry.phrase === normalizedQuery)
+    if (!exactEntry) return
+    if (
+      entryForm.phrase === exactEntry.phrase
+      && Number(entryForm.sourceEntryId || 0) === Number(exactEntry.sourceEntryId || 0)
+    ) return
+    chooseDictionaryEntry(exactEntry)
+  }, [dictionaryQuery, dictionaryResults, entryForm.phrase, entryForm.sourceEntryId])
   const startManualEntry = () => {
     const phrase = Array.from(String(dictionaryQuery || '').replace(/\s/g, '')).join('')
     setEntryForm((current) => ({ ...emptyEntryForm, phrase, stage: current.stage }))
@@ -833,8 +850,29 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
       setEntrySaving(false)
     }
   }
+  const uploadEntryImage = async (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    setEntryImageUploading(true)
+    try {
+      const illustrationUrl = await uploadIdiomIllustration(file)
+      setEntryForm((current) => ({ ...current, illustrationUrl }))
+      setMessages([`「${file.name}」已上傳；儲存成語資料後，學生即可看到圖片。`])
+    } catch (error) {
+      setMessages([error.message])
+    } finally {
+      setEntryImageUploading(false)
+      event.target.value = ''
+    }
+  }
   const validate = () => {
-    const result = buildManualIdiomPuzzle({ editorGrid, idioms: selectedEntries, difficulty, stage })
+    const result = buildManualIdiomPuzzle({
+      editorGrid,
+      idioms: selectedEntries,
+      acceptedAnswers: acceptedAnswerDrafts,
+      difficulty,
+      stage,
+    })
     setMessages(result.errors.length ? result.errors : ['版面與完整答案檢查通過，可以儲存或發布。'])
     setPreview(result.errors.length ? null : result.puzzle)
     return result
@@ -898,7 +936,27 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
 
       <div className="idiom-admin-section-heading"><div><h3>① 選擇本題成語</h3><p>至少 4 個；完成後學生才會解鎖這些成語的釋義與出處。</p></div><strong>{selectedIds.length} 個</strong></div>
       <div className="idiom-admin-catalog">
-        {available.map((entry) => <div className="idiom-admin-catalog-item" key={entry.id}><label><input type="checkbox" checked={selectedIds.includes(entry.id)} onChange={() => toggle(entry.id)} /><span>{entry.phrase}</span><small>{stageLabels[entry.stage]}</small></label><button type="button" onClick={() => editCatalogEntry(entry)}><Pencil aria-hidden="true" />編輯</button></div>)}
+        {available.map((entry) => (
+          <div className={`idiom-admin-catalog-item ${selectedIds.includes(entry.id) ? 'is-selected' : ''}`} key={entry.id}>
+            <label className="idiom-admin-catalog-check">
+              <input
+                type="checkbox"
+                checked={selectedIds.includes(entry.id)}
+                onChange={() => toggle(entry.id)}
+                aria-label={`將「${entry.phrase}」加入本題`}
+              />
+            </label>
+            <button
+              type="button"
+              className="idiom-admin-catalog-entry"
+              onClick={() => editCatalogEntry(entry)}
+              aria-label={`查看並修改「${entry.phrase}」資料`}
+            >
+              <strong>{entry.phrase}</strong>
+              <small>{stageLabels[entry.stage]}</small>
+            </button>
+          </div>
+        ))}
       </div>
       <details ref={entryEditorRef} className="idiom-entry-editor" open={entryEditorOpen} onToggle={(event) => setEntryEditorOpen(event.currentTarget.open)}>
         <summary><Plus aria-hidden="true" />搜尋、新增或編輯成語資料</summary>
@@ -942,7 +1000,15 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
           <label className="is-wide">典源或出處<textarea {...chineseTextInputProps} readOnly={Boolean(entryForm.sourceEntryId)} rows="4" value={entryForm.source} onChange={(event) => setEntryForm((current) => ({ ...current, source: event.target.value }))} /></label>
           <label className="is-wide">完整典故<textarea {...chineseTextInputProps} readOnly={Boolean(entryForm.sourceEntryId)} rows="4" value={entryForm.story} onChange={(event) => setEntryForm((current) => ({ ...current, story: event.target.value }))} /></label>
           <label className="is-wide">教育部成語典網址<input {...chineseTextInputProps} readOnly={Boolean(entryForm.sourceEntryId)} type="text" value={entryForm.sourceUrl} onChange={(event) => setEntryForm((current) => ({ ...current, sourceUrl: event.target.value }))} /></label>
-          <label className="is-wide">教師圖片網址（選填）<input {...chineseTextInputProps} type="text" value={entryForm.illustrationUrl} onChange={(event) => setEntryForm((current) => ({ ...current, illustrationUrl: event.target.value }))} /></label>
+          <label className="is-wide">教師圖片（選填）
+            <div className="idiom-entry-image-field">
+              <input {...chineseTextInputProps} type="text" placeholder="可貼上圖片網址，或使用右側按鈕上傳圖檔" value={entryForm.illustrationUrl} onChange={(event) => setEntryForm((current) => ({ ...current, illustrationUrl: event.target.value }))} />
+              <input ref={entryImageInputRef} hidden type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadEntryImage} />
+              <button type="button" disabled={entryImageUploading} onClick={() => entryImageInputRef.current?.click()}><ImagePlus aria-hidden="true" />{entryImageUploading ? '上傳中……' : '上傳圖檔'}</button>
+              {entryForm.illustrationUrl && <button type="button" className="is-remove" onClick={() => setEntryForm((current) => ({ ...current, illustrationUrl: '' }))}>移除圖片</button>}
+            </div>
+            {entryForm.illustrationUrl && <img className="idiom-entry-image-preview" src={entryForm.illustrationUrl} alt="教師圖片預覽" />}
+          </label>
         </div>
         <div className="idiom-entry-editor-actions">
           {entryForm.sourceEntryId && <button type="button" className="secondary-button" onClick={clearEntryForm}>清除並改為手動輸入</button>}
@@ -952,7 +1018,29 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
       <button type="button" className="idiom-auto-layout-button" onClick={generate}><Sparkles aria-hidden="true" />依所選成語自動排版</button>
       <p className="idiom-auto-layout-note">先勾選至少 4 個具有共同文字的成語；系統會自動建立交錯版面，仍可在下方手動調整。</p>
 
-      <div className="idiom-admin-section-heading"><div><h3>② 建立題目與完整答案</h3><p>題目格設定黑格、白格與提示字；完整答案逐格輸入正確文字。</p></div></div>
+      <div className="idiom-admin-section-heading"><div><h3>② 設定可接受的替代答案（選填）</h3><p>只影響本題判分，不會改寫教育部成語資料。</p></div></div>
+      <div className="idiom-alternate-answer-editor">
+        <p>替代答案須與預設答案字數相同、使用相同文字，且不可改動提示字或交錯字的位置。多個答案可用頓號、逗號或換行分隔。</p>
+        {selectedEntries.length === 0 && <p className="is-empty">請先選擇本題成語。</p>}
+        {selectedEntries.map((entry) => (
+          <label key={entry.id}>
+            <span><strong>{entry.phrase}</strong><small>預設答案</small></span>
+            <textarea
+              {...chineseTextInputProps}
+              rows="2"
+              value={acceptedAnswerDrafts[entry.id] || ''}
+              placeholder="例如：一十一五"
+              onChange={(event) => {
+                const value = event.target.value
+                setAcceptedAnswerDrafts((current) => ({ ...current, [entry.id]: value }))
+                setPreview(null)
+              }}
+            />
+          </label>
+        ))}
+      </div>
+
+      <div className="idiom-admin-section-heading"><div><h3>③ 建立題目與完整答案</h3><p>題目格設定黑格、白格與提示字；完整答案逐格輸入正確文字。</p></div></div>
       <div className="idiom-editor-tabs">
         <button type="button" className={tab === 'puzzle' ? 'is-active' : ''} onClick={() => setTab('puzzle')}>題目格</button>
         <button type="button" className={tab === 'solution' ? 'is-active' : ''} onClick={() => setTab('solution')}>完整答案</button>

@@ -28,14 +28,27 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('交錯格')
   })
 
-  it('通關後列出成語、教育部釋義與出處，圖片未確認時不亂配圖', () => {
+  it('通關後列出成語、教育部釋義與出處，沒有圖片時不顯示空白圖片區塊', () => {
     const html = renderToStaticMarkup(<IdiomLearningPanel puzzle={puzzle} />)
     expect(html).toContain('一心一意')
     expect(html).toContain('專心一意。')
     expect(html).toContain('典源或出處')
     expect(html).toContain('播放發音')
     expect(html).toContain('ㄧ ㄒㄧㄣ ㄧ ㄧˋ')
-    expect(html).toContain('插圖須經教師確認與成語內容相符後才會顯示')
+    expect(html).not.toContain('idiom-entry-illustration')
+    expect(html).not.toContain('待老師上傳')
+  })
+
+  it('教師已設定圖片時才在學生端顯示成語輔助插圖', () => {
+    const withImage = {
+      ...puzzle,
+      idioms: puzzle.idioms.map((entry, index) => index === 0
+        ? { ...entry, illustrationUrl: 'https://example.com/idiom.webp' }
+        : entry),
+    }
+    const html = renderToStaticMarkup(<IdiomLearningPanel puzzle={withImage} />)
+    expect(html).toContain('src="https://example.com/idiom.webp"')
+    expect(html).toContain('一心一意的輔助插圖')
   })
 
   it('提供一字、交錯字與完整成語提示，並顯示每關兩次上限', () => {
@@ -50,7 +63,7 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('本關提示已使用 0／2 次')
   })
 
-  it('完成的成語可用不同底色標示，錯誤成語整句使用紅色狀態', () => {
+  it('完成的成語可用較深底色標示，錯誤填字格使用紅色狀態', () => {
     const correctCell = puzzle.board.cells[0]
     const wrongCell = puzzle.board.cells[1]
     const html = renderToStaticMarkup(
@@ -171,6 +184,7 @@ describe('成語填字圖畫面', () => {
     const html = renderToStaticMarkup(
       <IdiomPuzzleEditor
         catalog={puzzle.idioms.map((entry) => ({ ...entry, stage: 'junior' }))}
+        puzzle={{ ...puzzle, acceptedAnswers: { a: ['一意一心'] } }}
         onSaved={() => {}}
         onCancel={() => {}}
         onCatalogAdded={() => {}}
@@ -186,8 +200,14 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('破音字')
     expect(html).toContain('依所選成語自動排版')
     expect(html).toContain('先勾選至少 4 個具有共同文字的成語')
+    expect(html).toContain('設定可接受的替代答案')
+    expect(html).toContain('不會改寫教育部成語資料')
+    expect(html).toContain('placeholder="例如：一十一五"')
     expect(html).toContain('新增並加入本題')
-    expect(html).toContain('編輯')
+    expect(html).toContain('上傳圖檔')
+    expect(html).toContain('image/jpeg,image/png,image/webp')
+    expect(html).toContain('查看並修改')
+    expect(html).not.toContain('>編輯</button>')
     expect(html).not.toContain('type="url"')
     expect(html).toContain('lang="zh-Hant"')
   })
