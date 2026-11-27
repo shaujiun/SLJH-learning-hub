@@ -692,6 +692,7 @@ function IdiomEditorBoard({ grid, tab, tool, onChange }) {
 }
 
 export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, onCatalogAdded }) {
+  const [savedPuzzleId, setSavedPuzzleId] = useState(puzzle?.id || '')
   const [title, setTitle] = useState(puzzle?.title || '成語填字圖')
   const [publishedOn, setPublishedOn] = useState(puzzle?.publishedOn || todayDateValue())
   const [difficulty, setDifficulty] = useState(puzzle?.difficulty || 'beginner')
@@ -897,9 +898,9 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
     if (result.errors.length) return
     setSaving(true)
     try {
-      await saveIdiomPuzzle({
+      const savedPuzzle = await saveIdiomPuzzle({
         ...result.puzzle,
-        id: puzzle?.id,
+        id: savedPuzzleId || undefined,
         title,
         publishedOn,
         difficulty,
@@ -908,8 +909,11 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
         sourceVersion: IDIOM_DICTIONARY_VERSION,
         isDailyEligible,
       })
-      setMessages([status === 'published' ? '題目已發布。' : '草稿已儲存。'])
-      await onSaved()
+      if (savedPuzzle?.id) setSavedPuzzleId(savedPuzzle.id)
+      setMessages([status === 'published'
+        ? '題目已發布。編輯畫面會保留，可繼續修改或按「關閉」返回題目。'
+        : '草稿已儲存。編輯畫面會保留，可繼續修改或按「關閉」返回題目。'])
+      await onSaved(savedPuzzle)
     } catch (error) {
       setMessages([error.message])
     } finally {
@@ -920,7 +924,7 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
   return (
     <section className="idiom-admin-editor" aria-labelledby="idiom-editor-title">
       <div className="idiom-admin-heading">
-        <div><p className="eyebrow">ADMIN EDITOR</p><h2 id="idiom-editor-title">{puzzle?.id ? '編輯成語填字圖' : '建立成語填字圖'}</h2></div>
+        <div><p className="eyebrow">ADMIN EDITOR</p><h2 id="idiom-editor-title">{savedPuzzleId ? '編輯成語填字圖' : '建立成語填字圖'}</h2></div>
         <button type="button" className="icon-button" onClick={onCancel}><X aria-hidden="true" />關閉</button>
       </div>
       <div className="idiom-admin-fields">
@@ -1072,8 +1076,8 @@ export default function IdiomWordGrid({ guestMode = false }) {
   const [showReviewDialog, setShowReviewDialog] = useState(false)
   const focusTaskId = typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('focusTask') || ''
   const returnUrl = guestMode ? './?guest=1' : './'
-  const load = async () => {
-    setState((current) => ({ ...current, loading: true, error: '' }))
+  const load = async ({ background = false } = {}) => {
+    if (!background) setState((current) => ({ ...current, loading: true, error: '' }))
     try {
       const data = await loadIdiomWordGridContext({ guestMode })
       const localCompletedIds = data.puzzles
@@ -1146,7 +1150,7 @@ export default function IdiomWordGrid({ guestMode = false }) {
           catalog={state.catalog}
           puzzle={editing.id ? editing : null}
           onCancel={() => setEditing(null)}
-          onSaved={async () => { await load(); setEditing(null) }}
+          onSaved={async () => { await load({ background: true }) }}
           onCatalogAdded={(entry) => setState((current) => ({
             ...current,
             catalog: [...current.catalog.filter((item) => item.id !== entry.id), entry]
