@@ -468,6 +468,36 @@ export function assessIdiomAssignments(puzzle, assignments = {}) {
   return { status: wrongCellKeys.length ? 'incorrect' : 'correct', correct: wrongCellKeys.length === 0, wrongCellKeys }
 }
 
+export function assessIdiomProgress(puzzle, assignments = {}, revealedKeys = []) {
+  const fixed = new Set([...(puzzle?.givenCellKeys || []), ...(revealedKeys || [])])
+  const tiles = createIdiomBankTiles(puzzle)
+  const cells = puzzle?.board?.cells || []
+  const idioms = (puzzle?.idioms || []).map((entry, colorIndex) => {
+    const idiomCells = cells.filter((cell) => cell.idiomIds?.includes(entry.id))
+    const values = idiomCells.map((cell) => {
+      if (fixed.has(cell.key)) return cell.solution
+      const tileId = assignments[cell.key]
+      return Number.isInteger(tileId) ? tiles[tileId]?.character || '' : ''
+    })
+    const complete = idiomCells.length > 0 && values.every(Boolean)
+    const correct = complete && idiomCells.every((cell, index) => values[index] === cell.solution)
+    return {
+      id: entry.id,
+      cellKeys: idiomCells.map((cell) => cell.key),
+      colorIndex,
+      status: complete ? (correct ? 'correct' : 'incorrect') : 'incomplete',
+    }
+  })
+  const idiomById = new Map(idioms.map((idiom) => [idiom.id, idiom]))
+  const cellFeedback = Object.fromEntries(cells.map((cell) => [
+    cell.key,
+    (cell.idiomIds || [])
+      .map((idiomId) => idiomById.get(idiomId))
+      .filter((idiom) => idiom && idiom.status !== 'incomplete'),
+  ]))
+  return { idioms, cellFeedback }
+}
+
 export function chooseHintCell(puzzle, assignments = {}, revealedKeys = [], kind = 'letter', requestedKey = '') {
   const given = new Set([...(puzzle?.givenCellKeys || []), ...(revealedKeys || [])])
   const cells = (puzzle?.board?.cells || []).filter((cell) => !given.has(cell.key))
@@ -481,6 +511,25 @@ export function chooseHintCell(puzzle, assignments = {}, revealedKeys = [], kind
 export function chooseAllCrossHintCells(puzzle, revealedKeys = []) {
   const fixed = new Set([...(puzzle?.givenCellKeys || []), ...(revealedKeys || [])])
   return (puzzle?.board?.cells || []).filter((cell) => cell.isIntersection && !fixed.has(cell.key))
+}
+
+export function chooseIdiomHintCells(puzzle, assignments = {}, revealedKeys = [], requestedKey = '') {
+  if (!requestedKey) return { status: 'cell-required', idiomId: '', cellKeys: [] }
+  const cell = (puzzle?.board?.cells || []).find((item) => item.key === requestedKey)
+  if (!cell) return { status: 'cell-required', idiomId: '', cellKeys: [] }
+
+  const progress = assessIdiomProgress(puzzle, assignments, revealedKeys)
+  const candidates = progress.idioms.filter((idiom) => cell.idiomIds?.includes(idiom.id) && idiom.status !== 'correct')
+  if (candidates.length > 1) return { status: 'ambiguous', idiomId: '', cellKeys: [] }
+  const target = candidates[0]
+  if (!target) return { status: 'already-correct', idiomId: '', cellKeys: [] }
+
+  const fixed = new Set([...(puzzle?.givenCellKeys || []), ...(revealedKeys || [])])
+  return {
+    status: 'ready',
+    idiomId: target.id,
+    cellKeys: target.cellKeys.filter((key) => !fixed.has(key)),
+  }
 }
 
 export function assignIdiomTile(assignments = {}, cellKey = '', tileId = null) {

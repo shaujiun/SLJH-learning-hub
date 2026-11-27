@@ -38,13 +38,49 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('插圖須經教師確認與成語內容相符後才會顯示')
   })
 
-  it('提供三種提示並清楚顯示能量成本', () => {
-    const html = renderToStaticMarkup(<PlayIdiomPuzzle puzzle={puzzle} context={{ studentId: '', energy: 5, remoteEnabled: false }} focusTaskId="" onEnergyChange={() => {}} />)
+  it('提供一字、交錯字與完整成語提示，並顯示每關兩次上限', () => {
+    const html = renderToStaticMarkup(<PlayIdiomPuzzle puzzle={puzzle} context={{ studentId: '', energy: 5, remoteEnabled: false, hintUseCounts: {} }} focusTaskId="" onEnergyChange={() => {}} />)
     expect(html).toContain('一字提示')
     expect(html).toContain('交錯字提示')
-    expect(html).toContain('錯字檢查')
+    expect(html).toContain('完整成語提示')
+    expect(html).not.toContain('錯字檢查')
     expect(html).toContain('1 能量')
     expect(html).toContain('2 能量')
+    expect(html).toContain('5 能量')
+    expect(html).toContain('本關提示已使用 0／2 次')
+  })
+
+  it('完成的成語可用不同底色標示，錯誤成語整句使用紅色狀態', () => {
+    const correctCell = puzzle.board.cells[0]
+    const wrongCell = puzzle.board.cells[1]
+    const html = renderToStaticMarkup(
+      <IdiomBoard
+        puzzle={puzzle}
+        assignments={{}}
+        revealedKeys={[]}
+        feedbackByCell={{
+          [correctCell.key]: [{ id: 'a', status: 'correct', colorIndex: 0 }],
+          [wrongCell.key]: [{ id: 'b', status: 'incorrect', colorIndex: 1 }],
+        }}
+        onCellClick={() => {}}
+      />,
+    )
+    expect(html).toContain('data-idiom-feedback="correct"')
+    expect(html).toContain('data-idiom-feedback="incorrect"')
+    expect(html).toContain('--idiom-feedback-background:#ffd2cf')
+  })
+
+  it('登入學生可看到目前能量與累計收支', () => {
+    const html = renderToStaticMarkup(
+      <PlayIdiomPuzzle
+        puzzle={puzzle}
+        context={{ studentId: 'student-1', energy: 7, energyEarnedTotal: 18, energySpentTotal: 11, hintUseCounts: {}, remoteEnabled: true, completedPuzzleIds: [] }}
+        focusTaskId=""
+        onEnergyChange={() => {}}
+      />,
+    )
+    expect(html).toContain('7</strong><span>目前能量')
+    expect(html).toContain('累計獲得 18・已使用 11')
   })
 
   it('其他裝置載入遠端通關紀錄後可直接開啟本關成語解說', () => {
@@ -118,14 +154,15 @@ describe('成語填字圖畫面', () => {
     const html = renderToStaticMarkup(
       <PlayIdiomPuzzle
         puzzle={{ ...puzzle, difficulty: 'advanced' }}
-        context={{ studentId: 'student-1', energy: 12, remoteEnabled: true, completedPuzzleIds: [], reviewEntryIds: [] }}
+        context={{ studentId: 'student-1', energy: 12, remoteEnabled: true, completedPuzzleIds: [], reviewEntryIds: [], hintUseCounts: {} }}
         focusTaskId=""
         onEnergyChange={() => {}}
       />,
     )
     expect(html).toContain('所有交錯字提示')
     expect(html).toContain('10 能量')
-    expect(html).toContain('錯字檢查')
+    expect(html).toContain('完整成語提示')
+    expect(html).not.toContain('錯字檢查')
     expect(html).not.toContain('／20 能量')
     expect(html).toContain('先點選題目空格，再選下方文字')
   })
@@ -145,10 +182,13 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('完整答案')
     expect(html).toContain('適合等級')
     expect(html).toContain('正式發布')
-    expect(html).toContain('搜尋教育部《成語典》並加入成語')
+    expect(html).toContain('搜尋、新增或編輯成語資料')
     expect(html).toContain('破音字')
     expect(html).toContain('依所選成語自動排版')
     expect(html).toContain('先勾選至少 4 個具有共同文字的成語')
     expect(html).toContain('新增並加入本題')
+    expect(html).toContain('編輯')
+    expect(html).not.toContain('type="url"')
+    expect(html).toContain('lang="zh-Hant"')
   })
 })

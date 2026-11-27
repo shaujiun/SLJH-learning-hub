@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   assessIdiomAssignments,
+  assessIdiomProgress,
   applyRevealedIdiomCells,
   buildIdiomBoard,
   buildIdiomLevelNavigation,
@@ -8,6 +9,7 @@ import {
   buildManualIdiomPuzzle,
   chooseAllCrossHintCells,
   chooseHintCell,
+  chooseIdiomHintCells,
   createIdiomBankTiles,
   editorGridFromPuzzle,
   assignIdiomTile,
@@ -77,10 +79,48 @@ describe('成語填字圖核心', () => {
     }
   })
 
+  it('成語填完後會整句判色，任一字錯誤時整句都標為錯誤', () => {
+    const puzzle = buildIdiomPuzzle(entries, 'beginner')
+    const tiles = createIdiomBankTiles(puzzle)
+    const assignments = {}
+    puzzle.board.cells
+      .filter((cell) => !puzzle.givenCellKeys.includes(cell.key))
+      .forEach((cell) => {
+        assignments[cell.key] = tiles.findIndex((tile, index) => tile.character === cell.solution
+          && !Object.values(assignments).includes(index))
+      })
+
+    const correct = assessIdiomProgress(puzzle, assignments)
+    expect(correct.idioms.every((idiom) => idiom.status === 'correct')).toBe(true)
+
+    const targetCell = puzzle.board.cells.find((cell) => !puzzle.givenCellKeys.includes(cell.key))
+    const wrongTile = tiles.find((tile) => tile.character !== targetCell.solution)
+    const incorrect = assessIdiomProgress(puzzle, { ...assignments, [targetCell.key]: wrongTile.id })
+    const affectedIdioms = incorrect.idioms.filter((idiom) => targetCell.idiomIds.includes(idiom.id))
+    expect(affectedIdioms.every((idiom) => idiom.status === 'incorrect')).toBe(true)
+    affectedIdioms.forEach((idiom) => {
+      idiom.cellKeys.forEach((key) => {
+        expect(incorrect.cellFeedback[key].some((feedback) => feedback.status === 'incorrect')).toBe(true)
+      })
+    })
+  })
+
   it('交錯提示優先選取同時屬於兩個成語的空格', () => {
     const puzzle = buildIdiomPuzzle(entries, 'challenge')
     const cell = chooseHintCell(puzzle, {}, [], 'cross')
     expect(cell?.isIntersection).toBe(true)
+  })
+
+  it('完整成語提示以所選非交錯格判斷目標，交錯格有歧義時不直接猜測', () => {
+    const puzzle = buildIdiomPuzzle(entries, 'challenge')
+    const crossCell = puzzle.board.cells.find((cell) => cell.isIntersection)
+    expect(chooseIdiomHintCells(puzzle, {}, [], crossCell.key).status).toBe('ambiguous')
+
+    const ordinaryCell = puzzle.board.cells.find((cell) => !cell.isIntersection && !puzzle.givenCellKeys.includes(cell.key))
+    const target = chooseIdiomHintCells(puzzle, {}, [], ordinaryCell.key)
+    expect(target.status).toBe('ready')
+    expect(target.cellKeys).toContain(ordinaryCell.key)
+    expect(target.cellKeys.length).toBeGreaterThan(1)
   })
 
   it('所有交錯字提示會排除已提示格，字卡可直接移入所選方格', () => {

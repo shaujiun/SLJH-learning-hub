@@ -47,8 +47,12 @@ describe('成語填字圖服務', () => {
           puzzle_data: { board: { width: 1, height: 1, cells: [] }, idioms: [], givenCellKeys: [] },
           status: 'published', is_daily_eligible: true,
         }])
-        if (table === 'idiom_word_grid_completions') return result([{ puzzle_id: 'puzzle-1' }])
+        if (table === 'idiom_word_grid_completions') return result([{ puzzle_id: 'puzzle-1', energy_earned: 4 }])
         if (table === 'idiom_word_grid_reviews') return result([{ idiom_entry_id: 'entry-2' }])
+        if (table === 'idiom_word_grid_hints') return result([
+          { puzzle_id: 'puzzle-1', energy_cost: 2 },
+          { puzzle_id: 'puzzle-1', energy_cost: 5 },
+        ])
         if (table === 'idiom_word_grid_wallets') return result({ energy: 7 })
         return result([])
       }),
@@ -56,7 +60,8 @@ describe('成語填字圖服務', () => {
     }
 
     await expect(loadIdiomWordGridContext({}, client)).resolves.toMatchObject({
-      studentId: 'student-1', completedPuzzleIds: ['puzzle-1'], reviewEntryIds: ['entry-2'], energy: 7, remoteEnabled: true,
+      studentId: 'student-1', completedPuzzleIds: ['puzzle-1'], reviewEntryIds: ['entry-2'], energy: 7,
+      energyEarnedTotal: 4, energySpentTotal: 7, hintUseCounts: { 'puzzle-1': 2 }, remoteEnabled: true,
     })
   })
 
@@ -66,6 +71,12 @@ describe('成語填字圖服務', () => {
     await expect(completeIdiomPuzzle({ puzzleId: 'p1', hintsUsed: 0, focusTaskId: 'task-1' }, client)).resolves.toMatchObject({ energy: 8, energyEarned: 4, firstCompletion: true })
     expect(client.rpc).toHaveBeenCalledWith('spend_idiom_word_grid_hint', expect.objectContaining({ p_hint_kind: 'cross' }))
     expect(client.rpc).toHaveBeenCalledWith('complete_idiom_word_grid', expect.objectContaining({ p_hints_used: 0 }))
+  })
+
+  it('資料庫拒絕第三次提示時顯示清楚訊息', async () => {
+    const client = { rpc: vi.fn(async () => ({ data: null, error: { message: 'idiom_hint_limit_reached' } })) }
+    await expect(spendIdiomHint({ puzzleId: 'p1', kind: 'idiom', cellKey: 'entry-1' }, client))
+      .rejects.toThrow('本關最多使用 2 次提示')
   })
 
   it('學生可加入或移除跨裝置成語複習清單', async () => {

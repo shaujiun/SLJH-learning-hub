@@ -67,29 +67,32 @@ export async function loadIdiomWordGridContext({ guestMode = false } = {}, clien
     try { client = requireSupabase() } catch { client = null }
   }
   if (!client) return {
-    puzzles: getStarterIdiomPuzzles(), catalog: STARTER_IDIOM_ENTRIES, energy: 0,
+    puzzles: getStarterIdiomPuzzles(), catalog: STARTER_IDIOM_ENTRIES, energy: 0, energyEarnedTotal: 0, energySpentTotal: 0, hintUseCounts: {},
     studentId: '', completedPuzzleIds: [], reviewEntryIds: [], canManage: false, remoteEnabled: false,
   }
 
   const account = guestMode ? { userId: '', studentId: '', canManage: false } : await sessionContext(client)
   let query = client.from('idiom_word_grid_puzzles').select(PUZZLE_SELECT).order('published_on', { ascending: false })
   if (!account.canManage) query = query.eq('status', 'published')
-  const [puzzleResult, catalogResult, walletResult, completionResult, reviewResult] = await Promise.all([
+  const [puzzleResult, catalogResult, walletResult, completionResult, reviewResult, hintResult] = await Promise.all([
     query,
     client.from('idiom_entries').select('id,phrase,definition,source_text,story,source_url,illustration_url,stage,source_entry_id,zhuyin,pinyin').eq('is_active', true).order('phrase'),
     account.studentId
       ? client.from('idiom_word_grid_wallets').select('energy').eq('student_id', account.studentId).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
     account.studentId
-      ? client.from('idiom_word_grid_completions').select('puzzle_id').eq('student_id', account.studentId)
+      ? client.from('idiom_word_grid_completions').select('puzzle_id,energy_earned').eq('student_id', account.studentId)
       : Promise.resolve({ data: [], error: null }),
     account.studentId
       ? client.from('idiom_word_grid_reviews').select('idiom_entry_id').eq('student_id', account.studentId)
       : Promise.resolve({ data: [], error: null }),
+    account.studentId
+      ? client.from('idiom_word_grid_hints').select('puzzle_id,energy_cost').eq('student_id', account.studentId)
+      : Promise.resolve({ data: [], error: null }),
   ])
   if (puzzleResult.error && !isMissingRelation(puzzleResult.error)) throw new Error(`無法讀取成語填字圖：${puzzleResult.error.message}`)
   if (puzzleResult.error) return {
-    puzzles: getStarterIdiomPuzzles(), catalog: STARTER_IDIOM_ENTRIES, energy: 0,
+    puzzles: getStarterIdiomPuzzles(), catalog: STARTER_IDIOM_ENTRIES, energy: 0, energyEarnedTotal: 0, energySpentTotal: 0, hintUseCounts: {},
     studentId: account.studentId, completedPuzzleIds: [], reviewEntryIds: [], canManage: account.canManage, remoteEnabled: false,
   }
   if (completionResult.error && !isMissingRelation(completionResult.error)) {
@@ -98,11 +101,23 @@ export async function loadIdiomWordGridContext({ guestMode = false } = {}, clien
   if (reviewResult.error && !isMissingRelation(reviewResult.error)) {
     throw new Error(`無法讀取成語複習清單：${reviewResult.error.message}`)
   }
+  if (hintResult.error && !isMissingRelation(hintResult.error)) {
+    throw new Error(`無法讀取成語提示紀錄：${hintResult.error.message}`)
+  }
   const catalog = catalogResult.error ? STARTER_IDIOM_ENTRIES : (catalogResult.data || []).map(mapIdiomEntry)
+  const hintRows = hintResult.error ? [] : hintResult.data || []
+  const hintUseCounts = hintRows.reduce((counts, row) => {
+    const puzzleId = String(row.puzzle_id || '')
+    if (puzzleId) counts[puzzleId] = Number(counts[puzzleId] || 0) + 1
+    return counts
+  }, {})
   return {
     puzzles: (puzzleResult.data || []).map(mapIdiomPuzzle),
     catalog,
     energy: Number(walletResult.data?.energy || 0),
+    energyEarnedTotal: (completionResult.data || []).reduce((total, row) => total + Number(row.energy_earned || 0), 0),
+    energySpentTotal: hintRows.reduce((total, row) => total + Number(row.energy_cost || 0), 0),
+    hintUseCounts,
     studentId: account.studentId,
     completedPuzzleIds: (completionResult.data || []).map((row) => String(row.puzzle_id || '')).filter(Boolean),
     reviewEntryIds: (reviewResult.error ? [] : reviewResult.data || []).map((row) => String(row.idiom_entry_id || '')).filter(Boolean),
@@ -153,7 +168,11 @@ export async function spendIdiomHint({ puzzleId, kind, cellKey }, client = requi
     p_hint_kind: kind,
     p_cell_key: cellKey,
   })
-  if (error) throw new Error(error.message === 'idiom_energy_insufficient' ? '能量不足，完成其他關卡後可取得能量。' : `無法使用提示：${error.message}`)
+  if (error) {
+    if (error.message === 'idiom_energy_insufficient') throw new Error('能量不足，完成其他關卡後可取得能量。')
+    if (error.message === 'idiom_hint_limit_reached') throw new Error('本關最多使用 2 次提示；目前已達上限。')
+    throw new Error(`無法使用提示：${error.message}`)
+  }
   return { energy: Number(data?.energy || 0) }
 }
 

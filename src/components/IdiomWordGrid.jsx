@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import {
   assessIdiomAssignments,
+  assessIdiomProgress,
   applyRevealedIdiomCells,
   assignIdiomTile,
   buildIdiomPuzzle,
@@ -28,6 +29,7 @@ import {
   chooseAllCrossHintCells,
   createIdiomEditorGrid,
   createIdiomBankTiles,
+  chooseIdiomHintCells,
   editorGridFromPuzzle,
   buildIdiomLevelNavigation,
   IDIOM_EDITOR_CELL_TYPES,
@@ -61,6 +63,28 @@ const stageLabels = {
   all: '跨階段／自訂',
 }
 
+const chineseTextInputProps = {
+  lang: 'zh-Hant',
+  inputMode: 'text',
+  autoCapitalize: 'off',
+  autoCorrect: 'off',
+  spellCheck: false,
+}
+
+const idiomFeedbackColors = ['#d8f3e8', '#dcecff', '#fff0bd', '#eadfff', '#d9f2f5', '#ffe0cf', '#e7efc8', '#f8dff0']
+
+function idiomFeedbackBackground(feedback = []) {
+  const colors = feedback.map((item) => (
+    item.status === 'incorrect' ? '#ffd2cf' : idiomFeedbackColors[item.colorIndex % idiomFeedbackColors.length]
+  ))
+  const unique = [...new Set(colors)]
+  if (unique.length === 0) return undefined
+  if (unique.length === 1) return unique[0]
+  const step = 100 / unique.length
+  const stops = unique.flatMap((color, index) => [`${color} ${index * step}%`, `${color} ${(index + 1) * step}%`])
+  return `linear-gradient(135deg, ${stops.join(', ')})`
+}
+
 function progressKey(studentId, puzzleId) {
   return `sljh:idiom-word-grid:${studentId || 'guest'}:${puzzleId}`
 }
@@ -81,7 +105,7 @@ function PuzzleTabs({ guestMode }) {
   )
 }
 
-export function IdiomBoard({ puzzle, assignments, selectedCellKey, revealedKeys, checkedWrongKeys = [], arrivingCellKey = '', onCellClick, boardRef = null }) {
+export function IdiomBoard({ puzzle, assignments, selectedCellKey, revealedKeys, feedbackByCell = {}, arrivingCellKey = '', onCellClick, boardRef = null }) {
   const tiles = useMemo(() => createIdiomBankTiles(puzzle), [puzzle])
   const given = new Set(puzzle.givenCellKeys || [])
   const revealed = new Set(revealedKeys || [])
@@ -103,14 +127,21 @@ export function IdiomBoard({ puzzle, assignments, selectedCellKey, revealedKeys,
         const tile = tiles[assignments[key]]
         const fixed = given.has(key) || revealed.has(key)
         const value = fixed ? cell.solution : tile?.character || ''
+        const feedback = feedbackByCell[key] || []
+        const feedbackStatus = feedback.some((item) => item.status === 'incorrect')
+          ? 'incorrect'
+          : feedback.length ? 'correct' : ''
+        const feedbackBackground = idiomFeedbackBackground(feedback)
         return (
           <button
             key={key}
             type="button"
             role="gridcell"
-            className={`idiom-grid-cell ${fixed ? 'is-given' : ''} ${revealed.has(key) ? 'is-hint' : ''} ${checkedWrongKeys.includes(key) ? 'is-checked-wrong' : ''} ${cell.isIntersection ? 'is-intersection' : ''} ${selectedCellKey === key ? 'is-selected-cell' : ''} ${arrivingCellKey === key ? 'is-tile-arriving' : ''}`}
+            className={`idiom-grid-cell ${fixed ? 'is-given' : ''} ${revealed.has(key) ? 'is-hint' : ''} ${feedbackStatus ? `is-idiom-${feedbackStatus}` : ''} ${cell.isIntersection ? 'is-intersection' : ''} ${selectedCellKey === key ? 'is-selected-cell' : ''} ${arrivingCellKey === key ? 'is-tile-arriving' : ''}`}
             disabled={fixed}
             data-cell-key={key}
+            data-idiom-feedback={feedbackStatus || undefined}
+            style={feedbackBackground ? { '--idiom-feedback-background': feedbackBackground } : undefined}
             onClick={() => onCellClick(key)}
             aria-label={`第 ${row + 1} 列第 ${column + 1} 格${value ? `，${value}` : '，空白'}${cell.isIntersection ? '，交錯格' : ''}`}
           >
@@ -272,12 +303,12 @@ export function PlayIdiomPuzzle({
   onNextPuzzle = null,
 }) {
   const initial = useMemo(() => restoreProgress(context.studentId, puzzle.id), [context.studentId, puzzle.id])
+  const savedHintUses = Number(context.hintUseCounts?.[puzzle.id] || 0)
   const [assignments, setAssignments] = useState(() => applyRevealedIdiomCells(puzzle, initial.assignments || {}, initial.revealedKeys || []))
   const [revealedKeys, setRevealedKeys] = useState(initial.revealedKeys || [])
-  const [hintUses, setHintUses] = useState(Number(initial.hintUses || initial.revealedKeys?.length || 0))
+  const [hintUses, setHintUses] = useState(Math.max(Number(initial.hintUses || initial.revealedKeys?.length || 0), savedHintUses))
   const [selectedTile, setSelectedTile] = useState(null)
   const [selectedCellKey, setSelectedCellKey] = useState('')
-  const [checkedWrongKeys, setCheckedWrongKeys] = useState([])
   const [message, setMessage] = useState('')
   const [completed, setCompleted] = useState(Boolean(initial.completed || context.completedPuzzleIds?.includes(puzzle.id)))
   const [showCompletionDialog, setShowCompletionDialog] = useState(false)
@@ -288,6 +319,11 @@ export function PlayIdiomPuzzle({
   const animationTimerRef = useRef(null)
   const tiles = useMemo(() => createIdiomBankTiles(puzzle), [puzzle])
   const usedTileIds = new Set(Object.values(assignments))
+  const idiomProgress = useMemo(
+    () => assessIdiomProgress(puzzle, assignments, revealedKeys),
+    [assignments, puzzle, revealedKeys],
+  )
+  const hintLimitReached = hintUses >= 2
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -301,10 +337,9 @@ export function PlayIdiomPuzzle({
   const reset = () => {
     setAssignments({})
     setRevealedKeys([])
-    setHintUses(0)
+    setHintUses(savedHintUses)
     setSelectedTile(null)
     setSelectedCellKey('')
-    setCheckedWrongKeys([])
     setCompleted(false)
     setShowCompletionDialog(false)
     setMessage('已重新開始；可先選方格再選文字，也可先選文字再點方格。')
@@ -325,7 +360,6 @@ export function PlayIdiomPuzzle({
   const placeTile = (cellKey) => {
     const wasSelected = selectedCellKey === cellKey
     setSelectedCellKey(cellKey)
-    setCheckedWrongKeys((current) => current.filter((key) => key !== cellKey))
     if (selectedTile != null) {
       assignTileToCell(cellKey, selectedTile)
       return
@@ -362,6 +396,10 @@ export function PlayIdiomPuzzle({
   }
 
   const revealHint = async (kind) => {
+    if (hintLimitReached) {
+      setMessage('本關最多使用 2 次提示；目前已達上限。')
+      return
+    }
     const target = chooseHintCell(puzzle, assignments, revealedKeys, kind, selectedCellKey)
     if (!target) {
       setMessage(kind === 'cross' ? '目前沒有可提示的交錯格。' : '請先點選想提示的空格。')
@@ -379,7 +417,7 @@ export function PlayIdiomPuzzle({
         const result = await spendIdiomHint({ puzzleId: puzzle.id, kind, cellKey: target.key })
         nextEnergy = result.energy
       }
-      onEnergyChange(nextEnergy)
+      onEnergyChange(nextEnergy, { spent: cost })
       setHintUses((current) => current + 1)
       setRevealedKeys((current) => [...new Set([...current, target.key])])
       setAssignments((current) => applyRevealedIdiomCells(puzzle, current, [target.key]))
@@ -391,28 +429,40 @@ export function PlayIdiomPuzzle({
     }
   }
 
-  const checkOneWrong = async () => {
-    const result = assessIdiomAssignments(puzzle, assignments)
-    const wrongCellKey = result.wrongCellKeys?.[0]
-    if (!wrongCellKey) {
-      setMessage(result.status === 'incomplete' ? '請先填入一些文字，再使用錯字檢查。' : '目前填入的文字沒有發現錯位。')
+  const revealIdiomHint = async () => {
+    if (hintLimitReached) {
+      setMessage('本關最多使用 2 次提示；目前已達上限。')
       return
     }
-    if (context.energy < 2) {
-      setMessage('能量不足，需要 2 點。')
+    const target = chooseIdiomHintCells(puzzle, assignments, revealedKeys, selectedCellKey)
+    if (target.status === 'cell-required') {
+      setMessage('請先點選想提示的成語中的任一空格。')
+      return
+    }
+    if (target.status === 'ambiguous') {
+      setMessage('這是交錯格，同時屬於兩個尚未完成的成語；請改點該成語的非交錯格。')
+      return
+    }
+    if (target.status === 'already-correct' || target.cellKeys.length === 0) {
+      setMessage('所選成語已經正確完成，不需要再使用提示。')
+      return
+    }
+    if (context.energy < 5) {
+      setMessage('能量不足，需要 5 點。')
       return
     }
     setBusy(true)
     try {
-      let nextEnergy = context.energy - 2
+      let nextEnergy = context.energy - 5
       if (context.remoteEnabled && context.studentId && !puzzle.id.startsWith('starter-')) {
-        const saved = await spendIdiomHint({ puzzleId: puzzle.id, kind: 'check', cellKey: wrongCellKey })
+        const saved = await spendIdiomHint({ puzzleId: puzzle.id, kind: 'idiom', cellKey: target.idiomId })
         nextEnergy = saved.energy
       }
-      onEnergyChange(nextEnergy)
+      onEnergyChange(nextEnergy, { spent: 5 })
       setHintUses((current) => current + 1)
-      setCheckedWrongKeys([wrongCellKey])
-      setMessage('已標記一個位置錯誤的字，但不公布正確答案；調整後可再檢查。')
+      setRevealedKeys((current) => [...new Set([...current, ...target.cellKeys])])
+      setAssignments((current) => applyRevealedIdiomCells(puzzle, current, target.cellKeys))
+      setMessage('已揭示所選的一個完整成語。')
     } catch (error) {
       setMessage(error.message)
     } finally {
@@ -421,6 +471,10 @@ export function PlayIdiomPuzzle({
   }
 
   const revealAllCrossHints = async () => {
+    if (hintLimitReached) {
+      setMessage('本關最多使用 2 次提示；目前已達上限。')
+      return
+    }
     const targets = chooseAllCrossHintCells(puzzle, revealedKeys)
     if (targets.length === 0) {
       setMessage('本題目前沒有尚未揭示的交錯字。')
@@ -438,7 +492,7 @@ export function PlayIdiomPuzzle({
         nextEnergy = saved.energy
       }
       const targetKeys = targets.map((target) => target.key)
-      onEnergyChange(nextEnergy)
+      onEnergyChange(nextEnergy, { spent: 10 })
       setHintUses((current) => current + 1)
       setRevealedKeys((current) => [...new Set([...current, ...targetKeys])])
       setAssignments((current) => applyRevealedIdiomCells(puzzle, current, targetKeys))
@@ -482,7 +536,10 @@ export function PlayIdiomPuzzle({
       setShowCompletionDialog(true)
       onPuzzleCompleted(puzzle.id)
       setMessage('全部正確，已解鎖本關成語的釋義與出處。')
-      if (!wasCompleted) onEnergyChange(context.energy + (hintUses ? 3 : 4))
+      if (!wasCompleted) {
+        const earned = hintUses ? 3 : 4
+        onEnergyChange(context.energy + earned, { earned })
+      }
       return
     }
     setBusy(true)
@@ -492,7 +549,7 @@ export function PlayIdiomPuzzle({
       setCompleted(true)
       setShowCompletionDialog(true)
       onPuzzleCompleted(puzzle.id)
-      onEnergyChange(saved.energy)
+      onEnergyChange(saved.energy, { earned: saved.energyEarned })
       setMessage(`全部正確，已解鎖成語學習。${saved.energyEarned ? `本關獲得 ${saved.energyEarned} 點能量。` : '本關已領取過能量。'}${saved.taskCompleted ? '每日任務也已完成。' : ''}`)
     } catch (error) {
       setCompleted(true)
@@ -509,18 +566,18 @@ export function PlayIdiomPuzzle({
       <section className="idiom-play-card">
         <div className="idiom-play-heading">
           <div><p className="eyebrow">IDIOM CROSSWORD</p><h2>{puzzle.title}</h2><span>{levelLabel || IDIOM_DIFFICULTIES[puzzle.difficulty]?.label || '基礎'}・{stageLabels[puzzle.stage] || '自訂'}</span></div>
-          <div className="idiom-energy"><Coins aria-hidden="true" /><strong>{context.energy}</strong><span>能量</span></div>
+          <div className="idiom-energy"><Coins aria-hidden="true" /><strong>{context.energy}</strong><span>目前能量</span>{context.studentId && <small>累計獲得 {context.energyEarnedTotal || 0}・已使用 {context.energySpentTotal || 0}</small>}</div>
         </div>
         <p className="idiom-play-instruction">先點選題目空格，再選下方文字即可直接填入；也可先選文字再點方格。再次點選同一個已填方格可取回文字；右下圓點代表交錯字。</p>
         <div className="idiom-solving-layout">
-          <div className="idiom-board-wrap"><IdiomBoard puzzle={puzzle} assignments={assignments} selectedCellKey={selectedCellKey} revealedKeys={revealedKeys} checkedWrongKeys={checkedWrongKeys} arrivingCellKey={arrivingCellKey} onCellClick={placeTile} boardRef={boardRef} /></div>
+          <div className="idiom-board-wrap"><IdiomBoard puzzle={puzzle} assignments={assignments} selectedCellKey={selectedCellKey} revealedKeys={revealedKeys} feedbackByCell={idiomProgress.cellFeedback} arrivingCellKey={arrivingCellKey} onCellClick={placeTile} boardRef={boardRef} /></div>
           <aside className="idiom-hint-panel">
             <h3><Lightbulb aria-hidden="true" />提示工具</h3>
-            <button type="button" disabled={busy || context.energy < 1} onClick={() => revealHint('letter')}><strong>一字提示</strong><span>先選空格，再揭示正確字</span><b>1 能量</b></button>
-            <button type="button" disabled={busy || context.energy < 2} onClick={() => revealHint('cross')}><strong>交錯字提示</strong><span>揭示同時連接兩個成語的字</span><b>2 能量</b></button>
-            {['advanced', 'challenge'].includes(puzzle.difficulty) && <button type="button" disabled={busy || context.energy < 10} onClick={revealAllCrossHints}><strong>所有交錯字提示</strong><span>一次揭示本題所有交錯位置</span><b>10 能量</b></button>}
-            <button type="button" disabled={busy || context.energy < 2} onClick={checkOneWrong}><strong>錯字檢查</strong><span>標記一個放錯的位置，不公布答案</span><b>2 能量</b></button>
-            <p>首次通關可得 3 點；未使用提示再加 1 點。同一關重玩不重複獲得。</p>
+            <button type="button" disabled={busy || hintLimitReached || context.energy < 1} onClick={() => revealHint('letter')}><strong>一字提示</strong><span>先選空格，再揭示正確字</span><b>1 能量</b></button>
+            <button type="button" disabled={busy || hintLimitReached || context.energy < 2} onClick={() => revealHint('cross')}><strong>交錯字提示</strong><span>揭示同時連接兩個成語的字</span><b>2 能量</b></button>
+            <button type="button" disabled={busy || hintLimitReached || context.energy < 5} onClick={revealIdiomHint}><strong>完整成語提示</strong><span>先選該成語的非交錯格，再揭示整句</span><b>5 能量</b></button>
+            {['advanced', 'challenge'].includes(puzzle.difficulty) && <button type="button" disabled={busy || hintLimitReached || context.energy < 10} onClick={revealAllCrossHints}><strong>所有交錯字提示</strong><span>一次揭示本題所有交錯位置</span><b>10 能量</b></button>}
+            <p>本關提示已使用 {hintUses}／2 次。首次通關可得 3 點；未使用提示再加 1 點。同一關重玩不重複獲得。</p>
           </aside>
         </div>
         <section className="idiom-character-bank" aria-labelledby="idiom-bank-title">
@@ -559,6 +616,7 @@ function resizeIdiomEditorGrid(grid, nextWidth, nextHeight) {
 }
 
 function IdiomEditorBoard({ grid, tab, tool, onChange }) {
+  const [editingGivenIndex, setEditingGivenIndex] = useState(-1)
   const updateCell = (index, value) => {
     const cells = grid.cells.map((cell, cellIndex) => cellIndex === index ? value : cell)
     onChange({ ...grid, cells })
@@ -573,9 +631,8 @@ function IdiomEditorBoard({ grid, tab, tool, onChange }) {
       updateCell(index, { type: IDIOM_EDITOR_CELL_TYPES.empty, value: current.value || '' })
       return
     }
-    const value = window.prompt('請輸入這一格的提示字', current.value || '')
-    if (value == null) return
-    updateCell(index, { type: IDIOM_EDITOR_CELL_TYPES.given, value: Array.from(value.trim())[0] || '' })
+    updateCell(index, { type: IDIOM_EDITOR_CELL_TYPES.given, value: current.value || '' })
+    setEditingGivenIndex(index)
   }
   return (
     <div
@@ -595,7 +652,24 @@ function IdiomEditorBoard({ grid, tab, tool, onChange }) {
               className={`idiom-editor-cell is-${cell.type}`}
               value={cell.value}
               maxLength={1}
+              {...chineseTextInputProps}
               aria-label={`第 ${row + 1} 列第 ${column + 1} 格答案`}
+              onChange={(event) => updateCell(index, { ...cell, value: Array.from(event.target.value)[0] || '' })}
+            />
+          )
+        }
+        if (tool === IDIOM_EDITOR_CELL_TYPES.given && cell.type === IDIOM_EDITOR_CELL_TYPES.given) {
+          return (
+            <input
+              key={index}
+              className="idiom-editor-cell is-given"
+              value={cell.value}
+              maxLength={1}
+              {...chineseTextInputProps}
+              autoFocus={editingGivenIndex === index}
+              aria-label={`第 ${row + 1} 列第 ${column + 1} 格提示字`}
+              onFocus={() => setEditingGivenIndex(index)}
+              onBlur={() => setEditingGivenIndex(-1)}
               onChange={(event) => updateCell(index, { ...cell, value: Array.from(event.target.value)[0] || '' })}
             />
           )
@@ -630,9 +704,11 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
   const [tool, setTool] = useState(IDIOM_EDITOR_CELL_TYPES.block)
   const [saving, setSaving] = useState(false)
   const [messages, setMessages] = useState([])
-  const emptyEntryForm = { phrase: '', stage: 'junior', definition: '', source: '', story: '', sourceUrl: '', sourceEntryId: null, zhuyin: '', pinyin: '' }
+  const emptyEntryForm = { phrase: '', stage: 'junior', definition: '', source: '', story: '', sourceUrl: '', illustrationUrl: '', sourceEntryId: null, zhuyin: '', pinyin: '' }
   const [entryForm, setEntryForm] = useState(emptyEntryForm)
   const [entrySaving, setEntrySaving] = useState(false)
+  const [entryEditorOpen, setEntryEditorOpen] = useState(false)
+  const entryEditorRef = useRef(null)
   const [dictionaryQuery, setDictionaryQuery] = useState('')
   const [dictionaryState, setDictionaryState] = useState({
     loading: false,
@@ -705,6 +781,7 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
       pinyin: entry.pinyin,
     }))
     setDictionaryQuery(entry.phrase)
+    setEntryEditorOpen(true)
     setMessages([existingEntry
       ? `題庫已有「${entry.phrase}」。已帶入較新的官方資料；儲存後會更新既有資料並加入本題。`
       : `已帶入教育部《成語典》「${entry.phrase}」的官方資料；請選擇適合等級後加入本題。`])
@@ -713,10 +790,31 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
     const phrase = Array.from(String(dictionaryQuery || '').replace(/\s/g, '')).join('')
     setEntryForm((current) => ({ ...emptyEntryForm, phrase, stage: current.stage }))
     setMessages([`請自行補充「${phrase}」的釋義與出處；日後若成語典收錄更完整資料，可再搜尋並更新。`])
+    setEntryEditorOpen(true)
   }
   const clearEntryForm = () => {
     setEntryForm({ ...emptyEntryForm, stage: entryForm.stage })
     setDictionaryQuery('')
+  }
+  const editCatalogEntry = (entry) => {
+    setEntryForm({
+      phrase: entry.phrase || '',
+      stage: entry.stage || 'junior',
+      definition: entry.definition || '',
+      source: entry.source || '',
+      story: entry.story || '',
+      sourceUrl: entry.sourceUrl || '',
+      illustrationUrl: entry.illustrationUrl || '',
+      sourceEntryId: entry.sourceEntryId || null,
+      zhuyin: entry.zhuyin || '',
+      pinyin: entry.pinyin || '',
+    })
+    setDictionaryQuery(entry.phrase || '')
+    setEntryEditorOpen(true)
+    setMessages([entry.sourceEntryId
+      ? `正在編輯「${entry.phrase}」；教育部官方欄位維持唯讀，可調整適合等級與教師圖片。`
+      : `正在編輯老師自行建立的「${entry.phrase}」。`])
+    window.requestAnimationFrame(() => entryEditorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
   }
   const addEntry = async () => {
     setEntrySaving(true)
@@ -788,7 +886,7 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
         <button type="button" className="icon-button" onClick={onCancel}><X aria-hidden="true" />關閉</button>
       </div>
       <div className="idiom-admin-fields">
-        <label>題目名稱<input value={title} onChange={(event) => setTitle(event.target.value)} /></label>
+        <label>題目名稱<input {...chineseTextInputProps} value={title} onChange={(event) => setTitle(event.target.value)} /></label>
         <label>發布日期<input type="date" value={publishedOn} onChange={(event) => setPublishedOn(event.target.value)} /></label>
         <label>適合等級<select value={stage} onChange={(event) => setStage(event.target.value)}>{Object.entries(stageLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         <label>難度<select value={difficulty} onChange={(event) => setDifficulty(event.target.value)}>{difficultyOrder.map((value) => <option key={value} value={value}>{IDIOM_DIFFICULTIES[value].label}</option>)}</select></label>
@@ -800,13 +898,13 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
 
       <div className="idiom-admin-section-heading"><div><h3>① 選擇本題成語</h3><p>至少 4 個；完成後學生才會解鎖這些成語的釋義與出處。</p></div><strong>{selectedIds.length} 個</strong></div>
       <div className="idiom-admin-catalog">
-        {available.map((entry) => <label key={entry.id}><input type="checkbox" checked={selectedIds.includes(entry.id)} onChange={() => toggle(entry.id)} /><span>{entry.phrase}</span><small>{stageLabels[entry.stage]}</small></label>)}
+        {available.map((entry) => <div className="idiom-admin-catalog-item" key={entry.id}><label><input type="checkbox" checked={selectedIds.includes(entry.id)} onChange={() => toggle(entry.id)} /><span>{entry.phrase}</span><small>{stageLabels[entry.stage]}</small></label><button type="button" onClick={() => editCatalogEntry(entry)}><Pencil aria-hidden="true" />編輯</button></div>)}
       </div>
-      <details className="idiom-entry-editor">
-        <summary><Plus aria-hidden="true" />搜尋教育部《成語典》並加入成語</summary>
+      <details ref={entryEditorRef} className="idiom-entry-editor" open={entryEditorOpen} onToggle={(event) => setEntryEditorOpen(event.currentTarget.open)}>
+        <summary><Plus aria-hidden="true" />搜尋、新增或編輯成語資料</summary>
         <p>輸入成語或部分文字，點選結果後會自動帶入官方釋義、典源、典故、注音及網址。</p>
         <div className="idiom-dictionary-search">
-          <label><span><Search aria-hidden="true" />搜尋成語</span><input value={dictionaryQuery} placeholder="例如：一字千金" onFocus={ensureDictionary} onChange={(event) => updateDictionaryQuery(event.target.value)} /></label>
+          <label><span><Search aria-hidden="true" />搜尋成語</span><input {...chineseTextInputProps} value={dictionaryQuery} placeholder="例如：一字千金" onFocus={ensureDictionary} onChange={(event) => updateDictionaryQuery(event.target.value)} /></label>
           {dictionaryState.loading && <p role="status">正在載入教育部成語資料……</p>}
           {dictionaryState.appendixLoading && <p role="status">正在補查修訂本參考資料……</p>}
           {dictionaryState.error && <p className="is-error" role="alert">{dictionaryState.error}</p>}
@@ -837,13 +935,14 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
           </p>
         )}
         <div className="idiom-entry-editor-fields">
-          <label>成語<input readOnly={Boolean(entryForm.sourceEntryId)} value={entryForm.phrase} onChange={(event) => setEntryForm((current) => ({ ...current, phrase: event.target.value }))} /></label>
+          <label>成語<input {...chineseTextInputProps} readOnly={Boolean(entryForm.sourceEntryId)} value={entryForm.phrase} onChange={(event) => setEntryForm((current) => ({ ...current, phrase: event.target.value }))} /></label>
           <label>適合等級<select value={entryForm.stage} onChange={(event) => setEntryForm((current) => ({ ...current, stage: event.target.value }))}><option value="elementary">國小階段</option><option value="junior">國中階段</option><option value="senior">高中延伸</option></select></label>
           {entryForm.sourceEntryId && <div className="idiom-official-reading is-wide"><div><strong>教育部注音</strong><span>{entryForm.zhuyin || '未收錄'}</span></div><div><strong>漢語拼音</strong><span>{entryForm.pinyin || '未收錄'}</span></div><button type="button" onClick={() => speakIdiom(entryForm.phrase)}><Volume2 aria-hidden="true" />試聽</button></div>}
-          <label className="is-wide">釋義<textarea readOnly={Boolean(entryForm.sourceEntryId)} rows="3" value={entryForm.definition} onChange={(event) => setEntryForm((current) => ({ ...current, definition: event.target.value }))} /></label>
-          <label className="is-wide">典源或出處<textarea readOnly={Boolean(entryForm.sourceEntryId)} rows="4" value={entryForm.source} onChange={(event) => setEntryForm((current) => ({ ...current, source: event.target.value }))} /></label>
-          <label className="is-wide">完整典故<textarea readOnly={Boolean(entryForm.sourceEntryId)} rows="4" value={entryForm.story} onChange={(event) => setEntryForm((current) => ({ ...current, story: event.target.value }))} /></label>
-          <label className="is-wide">教育部成語典網址<input readOnly={Boolean(entryForm.sourceEntryId)} type="url" value={entryForm.sourceUrl} onChange={(event) => setEntryForm((current) => ({ ...current, sourceUrl: event.target.value }))} /></label>
+          <label className="is-wide">釋義<textarea {...chineseTextInputProps} readOnly={Boolean(entryForm.sourceEntryId)} rows="3" value={entryForm.definition} onChange={(event) => setEntryForm((current) => ({ ...current, definition: event.target.value }))} /></label>
+          <label className="is-wide">典源或出處<textarea {...chineseTextInputProps} readOnly={Boolean(entryForm.sourceEntryId)} rows="4" value={entryForm.source} onChange={(event) => setEntryForm((current) => ({ ...current, source: event.target.value }))} /></label>
+          <label className="is-wide">完整典故<textarea {...chineseTextInputProps} readOnly={Boolean(entryForm.sourceEntryId)} rows="4" value={entryForm.story} onChange={(event) => setEntryForm((current) => ({ ...current, story: event.target.value }))} /></label>
+          <label className="is-wide">教育部成語典網址<input {...chineseTextInputProps} readOnly={Boolean(entryForm.sourceEntryId)} type="text" value={entryForm.sourceUrl} onChange={(event) => setEntryForm((current) => ({ ...current, sourceUrl: event.target.value }))} /></label>
+          <label className="is-wide">教師圖片網址（選填）<input {...chineseTextInputProps} type="text" value={entryForm.illustrationUrl} onChange={(event) => setEntryForm((current) => ({ ...current, illustrationUrl: event.target.value }))} /></label>
         </div>
         <div className="idiom-entry-editor-actions">
           {entryForm.sourceEntryId && <button type="button" className="secondary-button" onClick={clearEntryForm}>清除並改為手動輸入</button>}
@@ -878,7 +977,7 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
 }
 
 export default function IdiomWordGrid({ guestMode = false }) {
-  const [state, setState] = useState({ loading: true, error: '', puzzles: [], catalog: [], energy: 0, studentId: '', completedPuzzleIds: [], reviewEntryIds: [], canManage: false, remoteEnabled: false })
+  const [state, setState] = useState({ loading: true, error: '', puzzles: [], catalog: [], energy: 0, energyEarnedTotal: 0, energySpentTotal: 0, hintUseCounts: {}, studentId: '', completedPuzzleIds: [], reviewEntryIds: [], canManage: false, remoteEnabled: false })
   const [selectedId, setSelectedId] = useState('')
   const [selectedDifficulty, setSelectedDifficulty] = useState('beginner')
   const [editing, setEditing] = useState(null)
@@ -1000,7 +1099,15 @@ export default function IdiomWordGrid({ guestMode = false }) {
               reviewEntryIds={state.reviewEntryIds || []}
               onToggleReview={updateReviewEntries}
               onNextPuzzle={nextLevel ? () => setSelectedId(nextLevel.puzzle.id) : null}
-              onEnergyChange={(energy) => setState((current) => ({ ...current, energy }))}
+              onEnergyChange={(energy, change = {}) => setState((current) => ({
+                ...current,
+                energy,
+                energyEarnedTotal: Number(current.energyEarnedTotal || 0) + Number(change.earned || 0),
+                energySpentTotal: Number(current.energySpentTotal || 0) + Number(change.spent || 0),
+                hintUseCounts: change.spent
+                  ? { ...current.hintUseCounts, [puzzle.id]: Number(current.hintUseCounts?.[puzzle.id] || 0) + 1 }
+                  : current.hintUseCounts,
+              }))}
               onPuzzleCompleted={(puzzleId) => setState((current) => ({
                 ...current,
                 completedPuzzleIds: [...new Set([...(current.completedPuzzleIds || []), puzzleId])],
