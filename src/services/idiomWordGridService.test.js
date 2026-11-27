@@ -175,15 +175,21 @@ describe('成語填字圖服務', () => {
   })
 
   it('新增成語填字圖使用獨立題目身分，不以題名與日期覆寫舊題', async () => {
-    const query = result(null)
+    const query = result({
+      id: 'puzzle-new', title: '成語填字圖', published_on: '2026-11-23', difficulty: 'basic',
+      puzzle_data: { board: { width: 4, height: 4, cells: [], placements: [{}, {}, {}, {}] }, idioms: [], givenCellKeys: [], acceptedAnswers: { a: ['一十一五'] }, editorGrid: { width: 4, height: 4, cells: [] }, stage: 'junior' },
+      source_version: 'dict_idioms_2020_20260929', illustration_url: '', is_daily_eligible: true, status: 'draft',
+    })
     const client = { from: vi.fn(() => query) }
     const puzzle = {
       title: '成語填字圖', publishedOn: '2026-11-23', difficulty: 'basic', stage: 'junior', status: 'draft',
       board: { width: 4, height: 4, cells: [], placements: [{}, {}, {}, {}] },
       idioms: [], givenCellKeys: [], acceptedAnswers: { a: ['一十一五'] }, editorGrid: { width: 4, height: 4, cells: [] },
     }
-    await expect(saveIdiomPuzzle(puzzle, client)).resolves.toBeUndefined()
+    await expect(saveIdiomPuzzle(puzzle, client)).resolves.toMatchObject({ id: 'puzzle-new', title: '成語填字圖' })
     expect(query.insert).toHaveBeenCalledWith(expect.objectContaining({ title: '成語填字圖', published_on: '2026-11-23' }))
+    expect(query.select).toHaveBeenCalled()
+    expect(query.single).toHaveBeenCalled()
     expect(query.insert).toHaveBeenCalledWith(expect.objectContaining({
       puzzle_data: expect.objectContaining({ acceptedAnswers: { a: ['一十一五'] } }),
     }))
