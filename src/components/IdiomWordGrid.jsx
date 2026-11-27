@@ -952,8 +952,8 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
               onClick={() => editCatalogEntry(entry)}
               aria-label={`查看並修改「${entry.phrase}」資料`}
             >
-              <strong>{entry.phrase}</strong>
-              <small>{stageLabels[entry.stage]}</small>
+              <span className="idiom-admin-catalog-phrase">{entry.phrase || '未命名成語'}</span>
+              <small>適合等級：{stageLabels[entry.stage] || '尚未設定'}</small>
             </button>
           </div>
         ))}
