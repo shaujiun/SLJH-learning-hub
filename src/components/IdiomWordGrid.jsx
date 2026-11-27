@@ -789,6 +789,16 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
       ? `題庫已有「${entry.phrase}」。已帶入較新的官方資料；儲存後會更新既有資料並加入本題。`
       : `已帶入教育部《成語典》「${entry.phrase}」的官方資料；請選擇適合等級後加入本題。`])
   }
+  useEffect(() => {
+    const normalizedQuery = Array.from(String(dictionaryQuery || '').replace(/\s/g, '')).join('')
+    const exactEntry = dictionaryResults.find((entry) => entry.phrase === normalizedQuery)
+    if (!exactEntry) return
+    if (
+      entryForm.phrase === exactEntry.phrase
+      && Number(entryForm.sourceEntryId || 0) === Number(exactEntry.sourceEntryId || 0)
+    ) return
+    chooseDictionaryEntry(exactEntry)
+  }, [dictionaryQuery, dictionaryResults, entryForm.phrase, entryForm.sourceEntryId])
   const startManualEntry = () => {
     const phrase = Array.from(String(dictionaryQuery || '').replace(/\s/g, '')).join('')
     setEntryForm((current) => ({ ...emptyEntryForm, phrase, stage: current.stage }))
@@ -907,7 +917,27 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
 
       <div className="idiom-admin-section-heading"><div><h3>① 選擇本題成語</h3><p>至少 4 個；完成後學生才會解鎖這些成語的釋義與出處。</p></div><strong>{selectedIds.length} 個</strong></div>
       <div className="idiom-admin-catalog">
-        {available.map((entry) => <div className="idiom-admin-catalog-item" key={entry.id}><label><input type="checkbox" checked={selectedIds.includes(entry.id)} onChange={() => toggle(entry.id)} /><span>{entry.phrase}</span><small>{stageLabels[entry.stage]}</small></label><button type="button" onClick={() => editCatalogEntry(entry)}><Pencil aria-hidden="true" />編輯</button></div>)}
+        {available.map((entry) => (
+          <div className={`idiom-admin-catalog-item ${selectedIds.includes(entry.id) ? 'is-selected' : ''}`} key={entry.id}>
+            <label className="idiom-admin-catalog-check">
+              <input
+                type="checkbox"
+                checked={selectedIds.includes(entry.id)}
+                onChange={() => toggle(entry.id)}
+                aria-label={`將「${entry.phrase}」加入本題`}
+              />
+            </label>
+            <button
+              type="button"
+              className="idiom-admin-catalog-entry"
+              onClick={() => editCatalogEntry(entry)}
+              aria-label={`查看並修改「${entry.phrase}」資料`}
+            >
+              <strong>{entry.phrase}</strong>
+              <small>{stageLabels[entry.stage]}</small>
+            </button>
+          </div>
+        ))}
       </div>
       <details ref={entryEditorRef} className="idiom-entry-editor" open={entryEditorOpen} onToggle={(event) => setEntryEditorOpen(event.currentTarget.open)}>
         <summary><Plus aria-hidden="true" />搜尋、新增或編輯成語資料</summary>
