@@ -7,7 +7,7 @@ import {
   CircleAlert,
   Coins,
   ExternalLink,
-  Image as ImageIcon,
+  ImagePlus,
   Lightbulb,
   Pencil,
   Plus,
@@ -46,6 +46,7 @@ import {
   saveIdiomPuzzle,
   saveIdiomReviews,
   spendIdiomHint,
+  uploadIdiomIllustration,
 } from '../services/idiomWordGridService.js'
 import { loadIdiomDictionary, loadIdiomDictionaryAppendix } from '../services/idiomDictionaryService.js'
 import { trackLearningActivityAttempt } from '../services/learningProgressService.js'
@@ -192,7 +193,7 @@ export function IdiomLearningPanel({
         ))}
       </div>
       {entry && (
-        <article className="idiom-entry-card">
+        <article className={`idiom-entry-card ${entry.illustrationUrl ? 'has-illustration' : ''}`}>
           <div className="idiom-entry-copy">
             <div className="idiom-entry-title-row">
               <div><h3>{entry.phrase}</h3>{entry.zhuyin && <p>{entry.zhuyin}</p>}</div>
@@ -208,11 +209,11 @@ export function IdiomLearningPanel({
             {entry.story && <details><summary>閱讀完整典故</summary><p>{entry.story}</p></details>}
             {entry.sourceUrl && <a href={entry.sourceUrl} target="_blank" rel="noreferrer">開啟教育部《成語典》條目<ExternalLink aria-hidden="true" /></a>}
           </div>
-          <div className={`idiom-entry-illustration ${entry.illustrationUrl ? 'has-image' : ''}`}>
-            {entry.illustrationUrl
-              ? <img src={entry.illustrationUrl} alt={`${entry.phrase}的輔助插圖`} />
-              : <><ImageIcon aria-hidden="true" /><span>插圖須經教師確認與成語內容相符後才會顯示</span></>}
-          </div>
+          {entry.illustrationUrl && (
+            <div className="idiom-entry-illustration has-image">
+              <img src={entry.illustrationUrl} alt={`${entry.phrase}的輔助插圖`} />
+            </div>
+          )}
         </article>
       )}
       {reviewMessage && <p className="idiom-review-message" role="status">{reviewMessage}</p>}
@@ -710,8 +711,10 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
   const emptyEntryForm = { phrase: '', stage: 'junior', definition: '', source: '', story: '', sourceUrl: '', illustrationUrl: '', sourceEntryId: null, zhuyin: '', pinyin: '' }
   const [entryForm, setEntryForm] = useState(emptyEntryForm)
   const [entrySaving, setEntrySaving] = useState(false)
+  const [entryImageUploading, setEntryImageUploading] = useState(false)
   const [entryEditorOpen, setEntryEditorOpen] = useState(false)
   const entryEditorRef = useRef(null)
+  const entryImageInputRef = useRef(null)
   const [dictionaryQuery, setDictionaryQuery] = useState('')
   const [dictionaryState, setDictionaryState] = useState({
     loading: false,
@@ -779,6 +782,7 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
       source: entry.source,
       story: entry.story,
       sourceUrl: entry.sourceUrl,
+      illustrationUrl: existingEntry?.illustrationUrl || entry.illustrationUrl || '',
       sourceEntryId: entry.sourceEntryId,
       zhuyin: entry.zhuyin,
       pinyin: entry.pinyin,
@@ -844,6 +848,21 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
       setMessages([error.message])
     } finally {
       setEntrySaving(false)
+    }
+  }
+  const uploadEntryImage = async (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    setEntryImageUploading(true)
+    try {
+      const illustrationUrl = await uploadIdiomIllustration(file)
+      setEntryForm((current) => ({ ...current, illustrationUrl }))
+      setMessages([`「${file.name}」已上傳；儲存成語資料後，學生即可看到圖片。`])
+    } catch (error) {
+      setMessages([error.message])
+    } finally {
+      setEntryImageUploading(false)
+      event.target.value = ''
     }
   }
   const validate = () => {
@@ -981,7 +1000,15 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
           <label className="is-wide">典源或出處<textarea {...chineseTextInputProps} readOnly={Boolean(entryForm.sourceEntryId)} rows="4" value={entryForm.source} onChange={(event) => setEntryForm((current) => ({ ...current, source: event.target.value }))} /></label>
           <label className="is-wide">完整典故<textarea {...chineseTextInputProps} readOnly={Boolean(entryForm.sourceEntryId)} rows="4" value={entryForm.story} onChange={(event) => setEntryForm((current) => ({ ...current, story: event.target.value }))} /></label>
           <label className="is-wide">教育部成語典網址<input {...chineseTextInputProps} readOnly={Boolean(entryForm.sourceEntryId)} type="text" value={entryForm.sourceUrl} onChange={(event) => setEntryForm((current) => ({ ...current, sourceUrl: event.target.value }))} /></label>
-          <label className="is-wide">教師圖片網址（選填）<input {...chineseTextInputProps} type="text" value={entryForm.illustrationUrl} onChange={(event) => setEntryForm((current) => ({ ...current, illustrationUrl: event.target.value }))} /></label>
+          <label className="is-wide">教師圖片（選填）
+            <div className="idiom-entry-image-field">
+              <input {...chineseTextInputProps} type="text" placeholder="可貼上圖片網址，或使用右側按鈕上傳圖檔" value={entryForm.illustrationUrl} onChange={(event) => setEntryForm((current) => ({ ...current, illustrationUrl: event.target.value }))} />
+              <input ref={entryImageInputRef} hidden type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadEntryImage} />
+              <button type="button" disabled={entryImageUploading} onClick={() => entryImageInputRef.current?.click()}><ImagePlus aria-hidden="true" />{entryImageUploading ? '上傳中……' : '上傳圖檔'}</button>
+              {entryForm.illustrationUrl && <button type="button" className="is-remove" onClick={() => setEntryForm((current) => ({ ...current, illustrationUrl: '' }))}>移除圖片</button>}
+            </div>
+            {entryForm.illustrationUrl && <img className="idiom-entry-image-preview" src={entryForm.illustrationUrl} alt="教師圖片預覽" />}
+          </label>
         </div>
         <div className="idiom-entry-editor-actions">
           {entryForm.sourceEntryId && <button type="button" className="secondary-button" onClick={clearEntryForm}>清除並改為手動輸入</button>}

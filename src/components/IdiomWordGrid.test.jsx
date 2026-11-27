@@ -28,14 +28,27 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('交錯格')
   })
 
-  it('通關後列出成語、教育部釋義與出處，圖片未確認時不亂配圖', () => {
+  it('通關後列出成語、教育部釋義與出處，沒有圖片時不顯示空白圖片區塊', () => {
     const html = renderToStaticMarkup(<IdiomLearningPanel puzzle={puzzle} />)
     expect(html).toContain('一心一意')
     expect(html).toContain('專心一意。')
     expect(html).toContain('典源或出處')
     expect(html).toContain('播放發音')
     expect(html).toContain('ㄧ ㄒㄧㄣ ㄧ ㄧˋ')
-    expect(html).toContain('插圖須經教師確認與成語內容相符後才會顯示')
+    expect(html).not.toContain('idiom-entry-illustration')
+    expect(html).not.toContain('待老師上傳')
+  })
+
+  it('教師已設定圖片時才在學生端顯示成語輔助插圖', () => {
+    const withImage = {
+      ...puzzle,
+      idioms: puzzle.idioms.map((entry, index) => index === 0
+        ? { ...entry, illustrationUrl: 'https://example.com/idiom.webp' }
+        : entry),
+    }
+    const html = renderToStaticMarkup(<IdiomLearningPanel puzzle={withImage} />)
+    expect(html).toContain('src="https://example.com/idiom.webp"')
+    expect(html).toContain('一心一意的輔助插圖')
   })
 
   it('提供一字、交錯字與完整成語提示，並顯示每關兩次上限', () => {
@@ -191,6 +204,8 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('不會改寫教育部成語資料')
     expect(html).toContain('placeholder="例如：一十一五"')
     expect(html).toContain('新增並加入本題')
+    expect(html).toContain('上傳圖檔')
+    expect(html).toContain('image/jpeg,image/png,image/webp')
     expect(html).toContain('查看並修改')
     expect(html).not.toContain('>編輯</button>')
     expect(html).not.toContain('type="url"')

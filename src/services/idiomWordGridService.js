@@ -145,7 +145,9 @@ export async function saveIdiomEntry(input, client = requireSupabase()) {
     source_text: incomingText(input.source, existing?.source_text),
     story: incomingText(input.story, existing?.story),
     source_url: incomingText(input.sourceUrl, existing?.source_url),
-    illustration_url: incomingText(input.illustrationUrl, existing?.illustration_url),
+    illustration_url: Object.prototype.hasOwnProperty.call(input, 'illustrationUrl')
+      ? String(input.illustrationUrl || '').trim()
+      : incomingText(existing?.illustration_url),
     stage: ['elementary', 'junior', 'senior'].includes(input.stage) ? input.stage : 'junior',
     source_entry_id: Number(input.sourceEntryId || 0) || Number(existing?.source_entry_id || 0) || null,
     zhuyin: incomingText(input.zhuyin, existing?.zhuyin),
@@ -161,6 +163,36 @@ export async function saveIdiomEntry(input, client = requireSupabase()) {
     .single()
   if (error) throw new Error(`無法儲存成語資料：${error.message}`)
   return { ...mapIdiomEntry(data), wasUpdated: Boolean(existing) }
+}
+
+export async function uploadIdiomIllustration(file, client = requireSupabase()) {
+  if (!file) throw new Error('請先選擇圖片。')
+  const extensions = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+  }
+  const extension = extensions[file.type]
+  if (!extension) throw new Error('圖片僅支援 JPG、PNG 或 WebP。')
+  if (file.size > 5 * 1024 * 1024) throw new Error('圖片大小不可超過 5 MB。')
+
+  const { data: sessionData, error: sessionError } = await client.auth.getSession()
+  const userId = sessionData?.session?.user?.id
+  if (sessionError || !userId) throw new Error('請先以管理者帳號登入後再上傳圖片。')
+
+  const randomPart = typeof crypto !== 'undefined' && crypto.getRandomValues
+    ? crypto.getRandomValues(new Uint32Array(1))[0]
+    : Math.floor(Math.random() * 1_000_000_000)
+  const path = `${userId}/${Date.now()}-${randomPart}.${extension}`
+  const bucket = client.storage.from('idiom-word-grid-media')
+  const { error: uploadError } = await bucket.upload(path, file, {
+    contentType: file.type,
+    upsert: false,
+  })
+  if (uploadError) throw new Error(`成語圖片上傳失敗：${uploadError.message}`)
+  const publicUrl = bucket.getPublicUrl(path).data?.publicUrl || ''
+  if (!publicUrl) throw new Error('成語圖片已上傳，但無法取得公開網址。')
+  return publicUrl
 }
 
 export async function spendIdiomHint({ puzzleId, kind, cellKey }, client = requireSupabase()) {

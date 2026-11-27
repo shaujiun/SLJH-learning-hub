@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { completeIdiomPuzzle, loadIdiomWordGridContext, mapIdiomPuzzle, saveIdiomEntry, saveIdiomPuzzle, saveIdiomReviews, spendIdiomHint } from './idiomWordGridService.js'
+import { completeIdiomPuzzle, loadIdiomWordGridContext, mapIdiomPuzzle, saveIdiomEntry, saveIdiomPuzzle, saveIdiomReviews, spendIdiomHint, uploadIdiomIllustration } from './idiomWordGridService.js'
 
 function result(data, error = null) {
   const promise = Promise.resolve({ data, error })
@@ -138,6 +138,40 @@ describe('成語填字圖服務', () => {
       source_text: '教師已補充的出處', story: '教育部完整典故',
       illustration_url: 'https://example.com/teacher-image.png', source_entry_id: 106662,
     }), { onConflict: 'phrase' })
+  })
+
+  it('管理者可上傳成語圖片並取得學生端可讀取的公開網址', async () => {
+    const upload = vi.fn(async () => ({ error: null }))
+    const getPublicUrl = vi.fn(() => ({ data: { publicUrl: 'https://example.supabase.co/storage/v1/object/public/idiom-word-grid-media/admin/image.webp' } }))
+    const bucket = { upload, getPublicUrl }
+    const client = {
+      auth: { getSession: vi.fn(async () => ({ data: { session: { user: { id: 'admin-1' } } }, error: null })) },
+      storage: { from: vi.fn(() => bucket) },
+    }
+    const file = { name: '成語圖片.webp', type: 'image/webp', size: 1024 }
+
+    await expect(uploadIdiomIllustration(file, client)).resolves.toContain('/idiom-word-grid-media/')
+    expect(client.storage.from).toHaveBeenCalledWith('idiom-word-grid-media')
+    expect(upload).toHaveBeenCalledWith(expect.stringMatching(/^admin-1\/\d+-\d+\.webp$/), file, {
+      contentType: 'image/webp',
+      upsert: false,
+    })
+  })
+
+  it('教師明確移除圖片時會儲存空值，而不是恢復舊圖片', async () => {
+    const readQuery = result({
+      id: 'entry-1', phrase: '一心一意', definition: '專心一意。', source_text: '', story: '', source_url: '',
+      illustration_url: 'https://example.com/old.png', stage: 'junior', source_entry_id: null,
+      zhuyin: '', pinyin: '', license_version: 'teacher-created',
+    })
+    const writeQuery = result({
+      id: 'entry-1', phrase: '一心一意', definition: '專心一意。', source_text: '', story: '', source_url: '',
+      illustration_url: '', stage: 'junior', source_entry_id: null, zhuyin: '', pinyin: '',
+    })
+    const client = { from: vi.fn().mockReturnValueOnce(readQuery).mockReturnValueOnce(writeQuery) }
+
+    await saveIdiomEntry({ phrase: '一心一意', definition: '專心一意。', illustrationUrl: '' }, client)
+    expect(writeQuery.upsert).toHaveBeenCalledWith(expect.objectContaining({ illustration_url: '' }), { onConflict: 'phrase' })
   })
 
   it('新增成語填字圖使用獨立題目身分，不以題名與日期覆寫舊題', async () => {
