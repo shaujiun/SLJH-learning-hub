@@ -20,9 +20,9 @@ describe('成語填字圖服務', () => {
   it('將資料庫題目轉成可變版面', () => {
     expect(mapIdiomPuzzle({
       id: 'p1', title: '測試', published_on: '2026-10-31', difficulty: 'basic',
-      puzzle_data: { board: { width: 7, height: 4, cells: [] }, idioms: [], givenCellKeys: ['0:0'], editorGrid: { width: 7, height: 4, cells: [] }, stage: 'elementary' },
+      puzzle_data: { board: { width: 7, height: 4, cells: [] }, idioms: [], givenCellKeys: ['0:0'], acceptedAnswers: { a: ['一十一五'] }, editorGrid: { width: 7, height: 4, cells: [] }, stage: 'elementary' },
       status: 'published', is_daily_eligible: true,
-    })).toMatchObject({ id: 'p1', title: '測試', difficulty: 'basic', givenCellKeys: ['0:0'], stage: 'elementary', editorGrid: { width: 7, height: 4 }, board: { width: 7, height: 4 } })
+    })).toMatchObject({ id: 'p1', title: '測試', difficulty: 'basic', givenCellKeys: ['0:0'], acceptedAnswers: { a: ['一十一五'] }, stage: 'elementary', editorGrid: { width: 7, height: 4 }, board: { width: 7, height: 4 } })
   })
 
   it('資料表尚未安裝時提供內建題目，訪客仍可遊玩', async () => {
@@ -146,10 +146,13 @@ describe('成語填字圖服務', () => {
     const puzzle = {
       title: '成語填字圖', publishedOn: '2026-11-23', difficulty: 'basic', stage: 'junior', status: 'draft',
       board: { width: 4, height: 4, cells: [], placements: [{}, {}, {}, {}] },
-      idioms: [], givenCellKeys: [], editorGrid: { width: 4, height: 4, cells: [] },
+      idioms: [], givenCellKeys: [], acceptedAnswers: { a: ['一十一五'] }, editorGrid: { width: 4, height: 4, cells: [] },
     }
     await expect(saveIdiomPuzzle(puzzle, client)).resolves.toBeUndefined()
     expect(query.insert).toHaveBeenCalledWith(expect.objectContaining({ title: '成語填字圖', published_on: '2026-11-23' }))
+    expect(query.insert).toHaveBeenCalledWith(expect.objectContaining({
+      puzzle_data: expect.objectContaining({ acceptedAnswers: { a: ['一十一五'] } }),
+    }))
     expect(query.upsert).not.toHaveBeenCalled()
   })
 

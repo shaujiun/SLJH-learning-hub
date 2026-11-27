@@ -139,6 +139,13 @@
 .idiom-admin-catalog-item > button svg { width: 1rem; }
 .idiom-auto-layout-button { display: inline-flex; align-items: center; gap: .35rem; margin-top: .7rem; padding: .65rem .85rem; border: 1px solid #197365; border-radius: 9px; background: #eef8f5; color: #176b60; font-weight: 900; cursor: pointer; }
 .idiom-auto-layout-note { margin: .4rem 0 0; color: #526661; font-size: .92rem; }
+.idiom-alternate-answer-editor { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: .65rem; margin-top: .75rem; padding: .8rem; border: 1px solid #c8dbd6; border-radius: 12px; background: #f6faf8; }
+.idiom-alternate-answer-editor > p { grid-column: 1 / -1; margin: 0; color: #526661; line-height: 1.6; }
+.idiom-alternate-answer-editor > p.is-empty { color: #7a6751; }
+.idiom-alternate-answer-editor label { display: grid; gap: .35rem; min-width: 0; padding: .65rem; border: 1px solid #d4e2de; border-radius: 10px; background: #fff; }
+.idiom-alternate-answer-editor label > span { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
+.idiom-alternate-answer-editor label small { color: #6c7f79; font-weight: 700; }
+.idiom-alternate-answer-editor textarea { box-sizing: border-box; width: 100%; resize: vertical; padding: .55rem; border: 1px solid #82999c; border-radius: 9px; background: #fff; color: #17324a; font: inherit; }
 .idiom-dictionary-results em { display: inline-flex; width: fit-content; padding: .12rem .42rem; border-radius: 999px; background: #edf4f2; color: #4c6660; font-size: .78rem; font-style: normal; font-weight: 800; }
 .idiom-entry-editor { margin-top: .75rem; padding: .75rem; border: 1px solid #d7e3df; border-radius: 12px; background: #fbfdfc; }
 .idiom-entry-editor summary { display: flex; align-items: center; gap: .35rem; color: #176b60; font-weight: 900; cursor: pointer; }

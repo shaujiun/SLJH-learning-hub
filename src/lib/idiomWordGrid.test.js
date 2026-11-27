@@ -13,6 +13,7 @@ import {
   createIdiomBankTiles,
   editorGridFromPuzzle,
   assignIdiomTile,
+  normalizeAcceptedIdiomAnswers,
   pickPreferredIdiomLevel,
 } from './idiomWordGrid.js'
 
@@ -22,6 +23,42 @@ const entries = [
   { id: 'c', phrase: '和氣生財' },
   { id: 'd', phrase: '財源廣進' },
 ]
+
+const intersectingPuzzle = {
+  difficulty: 'beginner',
+  board: {
+    width: 4,
+    height: 4,
+    placements: [
+      { idiomId: 'a', phrase: '一五一十', row: 0, column: 0, direction: 'across' },
+      { idiomId: 'b', phrase: '一心一意', row: 0, column: 0, direction: 'down' },
+    ],
+    cells: [
+      { key: '0:0', row: 0, column: 0, solution: '一', idiomIds: ['a', 'b'], isIntersection: true },
+      { key: '0:1', row: 0, column: 1, solution: '五', idiomIds: ['a'], isIntersection: false },
+      { key: '0:2', row: 0, column: 2, solution: '一', idiomIds: ['a'], isIntersection: false },
+      { key: '0:3', row: 0, column: 3, solution: '十', idiomIds: ['a'], isIntersection: false },
+      { key: '1:0', row: 1, column: 0, solution: '心', idiomIds: ['b'], isIntersection: false },
+      { key: '2:0', row: 2, column: 0, solution: '一', idiomIds: ['b'], isIntersection: false },
+      { key: '3:0', row: 3, column: 0, solution: '意', idiomIds: ['b'], isIntersection: false },
+    ],
+  },
+  idioms: [
+    { id: 'a', phrase: '一五一十' },
+    { id: 'b', phrase: '一心一意' },
+  ],
+  givenCellKeys: ['0:2'],
+}
+
+function assignmentsForCharacters(puzzle, charactersByCell) {
+  const tiles = createIdiomBankTiles(puzzle)
+  const used = new Set()
+  return Object.fromEntries(Object.entries(charactersByCell).map(([cellKey, character]) => {
+    const tile = tiles.find((candidate) => candidate.character === character && !used.has(candidate.id))
+    used.add(tile.id)
+    return [cellKey, tile.id]
+  }))
+}
 
 describe('成語填字圖核心', () => {
   it('依難度建立固定關卡編號，並把已通關題目留在回顧清單', () => {
@@ -79,29 +116,32 @@ describe('成語填字圖核心', () => {
     }
   })
 
-  it('成語填完後會整句判色，任一字錯誤時整句都標為錯誤', () => {
-    const puzzle = buildIdiomPuzzle(entries, 'beginner')
-    const tiles = createIdiomBankTiles(puzzle)
-    const assignments = {}
-    puzzle.board.cells
-      .filter((cell) => !puzzle.givenCellKeys.includes(cell.key))
-      .forEach((cell) => {
-        assignments[cell.key] = tiles.findIndex((tile, index) => tile.character === cell.solution
-          && !Object.values(assignments).includes(index))
-      })
+  it('錯誤成語只標紅填字格，提示字不變色，已由另一成語確認的交錯字保留正確色', () => {
+    const assignments = assignmentsForCharacters(intersectingPuzzle, {
+      '0:0': '一', '0:1': '十', '0:3': '五',
+      '1:0': '心', '2:0': '一', '3:0': '意',
+    })
+    const progress = assessIdiomProgress(intersectingPuzzle, assignments)
 
-    const correct = assessIdiomProgress(puzzle, assignments)
-    expect(correct.idioms.every((idiom) => idiom.status === 'correct')).toBe(true)
+    expect(progress.idioms.find((idiom) => idiom.id === 'a')?.status).toBe('incorrect')
+    expect(progress.idioms.find((idiom) => idiom.id === 'b')?.status).toBe('correct')
+    expect(progress.cellFeedback['0:1'].map((feedback) => feedback.status)).toEqual(['incorrect'])
+    expect(progress.cellFeedback['0:3'].map((feedback) => feedback.status)).toEqual(['incorrect'])
+    expect(progress.cellFeedback['0:2']).toEqual([])
+    expect(progress.cellFeedback['0:0'].map((feedback) => feedback.status)).toEqual(['correct'])
+  })
 
-    const targetCell = puzzle.board.cells.find((cell) => !puzzle.givenCellKeys.includes(cell.key))
-    const wrongTile = tiles.find((tile) => tile.character !== targetCell.solution)
-    const incorrect = assessIdiomProgress(puzzle, { ...assignments, [targetCell.key]: wrongTile.id })
-    const affectedIdioms = incorrect.idioms.filter((idiom) => targetCell.idiomIds.includes(idiom.id))
-    expect(affectedIdioms.every((idiom) => idiom.status === 'incorrect')).toBe(true)
-    affectedIdioms.forEach((idiom) => {
-      idiom.cellKeys.forEach((key) => {
-        expect(incorrect.cellFeedback[key].some((feedback) => feedback.status === 'incorrect')).toBe(true)
-      })
+  it('教師可為單一成語設定字序不同的替代答案，兩種答案都判定正確', () => {
+    const puzzle = { ...intersectingPuzzle, acceptedAnswers: { a: ['一十一五'] } }
+    const assignments = assignmentsForCharacters(puzzle, {
+      '0:0': '一', '0:1': '十', '0:3': '五',
+      '1:0': '心', '2:0': '一', '3:0': '意',
+    })
+
+    expect(assessIdiomAssignments(puzzle, assignments).correct).toBe(true)
+    expect(assessIdiomProgress(puzzle, assignments).idioms.every((idiom) => idiom.status === 'correct')).toBe(true)
+    expect(normalizeAcceptedIdiomAnswers({ a: '一十一五、 一五一十\n一十一五' })).toEqual({
+      a: ['一十一五', '一五一十'],
     })
   })
 
@@ -176,5 +216,17 @@ describe('成語填字圖核心', () => {
 
     expect(result.errors).toContain('完整答案尚有空白，請逐格填入答案。')
     expect(result.errors.some((message) => message.includes('答案版面找不到'))).toBe(true)
+  })
+
+  it('替代答案若不是相同文字的重新排列，檢查時不允許儲存', () => {
+    const generated = buildIdiomPuzzle(entries, 'basic')
+    const editorGrid = editorGridFromPuzzle(generated)
+    const result = buildManualIdiomPuzzle({
+      editorGrid,
+      idioms: entries,
+      acceptedAnswers: { a: '天地玄黃' },
+    })
+
+    expect(result.errors.some((message) => message.includes('必須使用相同的一組文字'))).toBe(true)
   })
 })

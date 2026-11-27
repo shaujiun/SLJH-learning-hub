@@ -50,7 +50,7 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('本關提示已使用 0／2 次')
   })
 
-  it('完成的成語可用不同底色標示，錯誤成語整句使用紅色狀態', () => {
+  it('完成的成語可用較深底色標示，錯誤填字格使用紅色狀態', () => {
     const correctCell = puzzle.board.cells[0]
     const wrongCell = puzzle.board.cells[1]
     const html = renderToStaticMarkup(
@@ -171,6 +171,7 @@ describe('成語填字圖畫面', () => {
     const html = renderToStaticMarkup(
       <IdiomPuzzleEditor
         catalog={puzzle.idioms.map((entry) => ({ ...entry, stage: 'junior' }))}
+        puzzle={{ ...puzzle, acceptedAnswers: { a: ['一意一心'] } }}
         onSaved={() => {}}
         onCancel={() => {}}
         onCatalogAdded={() => {}}
@@ -186,6 +187,9 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('破音字')
     expect(html).toContain('依所選成語自動排版')
     expect(html).toContain('先勾選至少 4 個具有共同文字的成語')
+    expect(html).toContain('設定可接受的替代答案')
+    expect(html).toContain('不會改寫教育部成語資料')
+    expect(html).toContain('placeholder="例如：一十一五"')
     expect(html).toContain('新增並加入本題')
     expect(html).toContain('編輯')
     expect(html).not.toContain('type="url"')

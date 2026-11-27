@@ -51,6 +51,22 @@ function idiomCharacters(value) {
   return Array.from(String(value || '').replace(/[\s，、；；。．！!？?「」『』（）()]/g, ''))
 }
 
+export function normalizeAcceptedIdiomAnswers(source = {}) {
+  return Object.fromEntries(Object.entries(source || {}).map(([idiomId, rawAnswers]) => {
+    const values = Array.isArray(rawAnswers)
+      ? rawAnswers
+      : String(rawAnswers || '').split(/[\n,，、;；|／/]+/)
+    const answers = [...new Set(values
+      .map((answer) => idiomCharacters(answer).join(''))
+      .filter(Boolean))]
+    return [String(idiomId), answers]
+  }).filter(([, answers]) => answers.length > 0))
+}
+
+function characterSignature(value) {
+  return idiomCharacters(value).sort((left, right) => left.localeCompare(right, 'zh-TW')).join('')
+}
+
 export function normalizeIdiomEntry(entry, index = 0) {
   const phrase = idiomCharacters(entry?.phrase).join('')
   return {
@@ -276,6 +292,7 @@ export function buildIdiomPuzzle(rawEntries, difficulty = 'basic', options = {})
     board,
     idioms: usedIdioms,
     givenCellKeys: selectGivenCellKeys(board, difficulty),
+    acceptedAnswers: normalizeAcceptedIdiomAnswers(options.acceptedAnswers),
   }
 }
 
@@ -363,9 +380,10 @@ function findManualPlacement(grid, entry, direction) {
   return placements
 }
 
-export function buildManualIdiomPuzzle({ editorGrid, idioms, difficulty = 'basic', stage = 'junior' } = {}) {
+export function buildManualIdiomPuzzle({ editorGrid, idioms, acceptedAnswers = {}, difficulty = 'basic', stage = 'junior' } = {}) {
   const grid = createIdiomEditorGrid(editorGrid?.width, editorGrid?.height, editorGrid)
   const entries = (idioms || []).map(normalizeIdiomEntry).filter((entry) => entry.phrase.length >= 4)
+  const normalizedAcceptedAnswers = normalizeAcceptedIdiomAnswers(acceptedAnswers)
   const errors = []
   if (entries.length < 4) errors.push('至少選擇 4 個成語。')
 
@@ -410,6 +428,34 @@ export function buildManualIdiomPuzzle({ editorGrid, idioms, difficulty = 'basic
     errors.push('成語之間尚未形成交錯字。')
   }
 
+  const givenKeys = new Set(activeIndexes
+    .filter(({ cell }) => cell.type === IDIOM_EDITOR_CELL_TYPES.given)
+    .map(({ index }) => coordinateKey(Math.floor(index / grid.width), index % grid.width)))
+  const entriesById = new Map(entries.map((entry) => [entry.id, entry]))
+  placements.forEach((placement) => {
+    const entry = entriesById.get(placement.idiomId)
+    const alternatives = normalizedAcceptedAnswers[placement.idiomId] || []
+    alternatives.forEach((alternative) => {
+      if (alternative === entry?.phrase) return
+      if (idiomCharacters(alternative).length !== idiomCharacters(placement.phrase).length) {
+        errors.push(`「${entry?.phrase}」的替代答案「${alternative}」字數不同。`)
+        return
+      }
+      if (characterSignature(alternative) !== characterSignature(placement.phrase)) {
+        errors.push(`「${entry?.phrase}」的替代答案「${alternative}」必須使用相同的一組文字。`)
+        return
+      }
+      cellsForPlacement(alternative, placement.row, placement.column, placement.direction).forEach((cell) => {
+        const key = coordinateKey(cell.row, cell.column)
+        const isFixed = givenKeys.has(key) || Number(memberships.get(key)?.size || 0) > 1
+        const expected = editorCellAt(grid, cell.row, cell.column)?.value || ''
+        if (isFixed && cell.character !== expected) {
+          errors.push(`替代答案「${alternative}」不可改變提示字或交錯字「${expected}」。`)
+        }
+      })
+    })
+  })
+
   const boardCells = activeIndexes.map(({ cell, index }) => {
     const row = Math.floor(index / grid.width)
     const column = index % grid.width
@@ -438,9 +484,11 @@ export function buildManualIdiomPuzzle({ editorGrid, idioms, difficulty = 'basic
         showBlocks: true,
       },
       idioms: entries,
-      givenCellKeys: activeIndexes
-        .filter(({ cell }) => cell.type === IDIOM_EDITOR_CELL_TYPES.given)
-        .map(({ index }) => coordinateKey(Math.floor(index / grid.width), index % grid.width)),
+      givenCellKeys: [...givenKeys],
+      acceptedAnswers: Object.fromEntries(entries.map((entry) => {
+        const alternatives = (normalizedAcceptedAnswers[entry.id] || []).filter((answer) => answer !== entry.phrase)
+        return [entry.id, alternatives]
+      }).filter(([, alternatives]) => alternatives.length > 0)),
       editorGrid: grid,
     },
     errors: [...new Set(errors)],
@@ -462,38 +510,62 @@ export function assessIdiomAssignments(puzzle, assignments = {}) {
   const editable = (puzzle?.board?.cells || []).filter((cell) => !given.has(cell.key))
   const complete = editable.every((cell) => Number.isInteger(assignments[cell.key]) && tiles[assignments[cell.key]])
   if (!complete) return { status: 'incomplete', correct: false }
-  const wrongCellKeys = editable
-    .filter((cell) => tiles[assignments[cell.key]]?.character !== cell.solution)
-    .map((cell) => cell.key)
+  const progress = assessIdiomProgress(puzzle, assignments)
+  const wrongCellKeys = [...new Set(progress.idioms
+    .filter((idiom) => idiom.status !== 'correct')
+    .flatMap((idiom) => idiom.editableCellKeys))]
   return { status: wrongCellKeys.length ? 'incorrect' : 'correct', correct: wrongCellKeys.length === 0, wrongCellKeys }
+}
+
+function orderedCellsForIdiom(puzzle, entry, cellsByKey) {
+  const placement = (puzzle?.board?.placements || []).find((item) => item.idiomId === entry.id)
+  if (!placement) {
+    return (puzzle?.board?.cells || []).filter((cell) => cell.idiomIds?.includes(entry.id))
+  }
+  return cellsForPlacement(placement.phrase || entry.phrase, placement.row, placement.column, placement.direction)
+    .map((cell) => cellsByKey.get(coordinateKey(cell.row, cell.column)))
+    .filter(Boolean)
 }
 
 export function assessIdiomProgress(puzzle, assignments = {}, revealedKeys = []) {
   const fixed = new Set([...(puzzle?.givenCellKeys || []), ...(revealedKeys || [])])
   const tiles = createIdiomBankTiles(puzzle)
   const cells = puzzle?.board?.cells || []
+  const cellsByKey = new Map(cells.map((cell) => [cell.key, cell]))
+  const acceptedAnswers = normalizeAcceptedIdiomAnswers(puzzle?.acceptedAnswers)
   const idioms = (puzzle?.idioms || []).map((entry, colorIndex) => {
-    const idiomCells = cells.filter((cell) => cell.idiomIds?.includes(entry.id))
+    const idiomCells = orderedCellsForIdiom(puzzle, entry, cellsByKey)
     const values = idiomCells.map((cell) => {
       if (fixed.has(cell.key)) return cell.solution
       const tileId = assignments[cell.key]
       return Number.isInteger(tileId) ? tiles[tileId]?.character || '' : ''
     })
     const complete = idiomCells.length > 0 && values.every(Boolean)
-    const correct = complete && idiomCells.every((cell, index) => values[index] === cell.solution)
+    const submittedAnswer = values.join('')
+    const accepted = [...new Set([entry.phrase, ...(acceptedAnswers[entry.id] || [])])]
+    const correct = complete && accepted.includes(submittedAnswer)
     return {
       id: entry.id,
       cellKeys: idiomCells.map((cell) => cell.key),
+      editableCellKeys: idiomCells.filter((cell) => !fixed.has(cell.key)).map((cell) => cell.key),
       colorIndex,
+      submittedAnswer,
+      acceptedAnswers: accepted,
       status: complete ? (correct ? 'correct' : 'incorrect') : 'incomplete',
     }
   })
   const idiomById = new Map(idioms.map((idiom) => [idiom.id, idiom]))
   const cellFeedback = Object.fromEntries(cells.map((cell) => [
     cell.key,
-    (cell.idiomIds || [])
+    (() => {
+      const memberships = (cell.idiomIds || [])
       .map((idiomId) => idiomById.get(idiomId))
-      .filter((idiom) => idiom && idiom.status !== 'incomplete'),
+        .filter(Boolean)
+      const correctMemberships = memberships.filter((idiom) => idiom.status === 'correct')
+      if (correctMemberships.length > 0) return correctMemberships
+      if (fixed.has(cell.key)) return []
+      return memberships.filter((idiom) => idiom.status === 'incorrect')
+    })(),
   ]))
   return { idioms, cellFeedback }
 }
@@ -568,5 +640,6 @@ export function serializeIdiomPuzzle(puzzle) {
     board: puzzle.board,
     idioms: puzzle.idioms,
     givenCellKeys: puzzle.givenCellKeys,
+    acceptedAnswers: normalizeAcceptedIdiomAnswers(puzzle.acceptedAnswers),
   }
 }

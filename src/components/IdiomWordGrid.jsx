@@ -71,7 +71,7 @@ const chineseTextInputProps = {
   spellCheck: false,
 }
 
-const idiomFeedbackColors = ['#d8f3e8', '#dcecff', '#fff0bd', '#eadfff', '#d9f2f5', '#ffe0cf', '#e7efc8', '#f8dff0']
+const idiomFeedbackColors = ['#a9dfca', '#b7d5f5', '#f3d47f', '#ccb5ea', '#a6dfe5', '#f3b995', '#cddc8c', '#efb2d6']
 
 function idiomFeedbackBackground(feedback = []) {
   const colors = feedback.map((item) => (
@@ -696,6 +696,9 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
   const [difficulty, setDifficulty] = useState(puzzle?.difficulty || 'beginner')
   const [stage, setStage] = useState(puzzle?.stage || 'junior')
   const [selectedIds, setSelectedIds] = useState((puzzle?.idioms || []).map((entry) => entry.id))
+  const [acceptedAnswerDrafts, setAcceptedAnswerDrafts] = useState(() => Object.fromEntries(
+    Object.entries(puzzle?.acceptedAnswers || {}).map(([idiomId, answers]) => [idiomId, (answers || []).join('、')]),
+  ))
   const [editorGrid, setEditorGrid] = useState(() => puzzle ? editorGridFromPuzzle(puzzle) : createIdiomEditorGrid(8, 8))
   const [preview, setPreview] = useState(null)
   const [status, setStatus] = useState(puzzle?.status || 'draft')
@@ -834,7 +837,13 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
     }
   }
   const validate = () => {
-    const result = buildManualIdiomPuzzle({ editorGrid, idioms: selectedEntries, difficulty, stage })
+    const result = buildManualIdiomPuzzle({
+      editorGrid,
+      idioms: selectedEntries,
+      acceptedAnswers: acceptedAnswerDrafts,
+      difficulty,
+      stage,
+    })
     setMessages(result.errors.length ? result.errors : ['版面與完整答案檢查通過，可以儲存或發布。'])
     setPreview(result.errors.length ? null : result.puzzle)
     return result
@@ -952,7 +961,29 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
       <button type="button" className="idiom-auto-layout-button" onClick={generate}><Sparkles aria-hidden="true" />依所選成語自動排版</button>
       <p className="idiom-auto-layout-note">先勾選至少 4 個具有共同文字的成語；系統會自動建立交錯版面，仍可在下方手動調整。</p>
 
-      <div className="idiom-admin-section-heading"><div><h3>② 建立題目與完整答案</h3><p>題目格設定黑格、白格與提示字；完整答案逐格輸入正確文字。</p></div></div>
+      <div className="idiom-admin-section-heading"><div><h3>② 設定可接受的替代答案（選填）</h3><p>只影響本題判分，不會改寫教育部成語資料。</p></div></div>
+      <div className="idiom-alternate-answer-editor">
+        <p>替代答案須與預設答案字數相同、使用相同文字，且不可改動提示字或交錯字的位置。多個答案可用頓號、逗號或換行分隔。</p>
+        {selectedEntries.length === 0 && <p className="is-empty">請先選擇本題成語。</p>}
+        {selectedEntries.map((entry) => (
+          <label key={entry.id}>
+            <span><strong>{entry.phrase}</strong><small>預設答案</small></span>
+            <textarea
+              {...chineseTextInputProps}
+              rows="2"
+              value={acceptedAnswerDrafts[entry.id] || ''}
+              placeholder="例如：一十一五"
+              onChange={(event) => {
+                const value = event.target.value
+                setAcceptedAnswerDrafts((current) => ({ ...current, [entry.id]: value }))
+                setPreview(null)
+              }}
+            />
+          </label>
+        ))}
+      </div>
+
+      <div className="idiom-admin-section-heading"><div><h3>③ 建立題目與完整答案</h3><p>題目格設定黑格、白格與提示字；完整答案逐格輸入正確文字。</p></div></div>
       <div className="idiom-editor-tabs">
         <button type="button" className={tab === 'puzzle' ? 'is-active' : ''} onClick={() => setTab('puzzle')}>題目格</button>
         <button type="button" className={tab === 'solution' ? 'is-active' : ''} onClick={() => setTab('solution')}>完整答案</button>
