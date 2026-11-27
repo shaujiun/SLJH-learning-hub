@@ -64,6 +64,8 @@ const stageLabels = {
   all: '跨階段／自訂',
 }
 
+const gridDimensionOptions = Array.from({ length: 15 }, (_, index) => index + 4)
+
 const chineseTextInputProps = {
   lang: 'zh-Hant',
   inputMode: 'text',
@@ -692,6 +694,7 @@ function IdiomEditorBoard({ grid, tab, tool, onChange }) {
 }
 
 export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, onCatalogAdded }) {
+  const titleInputRef = useRef(null)
   const [savedPuzzleId, setSavedPuzzleId] = useState(puzzle?.id || '')
   const [title, setTitle] = useState(puzzle?.title || '成語填字圖')
   const [publishedOn, setPublishedOn] = useState(puzzle?.publishedOn || todayDateValue())
@@ -734,6 +737,17 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
   )
   const normalizedEntryPhrase = Array.from(String(entryForm.phrase || '').replace(/\s/g, '')).join('')
   const existingCatalogEntry = catalog.find((entry) => entry.phrase === normalizedEntryPhrase) || null
+
+  const restoreChineseTextFocus = () => {
+    if (typeof window === 'undefined' || !window.matchMedia?.('(pointer: fine)').matches) return
+    window.setTimeout(() => {
+      const input = titleInputRef.current
+      if (!input) return
+      input.focus({ preventScroll: true })
+      const end = input.value.length
+      input.setSelectionRange?.(end, end)
+    }, 0)
+  }
 
   const toggle = (id) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])
   const ensureDictionary = async () => {
@@ -910,9 +924,7 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
         isDailyEligible,
       })
       if (savedPuzzle?.id) setSavedPuzzleId(savedPuzzle.id)
-      setMessages([status === 'published'
-        ? '題目已發布。編輯畫面會保留，可繼續修改或按「關閉」返回題目。'
-        : '草稿已儲存。編輯畫面會保留，可繼續修改或按「關閉」返回題目。'])
+      setMessages([status === 'published' ? '題目已發布。' : '草稿已儲存。'])
       await onSaved(savedPuzzle)
     } catch (error) {
       setMessages([error.message])
@@ -928,13 +940,13 @@ export function IdiomPuzzleEditor({ catalog, puzzle = null, onSaved, onCancel, o
         <button type="button" className="icon-button" onClick={onCancel}><X aria-hidden="true" />關閉</button>
       </div>
       <div className="idiom-admin-fields">
-        <label>題目名稱<input {...chineseTextInputProps} value={title} onChange={(event) => setTitle(event.target.value)} /></label>
+        <label>題目名稱<input ref={titleInputRef} {...chineseTextInputProps} value={title} onChange={(event) => setTitle(event.target.value)} /></label>
         <label>發布日期<input type="date" value={publishedOn} onChange={(event) => setPublishedOn(event.target.value)} /></label>
-        <label>適合等級<select value={stage} onChange={(event) => setStage(event.target.value)}>{Object.entries(stageLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-        <label>難度<select value={difficulty} onChange={(event) => setDifficulty(event.target.value)}>{difficultyOrder.map((value) => <option key={value} value={value}>{IDIOM_DIFFICULTIES[value].label}</option>)}</select></label>
-        <label>列數<input type="number" min="4" max="18" value={editorGrid.height} onChange={(event) => setEditorGrid((current) => resizeIdiomEditorGrid(current, current.width, Number(event.target.value)))} /></label>
-        <label>欄數<input type="number" min="4" max="18" value={editorGrid.width} onChange={(event) => setEditorGrid((current) => resizeIdiomEditorGrid(current, Number(event.target.value), current.height))} /></label>
-        <label>發布狀態<select value={status} onChange={(event) => setStatus(event.target.value)}><option value="draft">草稿</option><option value="published">正式發布</option><option value="archived">封存</option></select></label>
+        <label>適合等級<select value={stage} onChange={(event) => { setStage(event.target.value); restoreChineseTextFocus() }}>{Object.entries(stageLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        <label>難度<select value={difficulty} onChange={(event) => { setDifficulty(event.target.value); restoreChineseTextFocus() }}>{difficultyOrder.map((value) => <option key={value} value={value}>{IDIOM_DIFFICULTIES[value].label}</option>)}</select></label>
+        <label>列數<select value={editorGrid.height} onChange={(event) => { setEditorGrid((current) => resizeIdiomEditorGrid(current, current.width, Number(event.target.value))); restoreChineseTextFocus() }}>{gridDimensionOptions.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+        <label>欄數<select value={editorGrid.width} onChange={(event) => { setEditorGrid((current) => resizeIdiomEditorGrid(current, Number(event.target.value), current.height)); restoreChineseTextFocus() }}>{gridDimensionOptions.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+        <label>發布狀態<select value={status} onChange={(event) => { setStatus(event.target.value); restoreChineseTextFocus() }}><option value="draft">草稿</option><option value="published">正式發布</option><option value="archived">封存</option></select></label>
         <label className="idiom-admin-checkbox"><input type="checkbox" checked={isDailyEligible} onChange={(event) => setIsDailyEligible(event.target.checked)} />可列入每日任務</label>
       </div>
 
@@ -1132,6 +1144,10 @@ export default function IdiomWordGrid({ guestMode = false }) {
     setSelectedDifficulty(difficulty)
     setSelectedId(preferred?.puzzle.id || '')
   }
+  const returnToPuzzlePage = () => {
+    setEditing(null)
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }))
+  }
   return (
     <main className="idiom-word-grid-page">
       <header className="idiom-page-header">
@@ -1149,8 +1165,8 @@ export default function IdiomWordGrid({ guestMode = false }) {
           key={editing.id || 'new'}
           catalog={state.catalog}
           puzzle={editing.id ? editing : null}
-          onCancel={() => setEditing(null)}
-          onSaved={async () => { await load({ background: true }) }}
+          onCancel={returnToPuzzlePage}
+          onSaved={async () => { await load({ background: true }); returnToPuzzlePage() }}
           onCatalogAdded={(entry) => setState((current) => ({
             ...current,
             catalog: [...current.catalog.filter((item) => item.id !== entry.id), entry]
