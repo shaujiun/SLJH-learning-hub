@@ -5,6 +5,7 @@ import { findPendingFocusTaskId } from './focusTaskRecoveryService.js'
 import { getStarterIdiomPuzzles, STARTER_IDIOM_ENTRIES } from '../data/idiomWordGridStarter.js'
 
 const PUZZLE_SELECT = 'id,title,published_on,difficulty,puzzle_data,source_version,illustration_url,is_daily_eligible,status,created_at,updated_at'
+const IDIOM_ENTRY_SELECT = 'id,phrase,definition,source_text,story,source_url,illustration_url,stage,source_entry_id,zhuyin,pinyin,license_version'
 
 function isMissingRelation(error) {
   return ['42P01', 'PGRST205', 'PGRST202'].includes(error?.code)
@@ -67,13 +68,13 @@ export async function loadIdiomWordGridContext({ guestMode = false } = {}, clien
   }
   if (!client) return {
     puzzles: getStarterIdiomPuzzles(), catalog: STARTER_IDIOM_ENTRIES, energy: 0,
-    studentId: '', completedPuzzleIds: [], canManage: false, remoteEnabled: false,
+    studentId: '', completedPuzzleIds: [], reviewEntryIds: [], canManage: false, remoteEnabled: false,
   }
 
   const account = guestMode ? { userId: '', studentId: '', canManage: false } : await sessionContext(client)
   let query = client.from('idiom_word_grid_puzzles').select(PUZZLE_SELECT).order('published_on', { ascending: false })
   if (!account.canManage) query = query.eq('status', 'published')
-  const [puzzleResult, catalogResult, walletResult, completionResult] = await Promise.all([
+  const [puzzleResult, catalogResult, walletResult, completionResult, reviewResult] = await Promise.all([
     query,
     client.from('idiom_entries').select('id,phrase,definition,source_text,story,source_url,illustration_url,stage,source_entry_id,zhuyin,pinyin').eq('is_active', true).order('phrase'),
     account.studentId
@@ -82,14 +83,20 @@ export async function loadIdiomWordGridContext({ guestMode = false } = {}, clien
     account.studentId
       ? client.from('idiom_word_grid_completions').select('puzzle_id').eq('student_id', account.studentId)
       : Promise.resolve({ data: [], error: null }),
+    account.studentId
+      ? client.from('idiom_word_grid_reviews').select('idiom_entry_id').eq('student_id', account.studentId)
+      : Promise.resolve({ data: [], error: null }),
   ])
   if (puzzleResult.error && !isMissingRelation(puzzleResult.error)) throw new Error(`無法讀取成語填字圖：${puzzleResult.error.message}`)
   if (puzzleResult.error) return {
     puzzles: getStarterIdiomPuzzles(), catalog: STARTER_IDIOM_ENTRIES, energy: 0,
-    studentId: account.studentId, completedPuzzleIds: [], canManage: account.canManage, remoteEnabled: false,
+    studentId: account.studentId, completedPuzzleIds: [], reviewEntryIds: [], canManage: account.canManage, remoteEnabled: false,
   }
   if (completionResult.error && !isMissingRelation(completionResult.error)) {
     throw new Error(`無法讀取成語通關紀錄：${completionResult.error.message}`)
+  }
+  if (reviewResult.error && !isMissingRelation(reviewResult.error)) {
+    throw new Error(`無法讀取成語複習清單：${reviewResult.error.message}`)
   }
   const catalog = catalogResult.error ? STARTER_IDIOM_ENTRIES : (catalogResult.data || []).map(mapIdiomEntry)
   return {
@@ -98,6 +105,7 @@ export async function loadIdiomWordGridContext({ guestMode = false } = {}, clien
     energy: Number(walletResult.data?.energy || 0),
     studentId: account.studentId,
     completedPuzzleIds: (completionResult.data || []).map((row) => String(row.puzzle_id || '')).filter(Boolean),
+    reviewEntryIds: (reviewResult.error ? [] : reviewResult.data || []).map((row) => String(row.idiom_entry_id || '')).filter(Boolean),
     canManage: account.canManage,
     remoteEnabled: true,
   }
@@ -108,18 +116,25 @@ export async function saveIdiomEntry(input, client = requireSupabase()) {
   const definition = String(input.definition || '').trim()
   if (phrase.length < 4) throw new Error('成語至少需要 4 個字。')
   if (!definition) throw new Error('請輸入教育部成語典的釋義。')
+  const { data: existing, error: existingError } = await client
+    .from('idiom_entries')
+    .select(IDIOM_ENTRY_SELECT)
+    .eq('phrase', phrase)
+    .maybeSingle()
+  if (existingError) throw new Error(`無法檢查既有成語資料：${existingError.message}`)
+  const incomingText = (value, fallback = '') => String(value || '').trim() || String(fallback || '').trim()
   const payload = {
     phrase,
     definition,
-    source_text: String(input.source || '').trim(),
-    story: String(input.story || '').trim(),
-    source_url: String(input.sourceUrl || '').trim(),
-    illustration_url: String(input.illustrationUrl || '').trim(),
+    source_text: incomingText(input.source, existing?.source_text),
+    story: incomingText(input.story, existing?.story),
+    source_url: incomingText(input.sourceUrl, existing?.source_url),
+    illustration_url: incomingText(input.illustrationUrl, existing?.illustration_url),
     stage: ['elementary', 'junior', 'senior'].includes(input.stage) ? input.stage : 'junior',
-    source_entry_id: Number(input.sourceEntryId || 0) || null,
-    zhuyin: String(input.zhuyin || '').trim(),
-    pinyin: String(input.pinyin || '').trim(),
-    license_version: input.sourceVersion || 'dict_idioms_2020_20260929',
+    source_entry_id: Number(input.sourceEntryId || 0) || Number(existing?.source_entry_id || 0) || null,
+    zhuyin: incomingText(input.zhuyin, existing?.zhuyin),
+    pinyin: incomingText(input.pinyin, existing?.pinyin),
+    license_version: input.sourceVersion || existing?.license_version || 'dict_idioms_2020_20260929',
     is_active: true,
     updated_at: new Date().toISOString(),
   }
@@ -129,7 +144,7 @@ export async function saveIdiomEntry(input, client = requireSupabase()) {
     .select('id,phrase,definition,source_text,story,source_url,illustration_url,stage,source_entry_id,zhuyin,pinyin')
     .single()
   if (error) throw new Error(`無法儲存成語資料：${error.message}`)
-  return mapIdiomEntry(data)
+  return { ...mapIdiomEntry(data), wasUpdated: Boolean(existing) }
 }
 
 export async function spendIdiomHint({ puzzleId, kind, cellKey }, client = requireSupabase()) {
@@ -140,6 +155,26 @@ export async function spendIdiomHint({ puzzleId, kind, cellKey }, client = requi
   })
   if (error) throw new Error(error.message === 'idiom_energy_insufficient' ? '能量不足，完成其他關卡後可取得能量。' : `無法使用提示：${error.message}`)
   return { energy: Number(data?.energy || 0) }
+}
+
+export async function saveIdiomReviews({ studentId, entryIds, shouldReview = true }, client = requireSupabase()) {
+  const normalizedIds = [...new Set((entryIds || []).map((id) => String(id || '')).filter(Boolean))]
+  if (!studentId || normalizedIds.length === 0) return
+  if (shouldReview) {
+    const now = new Date().toISOString()
+    const { error } = await client.from('idiom_word_grid_reviews').upsert(
+      normalizedIds.map((entryId) => ({ student_id: studentId, idiom_entry_id: entryId, updated_at: now })),
+      { onConflict: 'student_id,idiom_entry_id' },
+    )
+    if (error) throw new Error(`無法加入成語複習清單：${error.message}`)
+    return
+  }
+  const { error } = await client
+    .from('idiom_word_grid_reviews')
+    .delete()
+    .eq('student_id', studentId)
+    .in('idiom_entry_id', normalizedIds)
+  if (error) throw new Error(`無法移除成語複習清單：${error.message}`)
 }
 
 export async function completeIdiomPuzzle({ puzzleId, hintsUsed = 0, focusTaskId = '' }, client = requireSupabase()) {

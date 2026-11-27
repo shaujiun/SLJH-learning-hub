@@ -478,6 +478,41 @@ export function chooseHintCell(puzzle, assignments = {}, revealedKeys = [], kind
   return requested || empty[0] || cells[0] || null
 }
 
+export function chooseAllCrossHintCells(puzzle, revealedKeys = []) {
+  const fixed = new Set([...(puzzle?.givenCellKeys || []), ...(revealedKeys || [])])
+  return (puzzle?.board?.cells || []).filter((cell) => cell.isIntersection && !fixed.has(cell.key))
+}
+
+export function assignIdiomTile(assignments = {}, cellKey = '', tileId = null) {
+  if (!cellKey || !Number.isInteger(tileId)) return { ...assignments }
+  const next = { ...assignments }
+  Object.keys(next).forEach((key) => {
+    if (next[key] === tileId) delete next[key]
+  })
+  next[cellKey] = tileId
+  return next
+}
+
+export function applyRevealedIdiomCells(puzzle, assignments = {}, cellKeys = []) {
+  const tiles = createIdiomBankTiles(puzzle)
+  const cellMap = new Map((puzzle?.board?.cells || []).map((cell) => [cell.key, cell]))
+  let next = { ...assignments }
+  ;[...new Set(cellKeys || [])].forEach((cellKey) => {
+    const cell = cellMap.get(cellKey)
+    if (!cell) return
+    const currentTileId = next[cellKey]
+    if (tiles[currentTileId]?.character === cell.solution) return
+
+    const usedByOtherCells = new Set(Object.entries(next)
+      .filter(([key]) => key !== cellKey)
+      .map(([, tileId]) => tileId))
+    const unusedMatchingTile = tiles.find((tile) => tile.character === cell.solution && !usedByOtherCells.has(tile.id))
+    const matchingTile = unusedMatchingTile || tiles.find((tile) => tile.character === cell.solution)
+    if (matchingTile) next = assignIdiomTile(next, cellKey, matchingTile.id)
+  })
+  return next
+}
+
 export function serializeIdiomPuzzle(puzzle) {
   return {
     difficulty: puzzle.difficulty,
