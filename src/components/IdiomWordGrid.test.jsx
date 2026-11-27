@@ -207,6 +207,8 @@ describe('成語填字圖畫面', () => {
     expect(html).toContain('上傳圖檔')
     expect(html).toContain('image/jpeg,image/png,image/webp')
     expect(html).toContain('查看並修改')
+    expect(html).toContain(`class="idiom-admin-catalog-phrase">${puzzle.idioms[0].phrase}</span>`)
+    expect(html).toContain('適合等級：國中階段')
     expect(html).not.toContain('>編輯</button>')
     expect(html).not.toContain('type="url"')
     expect(html).toContain('lang="zh-Hant"')

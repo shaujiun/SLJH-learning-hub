@@ -132,15 +132,15 @@
 .idiom-admin-section-heading h3, .idiom-admin-section-heading p { margin: 0; }
 .idiom-admin-section-heading p { margin-top: .25rem; color: #637770; }
 .idiom-admin-section-heading > strong { min-width: max-content; padding: .45rem .7rem; border-radius: 999px; background: #fff2b4; color: #805b13; }
-.idiom-admin-catalog { max-height: 240px; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .35rem; overflow: auto; padding: .7rem; border: 1px solid #d0dfda; border-radius: 12px; }
+.idiom-admin-catalog { max-height: 240px; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .35rem; overflow: auto; padding: .7rem; border: 1px solid #d0dfda; border-radius: 12px; }
 .idiom-admin-catalog-item { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: stretch; gap: .3rem; padding: .35rem; border-radius: 10px; background: #f5f8f7; }
 .idiom-admin-catalog-item.is-selected { background: #e5f4ef; box-shadow: inset 0 0 0 1px #8cbab0; }
 .idiom-admin-catalog-check { display: grid; place-items: center; padding: .35rem; cursor: pointer; }
 .idiom-admin-catalog-check input { width: 1.15rem; height: 1.15rem; }
-.idiom-admin-catalog-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .35rem; min-height: 44px; padding: .45rem .55rem; border: 0; border-radius: 8px; background: transparent; color: #176b60; text-align: left; cursor: pointer; }
+.idiom-admin-catalog-entry { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); align-content: center; gap: .18rem; min-height: 52px; padding: .45rem .55rem; border: 0; border-radius: 8px; background: transparent; color: #176b60; text-align: left; cursor: pointer; }
 .idiom-admin-catalog-entry:hover, .idiom-admin-catalog-entry:focus-visible { background: #fff; box-shadow: 0 0 0 2px #72a29a; outline: 0; }
-.idiom-admin-catalog-entry strong { overflow: hidden; text-overflow: ellipsis; }
-.idiom-admin-catalog-entry small { color: #72847e; }
+.idiom-admin-catalog-phrase { min-width: 0; overflow: hidden; color: #145f56; font-size: 1.08rem; font-weight: 900; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.idiom-admin-catalog-entry small { overflow: hidden; color: #72847e; font-size: .78rem; font-weight: 700; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .idiom-auto-layout-button { display: inline-flex; align-items: center; gap: .35rem; margin-top: .7rem; padding: .65rem .85rem; border: 1px solid #197365; border-radius: 9px; background: #eef8f5; color: #176b60; font-weight: 900; cursor: pointer; }
 .idiom-auto-layout-note { margin: .4rem 0 0; color: #526661; font-size: .92rem; }
 .idiom-alternate-answer-editor { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: .65rem; margin-top: .75rem; padding: .8rem; border: 1px solid #c8dbd6; border-radius: 12px; background: #f6faf8; }
